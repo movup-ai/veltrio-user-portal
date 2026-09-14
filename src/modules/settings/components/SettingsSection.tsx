@@ -1,4 +1,7 @@
 import { ChevronDown } from 'lucide-react'
+import { Card } from '@/components/ui/card'
+import { PageActionButton } from '@/components/layout/PageActionButton'
+import { PanelHeading } from '@/components/layout/PanelHeading'
 import type { SettingsField, SettingsSectionDef } from '../types/settings.types'
 
 function FieldControl({ field }: { field: SettingsField }) {
@@ -39,12 +42,9 @@ function FieldControl({ field }: { field: SettingsField }) {
 
 export function SettingsSection({ section }: { section: SettingsSectionDef }) {
   return (
-    <section className="bg-surface border-border shadow-xs overflow-hidden rounded-xl border">
+    <Card as="section" className="overflow-hidden">
       <div className="border-border-soft border-b px-[18px] py-4">
-        <h2 className="m-0 text-[14.5px] font-semibold">{section.title}</h2>
-        <p className="text-fg-4 m-0 mt-[3px] text-[12.5px]" style={{ textWrap: 'pretty' }}>
-          {section.description}
-        </p>
+        <PanelHeading title={section.title} description={section.description} />
       </div>
 
       <div className="grid gap-4 p-[18px]" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
@@ -62,13 +62,9 @@ export function SettingsSection({ section }: { section: SettingsSectionDef }) {
       </div>
 
       <div className="border-border-soft bg-surface-2 flex justify-end gap-2 border-t px-[18px] py-[13px]">
-        <button type="button" className="bg-surface border-border text-fg-2 hover:bg-surface-3 h-[34px] rounded-[9px] border px-[13px] text-[12.5px] font-semibold transition-colors">
-          Discard
-        </button>
-        <button type="button" className="bg-primary text-primary-foreground hover:bg-primary-hover h-[34px] rounded-[9px] px-[13px] text-[12.5px] font-semibold transition-colors">
-          Save changes
-        </button>
+        <PageActionButton label="Discard" />
+        <PageActionButton label="Save changes" variant="solid" />
       </div>
-    </section>
+    </Card>
   )
 }

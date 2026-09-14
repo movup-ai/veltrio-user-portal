@@ -66,7 +66,8 @@
   --shadow-lg: var(--veltrio-shadow-lg);
 
   /* Typography */
-  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: 'Manrope', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Sora', 'Manrope', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
 
   --text-page-title: 1.5rem;
@@ -96,4 +97,49 @@
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
   --text-caption--font-weight: 400;
+
+  /*
+   * Data-display type scale — the sizes actually shipped across the
+   * dashboard/bookings/vehicles/.../settings pages, extracted verbatim so
+   * new pages reuse the same rhythm instead of re-guessing pixel values.
+   * Deliberately separate from the --text-page-title/... scale above,
+   * which nothing in the live app currently renders with.
+   */
+  /*
+   * Line-height is deliberately omitted below except where the shipped
+   * markup had an explicit `leading-*` — everywhere else currently relies
+   * on the inherited body line-height (1.375rem), and setting one here
+   * would shift vertical rhythm versus what's actually rendering today.
+   */
+  --text-heading: 25px;
+  --text-heading--letter-spacing: -0.025em;
+  --text-heading--font-weight: 700;
+
+  --text-panel-title: 14.5px;
+  --text-panel-title--font-weight: 600;
+
+  --text-stat-lg: 27px;
+  --text-stat-lg--line-height: 1.05;
+  --text-stat-lg--letter-spacing: -0.03em;
+  --text-stat-lg--font-weight: 700;
+
+  --text-stat-md: 23px;
+  --text-stat-md--letter-spacing: -0.025em; /* == Tailwind's tracking-tight */
+  --text-stat-md--font-weight: 700;
+
+  --text-body-sm: 13.5px;
+  --text-body-sm--font-weight: 400;
+
+  --text-meta: 12.5px;
+  --text-meta--font-weight: 600;
+
+  --text-caption-sm: 11.5px;
+  --text-caption-sm--font-weight: 400;
+
+  --text-table-header: 11px;
+  --text-table-header--letter-spacing: 0.05em;
+  --text-table-header--font-weight: 600;
+
+  /* Shared control chrome */
+  --radius-control: 9px;
 }

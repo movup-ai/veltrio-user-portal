@@ -1,31 +1,30 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn('rounded-lg border border-border bg-card text-card-foreground shadow-sm', className)}
-      {...props}
-    />
-  )
+export interface CardProps extends React.HTMLAttributes<HTMLElement> {
+  /** Native element to render — 'section' for panels with their own <h2>, 'div' (default) otherwise. */
+  as?: 'div' | 'section'
+  /** Adds the border/shadow hover treatment used by clickable-feeling cards (KpiCard, LocationCard, ...). */
+  hoverable?: boolean
 }
 
-export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex flex-col gap-1 p-6', className)} {...props} />
-}
-
-export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('text-card-title', className)} {...props} />
-}
-
-export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-description', className)} {...props} />
-}
-
-export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-6 pt-0', className)} {...props} />
-}
-
-export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex items-center p-6 pt-0', className)} {...props} />
-}
+/**
+ * Base card chrome shared by every bordered panel in the app (KPI cards,
+ * stat strips, revenue/fleet panels, location cards, record tables,
+ * settings sections). Deliberately unopinionated about padding — that
+ * varies by density across call sites, so compose it via `className`.
+ */
+export const Card = React.forwardRef<HTMLElement, CardProps>(
+  ({ as: Comp = 'div', hoverable, className, ...props }, ref) => {
+    return React.createElement(Comp, {
+      ref,
+      className: cn(
+        'bg-surface border-border shadow-xs rounded-xl border',
+        hoverable && 'transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-sm',
+        className,
+      ),
+      ...props,
+    })
+  },
+)
+Card.displayName = 'Card'

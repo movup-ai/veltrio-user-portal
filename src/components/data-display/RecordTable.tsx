@@ -1,5 +1,6 @@
 import { Ellipsis } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui/card'
 import { StatusBadge } from './StatusBadge'
 import type { Cell, Column, Row } from './record-table.types'
 
@@ -98,9 +99,9 @@ interface RecordTableProps {
 
 export function RecordTable({ title, tabs, columns, rows, rowCountLabel, pageNote, minWidth = '800px' }: RecordTableProps) {
   return (
-    <section className="bg-surface border-border shadow-xs overflow-hidden rounded-xl border">
+    <Card as="section" className="overflow-hidden">
       <div className="border-border-soft flex flex-wrap items-center gap-3.5 border-b px-4 py-3.5">
-        {title && <h2 className="m-0 shrink-0 text-[14.5px] font-semibold">{title}</h2>}
+        {title && <h2 className="text-panel-title m-0 shrink-0">{title}</h2>}
         {tabs && tabs.length > 0 && (
           <div className="bg-surface-3 flex shrink-0 gap-0.5 rounded-[9px] p-[3px]" role="tablist">
             {tabs.map((t) => (
@@ -110,7 +111,7 @@ export function RecordTable({ title, tabs, columns, rows, rowCountLabel, pageNot
                 role="tab"
                 aria-selected={t.selected}
                 onClick={t.onClick}
-                className="rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-colors"
+                className="text-meta rounded-[7px] px-3 py-1.5 whitespace-nowrap transition-colors"
                 style={{
                   background: t.selected ? 'var(--color-surface)' : 'transparent',
                   color: t.selected ? 'var(--color-foreground)' : 'var(--color-fg-3)',
@@ -174,6 +175,6 @@ export function RecordTable({ title, tabs, columns, rows, rowCountLabel, pageNot
           </button>
         </div>
       </div>
-    </section>
+    </Card>
   )
 }

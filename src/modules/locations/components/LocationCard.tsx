@@ -1,10 +1,11 @@
 import { ArrowRight, Clock, MapPin, UserRound } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import type { Location } from '../types/location.types'
 
 export function LocationCard({ location }: { location: Location }) {
   return (
-    <div className="bg-surface border-border shadow-xs hover:border-border-strong hover:shadow-sm flex flex-col gap-3.5 rounded-xl border p-[18px] transition-[border-color,box-shadow]">
+    <Card hoverable className="flex flex-col gap-3.5 p-[18px]">
       <div className="flex items-start gap-3">
         <span className="bg-tint text-primary flex size-9 shrink-0 items-center justify-center rounded-[10px]">
           <MapPin className="size-[18px]" />
@@ -47,6 +48,6 @@ export function LocationCard({ location }: { location: Location }) {
         <span>Manage location</span>
         <ArrowRight className="size-3.5" />
       </button>
-    </div>
+    </Card>
   )
 }

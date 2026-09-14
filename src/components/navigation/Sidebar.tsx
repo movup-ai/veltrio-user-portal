@@ -35,7 +35,11 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           <div className="bg-primary flex size-7 shrink-0 items-center justify-center rounded-lg">
             <CarFront className="text-primary-foreground size-4" strokeWidth={2.25} />
           </div>
-          {expanded && <span className="text-[16px] font-bold tracking-tight">Veltrio</span>}
+          {expanded && (
+            <span className="font-[family-name:var(--font-display)] text-[16px] font-bold tracking-tight">
+              Veltrio
+            </span>
+          )}
         </div>
 
         <nav className="vx-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden p-3" aria-label="Primary">

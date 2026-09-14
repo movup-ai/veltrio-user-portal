@@ -1,17 +1,18 @@
+import { Card } from '@/components/ui/card'
+import { PanelHeading } from '@/components/layout/PanelHeading'
 import { REVENUE_14D } from '../mock/dashboard.mock'
 
 export function RevenueBars() {
   const max = Math.max(...REVENUE_14D)
 
   return (
-    <div className="bg-surface border-border shadow-xs flex min-w-0 flex-[2_1_340px] flex-col rounded-xl border px-[18px] pt-[18px] pb-3.5">
+    <Card className="flex min-w-0 flex-[2_1_340px] flex-col px-[18px] pt-[18px] pb-3.5">
       <div className="flex flex-wrap items-start gap-3.5">
-        <div className="min-w-0 flex-1">
-          <h2 className="m-0 text-[14.5px] font-semibold">Revenue</h2>
-          <p className="text-fg-4 m-0 mt-[3px] text-[12.5px]">Daily gross, last 14 days</p>
-        </div>
+        <PanelHeading title="Revenue" description="Daily gross, last 14 days" className="min-w-0 flex-1" />
         <div className="text-right">
-          <div className="text-xl font-bold tracking-[-0.02em] tabular-nums">$71,540</div>
+          <div className="font-[family-name:var(--font-display)] text-xl font-bold tracking-[-0.02em] tabular-nums">
+            $71,540
+          </div>
           <div className="text-fg-3 text-[11.5px] tabular-nums">+9.8% vs. prior 14d</div>
         </div>
       </div>
@@ -40,6 +41,6 @@ export function RevenueBars() {
         <span>7 Sep</span>
         <span>14 Sep</span>
       </div>
-    </div>
+    </Card>
   )
 }

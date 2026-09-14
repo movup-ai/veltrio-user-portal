@@ -1,18 +1,19 @@
 import type { LucideIcon } from 'lucide-react'
 import { TrendingDown, TrendingUp } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 import { Sparkline } from '@/components/data-display/Sparkline'
 import type { KpiDef } from '../mock/dashboard.mock'
 
 export function KpiCard({ icon: Icon, label, value, delta, deltaNote, up, spark }: KpiDef & { icon: LucideIcon }) {
   return (
-    <div className="bg-surface border-border shadow-xs hover:border-border-strong hover:shadow-sm flex flex-col gap-2.5 rounded-xl border px-4 pt-[15px] pb-3 transition-[border-color,box-shadow]">
+    <Card hoverable className="flex flex-col gap-2.5 px-4 pt-[15px] pb-3">
       <div className="flex items-center gap-2">
         <Icon className="text-fg-4 size-[15px]" />
         <span className="text-fg-3 text-xs font-semibold">{label}</span>
       </div>
       <div className="flex items-end justify-between gap-2.5">
         <div>
-          <div className="text-[27px] leading-[1.05] font-bold tracking-[-0.03em] tabular-nums">{value}</div>
+          <div className="text-stat-lg tabular-nums">{value}</div>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <span
               className="inline-flex items-center gap-[3px] rounded-full py-px pr-1.5 pl-1 text-[11.5px] font-semibold tabular-nums"
@@ -29,6 +30,6 @@ export function KpiCard({ icon: Icon, label, value, delta, deltaNote, up, spark 
         </div>
         <Sparkline points={spark} color={up ? 'var(--color-success)' : 'var(--color-error)'} />
       </div>
-    </div>
+    </Card>
   )
 }

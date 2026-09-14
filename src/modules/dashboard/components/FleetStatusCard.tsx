@@ -1,14 +1,15 @@
 import { ArrowUpRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { Card } from '@/components/ui/card'
+import { PanelHeading } from '@/components/layout/PanelHeading'
 import { FLEET_DONUT_GRADIENT, FLEET_STATUS } from '../mock/dashboard.mock'
 
 export function FleetStatusCard() {
   const navigate = useNavigate()
 
   return (
-    <div className="bg-surface border-border shadow-xs flex min-w-0 flex-[1_1_260px] flex-col rounded-xl border p-[18px]">
-      <h2 className="m-0 text-[14.5px] font-semibold">Fleet status</h2>
-      <p className="text-fg-4 m-0 mt-[3px] text-[12.5px]">142 vehicles across 3 locations</p>
+    <Card className="flex min-w-0 flex-[1_1_260px] flex-col p-[18px]">
+      <PanelHeading title="Fleet status" description="142 vehicles across 3 locations" />
 
       <div className="mt-[18px] flex flex-wrap items-center gap-5">
         <div className="relative size-[124px] shrink-0 rounded-full" style={{ background: FLEET_DONUT_GRADIENT }}>
@@ -38,6 +39,6 @@ export function FleetStatusCard() {
           <ArrowUpRight className="size-3.5" />
         </button>
       </div>
-    </div>
+    </Card>
   )
 }
