@@ -1,0 +1,23 @@
+import type { BookingTuple } from '../types/booking.types'
+
+export const BOOKINGS_UPCOMING: BookingTuple[] = [
+  ['Marisol Vega', 'BK-48210', 'BMW X5 xDrive40i', 'FL·8KJ-204', 'Sep 14 · 09:30 → Sep 18', '4 days', 'Miami Beach', 'Confirmed', '$1,240'],
+  ['Andrés Koval', 'BK-48211', 'Tesla Model 3 LR', 'FL·2WQ-771', 'Sep 14 · 11:00 → Sep 16', '2 days', 'Miami Beach', 'Confirmed', '$418'],
+  ['Priya Raman', 'BK-48214', 'Jeep Wrangler Sport', 'FL·6TR-355', 'Sep 14 · 13:15 → Sep 21', '7 days', 'Orlando Intl.', 'Awaiting ID', '$1,015'],
+  ['Tobias Lund', 'BK-48216', 'Kia Carnival SX', 'FL·9PD-118', 'Sep 14 · 15:00 → Sep 17', '3 days', 'Orlando Intl.', 'Confirmed', '$564'],
+  ['Yara Haddad', 'BK-48219', 'Audi Q5 Premium', 'FL·4NM-902', 'Sep 14 · 17:45 → Sep 19', '5 days', 'Tampa Downtown', 'Deposit due', '$895'],
+  ['Caleb Onyango', 'BK-48223', 'Toyota Corolla LE', 'FL·1BZ-640', 'Sep 14 · 18:30 → Sep 15', '1 day', 'Tampa Downtown', 'Confirmed', '$74'],
+  ['Hélène Brassard', 'BK-48225', 'Mercedes GLC 300', 'FL·7VC-283', 'Sep 15 · 08:00 → Sep 22', '7 days', 'Miami Beach', 'Confirmed', '$1,673'],
+  ['Samir Qureshi', 'BK-48228', 'Ford Bronco Outer Banks', 'FL·3HX-517', 'Sep 15 · 10:20 → Sep 18', '3 days', 'Orlando Intl.', 'Awaiting ID', '$702'],
+]
+
+export const BOOKINGS_RECENT: BookingTuple[] = [
+  ['Dana Whitfield', 'BK-48198', 'Nissan Rogue SV', 'FL·5GD-441', 'Sep 9 · 08:00 → Sep 13', 'returned', 'Tampa Downtown', 'Completed', '$486'],
+  ['Ibrahim Sow', 'BK-48201', 'Tesla Model Y LR', 'FL·8QK-093', 'Sep 10 · 12:30 → Sep 13', 'returned', 'Miami Beach', 'Completed', '$627'],
+  ['Noor Al-Amin', 'BK-48203', 'Chevrolet Tahoe LT', 'FL·2FJ-806', 'Sep 8 · 14:00 → Sep 13', '3h late', 'Orlando Intl.', 'Overdue fee', '$1,388'],
+  ['Grant Mulvaney', 'BK-48205', 'Hyundai Elantra SEL', 'FL·6RB-212', 'Sep 11 · 09:45 → Sep 12', 'returned', 'Tampa Downtown', 'Completed', '$132'],
+  ['Lucía Ferreira', 'BK-48207', 'BMW 330i', 'FL·9LT-574', 'Sep 7 · 16:00 → Sep 12', 'returned', 'Miami Beach', 'Refunded', '−$310'],
+  ['Peter Achebe', 'BK-48209', 'Jeep Grand Cherokee', 'FL·4CM-168', 'Sep 9 · 10:00 → Sep 13', 'returned', 'Orlando Intl.', 'Completed', '$941'],
+  ['Sunniva Dahl', 'BK-48212', 'Kia Sportage EX', 'FL·7ZP-339', 'Sep 10 · 07:30 → Sep 12', 'returned', 'Tampa Downtown', 'Completed', '$298'],
+  ['Omar Benali', 'BK-48215', 'Audi A4 Premium', 'FL·1XN-725', 'Sep 6 · 18:00 → Sep 13', 'card declined', 'Miami Beach', 'Payment failed', '$1,204'],
+]

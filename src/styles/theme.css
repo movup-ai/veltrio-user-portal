@@ -1,0 +1,99 @@
+/**
+ * Maps Veltrio design tokens onto Tailwind v4's @theme namespace.
+ * This is what turns --veltrio-primary into utilities like bg-primary,
+ * text-primary-foreground, border-border, etc. Edit tokens.css to change
+ * values; edit this file only to add new token categories.
+ */
+@theme inline {
+  --color-primary: var(--veltrio-primary);
+  --color-primary-hover: var(--veltrio-primary-hover);
+  --color-primary-foreground: var(--veltrio-primary-foreground);
+  --color-secondary: var(--veltrio-secondary);
+  --color-secondary-foreground: var(--veltrio-secondary-foreground);
+  --color-tint: var(--veltrio-tint);
+
+  --color-background: var(--veltrio-bg);
+  --color-surface: var(--veltrio-surface);
+  --color-surface-2: var(--veltrio-surface-2);
+  --color-surface-3: var(--veltrio-surface-3);
+  --color-foreground: var(--veltrio-fg);
+  --color-fg-2: var(--veltrio-fg-2);
+  --color-fg-3: var(--veltrio-fg-3);
+  --color-fg-4: var(--veltrio-fg-4);
+  --color-muted: var(--veltrio-surface-3);
+  --color-muted-foreground: var(--veltrio-fg-3);
+  --color-border: var(--veltrio-border);
+  --color-border-soft: var(--veltrio-border-soft);
+  --color-border-strong: var(--veltrio-border-strong);
+  --color-input: var(--veltrio-border-strong);
+  --color-ring: var(--veltrio-ring);
+
+  --color-card: var(--veltrio-surface);
+  --color-card-foreground: var(--veltrio-fg);
+  --color-popover: var(--veltrio-surface);
+  --color-popover-foreground: var(--veltrio-fg);
+  --color-header: var(--veltrio-header-bg);
+
+  --color-success: var(--veltrio-success);
+  --color-success-tint: var(--veltrio-success-tint);
+  --color-success-foreground: var(--veltrio-success-foreground);
+  --color-warning: var(--veltrio-warning);
+  --color-warning-tint: var(--veltrio-warning-tint);
+  --color-warning-foreground: var(--veltrio-warning-foreground);
+  --color-error: var(--veltrio-error);
+  --color-error-tint: var(--veltrio-error-tint);
+  --color-error-foreground: var(--veltrio-error-foreground);
+  --color-info: var(--veltrio-info);
+  --color-info-tint: var(--veltrio-info-tint);
+  --color-info-foreground: var(--veltrio-info-foreground);
+  --color-neutral-tint: var(--veltrio-neutral-tint);
+
+  --color-destructive: var(--veltrio-error);
+  --color-destructive-foreground: var(--veltrio-error-foreground);
+
+  --color-bar-dim: var(--veltrio-bar-dim);
+
+  /* Radius scale */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Elevation */
+  --shadow-xs: var(--veltrio-shadow-xs);
+  --shadow-sm: var(--veltrio-shadow-sm);
+  --shadow-md: var(--veltrio-shadow-md);
+  --shadow-lg: var(--veltrio-shadow-lg);
+
+  /* Typography */
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  --text-page-title: 1.5rem;
+  --text-page-title--line-height: 2rem;
+  --text-page-title--font-weight: 600;
+
+  --text-section-title: 1.125rem;
+  --text-section-title--line-height: 1.75rem;
+  --text-section-title--font-weight: 600;
+
+  --text-card-title: 0.9375rem;
+  --text-card-title--line-height: 1.375rem;
+  --text-card-title--font-weight: 600;
+
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.375rem;
+  --text-body--font-weight: 400;
+
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.125rem;
+  --text-label--font-weight: 500;
+
+  --text-description: 0.8125rem;
+  --text-description--line-height: 1.25rem;
+  --text-description--font-weight: 400;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-caption--font-weight: 400;
+}

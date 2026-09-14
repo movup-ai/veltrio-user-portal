@@ -1,0 +1,29 @@
+import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from '@/components/ui/toast'
+import { useToast } from '@/components/ui/use-toast'
+
+export function Toaster() {
+  const { toasts, dismiss } = useToast()
+
+  return (
+    <ToastProvider>
+      {toasts.map(({ id, title, description, action, variant, open }) => (
+        <Toast key={id} variant={variant} open={open} onOpenChange={(next) => !next && dismiss(id)}>
+          <div className="flex flex-col gap-1">
+            {title && <ToastTitle>{title}</ToastTitle>}
+            {description && <ToastDescription>{description}</ToastDescription>}
+          </div>
+          {action}
+          <ToastClose />
+        </Toast>
+      ))}
+      <ToastViewport />
+    </ToastProvider>
+  )
+}
