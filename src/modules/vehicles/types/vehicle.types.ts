@@ -1,11 +1,117 @@
-/** [name, subtitle, plate, vin, location, status, dailyRate, utilization (0–1)] */
-export type VehicleTuple = [
-  name: string,
-  subtitle: string,
-  plate: string,
-  vin: string,
-  location: string,
-  status: string,
-  dailyRate: string,
-  utilization: number,
-]
+export const VEHICLE_STATUSES = ['Available', 'On rent', 'Maintenance', 'Out of service'] as const
+export type VehicleStatus = (typeof VEHICLE_STATUSES)[number]
+
+export const VEHICLE_CLASSES = [
+  'Convertible',
+  'Coupe',
+  'Crossover',
+  'Hatchback',
+  'Minivan',
+  'Pickup-truck',
+  'Sedan',
+  'Sport',
+  'SUV',
+  'Van',
+  'Wagon',
+] as const
+export type VehicleClass = (typeof VEHICLE_CLASSES)[number]
+
+export const TRANSMISSIONS = ['Automatic', 'Manual'] as const
+export type Transmission = (typeof TRANSMISSIONS)[number]
+
+export const FUEL_TYPES = ['Petrol', 'Diesel', 'Hybrid', 'Electric'] as const
+export type FuelType = (typeof FUEL_TYPES)[number]
+
+/** How a rate option is billed. 'fixed' is a flat price for a set block (e.g. a 3-day weekend package). */
+export const BILLING_BASES = ['hour', 'day', 'week', 'month', 'fixed'] as const
+export type BillingBasis = (typeof BILLING_BASES)[number]
+
+export const BILLING_BASIS_LABELS: Record<BillingBasis, string> = {
+  hour: 'Per hour',
+  day: 'Per day',
+  week: 'Per week',
+  month: 'Per month',
+  fixed: 'Fixed length',
+}
+
+/** Unit for a fixed-length block's duration. */
+export const DURATION_UNITS = ['hours', 'days', 'weeks', 'months'] as const
+export type DurationUnit = (typeof DURATION_UNITS)[number]
+
+/**
+ * One way a renter can book this vehicle — "Daily · $400 · 200 mi included",
+ * "Weekend Package · fixed 3 days · $1,500 · unlimited miles", etc.
+ * A vehicle needs at least one to be bookable.
+ */
+export interface RateOption {
+  id: string
+  label: string
+  basis: BillingBasis
+  rate: number
+  /** Required when basis === 'fixed'. */
+  blockDuration?: number
+  blockDurationUnit?: DurationUnit
+  /** Miles included per billing unit. Ignored when unlimitedMileage is true. */
+  includedMiles?: number
+  unlimitedMileage: boolean
+}
+
+export interface VehiclePhoto {
+  id: string
+  /** Object URL (mock) or CDN URL (real backend). */
+  url: string
+  name: string
+}
+
+/** Per-vehicle charges that apply regardless of which rate option the renter picks. */
+export interface VehicleFees {
+  deposit?: number
+  overageRatePerMile?: number
+  fuelChargeRate?: number
+  taxRatePct?: number
+}
+
+export interface VehicleSpecs {
+  transmission: Transmission
+  fuelType: FuelType
+  seats: number
+  doors: number
+  topSpeedMph?: number
+  horsepower?: number
+  zeroToSixtySec?: number
+  cylinders?: number
+}
+
+export interface Vehicle {
+  id: string
+  make: string
+  model: string
+  year: number
+  class: VehicleClass
+  color: string
+  plate: string
+  vin: string
+  location: string
+  status: VehicleStatus
+  mileage: number
+  utilization: number
+  description?: string
+  notes?: string
+  photos: VehiclePhoto[]
+  rateOptions: RateOption[]
+  fees: VehicleFees
+  specs: VehicleSpecs
+  createdAt: string
+}
+
+/** Payload shape for create/update — server assigns id/createdAt/utilization. */
+export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization'>
+
+export interface VehicleListParams {
+  search?: string
+  status?: VehicleStatus | 'Any'
+  location?: string | 'All'
+  class?: VehicleClass | 'All'
+  page: number
+  pageSize: number
+}
