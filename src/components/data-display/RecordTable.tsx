@@ -1,6 +1,12 @@
 import { Ellipsis } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { StatusBadge } from './StatusBadge'
 import type { Cell, Column, Row } from './record-table.types'
 
@@ -69,14 +75,41 @@ function CellContent({ cell }: { cell: Cell }) {
         </span>
       )
     case 'actions':
+      if (!cell.items || cell.items.length === 0) {
+        return (
+          <button
+            type="button"
+            aria-label="Row actions"
+            className="text-fg-4 hover:bg-surface hover:border-border hover:text-foreground inline-flex size-7 items-center justify-center rounded-[7px] border border-transparent transition-colors"
+          >
+            <Ellipsis className="size-4" />
+          </button>
+        )
+      }
       return (
-        <button
-          type="button"
-          aria-label="Row actions"
-          className="text-fg-4 hover:bg-surface hover:border-border hover:text-foreground inline-flex size-7 items-center justify-center rounded-[7px] border border-transparent transition-colors"
-        >
-          <Ellipsis className="size-4" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Row actions"
+              onClick={(e) => e.stopPropagation()}
+              className="text-fg-4 hover:bg-surface hover:border-border hover:text-foreground inline-flex size-7 items-center justify-center rounded-[7px] border border-transparent transition-colors"
+            >
+              <Ellipsis className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            {cell.items.map((item) => (
+              <DropdownMenuItem
+                key={item.label}
+                onSelect={item.onClick}
+                className={item.destructive ? 'text-error focus:text-error' : undefined}
+              >
+                {item.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )
   }
 }
@@ -95,9 +128,22 @@ interface RecordTableProps {
   rowCountLabel: string
   pageNote: string
   minWidth?: string
+  onRowClick?: (key: string) => void
+  /** Omit to keep the footer's static/disabled Previous-Next look used elsewhere. */
+  pagination?: { page: number; hasNextPage: boolean; onPageChange: (page: number) => void }
 }
 
-export function RecordTable({ title, tabs, columns, rows, rowCountLabel, pageNote, minWidth = '800px' }: RecordTableProps) {
+export function RecordTable({
+  title,
+  tabs,
+  columns,
+  rows,
+  rowCountLabel,
+  pageNote,
+  minWidth = '800px',
+  onRowClick,
+  pagination,
+}: RecordTableProps) {
   return (
     <Card as="section" className="overflow-hidden">
       <div className="border-border-soft flex flex-wrap items-center gap-3.5 border-b px-4 py-3.5">
@@ -145,7 +191,14 @@ export function RecordTable({ title, tabs, columns, rows, rowCountLabel, pageNot
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.key} className="border-border-soft hover:bg-surface-2 border-b transition-colors last:border-0">
+              <tr
+                key={row.key}
+                onClick={onRowClick ? () => onRowClick(row.key) : undefined}
+                className={cn(
+                  'border-border-soft hover:bg-surface-2 border-b transition-colors last:border-0',
+                  onRowClick && 'cursor-pointer',
+                )}
+              >
                 {row.cells.map((cell, i) => (
                   <td key={i} className="px-4 py-[11px] align-middle" style={{ textAlign: cell.align ?? 'left' }}>
                     <CellContent cell={cell} />
@@ -162,14 +215,27 @@ export function RecordTable({ title, tabs, columns, rows, rowCountLabel, pageNot
         <div className="flex gap-1.5">
           <button
             type="button"
-            disabled
-            className="bg-surface border-border text-border-strong h-[30px] cursor-not-allowed rounded-lg border px-[11px] text-[12.5px]"
+            disabled={pagination ? pagination.page <= 1 : true}
+            onClick={() => pagination?.onPageChange(pagination.page - 1)}
+            className={cn(
+              'h-[30px] rounded-lg border px-[11px] text-[12.5px] transition-colors',
+              (pagination ? pagination.page <= 1 : true)
+                ? 'bg-surface border-border text-border-strong cursor-not-allowed'
+                : 'bg-surface border-border text-fg-2 hover:bg-surface-3 font-semibold',
+            )}
           >
             Previous
           </button>
           <button
             type="button"
-            className="bg-surface border-border text-fg-2 hover:bg-surface-3 h-[30px] rounded-lg border px-[11px] text-[12.5px] font-semibold transition-colors"
+            disabled={pagination ? !pagination.hasNextPage : false}
+            onClick={() => pagination?.onPageChange(pagination.page + 1)}
+            className={cn(
+              'h-[30px] rounded-lg border px-[11px] text-[12.5px] font-semibold transition-colors',
+              pagination && !pagination.hasNextPage
+                ? 'bg-surface border-border text-border-strong cursor-not-allowed'
+                : 'bg-surface border-border text-fg-2 hover:bg-surface-3',
+            )}
           >
             Next
           </button>
