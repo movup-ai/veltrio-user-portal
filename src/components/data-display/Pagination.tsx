@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -25,9 +26,11 @@ function getPageNumbers(page: number, totalPages: number): (number | 'ellipsis')
 
 /** Generic numbered pagination for non-table lists/grids. For tables, prefer DataTablePagination. */
 export function Pagination({ page, totalPages, onPageChange, className }: PaginationProps) {
+  const { t } = useTranslation('common')
+
   return (
-    <nav aria-label="Pagination" className={cn('flex items-center justify-center gap-1', className)}>
-      <Button variant="outline" size="icon" aria-label="Previous page" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+    <nav aria-label={t('table.pagination')} className={cn('flex items-center justify-center gap-1', className)}>
+      <Button variant="outline" size="icon" aria-label={t('table.previousPage')} disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
         <ChevronLeft />
       </Button>
 
@@ -52,7 +55,7 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
       <Button
         variant="outline"
         size="icon"
-        aria-label="Next page"
+        aria-label={t('table.nextPage')}
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >

@@ -1,18 +1,21 @@
 import { FileQuestion } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/feedback/EmptyState'
 
 export function NotFoundPage() {
+  const { t } = useTranslation('common')
+
   return (
     <div className="flex min-h-screen items-center justify-center p-6">
       <EmptyState
         icon={FileQuestion}
-        title="Page not found"
-        description="The page you're looking for doesn't exist or has moved."
+        title={t('notFound.title')}
+        description={t('notFound.description')}
         action={
           <Button asChild>
-            <Link to="/app/dashboard">Back to dashboard</Link>
+            <Link to="/app/dashboard">{t('notFound.backToDashboard')}</Link>
           </Button>
         }
       />

@@ -1,0 +1,39 @@
+{
+  "list": {
+    "title": "Pagos",
+    "description": "Facturas, cobros, reembolsos y cargos fallidos",
+    "recordPayment": "Registrar pago",
+    "payoutReport": "Informe de liquidación",
+    "searchPlaceholder": "Buscar factura, cliente o reserva",
+    "pageNote": "Mostrando 1–{{shown}} de {{total}} pagos",
+    "tabs": {
+      "All": "Todos",
+      "Paid": "Pagados",
+      "Pending": "Pendientes",
+      "Failed": "Fallidos",
+      "Refunded": "Reembolsados"
+    },
+    "filters": {
+      "status": "Estado",
+      "method": "Método",
+      "period": "Periodo"
+    },
+    "stats": {
+      "collected": "Cobrado (mes en curso)",
+      "collectedNote": "Neto de $1,240 en reembolsos",
+      "outstanding": "Pendiente de cobro",
+      "outstandingNote": "2 facturas sin pagar",
+      "failed": "Cargos fallidos",
+      "failedNote": "Reintento programado para esta noche",
+      "nextPayout": "Próxima liquidación",
+      "nextPayoutNote": "16 sept. · Chase ·· 8821"
+    }
+  },
+  "columns": {
+    "invoice": "Factura",
+    "customer": "Cliente",
+    "method": "Método",
+    "status": "Estado",
+    "amount": "Importe"
+  }
+}

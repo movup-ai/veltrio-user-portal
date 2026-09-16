@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CalendarCheck, CalendarDays, Download, Banknote, Plus, TriangleAlert } from 'lucide-react'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -7,54 +8,71 @@ import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
 import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
+import { useFormatters } from '@/i18n'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
 import { bookingColumns, bookingRow } from '@/modules/bookings/utils/booking.utils'
 
 const TABS = ['Upcoming', 'Today', 'Recent activity', 'Overdue'] as const
 type Tab = (typeof TABS)[number]
 
+const TOTAL_BOOKINGS = 34
+
 export function BookingsPage() {
+  const { t } = useTranslation('bookings')
+  const { t: tCommon } = useTranslation('common')
+  const format = useFormatters()
   const [tab, setTab] = useState<Tab>('Upcoming')
-  usePageHeaderActions([{ label: 'New booking', icon: Plus }])
+
+  usePageHeaderActions([{ label: t('list.newBooking'), icon: Plus }], [t])
 
   const rows = (tab === 'Recent activity' ? BOOKINGS_RECENT : BOOKINGS_UPCOMING).map(bookingRow)
 
   return (
     <PageContainer>
       <PageHeader
-        title="Bookings"
-        description="Every reservation across your three locations"
+        title={t('list.title')}
+        description={t('list.description')}
         actions={
           <>
-            <PageActionButton icon={CalendarDays} label="Calendar view" />
-            <PageActionButton icon={Download} label="Export" />
+            <PageActionButton icon={CalendarDays} label={t('list.calendarView')} />
+            <PageActionButton icon={Download} label={t('list.export')} />
           </>
         }
       />
 
       <FilterBar
-        searchPlaceholder="Search reference, customer, plate"
+        searchPlaceholder={t('list.searchPlaceholder')}
         filters={[
-          { label: 'Status', value: 'Any' },
-          { label: 'Location', value: 'All 3' },
-          { label: 'Pickup', value: 'Sep 14 – Sep 21' },
+          { label: t('list.filters.status'), value: tCommon('filters.any') },
+          { label: t('list.filters.location'), value: tCommon('filters.allCount', { count: 3 }) },
+          { label: t('list.filters.pickup'), value: 'Sep 14 – Sep 21' },
         ]}
       />
 
       <StatStrip
         stats={[
-          { icon: CalendarCheck, label: 'Open bookings', value: '34', note: '12 start in the next 48h' },
-          { icon: Banknote, label: 'Booked value', value: '$28,940', note: 'Confirmed, not yet invoiced' },
-          { icon: TriangleAlert, label: 'Needs attention', value: '3', note: '2 awaiting ID · 1 deposit due' },
+          { icon: CalendarCheck, label: t('list.stats.open'), value: '34', note: t('list.stats.openNote') },
+          {
+            icon: Banknote,
+            label: t('list.stats.bookedValue'),
+            value: format.currency(28940),
+            note: t('list.stats.bookedValueNote'),
+          },
+          { icon: TriangleAlert, label: t('list.stats.needsAttention'), value: '3', note: t('list.stats.needsAttentionNote') },
         ]}
       />
 
       <RecordTable
-        tabs={TABS.map((t) => ({ label: t, selected: tab === t, onClick: () => setTab(t) }))}
-        columns={bookingColumns()}
+        tabs={TABS.map((value) => ({
+          key: value,
+          label: t(`list.tabs.${value}`),
+          selected: tab === value,
+          onClick: () => setTab(value),
+        }))}
+        columns={bookingColumns(t)}
         rows={rows}
-        rowCountLabel={`${rows.length} of 34`}
-        pageNote={`Showing 1–${rows.length} of 34 bookings`}
+        rowCountLabel={tCommon('table.countOf', { count: rows.length, total: TOTAL_BOOKINGS })}
+        pageNote={t('list.pageNote', { shown: rows.length, total: TOTAL_BOOKINGS })}
         minWidth="800px"
       />
     </PageContainer>

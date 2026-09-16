@@ -1,22 +1,27 @@
 import { useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Bell, Menu, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePageActionsStore } from '@/state/page-actions.store'
-import { navLabelForPath } from './nav-items'
+import { LanguageSwitcher } from './LanguageSwitcher'
+import { navKeyForPath } from './nav-items'
+
+const UNREAD_NOTIFICATIONS = 3
 
 export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void }) {
+  const { t } = useTranslation('nav')
   const location = useLocation()
-  const title = navLabelForPath(location.pathname)
+  const title = t(`links.${navKeyForPath(location.pathname)}`)
   const headerActions = usePageActionsStore((state) => state.headerActions)
   const breadcrumbExtra = usePageActionsStore((state) => state.breadcrumbExtra)
 
   return (
     <header className="bg-header border-border sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3.5 border-b py-0 pr-5 pl-4 backdrop-blur-lg lg:pl-6">
-      <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMobileMenuClick} aria-label="Open menu">
+      <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMobileMenuClick} aria-label={t('header.openMenu')}>
         <Menu />
       </Button>
 
-      <nav aria-label="Breadcrumb" className="text-fg-4 hidden shrink-0 items-center gap-[7px] text-[13px] whitespace-nowrap sm:flex">
+      <nav aria-label={t('header.breadcrumb')} className="text-fg-4 hidden shrink-0 items-center gap-[7px] text-[13px] whitespace-nowrap sm:flex">
         <span>Sunstate Car Co.</span>
         <span>/</span>
         {breadcrumbExtra ? (
@@ -36,8 +41,8 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
         <Search className="text-fg-4 size-[15px] shrink-0" />
         <input
           type="text"
-          placeholder="Search plate, booking, customer"
-          aria-label="Global search"
+          placeholder={t('header.searchPlaceholder')}
+          aria-label={t('header.globalSearch')}
           className="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-foreground outline-none"
         />
         <kbd className="text-fg-4 border-border hidden shrink-0 rounded-[5px] border px-1 py-px font-mono text-[10.5px] sm:block">⌘K</kbd>
@@ -45,14 +50,16 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
 
       <button
         type="button"
-        aria-label="Notifications, 3 unread"
+        aria-label={t('header.notifications', { count: UNREAD_NOTIFICATIONS })}
         className="bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground relative flex size-[34px] shrink-0 items-center justify-center rounded-[9px] border transition-colors"
       >
         <Bell className="size-4" />
         <span className="bg-error border-background text-surface absolute -top-[3px] -right-[3px] flex size-[15px] items-center justify-center rounded-full border-2 text-[9.5px] font-bold">
-          3
+          {UNREAD_NOTIFICATIONS}
         </span>
       </button>
+
+      <LanguageSwitcher />
 
       {headerActions.map((a) => (
         <button

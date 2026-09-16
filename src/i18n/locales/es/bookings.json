@@ -1,0 +1,61 @@
+{
+  "list": {
+    "title": "Reservas",
+    "description": "Todas las reservas de sus tres sucursales",
+    "calendarView": "Vista de calendario",
+    "export": "Exportar",
+    "newBooking": "Nueva reserva",
+    "searchPlaceholder": "Buscar referencia, cliente, matrícula",
+    "pageNote": "Mostrando 1–{{shown}} de {{total}} reservas",
+    "tabs": {
+      "Upcoming": "Próximas",
+      "Today": "Hoy",
+      "Recent activity": "Actividad reciente",
+      "Overdue": "Vencidas"
+    },
+    "filters": {
+      "status": "Estado",
+      "location": "Sucursal",
+      "pickup": "Recogida"
+    },
+    "stats": {
+      "open": "Reservas abiertas",
+      "openNote": "12 comienzan en las próximas 48 h",
+      "bookedValue": "Valor reservado",
+      "bookedValueNote": "Confirmado, aún sin facturar",
+      "needsAttention": "Requiere atención",
+      "needsAttentionNote": "2 pendientes de identificación · 1 depósito pendiente"
+    }
+  },
+  "columns": {
+    "customer": "Cliente",
+    "vehicle": "Vehículo",
+    "rentalWindow": "Periodo de alquiler",
+    "location": "Sucursal",
+    "status": "Estado",
+    "total": "Total"
+  },
+  "csv": {
+    "customer": "Cliente",
+    "reference": "Referencia",
+    "vehicle": "Vehículo",
+    "plate": "Matrícula",
+    "rentalWindow": "Periodo de alquiler",
+    "note": "Nota",
+    "location": "Sucursal",
+    "status": "Estado",
+    "total": "Total"
+  },
+  "details": {
+    "title": "Reserva {{id}}",
+    "description": "Cronología, pagos y documentos de la reserva",
+    "comingSoonTitle": "Detalles de la reserva próximamente",
+    "comingSoonDescription": "Este módulo se construirá a continuación."
+  },
+  "form": {
+    "title": "Nueva reserva",
+    "description": "Crear una nueva reserva de alquiler",
+    "comingSoonTitle": "Formulario de reserva próximamente",
+    "comingSoonDescription": "Este módulo se construirá a continuación."
+  }
+}

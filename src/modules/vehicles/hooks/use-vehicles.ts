@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { vehicleApi } from '../api/vehicle.api'
@@ -10,6 +11,14 @@ export const vehicleKeys = {
   list: (params: VehicleListParams) => [...vehicleKeys.lists(), params] as const,
   details: () => [...vehicleKeys.all, 'detail'] as const,
   detail: (id: string) => [...vehicleKeys.details(), id] as const,
+}
+
+/**
+ * Toasts fire outside the React tree, so they read the i18n singleton directly rather than
+ * a `t` from a hook — the message is resolved once, at the moment the toast is raised.
+ */
+function vehicleName(vehicle: Vehicle): string {
+  return `${vehicle.make} ${vehicle.model}`
 }
 
 export function useVehicles(params: VehicleListParams) {
@@ -35,10 +44,14 @@ export function useCreateVehicle() {
     mutationFn: (input: VehicleInput) => vehicleApi.create(input),
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
-      toast({ title: 'Vehicle added', description: `${vehicle.make} ${vehicle.model} was added to the fleet.`, variant: 'success' })
+      toast({
+        title: i18n.t('vehicles:toast.added'),
+        description: i18n.t('vehicles:toast.addedDescription', { name: vehicleName(vehicle) }),
+        variant: 'success',
+      })
     },
     onError: (error) => {
-      toast({ title: 'Could not add vehicle', description: normalizeApiError(error).message, variant: 'error' })
+      toast({ title: i18n.t('vehicles:toast.addFailed'), description: normalizeApiError(error).message, variant: 'error' })
     },
   })
 }
@@ -51,10 +64,14 @@ export function useUpdateVehicle(id: string) {
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
       queryClient.setQueryData(vehicleKeys.detail(id), vehicle)
-      toast({ title: 'Vehicle updated', description: `${vehicle.make} ${vehicle.model} was updated.`, variant: 'success' })
+      toast({
+        title: i18n.t('vehicles:toast.updated'),
+        description: i18n.t('vehicles:toast.updatedDescription', { name: vehicleName(vehicle) }),
+        variant: 'success',
+      })
     },
     onError: (error) => {
-      toast({ title: 'Could not update vehicle', description: normalizeApiError(error).message, variant: 'error' })
+      toast({ title: i18n.t('vehicles:toast.updateFailed'), description: normalizeApiError(error).message, variant: 'error' })
     },
   })
 }
@@ -67,10 +84,14 @@ export function useDeleteVehicle() {
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
       queryClient.removeQueries({ queryKey: vehicleKeys.detail(vehicle.id) })
-      toast({ title: 'Vehicle archived', description: `${vehicle.make} ${vehicle.model} was archived and removed from the active fleet.`, variant: 'success' })
+      toast({
+        title: i18n.t('vehicles:toast.archived'),
+        description: i18n.t('vehicles:toast.archivedDescription', { name: vehicleName(vehicle) }),
+        variant: 'success',
+      })
     },
     onError: (error) => {
-      toast({ title: 'Could not archive vehicle', description: normalizeApiError(error).message, variant: 'error' })
+      toast({ title: i18n.t('vehicles:toast.archiveFailed'), description: normalizeApiError(error).message, variant: 'error' })
     },
   })
 }

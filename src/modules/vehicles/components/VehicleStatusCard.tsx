@@ -1,10 +1,13 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CalendarClock, CalendarPlus, CalendarRange, ChevronDown, Gauge, MapPin, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
+import { useDomainLabels } from '@/i18n/domain'
+import { useFormatters } from '@/i18n'
 import { VEHICLE_STATUSES, type Vehicle, type VehicleStatus } from '../types/vehicle.types'
 
 function DetailRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: React.ReactNode }) {
@@ -27,6 +30,9 @@ interface VehicleStatusCardProps {
 }
 
 export function VehicleStatusCard({ vehicle, currentRental, onStatusChange }: VehicleStatusCardProps) {
+  const { t } = useTranslation('vehicles')
+  const domain = useDomainLabels()
+  const format = useFormatters()
   const navigate = useNavigate()
 
   return (
@@ -42,7 +48,7 @@ export function VehicleStatusCard({ vehicle, currentRental, onStatusChange }: Ve
           <DropdownMenuContent align="start">
             {VEHICLE_STATUSES.map((status) => (
               <DropdownMenuItem key={status} onSelect={() => status !== vehicle.status && onStatusChange(status)}>
-                {status}
+                {domain.status(status)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -52,17 +58,17 @@ export function VehicleStatusCard({ vehicle, currentRental, onStatusChange }: Ve
       <div className="flex flex-col gap-3.5">
         {currentRental && (
           <>
-            <DetailRow icon={User} label="Current renter" value={`${currentRental.customer} · ${currentRental.reference}`} />
-            <DetailRow icon={CalendarClock} label="Rental window" value={currentRental.window} />
+            <DetailRow
+              icon={User}
+              label={t('statusCard.currentRenter')}
+              value={`${currentRental.customer} · ${currentRental.reference}`}
+            />
+            <DetailRow icon={CalendarClock} label={t('statusCard.rentalWindow')} value={currentRental.window} />
           </>
         )}
-        <DetailRow icon={MapPin} label="Home branch" value={vehicle.location} />
-        <DetailRow icon={Gauge} label="Odometer" value={`${vehicle.mileage.toLocaleString('en-US')} mi`} />
-        <DetailRow
-          icon={CalendarRange}
-          label="In fleet since"
-          value={new Date(vehicle.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-        />
+        <DetailRow icon={MapPin} label={t('statusCard.homeBranch')} value={vehicle.location} />
+        <DetailRow icon={Gauge} label={t('statusCard.odometer')} value={`${format.number(vehicle.mileage)} mi`} />
+        <DetailRow icon={CalendarRange} label={t('statusCard.inFleetSince')} value={format.monthYear(vehicle.createdAt)} />
       </div>
 
       <Button
@@ -70,7 +76,7 @@ export function VehicleStatusCard({ vehicle, currentRental, onStatusChange }: Ve
         onClick={() => navigate('/app/bookings/new', { state: { vehicleId: vehicle.id } })}
       >
         <CalendarPlus className="size-4" />
-        New booking
+        {t('statusCard.newBooking')}
       </Button>
     </Card>
   )

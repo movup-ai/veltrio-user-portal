@@ -1,0 +1,108 @@
+{
+  "_comment": "Canonical English domain values (as stored/sent to the API) mapped to display labels. Keys must never be translated — only their values.",
+  "status": {
+    "Active": "Active",
+    "Available": "Available",
+    "Awaiting ID": "Awaiting ID",
+    "Completed": "Completed",
+    "Confirmed": "Confirmed",
+    "Deposit due": "Deposit due",
+    "Dormant": "Dormant",
+    "Failed": "Failed",
+    "Flagged": "Flagged",
+    "Limited hours": "Limited hours",
+    "Maintenance": "Maintenance",
+    "New": "New",
+    "On rent": "On rent",
+    "Open": "Open",
+    "Out of service": "Out of service",
+    "Overdue": "Overdue",
+    "Overdue fee": "Overdue fee",
+    "Paid": "Paid",
+    "Paused": "Paused",
+    "Payment failed": "Payment failed",
+    "Pending": "Pending",
+    "Refunded": "Refunded",
+    "Scheduled": "Scheduled",
+    "Verify docs": "Verify docs"
+  },
+  "vehicleClass": {
+    "Convertible": "Convertible",
+    "Coupe": "Coupe",
+    "Crossover": "Crossover",
+    "Hatchback": "Hatchback",
+    "Minivan": "Minivan",
+    "Pickup-truck": "Pickup truck",
+    "Sedan": "Sedan",
+    "Sport": "Sport",
+    "SUV": "SUV",
+    "Van": "Van",
+    "Wagon": "Wagon"
+  },
+  "transmission": {
+    "Automatic": "Automatic",
+    "Manual": "Manual"
+  },
+  "fuelType": {
+    "Petrol": "Petrol",
+    "Diesel": "Diesel",
+    "Hybrid": "Hybrid",
+    "Electric": "Electric"
+  },
+  "billingBasis": {
+    "hour": "Per hour",
+    "day": "Per day",
+    "week": "Per week",
+    "month": "Per month",
+    "fixed": "Fixed length"
+  },
+  "billingBasisHint": {
+    "hour": "Charged hourly",
+    "day": "Most common",
+    "week": "Charged weekly",
+    "month": "Long-term",
+    "fixed": "Flat rate · set duration"
+  },
+  "billingBasisSuffix": {
+    "hour": "/hr",
+    "day": "/day",
+    "week": "/wk",
+    "month": "/mo",
+    "fixed": ""
+  },
+  "billingBasisPer": {
+    "hour": "/hour",
+    "day": "/day",
+    "week": "/week",
+    "month": "/month",
+    "fixed": "total"
+  },
+  "billingBasisUnit": {
+    "hour": "hour",
+    "day": "day",
+    "week": "week",
+    "month": "month",
+    "fixed": "block"
+  },
+  "durationUnit": {
+    "hours_one": "hour",
+    "hours_other": "hours",
+    "days_one": "day",
+    "days_other": "days",
+    "weeks_one": "week",
+    "weeks_other": "weeks",
+    "months_one": "month",
+    "months_other": "months"
+  },
+  "units": {
+    "miles": "mi",
+    "milesLong_one": "mile",
+    "milesLong_other": "miles",
+    "mph": "mph",
+    "hp": "hp",
+    "seconds": "s",
+    "perMile": "/mi",
+    "unlimitedMiles": "Unlimited miles",
+    "eighthTank": "/ 1/8 tank"
+  }
+}

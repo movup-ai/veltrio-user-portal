@@ -1,0 +1,358 @@
+{
+  "list": {
+    "title": "Vehículos",
+    "description": "Gestione su flota de alquiler",
+    "addVehicle": "Añadir vehículo",
+    "importCsv": "Importar CSV",
+    "searchPlaceholder": "Buscar marca, modelo, matrícula o VIN",
+    "loading": "Cargando vehículos…",
+    "loadError": "No pudimos cargar la flota.",
+    "emptyTitle": "Ningún vehículo coincide con sus filtros",
+    "emptyDescription": "Pruebe a ajustar la búsqueda o los filtros.",
+    "setOrder": "Ordenar vehículos",
+    "doneOrdering": "Listo",
+    "dragToReorder_one": "{{count}} vehículo · arrastre para reordenar",
+    "dragToReorder_other": "{{count}} vehículos · arrastre para reordenar",
+    "pageNote": "Mostrando {{from}}–{{to}} de {{total}} vehículos",
+    "noneFound": "No se encontraron vehículos",
+    "tabs": {
+      "All": "Todos",
+      "Available": "Disponibles",
+      "On rent": "Alquilados",
+      "Maintenance": "En mantenimiento"
+    },
+    "stats": {
+      "fleetSize": "Tamaño de la flota",
+      "fleetSizeNote": "{{count}} disponibles ahora",
+      "utilization": "Uso",
+      "utilizationNote": "Objetivo 70 %",
+      "inMaintenance": "En mantenimiento",
+      "inMaintenanceNote": "Vehículos actualmente en servicio",
+      "avgDailyRate": "Tarifa diaria media",
+      "avgDailyRateNote": "Entre los vehículos con tarifa diaria"
+    },
+    "rowActions": {
+      "viewDetails": "Ver detalles",
+      "editVehicle": "Editar vehículo",
+      "archiveVehicle": "Archivar vehículo"
+    }
+  },
+  "filters": {
+    "status": "Estado",
+    "location": "Sucursal",
+    "vehicleType": "Tipo de vehículo",
+    "transmission": "Transmisión",
+    "fuelType": "Combustible",
+    "dailyPrice": "Precio diario",
+    "priceBand": {
+      "0-50": "$0 – $50 / día",
+      "50-100": "$50 – $100 / día",
+      "100-200": "$100 – $200 / día",
+      "200+": "$200+ / día"
+    }
+  },
+  "sort": {
+    "utilization": "Uso",
+    "dailyRate": "Tarifa diaria",
+    "name": "Nombre del vehículo"
+  },
+  "columns": {
+    "vehicle": "Vehículo",
+    "plateVin": "Matrícula / VIN",
+    "location": "Sucursal",
+    "status": "Estado",
+    "utilization30d": "Uso (30 d)",
+    "trips": "Viajes",
+    "dailyRate": "Tarifa diaria"
+  },
+  "details": {
+    "loading": "Cargando vehículo…",
+    "notFoundTitle": "Vehículo no encontrado",
+    "notFoundDescription": "Es posible que este vehículo se haya eliminado.",
+    "notFoundError": "No encontramos ese vehículo. Puede que se haya eliminado.",
+    "backToVehicles": "Volver a vehículos",
+    "previousVehicle": "Vehículo anterior",
+    "nextVehicle": "Vehículo siguiente",
+    "position": "{{index}} de {{total}}",
+    "archive": "Archivar",
+    "editVehicle": "Editar vehículo",
+    "descriptionTitle": "Descripción",
+    "descriptionSubtitle": "Resumen que ve el cliente en el anuncio",
+    "bookingHistory": "Historial de reservas",
+    "bookingHistoryNote": "Mostrando {{count}} de {{total}} alquileres",
+    "exportHistory": "Exportar historial",
+    "noBookings": "Este vehículo aún no tiene reservas.",
+    "rateOptions": "Opciones de tarifa",
+    "rateOptionsCount": "{{count}} disponibles",
+    "feesTitle": "Depósito, cargos e impuestos",
+    "notes": "Notas",
+    "noNotes": "Este vehículo aún no tiene notas.",
+    "bookingColumns": {
+      "customer": "Cliente",
+      "rentalWindow": "Periodo de alquiler",
+      "location": "Sucursal",
+      "status": "Estado",
+      "total": "Total"
+    }
+  },
+  "fees": {
+    "deposit": "Depósito",
+    "overageRate": "Tarifa por exceso",
+    "fuelCharge": "Cargo por combustible",
+    "taxRate": "Tasa de impuesto",
+    "securityDeposit": "Depósito de garantía"
+  },
+  "statusCard": {
+    "currentRenter": "Arrendatario actual",
+    "rentalWindow": "Periodo de alquiler",
+    "homeBranch": "Sucursal base",
+    "odometer": "Odómetro",
+    "inFleetSince": "En la flota desde",
+    "newBooking": "Nueva reserva"
+  },
+  "performance": {
+    "title": "Rendimiento",
+    "description": "Últimos 30 días",
+    "revenue": "Ingresos",
+    "trendVsLastMonth": "{{value}} % vs. mes pasado",
+    "daysOnRent": "Días alquilado",
+    "outOf30": "/ 30",
+    "utilization30d": "Uso (30 d)",
+    "fleetAverage": "Media de la flota {{value}} %"
+  },
+  "availability": {
+    "title": "Disponibilidad",
+    "openCalendar": "Abrir calendario",
+    "next14Days": "Próximos 14 días",
+    "availableDays_one": "{{count}} día disponible",
+    "availableDays_other": "{{count}} días disponibles",
+    "nextGap": "próximo hueco {{date}}",
+    "fullyBooked": "sin disponibilidad",
+    "dayInitials": "D,L,M,X,J,V,S",
+    "state": {
+      "booked": "Reservado",
+      "available": "Disponible",
+      "disabled": "No disponible"
+    }
+  },
+  "specs": {
+    "title": "Especificaciones",
+    "description": "Tal como se introdujo en el formulario del vehículo",
+    "make": "Marca",
+    "model": "Modelo",
+    "vehicleType": "Tipo de vehículo",
+    "year": "Año",
+    "color": "Color",
+    "plate": "Matrícula",
+    "vin": "VIN",
+    "status": "Estado",
+    "location": "Sucursal",
+    "currentMileage": "Kilometraje actual",
+    "transmission": "Transmisión",
+    "fuelType": "Combustible",
+    "seats": "Asientos",
+    "doors": "Puertas",
+    "topSpeed": "Velocidad máxima",
+    "power": "Potencia",
+    "zeroToSixty": "0–60 mph",
+    "cylinders": "Cilindros"
+  },
+  "gallery": {
+    "primaryPhoto": "Foto principal · 1600 × 900",
+    "cover": "Portada",
+    "showPhoto": "Mostrar {{name}}",
+    "goToPage": "Ir a la página de fotos {{page}}",
+    "suggestedShots": {
+      "front": "Frontal 3/4",
+      "rear": "Trasera 3/4",
+      "interior": "Interior",
+      "odometer": "Odómetro"
+    }
+  },
+  "form": {
+    "addTitle": "Añadir vehículo",
+    "editTitle": "Editar vehículo",
+    "subtitle": "Detalles y tarifas del vehículo",
+    "loadError": "No pudimos cargar este vehículo.",
+    "steps": {
+      "details": "Detalles del vehículo",
+      "photos": "Fotos",
+      "pricing": "Tarifas",
+      "review": "Revisión"
+    },
+    "stepsLabel": "Pasos del formulario",
+    "draft": {
+      "foundTitle": "Se encontraron cambios sin guardar",
+      "foundDescription": "Encontramos un borrador en el que trabajaba {{when}}. Restáurelo o empiece de nuevo.",
+      "discard": "Descartar borrador",
+      "restore": "Restaurar borrador",
+      "saved": "Borrador guardado {{when}}",
+      "saveAndExit": "Guardar borrador y salir"
+    },
+    "vin": {
+      "decodeLabel": "Decodificar VIN",
+      "placeholder": "Introduzca un VIN para rellenar marca, modelo, año y especificaciones",
+      "decode": "Decodificar",
+      "decoded": "VIN decodificado",
+      "decodedDescription": "Se rellenó {{fields}} a partir del VIN.",
+      "decodedNothing": "No se reconoció suficiente información para rellenar campos.",
+      "decodeFailed": "No se pudo decodificar el VIN",
+      "decodeFailedDescription": "Algo salió mal al decodificar este VIN.",
+      "fields": {
+        "make": "marca",
+        "model": "modelo",
+        "year": "año",
+        "vehicleType": "tipo de vehículo",
+        "transmission": "transmisión",
+        "fuelType": "combustible",
+        "doors": "puertas",
+        "cylinders": "cilindros",
+        "horsepower": "potencia"
+      }
+    },
+    "sections": {
+      "identity": "Identificación",
+      "registration": "Matrícula y estado",
+      "specs": "Especificaciones",
+      "performance": "Rendimiento (opcional)",
+      "rateOptions": "Opciones de tarifa",
+      "rateOptionsHint": "Cada opción es una forma en que un cliente puede reservar este vehículo, con su propio límite de millaje.",
+      "fees": "Depósito, cargos e impuestos",
+      "feesHint": "Se aplican a cada reserva, sea cual sea la opción de tarifa."
+    },
+    "fields": {
+      "make": "Marca",
+      "makePlaceholder": "Seleccione o escriba una marca",
+      "model": "Modelo",
+      "modelPlaceholder": "Seleccione o escriba un modelo",
+      "modelPickMakeFirst": "Elija primero una marca",
+      "year": "Año",
+      "yearPlaceholder": "p. ej. 2024",
+      "vehicleType": "Tipo de vehículo",
+      "vehicleTypePlaceholder": "Seleccione el tipo de vehículo",
+      "color": "Color",
+      "colorPlaceholder": "Seleccione o escriba un color",
+      "location": "Sucursal",
+      "locationPlaceholder": "Seleccione la sucursal",
+      "plate": "Matrícula",
+      "vin": "VIN",
+      "status": "Estado",
+      "statusPlaceholder": "Seleccione el estado",
+      "mileage": "Kilometraje actual (mi)",
+      "mileagePlaceholder": "p. ej. 12000",
+      "transmission": "Transmisión",
+      "transmissionPlaceholder": "Seleccione la transmisión",
+      "fuelType": "Combustible",
+      "fuelTypePlaceholder": "Seleccione el combustible",
+      "seats": "Asientos",
+      "doors": "Puertas",
+      "topSpeed": "Velocidad máxima (mph)",
+      "horsepower": "Potencia (hp)",
+      "zeroToSixty": "0–60 mph (s)",
+      "cylinders": "Cilindros",
+      "description": "Descripción",
+      "descriptionHint": "Resumen que ve el cliente en el anuncio del vehículo.",
+      "deposit": "Depósito de garantía (USD)",
+      "depositPlaceholder": "p. ej. 500",
+      "overageRate": "Tarifa por exceso (por milla)",
+      "overageRatePlaceholder": "p. ej. 0.35",
+      "fuelCharge": "Cargo por combustible (por 1/8 de tanque)",
+      "fuelChargeUnit": "/ 1/8 de tanque",
+      "taxRate": "Tasa de impuesto (%)"
+    },
+    "ai": {
+      "generate": "Generar",
+      "improve": "Mejorar redacción",
+      "shorten": "Acortar",
+      "expand": "Ampliar",
+      "failed": "No se pudo generar la descripción",
+      "failedDescription": "Algo salió mal al generar esta descripción."
+    },
+    "nav": {
+      "previousStep": "Paso anterior",
+      "nextStep": "Paso siguiente",
+      "cancel": "Cancelar",
+      "saveChanges": "Guardar cambios",
+      "publish": "Publicar vehículo"
+    },
+    "review": {
+      "makeFallback": "Marca",
+      "modelFallback": "Modelo",
+      "identity": "Identificación",
+      "registration": "Matrícula y estado",
+      "specs": "Especificaciones",
+      "performance": "Rendimiento",
+      "description": "Descripción",
+      "photos": "Fotos",
+      "noPhotos": "No se añadieron fotos.",
+      "rateOptions": "Opciones de tarifa",
+      "noRateOptions": "No se añadieron opciones de tarifa.",
+      "untitledOption": "Opción sin título",
+      "fees": "Depósito, cargos e impuestos",
+      "seatsDoors": "Asientos / Puertas",
+      "seatsDoorsValue": "{{seats}} asientos · {{doors}} puertas"
+    }
+  },
+  "rateOptions": {
+    "emptyTitle": "Aún no hay opciones de tarifa",
+    "emptyDescription": "Cada opción es una forma en que un cliente puede reservar este vehículo: diaria, semanal, un paquete de fin de semana. Añada al menos una para que el vehículo sea reservable.",
+    "add": "Añadir opción de tarifa",
+    "label": "Etiqueta",
+    "labelPlaceholder": "p. ej. Paquete de fin de semana",
+    "billingBasis": "Base de cobro",
+    "blockDuration": "Duración del bloque",
+    "durationUnit": "Unidad de duración",
+    "rate": "Tarifa (USD)",
+    "includedMiles": "Millas incluidas",
+    "includedMilesTotal": "Millas incluidas (en total)",
+    "includedMilesPer": "Millas incluidas (por {{unit}})",
+    "includedMilesPlaceholder": "p. ej. 200",
+    "unlimited": "Ilimitado",
+    "unlimitedMiles": "Millaje ilimitado",
+    "remove": "Eliminar {{label}}",
+    "removeFallback": "opción de tarifa",
+    "fixedBasis": "Fija · {{count}} {{unit}}"
+  },
+  "photos": {
+    "dropzone": "Arrastre y suelte fotos aquí, o haga clic para explorar",
+    "dropzoneHint": "Hasta {{max}} fotos, {{size}} MB cada una · {{used}}/{{max}} subidas",
+    "coverHint": "La primera foto se usa como portada en el anuncio del vehículo — arrastre las fotos para reordenarlas.",
+    "cover": "Portada",
+    "remove": "Eliminar {{name}}",
+    "limitReached": "Límite de fotos alcanzado",
+    "limitReachedDescription": "Puede subir hasta {{max}} fotos.",
+    "limitPartial": "Solo se añadieron {{added}} más — máximo {{max}} fotos en total.",
+    "skipped": "Se omitieron algunas fotos",
+    "skippedDescription": "Cada foto debe pesar menos de {{size}} MB."
+  },
+  "toast": {
+    "added": "Vehículo añadido",
+    "addedDescription": "{{name}} se añadió a la flota.",
+    "addFailed": "No se pudo añadir el vehículo",
+    "updated": "Vehículo actualizado",
+    "updatedDescription": "{{name}} se actualizó.",
+    "updateFailed": "No se pudo actualizar el vehículo",
+    "archived": "Vehículo archivado",
+    "archivedDescription": "{{name}} se archivó y se retiró de la flota activa.",
+    "archiveFailed": "No se pudo archivar el vehículo"
+  },
+  "archiveDialog": {
+    "title": "¿Archivar vehículo?",
+    "description": "{{name}} ({{plate}}) se archivará y se retirará de la flota activa. Esta acción no se puede deshacer.",
+    "confirm": "Archivar vehículo"
+  },
+  "timeAgo": {
+    "justNow": "hace un momento",
+    "seconds": "hace {{count}} s",
+    "minutes": "hace {{count}} min",
+    "hours": "hace {{count}} h"
+  },
+  "errors": {
+    "notFound": "Vehículo no encontrado",
+    "vinTooShort": "Introduzca un VIN completo (al menos 11 caracteres) antes de decodificar.",
+    "vinServiceUnreachable": "No se pudo contactar con el servicio de decodificación de VIN.",
+    "vinServiceUnavailable": "El servicio de decodificación de VIN no está disponible en este momento.",
+    "vinNoData": "El servicio de decodificación de VIN no devolvió datos.",
+    "vinUndecodable": "No se pudo decodificar este VIN."
+  }
+}

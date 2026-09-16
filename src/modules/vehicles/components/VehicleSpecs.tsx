@@ -1,5 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { PanelHeading } from '@/components/layout/PanelHeading'
+import { useDomainLabels } from '@/i18n/domain'
+import { useFormatters } from '@/i18n'
 import { cn } from '@/lib/utils'
 import type { Vehicle } from '../types/vehicle.types'
 
@@ -21,32 +24,35 @@ function SpecCell({ label, value, mono, emphasize }: SpecItem) {
 }
 
 export function VehicleSpecs({ vehicle }: { vehicle: Vehicle }) {
+  const { t } = useTranslation('vehicles')
+  const domain = useDomainLabels()
+  const format = useFormatters()
   const { specs } = vehicle
 
   // Labels mirror the Add/Edit vehicle form's field names exactly (VehicleFormPage), so this
   // panel reads as "what was entered" rather than a re-worded summary.
   const items: SpecItem[] = [
-    { label: 'Make', value: vehicle.make, emphasize: true },
-    { label: 'Model', value: vehicle.model, emphasize: true },
-    { label: 'Vehicle type', value: vehicle.class },
-    { label: 'Year', value: vehicle.year },
-    { label: 'Color', value: vehicle.color },
-    { label: 'Plate', value: vehicle.plate, emphasize: true },
-    { label: 'VIN', value: vehicle.vin, emphasize: true },
-    { label: 'Current mileage', value: `${vehicle.mileage.toLocaleString('en-US')} mi`, emphasize: true },
-    { label: 'Transmission', value: specs.transmission },
-    { label: 'Fuel type', value: specs.fuelType },
-    { label: 'Seats', value: specs.seats },
-    { label: 'Doors', value: specs.doors },
-    ...(specs.topSpeedMph != null ? [{ label: 'Top speed', value: `${specs.topSpeedMph} mph` }] : []),
-    ...(specs.horsepower != null ? [{ label: 'Power', value: `${specs.horsepower} hp` }] : []),
-    ...(specs.zeroToSixtySec != null ? [{ label: '0–60 mph', value: `${specs.zeroToSixtySec}s` }] : []),
-    ...(specs.cylinders != null ? [{ label: 'Cylinders', value: specs.cylinders }] : []),
+    { label: t('specs.make'), value: vehicle.make, emphasize: true },
+    { label: t('specs.model'), value: vehicle.model, emphasize: true },
+    { label: t('specs.vehicleType'), value: domain.label('vehicleClass', vehicle.class) },
+    { label: t('specs.year'), value: vehicle.year },
+    { label: t('specs.color'), value: vehicle.color },
+    { label: t('specs.plate'), value: vehicle.plate, emphasize: true },
+    { label: t('specs.vin'), value: vehicle.vin, emphasize: true },
+    { label: t('specs.currentMileage'), value: `${format.number(vehicle.mileage)} mi`, emphasize: true },
+    { label: t('specs.transmission'), value: domain.label('transmission', specs.transmission) },
+    { label: t('specs.fuelType'), value: domain.label('fuelType', specs.fuelType) },
+    { label: t('specs.seats'), value: specs.seats },
+    { label: t('specs.doors'), value: specs.doors },
+    ...(specs.topSpeedMph != null ? [{ label: t('specs.topSpeed'), value: `${specs.topSpeedMph} mph` }] : []),
+    ...(specs.horsepower != null ? [{ label: t('specs.power'), value: `${specs.horsepower} hp` }] : []),
+    ...(specs.zeroToSixtySec != null ? [{ label: t('specs.zeroToSixty'), value: `${specs.zeroToSixtySec}s` }] : []),
+    ...(specs.cylinders != null ? [{ label: t('specs.cylinders'), value: specs.cylinders }] : []),
   ]
 
   return (
     <Card className="flex flex-col gap-4 p-[18px]">
-      <PanelHeading title="Specifications" description="Exactly as entered on the vehicle form" />
+      <PanelHeading title={t('specs.title')} description={t('specs.description')} />
       <div className="grid gap-x-6 gap-y-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
         {items.map((item) => (
           <SpecCell key={item.label} {...item} />

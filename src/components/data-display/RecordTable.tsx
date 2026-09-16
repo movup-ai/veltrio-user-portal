@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Ellipsis, GripVertical } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import {
@@ -12,6 +13,8 @@ import { StatusBadge } from './StatusBadge'
 import type { Cell, Column, Row } from './record-table.types'
 
 function CellContent({ cell }: { cell: Cell }) {
+  const { t } = useTranslation('common')
+
   switch (cell.kind) {
     case 'avatar':
       return (
@@ -80,7 +83,7 @@ function CellContent({ cell }: { cell: Cell }) {
         return (
           <button
             type="button"
-            aria-label="Row actions"
+            aria-label={t('table.rowActions')}
             className="text-fg-4 hover:bg-surface hover:border-border hover:text-foreground inline-flex size-7 items-center justify-center rounded-[7px] border border-transparent transition-colors"
           >
             <Ellipsis className="size-4" />
@@ -92,7 +95,7 @@ function CellContent({ cell }: { cell: Cell }) {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Row actions"
+              aria-label={t('table.rowActions')}
               onClick={(e) => e.stopPropagation()}
               className="text-fg-4 hover:bg-surface hover:border-border hover:text-foreground inline-flex size-7 items-center justify-center rounded-[7px] border border-transparent transition-colors"
             >
@@ -116,6 +119,8 @@ function CellContent({ cell }: { cell: Cell }) {
 }
 
 interface TabDef {
+  /** Stable identity for the tab — translated labels can't double as React keys. */
+  key: string
   label: string
   selected: boolean
   onClick: () => void
@@ -155,6 +160,7 @@ export function RecordTable({
   reorderable = false,
   onReorder,
 }: RecordTableProps) {
+  const { t } = useTranslation('common')
   const [dragKey, setDragKey] = useState<string | null>(null)
 
   function handleDrop(overKey: string) {
@@ -181,21 +187,21 @@ export function RecordTable({
         {title && <h2 className="text-panel-title m-0 shrink-0">{title}</h2>}
         {tabs && tabs.length > 0 && (
           <div className="bg-surface-3 flex shrink-0 gap-0.5 rounded-[9px] p-[3px]" role="tablist">
-            {tabs.map((t) => (
+            {tabs.map((tab) => (
               <button
-                key={t.label}
+                key={tab.key}
                 type="button"
                 role="tab"
-                aria-selected={t.selected}
-                onClick={t.onClick}
+                aria-selected={tab.selected}
+                onClick={tab.onClick}
                 className="text-meta rounded-[7px] px-3 py-1.5 whitespace-nowrap transition-colors"
                 style={{
-                  background: t.selected ? 'var(--color-surface)' : 'transparent',
-                  color: t.selected ? 'var(--color-foreground)' : 'var(--color-fg-3)',
-                  boxShadow: t.selected ? 'var(--shadow-xs)' : 'none',
+                  background: tab.selected ? 'var(--color-surface)' : 'transparent',
+                  color: tab.selected ? 'var(--color-foreground)' : 'var(--color-fg-3)',
+                  boxShadow: tab.selected ? 'var(--shadow-xs)' : 'none',
                 }}
               >
-                {t.label}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -272,7 +278,7 @@ export function RecordTable({
                 : 'bg-surface border-border text-fg-2 hover:bg-surface-3 font-semibold',
             )}
           >
-            Previous
+            {t('actions.previous')}
           </button>
           <button
             type="button"
@@ -285,7 +291,7 @@ export function RecordTable({
                 : 'bg-surface border-border text-fg-2 hover:bg-surface-3',
             )}
           >
-            Next
+            {t('actions.next')}
           </button>
         </div>
       </div>

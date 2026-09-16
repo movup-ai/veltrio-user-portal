@@ -1,15 +1,16 @@
+import type { TFunction } from 'i18next'
 import type { Row } from '@/components/data-display/record-table.types'
 import { initials } from '@/utils/formatting'
 import type { BookingTuple } from '../types/booking.types'
 
-export function bookingColumns() {
+export function bookingColumns(t: TFunction<'bookings'>) {
   return [
-    { label: 'Customer', align: 'left' as const },
-    { label: 'Vehicle', align: 'left' as const },
-    { label: 'Rental window', align: 'left' as const },
-    { label: 'Location', align: 'left' as const },
-    { label: 'Status', align: 'left' as const },
-    { label: 'Total', align: 'right' as const },
+    { label: t('columns.customer'), align: 'left' as const },
+    { label: t('columns.vehicle'), align: 'left' as const },
+    { label: t('columns.rentalWindow'), align: 'left' as const },
+    { label: t('columns.location'), align: 'left' as const },
+    { label: t('columns.status'), align: 'left' as const },
+    { label: t('columns.total'), align: 'right' as const },
     { label: '', align: 'right' as const },
   ]
 }
@@ -21,15 +22,27 @@ export function parseBookingTotal(total: string): number {
   return negative ? -amount : amount
 }
 
-const CSV_HEADER = ['Customer', 'Reference', 'Vehicle', 'Plate', 'Rental window', 'Note', 'Location', 'Status', 'Total']
+function csvHeader(t: TFunction<'bookings'>): string[] {
+  return [
+    t('csv.customer'),
+    t('csv.reference'),
+    t('csv.vehicle'),
+    t('csv.plate'),
+    t('csv.rentalWindow'),
+    t('csv.note'),
+    t('csv.location'),
+    t('csv.status'),
+    t('csv.total'),
+  ]
+}
 
 function toCsvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`
 }
 
 /** Builds a CSV from booking tuples and triggers a browser download — no backend export endpoint yet. */
-export function downloadBookingsCsv(bookings: BookingTuple[], filename: string): void {
-  const csv = [CSV_HEADER, ...bookings].map((row) => row.map(toCsvCell).join(',')).join('\r\n')
+export function downloadBookingsCsv(bookings: BookingTuple[], filename: string, t: TFunction<'bookings'>): void {
+  const csv = [csvHeader(t), ...bookings].map((row) => row.map(toCsvCell).join(',')).join('\r\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
 

@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Ajustes",
+    "description": "Perfil de la organización, política de alquiler y acceso del equipo",
+    "auditLog": "Ver registro de auditoría"
+  },
+  "sections": {
+    "organization": {
+      "title": "Organización",
+      "description": "Aparece en facturas, contratos de alquiler y correos a clientes.",
+      "fields": {
+        "legalName": "Razón social",
+        "tradingName": "Nombre comercial",
+        "taxId": "Identificación fiscal",
+        "currency": "Moneda",
+        "currencyHelp": "Se aplica a todas las tarifas y facturas.",
+        "currencyValue": "USD — dólar estadounidense",
+        "timezone": "Zona horaria",
+        "timezoneHelp": "Las horas de recogida y devolución se muestran en esta zona."
+      }
+    },
+    "rentalPolicy": {
+      "title": "Política de alquiler",
+      "description": "Valores predeterminados para nuevas reservas, salvo que se anulen por sucursal.",
+      "fields": {
+        "minimumAge": "Edad mínima del conductor",
+        "minimumAgeValue": "{{count}} años",
+        "minimumAgeHelp": "El cargo para menores de 25 se configura en Tarifas.",
+        "securityDeposit": "Depósito de garantía",
+        "securityDepositHelp": "Se retiene en la tarjeta al recoger el vehículo.",
+        "gracePeriod": "Periodo de gracia",
+        "gracePeriodValue": "{{count}} minutos",
+        "gracePeriodHelp": "Antes de aplicar un cargo por devolución tardía.",
+        "fuelPolicy": "Política de combustible",
+        "fuelPolicyValue": "Mismo nivel al devolver",
+        "requireId": "Exigir verificación de identidad",
+        "requireIdValue": "Obligatoria antes de la recogida",
+        "requireIdHelp": "Bloquea la entrega en mostrador hasta validar los documentos.",
+        "autoChargeLateFees": "Cobrar recargos por retraso automáticamente",
+        "autoChargeLateFeesValue": "Activado"
+      }
+    }
+  },
+  "toggle": {
+    "enabled": "Activado",
+    "disabled": "Desactivado"
+  }
+}

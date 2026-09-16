@@ -1,4 +1,5 @@
 import { isAxiosError } from 'axios'
+import i18n from '@/i18n'
 import { ApiError, type ApiFieldError } from '@/types/api'
 
 const STATUS_TO_KIND: Record<number, ApiError['kind']> = {
@@ -18,9 +19,7 @@ export function normalizeApiError(error: unknown): ApiError {
 
   if (isAxiosError(error)) {
     if (!error.response) {
-      return new ApiError('network_error', 'Unable to reach the server. Check your connection.', {
-        cause: error,
-      })
+      return new ApiError('network_error', i18n.t('validation:api.network'), { cause: error })
     }
 
     const { status, data } = error.response
@@ -31,7 +30,7 @@ export function normalizeApiError(error: unknown): ApiError {
     return new ApiError(kind, message, { status, fieldErrors, cause: error })
   }
 
-  return new ApiError('unknown', 'Something went wrong. Please try again.', { cause: error })
+  return new ApiError('unknown', i18n.t('validation:api.unknown'), { cause: error })
 }
 
 function extractMessage(data: unknown): string | undefined {
@@ -65,21 +64,22 @@ function extractFieldErrors(data: unknown): ApiFieldError[] | undefined {
   return errors.length > 0 ? errors : undefined
 }
 
+/** Resolved at call time (not module scope) so the message follows the language in effect. */
 function defaultMessageFor(kind: ApiError['kind']): string {
   switch (kind) {
     case 'unauthorized':
-      return 'Your session has expired. Please sign in again.'
+      return i18n.t('validation:api.unauthorized')
     case 'forbidden':
-      return "You don't have permission to do that."
+      return i18n.t('validation:api.forbidden')
     case 'not_found':
-      return 'The requested resource could not be found.'
+      return i18n.t('validation:api.notFound')
     case 'validation':
-      return 'Some of the submitted information is invalid.'
+      return i18n.t('validation:api.validation')
     case 'rate_limited':
-      return 'Too many requests. Please slow down and try again.'
+      return i18n.t('validation:api.rateLimited')
     case 'server_error':
-      return 'The server ran into a problem. Please try again shortly.'
+      return i18n.t('validation:api.serverError')
     default:
-      return 'Something went wrong. Please try again.'
+      return i18n.t('validation:api.unknown')
   }
 }

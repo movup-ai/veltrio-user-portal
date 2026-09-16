@@ -1,0 +1,45 @@
+{
+  "vehicle": {
+    "makeRequired": "La marca es obligatoria",
+    "modelRequired": "El modelo es obligatorio",
+    "yearInvalid": "Introduzca un año válido",
+    "yearTooEarly": "El año debe ser 1990 o posterior",
+    "yearTooLate": "El año está demasiado lejos en el futuro",
+    "classRequired": "Seleccione un tipo de vehículo",
+    "colorRequired": "El color es obligatorio",
+    "plateRequired": "La matrícula es obligatoria",
+    "plateInvalid": "La matrícula contiene caracteres no válidos",
+    "vinTooShort": "El VIN parece demasiado corto",
+    "vinTooLong": "El VIN parece demasiado largo",
+    "locationRequired": "Seleccione una sucursal",
+    "statusRequired": "Seleccione un estado",
+    "mileageRequired": "Introduzca el kilometraje",
+    "mileageNegative": "El kilometraje no puede ser negativo",
+    "transmissionRequired": "Seleccione una transmisión",
+    "fuelTypeRequired": "Seleccione un tipo de combustible",
+    "seatsRequired": "Introduzca el número de asientos",
+    "doorsRequired": "Introduzca el número de puertas",
+    "photosMax": "Puede subir hasta {{max}} fotos",
+    "rateOptionsMin": "Añada al menos una opción de tarifa para que el vehículo sea reservable",
+    "depositRequired": "Introduzca un depósito de garantía",
+    "overageRateRequired": "Introduzca una tarifa por exceso"
+  },
+  "rateOption": {
+    "labelRequired": "La etiqueta es obligatoria",
+    "basisRequired": "Elija una base de cobro",
+    "rateRequired": "Introduzca una tarifa",
+    "ratePositive": "La tarifa debe ser mayor que 0",
+    "durationRequired": "Introduzca la duración del bloque",
+    "durationRange": "Debe ser un número entero, 1–{{max}} {{unit}}"
+  },
+  "api": {
+    "network": "No se puede conectar con el servidor. Compruebe su conexión.",
+    "unauthorized": "Su sesión ha expirado. Inicie sesión de nuevo.",
+    "forbidden": "No tiene permiso para hacer eso.",
+    "notFound": "No se encontró el recurso solicitado.",
+    "validation": "Parte de la información enviada no es válida.",
+    "rateLimited": "Demasiadas solicitudes. Reduzca el ritmo e inténtelo de nuevo.",
+    "serverError": "El servidor tuvo un problema. Inténtelo de nuevo en unos momentos.",
+    "unknown": "Algo salió mal. Inténtelo de nuevo."
+  }
+}

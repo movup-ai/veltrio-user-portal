@@ -1,6 +1,11 @@
+import type { TFunction } from 'i18next'
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
+import { formatCurrency, formatNumberIn, currentLanguage } from '@/i18n/formatters'
+import { translateDomain, translateDurationUnit } from '@/i18n/domain'
 import type { VehicleFormValues } from '../schema/vehicle.schema'
-import { BILLING_BASIS_LABELS, type RateOption, type Vehicle } from '../types/vehicle.types'
+import type { RateOption, Vehicle } from '../types/vehicle.types'
+
+export { formatCurrency }
 
 /** Flattens a Vehicle's nested specs/fees into the form's flat shape — used to prefill Edit and Duplicate. */
 export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
@@ -33,15 +38,15 @@ export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
   }
 }
 
-export function vehicleColumns() {
+export function vehicleColumns(t: TFunction<'vehicles'>) {
   return [
-    { label: 'Vehicle', align: 'left' as const },
-    { label: 'Plate / VIN', align: 'left' as const },
-    { label: 'Location', align: 'left' as const },
-    { label: 'Status', align: 'left' as const },
-    { label: 'Utilization (30d)', align: 'left' as const },
-    { label: 'Trips', align: 'right' as const },
-    { label: 'Daily rate', align: 'right' as const },
+    { label: t('columns.vehicle'), align: 'left' as const },
+    { label: t('columns.plateVin'), align: 'left' as const },
+    { label: t('columns.location'), align: 'left' as const },
+    { label: t('columns.status'), align: 'left' as const },
+    { label: t('columns.utilization30d'), align: 'left' as const },
+    { label: t('columns.trips'), align: 'right' as const },
+    { label: t('columns.dailyRate'), align: 'right' as const },
     { label: '', align: 'right' as const },
   ]
 }
@@ -50,20 +55,9 @@ export function vehicleDisplayName(v: Vehicle): string {
   return `${v.make} ${v.model}`
 }
 
+/** "Sedan · 2024" — the class is translated, the year is not. */
 export function vehicleSubtitle(v: Vehicle): string {
-  return `${v.class} · ${v.year}`
-}
-
-export function formatCurrency(amount: number): string {
-  return `$${amount.toLocaleString('en-US')}`
-}
-
-const BASIS_SUFFIX: Record<RateOption['basis'], string> = {
-  hour: '/hr',
-  day: '/day',
-  week: '/wk',
-  month: '/mo',
-  fixed: '',
+  return `${translateDomain('vehicleClass', v.class)} · ${v.year}`
 }
 
 /** The per-day rate option, used for list/stat comparisons across the fleet. */
@@ -77,24 +71,24 @@ export function headlineRateOption(v: Vehicle): RateOption | undefined {
 }
 
 export function formatRateOptionPrice(option: RateOption): string {
-  return `${formatCurrency(option.rate)}${BASIS_SUFFIX[option.basis]}`
+  return `${formatCurrency(option.rate)}${translateDomain('billingBasisSuffix', option.basis)}`
 }
 
 /** "Per day" / "Fixed · 3 days" — how the option is billed, for display. */
-export function formatRateOptionBasis(option: RateOption): string {
+export function formatRateOptionBasis(option: RateOption, t: TFunction<'vehicles'>): string {
   if (option.basis === 'fixed') {
     const unit = option.blockDurationUnit ?? 'days'
-    const n = option.blockDuration ?? 0
-    return `Fixed · ${n} ${n === 1 ? unit.replace(/s$/, '') : unit}`
+    const count = option.blockDuration ?? 0
+    return t('rateOptions.fixedBasis', { count, unit: translateDurationUnit(unit, count) })
   }
-  return BILLING_BASIS_LABELS[option.basis]
+  return translateDomain('billingBasis', option.basis)
 }
 
-export function formatRateOptionMileage(option: RateOption): string {
-  if (option.unlimitedMileage) return 'Unlimited miles'
+export function formatRateOptionMileage(option: RateOption, t: TFunction<'vehicles'>): string {
+  if (option.unlimitedMileage) return t('rateOptions.unlimitedMiles')
   if (option.includedMiles == null) return '—'
-  const per = option.basis === 'fixed' ? 'total' : BILLING_BASIS_LABELS[option.basis].replace('Per ', '/')
-  return `${option.includedMiles.toLocaleString('en-US')} mi ${per}`
+  const per = translateDomain('billingBasisPer', option.basis)
+  return `${formatNumberIn(currentLanguage(), option.includedMiles)} mi ${per}`
 }
 
 function meterTone(utilization: number): string {

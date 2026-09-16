@@ -1,13 +1,14 @@
+import type { TFunction } from 'i18next'
 import type { Row } from '@/components/data-display/record-table.types'
 import type { PricingTuple } from '../types/pricing.types'
 
-export function pricingColumns() {
+export function pricingColumns(t: TFunction<'pricing'>) {
   return [
-    { label: 'Rule', align: 'left' as const },
-    { label: 'Applies to', align: 'left' as const },
-    { label: 'Adjustment', align: 'left' as const },
-    { label: 'Status', align: 'left' as const },
-    { label: 'Enabled', align: 'left' as const },
+    { label: t('columns.rule'), align: 'left' as const },
+    { label: t('columns.appliesTo'), align: 'left' as const },
+    { label: t('columns.adjustment'), align: 'left' as const },
+    { label: t('columns.status'), align: 'left' as const },
+    { label: t('columns.enabled'), align: 'left' as const },
     { label: '', align: 'right' as const },
   ]
 }

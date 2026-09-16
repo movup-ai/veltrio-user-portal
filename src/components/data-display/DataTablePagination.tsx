@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -19,6 +20,7 @@ export function DataTablePagination({
   onPageChange,
   onPageSizeChange,
 }: DataTablePaginationProps) {
+  const { t } = useTranslation('common')
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, total)
@@ -26,7 +28,7 @@ export function DataTablePagination({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2 text-caption">
-        <span>Rows per page</span>
+        <span>{t('table.rowsPerPage')}</span>
         <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
           <SelectTrigger className="h-8 w-[72px]">
             <SelectValue />
@@ -43,13 +45,13 @@ export function DataTablePagination({
 
       <div className="flex items-center gap-4">
         <p className="text-caption">
-          {total === 0 ? 'No results' : `${from}–${to} of ${total}`}
+          {total === 0 ? t('table.noResults') : t('table.range', { from, to, total })}
         </p>
         <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="icon"
-            aria-label="First page"
+            aria-label={t('table.firstPage')}
             disabled={page <= 1}
             onClick={() => onPageChange(1)}
           >
@@ -58,7 +60,7 @@ export function DataTablePagination({
           <Button
             variant="outline"
             size="icon"
-            aria-label="Previous page"
+            aria-label={t('table.previousPage')}
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
           >
@@ -67,7 +69,7 @@ export function DataTablePagination({
           <Button
             variant="outline"
             size="icon"
-            aria-label="Next page"
+            aria-label={t('table.nextPage')}
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
           >
@@ -76,7 +78,7 @@ export function DataTablePagination({
           <Button
             variant="outline"
             size="icon"
-            aria-label="Last page"
+            aria-label={t('table.lastPage')}
             disabled={page >= totalPages}
             onClick={() => onPageChange(totalPages)}
           >

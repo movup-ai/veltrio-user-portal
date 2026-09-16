@@ -1,0 +1,61 @@
+{
+  "list": {
+    "title": "Bookings",
+    "description": "Every reservation across your three locations",
+    "calendarView": "Calendar view",
+    "export": "Export",
+    "newBooking": "New booking",
+    "searchPlaceholder": "Search reference, customer, plate",
+    "pageNote": "Showing 1–{{shown}} of {{total}} bookings",
+    "tabs": {
+      "Upcoming": "Upcoming",
+      "Today": "Today",
+      "Recent activity": "Recent activity",
+      "Overdue": "Overdue"
+    },
+    "filters": {
+      "status": "Status",
+      "location": "Location",
+      "pickup": "Pickup"
+    },
+    "stats": {
+      "open": "Open bookings",
+      "openNote": "12 start in the next 48h",
+      "bookedValue": "Booked value",
+      "bookedValueNote": "Confirmed, not yet invoiced",
+      "needsAttention": "Needs attention",
+      "needsAttentionNote": "2 awaiting ID · 1 deposit due"
+    }
+  },
+  "columns": {
+    "customer": "Customer",
+    "vehicle": "Vehicle",
+    "rentalWindow": "Rental window",
+    "location": "Location",
+    "status": "Status",
+    "total": "Total"
+  },
+  "csv": {
+    "customer": "Customer",
+    "reference": "Reference",
+    "vehicle": "Vehicle",
+    "plate": "Plate",
+    "rentalWindow": "Rental window",
+    "note": "Note",
+    "location": "Location",
+    "status": "Status",
+    "total": "Total"
+  },
+  "details": {
+    "title": "Booking {{id}}",
+    "description": "Booking timeline, payments, and documents",
+    "comingSoonTitle": "Booking details coming soon",
+    "comingSoonDescription": "This module is being built next."
+  },
+  "form": {
+    "title": "New booking",
+    "description": "Create a new rental booking",
+    "comingSoonTitle": "Booking form coming soon",
+    "comingSoonDescription": "This module is being built next."
+  }
+}

@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
@@ -15,11 +16,13 @@ interface DataTableToolbarProps {
 export function DataTableToolbar({
   searchValue,
   onSearchChange,
-  searchPlaceholder = 'Search…',
+  searchPlaceholder,
   filters,
   actions,
   className,
 }: DataTableToolbarProps) {
+  const { t } = useTranslation('common')
+
   return (
     <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between', className)}>
       <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
@@ -29,7 +32,7 @@ export function DataTableToolbar({
             <Input
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={searchPlaceholder}
+              placeholder={searchPlaceholder ?? `${t('actions.search')}…`}
               className="pl-8"
             />
           </div>

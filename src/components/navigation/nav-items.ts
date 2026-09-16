@@ -10,25 +10,30 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
+/** Canonical English keys — they index into the `nav` namespace, they are not display text. */
+export type NavGroupKey = 'Operations' | 'Revenue' | 'Setup'
+export type NavLinkKey = 'Dashboard' | 'Bookings' | 'Vehicles' | 'Customers' | 'Payments' | 'Pricing' | 'Locations' | 'Settings'
+
 export type NavEntry =
-  | { type: 'group'; label: string }
-  | { type: 'link'; label: string; to: string; icon: LucideIcon; badge?: string; urgent?: boolean }
+  | { type: 'group'; key: NavGroupKey }
+  | { type: 'link'; key: NavLinkKey; to: string; icon: LucideIcon; badge?: string; urgent?: boolean }
 
 export const NAV_ITEMS: NavEntry[] = [
-  { type: 'group', label: 'Operations' },
-  { type: 'link', label: 'Dashboard', to: '/app/dashboard', icon: LayoutDashboard },
-  { type: 'link', label: 'Bookings', to: '/app/bookings', icon: CalendarCheck, badge: '12' },
-  { type: 'link', label: 'Vehicles', to: '/app/vehicles', icon: Car },
-  { type: 'link', label: 'Customers', to: '/app/customers', icon: Users },
-  { type: 'group', label: 'Revenue' },
-  { type: 'link', label: 'Payments', to: '/app/payments', icon: CreditCard, badge: '2', urgent: true },
-  { type: 'link', label: 'Pricing', to: '/app/pricing', icon: Tag },
-  { type: 'group', label: 'Setup' },
-  { type: 'link', label: 'Locations', to: '/app/locations', icon: MapPin },
-  { type: 'link', label: 'Settings', to: '/app/settings', icon: Settings },
+  { type: 'group', key: 'Operations' },
+  { type: 'link', key: 'Dashboard', to: '/app/dashboard', icon: LayoutDashboard },
+  { type: 'link', key: 'Bookings', to: '/app/bookings', icon: CalendarCheck, badge: '12' },
+  { type: 'link', key: 'Vehicles', to: '/app/vehicles', icon: Car },
+  { type: 'link', key: 'Customers', to: '/app/customers', icon: Users },
+  { type: 'group', key: 'Revenue' },
+  { type: 'link', key: 'Payments', to: '/app/payments', icon: CreditCard, badge: '2', urgent: true },
+  { type: 'link', key: 'Pricing', to: '/app/pricing', icon: Tag },
+  { type: 'group', key: 'Setup' },
+  { type: 'link', key: 'Locations', to: '/app/locations', icon: MapPin },
+  { type: 'link', key: 'Settings', to: '/app/settings', icon: Settings },
 ]
 
-export function navLabelForPath(pathname: string): string {
+/** The nav key for a path — callers translate it via `t('nav:links.<key>')`. */
+export function navKeyForPath(pathname: string): NavLinkKey {
   const match = NAV_ITEMS.find((item) => item.type === 'link' && pathname.startsWith(item.to))
-  return match && match.type === 'link' ? match.label : 'Dashboard'
+  return match && match.type === 'link' ? match.key : 'Dashboard'
 }

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { Archive, ArrowLeft, ChevronLeft, ChevronRight, Download, SquarePen } from 'lucide-react'
+import { useFormatters } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
@@ -27,7 +30,6 @@ import { availabilityForVehicle } from '@/modules/vehicles/utils/availability'
 import type { VehicleStatus } from '@/modules/vehicles/types/vehicle.types'
 import { useDeleteVehicle, useUpdateVehicle, useVehicle, useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
 import {
-  formatCurrency,
   formatRateOptionBasis,
   formatRateOptionMileage,
   formatRateOptionPrice,
@@ -47,13 +49,13 @@ function FeeRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-function bookingHistoryColumns() {
+function bookingHistoryColumns(t: TFunction<'vehicles'>) {
   return [
-    { label: 'Customer', align: 'left' as const },
-    { label: 'Rental window', align: 'left' as const },
-    { label: 'Location', align: 'left' as const },
-    { label: 'Status', align: 'left' as const },
-    { label: 'Total', align: 'right' as const },
+    { label: t('details.bookingColumns.customer'), align: 'left' as const },
+    { label: t('details.bookingColumns.rentalWindow'), align: 'left' as const },
+    { label: t('details.bookingColumns.location'), align: 'left' as const },
+    { label: t('details.bookingColumns.status'), align: 'left' as const },
+    { label: t('details.bookingColumns.total'), align: 'right' as const },
   ]
 }
 
@@ -83,6 +85,9 @@ function bookingHistoryRow(b: BookingTuple): Row {
 }
 
 export function VehicleDetailsPage() {
+  const { t } = useTranslation('vehicles')
+  const { t: tBookings } = useTranslation('bookings')
+  const format = useFormatters()
   const { vehicleId } = useParams()
   const navigate = useNavigate()
   const [confirmArchive, setConfirmArchive] = useState(false)
@@ -94,14 +99,16 @@ export function VehicleDetailsPage() {
 
   usePageBreadcrumb(vehicle ? vehicleDisplayName(vehicle) : undefined)
   usePageHeaderActions(
-    vehicle ? [{ label: 'Edit vehicle', icon: SquarePen, onClick: () => navigate(`/app/vehicles/${vehicle.id}/edit`) }] : [],
-    [vehicle?.id],
+    vehicle
+      ? [{ label: t('details.editVehicle'), icon: SquarePen, onClick: () => navigate(`/app/vehicles/${vehicle.id}/edit`) }]
+      : [],
+    [vehicle?.id, t],
   )
 
   if (isLoading) {
     return (
       <PageContainer>
-        <LoadingState label="Loading vehicle…" />
+        <LoadingState label={t('details.loading')} />
       </PageContainer>
     )
   }
@@ -109,12 +116,8 @@ export function VehicleDetailsPage() {
   if (isError || !vehicle) {
     return (
       <PageContainer>
-        <PageHeader title="Vehicle not found" description="This vehicle may have been removed." />
-        <ErrorState
-          title="Vehicle not found"
-          description="We couldn't find that vehicle. It may have been deleted."
-          onRetry={() => refetch()}
-        />
+        <PageHeader title={t('details.notFoundTitle')} description={t('details.notFoundDescription')} />
+        <ErrorState title={t('details.notFoundTitle')} description={t('details.notFoundError')} onRetry={() => refetch()} />
       </PageContainer>
     )
   }
@@ -135,7 +138,8 @@ export function VehicleDetailsPage() {
 
   const fleetIds = fleetItems.map((v) => v.id)
   const fleetIndex = fleetIds.indexOf(vehicle.id)
-  const positionLabel = fleetIndex >= 0 ? `${fleetIndex + 1} of ${fleet?.total ?? fleetIds.length}` : null
+  const positionLabel =
+    fleetIndex >= 0 ? t('details.position', { index: fleetIndex + 1, total: fleet?.total ?? fleetIds.length }) : null
   const prevVehicleId = fleetIndex > 0 ? fleetIds[fleetIndex - 1] : undefined
   const nextVehicleId = fleetIndex >= 0 && fleetIndex < fleetIds.length - 1 ? fleetIds[fleetIndex + 1] : undefined
 
@@ -164,7 +168,7 @@ export function VehicleDetailsPage() {
     <PageContainer>
       <PageHeader
         leading={
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label="Back to vehicles">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label={t('details.backToVehicles')}>
             <ArrowLeft className="size-4" />
           </Button>
         }
@@ -181,7 +185,7 @@ export function VehicleDetailsPage() {
                   className="size-[30px]"
                   disabled={!prevVehicleId}
                   onClick={() => prevVehicleId && navigate(`/app/vehicles/${prevVehicleId}`)}
-                  aria-label="Previous vehicle"
+                  aria-label={t('details.previousVehicle')}
                 >
                   <ChevronLeft className="size-4" />
                 </Button>
@@ -191,13 +195,13 @@ export function VehicleDetailsPage() {
                   className="size-[30px]"
                   disabled={!nextVehicleId}
                   onClick={() => nextVehicleId && navigate(`/app/vehicles/${nextVehicleId}`)}
-                  aria-label="Next vehicle"
+                  aria-label={t('details.nextVehicle')}
                 >
                   <ChevronRight className="size-4" />
                 </Button>
               </>
             )}
-            <PageActionButton icon={Archive} label="Archive" onClick={() => setConfirmArchive(true)} />
+            <PageActionButton icon={Archive} label={t('details.archive')} onClick={() => setConfirmArchive(true)} />
           </>
         }
       />
@@ -210,7 +214,7 @@ export function VehicleDetailsPage() {
 
           {vehicle.description && (
             <Card className="flex flex-col gap-2 p-[18px]">
-              <PanelHeading title="Description" description="Customer-facing summary shown on the listing" />
+              <PanelHeading title={t('details.descriptionTitle')} description={t('details.descriptionSubtitle')} />
               <p className="text-[13px]" style={{ textWrap: 'pretty' }}>
                 {vehicle.description}
               </p>
@@ -219,24 +223,24 @@ export function VehicleDetailsPage() {
 
           {bookings.length > 0 ? (
             <RecordTable
-              title="Booking history"
-              columns={bookingHistoryColumns()}
+              title={t('details.bookingHistory')}
+              columns={bookingHistoryColumns(t)}
               rows={bookings.map(bookingHistoryRow)}
-              pageNote={`Showing ${bookings.length} of ${bookings.length} rentals`}
+              pageNote={t('details.bookingHistoryNote', { count: bookings.length, total: bookings.length })}
               minWidth="680px"
               actions={
                 <PageActionButton
                   icon={Download}
-                  label="Export History"
+                  label={t('details.exportHistory')}
                   className="!text-[11.5px]"
-                  onClick={() => downloadBookingsCsv(bookings, `${vehicle.plate}-booking-history.csv`)}
+                  onClick={() => downloadBookingsCsv(bookings, `${vehicle.plate}-booking-history.csv`, tBookings)}
                 />
               }
             />
           ) : (
             <Card className="flex flex-col gap-1 p-[18px]">
-              <PanelHeading title="Booking history" />
-              <p className="text-fg-3 text-[13px]">No bookings for this vehicle yet.</p>
+              <PanelHeading title={t('details.bookingHistory')} />
+              <p className="text-fg-3 text-[13px]">{t('details.noBookings')}</p>
             </Card>
           )}
         </div>
@@ -247,7 +251,10 @@ export function VehicleDetailsPage() {
           <VehiclePerformance vehicle={vehicle} fleetUtilization={fleetUtilization} revenue={revenue} daysOnRent={daysOnRent} />
 
           <Card className="flex flex-col gap-3 p-[18px]">
-            <PanelHeading title="Rate options" description={`${vehicle.rateOptions.length} available`} />
+            <PanelHeading
+              title={t('details.rateOptions')}
+              description={t('details.rateOptionsCount', { count: vehicle.rateOptions.length })}
+            />
             <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
               {vehicle.rateOptions.map((option) => (
                 <div key={option.id} className="flex flex-col gap-0.5 py-2.5">
@@ -256,9 +263,9 @@ export function VehicleDetailsPage() {
                     <span className="text-[13px] font-semibold">{formatRateOptionPrice(option)}</span>
                   </div>
                   <div className="text-fg-4 flex items-center gap-2 text-[11.5px]">
-                    <span>{formatRateOptionBasis(option)}</span>
+                    <span>{formatRateOptionBasis(option, t)}</span>
                     <span>·</span>
-                    <span>{formatRateOptionMileage(option)}</span>
+                    <span>{formatRateOptionMileage(option, t)}</span>
                   </div>
                 </div>
               ))}
@@ -266,21 +273,26 @@ export function VehicleDetailsPage() {
           </Card>
 
           <Card className="flex flex-col gap-1 p-[18px]">
-            <PanelHeading title="Deposit, fees &amp; tax" className="mb-1.5" />
-            {vehicle.fees.deposit != null && <FeeRow label="Deposit" value={formatCurrency(vehicle.fees.deposit)} />}
+            <PanelHeading title={t('details.feesTitle')} className="mb-1.5" />
+            {vehicle.fees.deposit != null && (
+              <FeeRow label={t('fees.deposit')} value={format.currency(vehicle.fees.deposit)} />
+            )}
             {vehicle.fees.overageRatePerMile != null && (
-              <FeeRow label="Overage rate" value={`${formatCurrency(vehicle.fees.overageRatePerMile)}/mi`} />
+              <FeeRow label={t('fees.overageRate')} value={`${format.currency(vehicle.fees.overageRatePerMile)}/mi`} />
             )}
             {vehicle.fees.fuelChargeRate != null && (
-              <FeeRow label="Fuel charge" value={`${formatCurrency(vehicle.fees.fuelChargeRate)} / 1/8 tank`} />
+              <FeeRow
+                label={t('fees.fuelCharge')}
+                value={`${format.currency(vehicle.fees.fuelChargeRate)} ${t('form.fields.fuelChargeUnit')}`}
+              />
             )}
-            {vehicle.fees.taxRatePct != null && <FeeRow label="Tax rate" value={`${vehicle.fees.taxRatePct}%`} />}
+            {vehicle.fees.taxRatePct != null && <FeeRow label={t('fees.taxRate')} value={`${vehicle.fees.taxRatePct}%`} />}
           </Card>
 
           <Card className="flex flex-col gap-2.5 p-[18px]">
-            <PanelHeading title="Notes" />
+            <PanelHeading title={t('details.notes')} />
             <p className="text-fg-3 text-[13px]" style={{ textWrap: 'pretty' }}>
-              {vehicle.notes || 'No notes for this vehicle yet.'}
+              {vehicle.notes || t('details.noNotes')}
             </p>
           </Card>
         </div>
@@ -289,9 +301,9 @@ export function VehicleDetailsPage() {
       <ConfirmDialog
         open={confirmArchive}
         onOpenChange={setConfirmArchive}
-        title="Archive vehicle?"
-        description={`${vehicleDisplayName(vehicle)} (${vehicle.plate}) will be archived and removed from the active fleet. This can't be undone.`}
-        confirmLabel="Archive vehicle"
+        title={t('archiveDialog.title')}
+        description={t('archiveDialog.description', { name: vehicleDisplayName(vehicle), plate: vehicle.plate })}
+        confirmLabel={t('archiveDialog.confirm')}
         loading={deleteVehicle.isPending}
         onConfirm={() => {
           deleteVehicle.mutate(vehicle, { onSuccess: () => navigate('/app/vehicles') })

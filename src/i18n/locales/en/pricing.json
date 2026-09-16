@@ -1,0 +1,31 @@
+{
+  "list": {
+    "title": "Pricing",
+    "description": "Seasonal uplifts, surcharges and negotiated rates",
+    "newRule": "New rule",
+    "rateCalendar": "Rate calendar",
+    "searchPlaceholder": "Search rule name",
+    "rulesTitle": "Pricing rules",
+    "pageNote": "Showing 1–{{shown}} of {{total}} rules",
+    "filters": {
+      "status": "Status",
+      "scope": "Scope",
+      "scopeValue": "All classes"
+    },
+    "stats": {
+      "activeRules": "Active rules",
+      "activeRulesNote": "1 scheduled, 1 paused",
+      "blendedRate": "Blended rate",
+      "blendedRateNote": "Across all classes",
+      "upliftEarned": "Uplift earned (MTD)",
+      "upliftEarnedNote": "6.5% of gross revenue"
+    }
+  },
+  "columns": {
+    "rule": "Rule",
+    "appliesTo": "Applies to",
+    "adjustment": "Adjustment",
+    "status": "Status",
+    "enabled": "Enabled"
+  }
+}

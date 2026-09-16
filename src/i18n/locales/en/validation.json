@@ -1,0 +1,45 @@
+{
+  "vehicle": {
+    "makeRequired": "Make is required",
+    "modelRequired": "Model is required",
+    "yearInvalid": "Enter a valid year",
+    "yearTooEarly": "Year must be 1990 or later",
+    "yearTooLate": "Year is too far in the future",
+    "classRequired": "Select a vehicle type",
+    "colorRequired": "Color is required",
+    "plateRequired": "Plate is required",
+    "plateInvalid": "Plate contains invalid characters",
+    "vinTooShort": "VIN looks too short",
+    "vinTooLong": "VIN looks too long",
+    "locationRequired": "Select a location",
+    "statusRequired": "Select a status",
+    "mileageRequired": "Enter mileage",
+    "mileageNegative": "Mileage cannot be negative",
+    "transmissionRequired": "Select a transmission",
+    "fuelTypeRequired": "Select a fuel type",
+    "seatsRequired": "Enter seat count",
+    "doorsRequired": "Enter door count",
+    "photosMax": "You can upload up to {{max}} photos",
+    "rateOptionsMin": "Add at least one rate option to make this vehicle bookable",
+    "depositRequired": "Enter a security deposit",
+    "overageRateRequired": "Enter an overage rate"
+  },
+  "rateOption": {
+    "labelRequired": "Label is required",
+    "basisRequired": "Pick a billing basis",
+    "rateRequired": "Enter a rate",
+    "ratePositive": "Rate must be greater than 0",
+    "durationRequired": "Enter a block duration",
+    "durationRange": "Must be a whole number, 1–{{max}} {{unit}}"
+  },
+  "api": {
+    "network": "Unable to reach the server. Check your connection.",
+    "unauthorized": "Your session has expired. Please sign in again.",
+    "forbidden": "You don't have permission to do that.",
+    "notFound": "The requested resource could not be found.",
+    "validation": "Some of the submitted information is invalid.",
+    "rateLimited": "Too many requests. Please slow down and try again.",
+    "serverError": "The server ran into a problem. Please try again shortly.",
+    "unknown": "Something went wrong. Please try again."
+  }
+}

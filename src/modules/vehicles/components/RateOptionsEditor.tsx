@@ -1,27 +1,15 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import type { FieldErrors } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useDomainLabels } from '@/i18n/domain'
 import { cn } from '@/lib/utils'
-import {
-  BILLING_BASES,
-  BILLING_BASIS_LABELS,
-  DURATION_UNITS,
-  type BillingBasis,
-  type DurationUnit,
-} from '../types/vehicle.types'
+import { BILLING_BASES, DURATION_UNITS, type BillingBasis, type DurationUnit } from '../types/vehicle.types'
 import type { RateOptionValues, VehicleFormValues } from '../schema/vehicle.schema'
-
-const BASIS_HINT: Record<BillingBasis, string> = {
-  hour: 'Charged hourly',
-  day: 'Most common',
-  week: 'Charged weekly',
-  month: 'Long-term',
-  fixed: 'Flat rate · set duration',
-}
 
 /** Shared grid so the header labels line up with each row's controls. The 1px column is the pricing | mileage divider. */
 const ROW_GRID = 'grid grid-cols-1 gap-x-3 gap-y-2 lg:grid-cols-[1.25fr_1.6fr_0.85fr_1px_1fr_92px_40px] lg:items-start'
@@ -47,9 +35,17 @@ interface RateOptionsEditorProps {
 }
 
 export function RateOptionsEditor({ value, onChange, errors, rootError, showAllErrors }: RateOptionsEditorProps) {
+  const { t } = useTranslation('vehicles')
+  const domain = useDomainLabels()
   // A freshly-added row shouldn't flash "required" errors before the user has touched it —
   // only surface a field's error once it's been blurred, or once showAllErrors kicks in.
   const [touched, setTouched] = useState<Set<string>>(new Set())
+
+  /** "Included miles (per day)" — the unit reads as a noun here, not a billing-basis phrase. */
+  const includedMilesLabel = (basis: BillingBasis) =>
+    basis === 'fixed'
+      ? t('rateOptions.includedMilesTotal')
+      : t('rateOptions.includedMilesPer', { unit: domain.label('billingBasisUnit', basis) })
 
   const update = (id: string, patch: Partial<RateOptionValues>) => {
     onChange(value.map((o) => (o.id === id ? { ...o, ...patch } : o)))
@@ -75,14 +71,11 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
     return (
       <div className="flex flex-col gap-3">
         <div className="border-border-strong flex flex-col items-center justify-center gap-2 rounded-[9px] border border-dashed px-6 py-10 text-center">
-          <p className="text-[13.5px] font-semibold">No rate options yet</p>
-          <p className="text-fg-3 max-w-md text-[12.5px]">
-            Each option is one way a renter can book this vehicle — Daily, Weekly, a Weekend Package. Add at least one
-            to make the vehicle bookable.
-          </p>
+          <p className="text-[13.5px] font-semibold">{t('rateOptions.emptyTitle')}</p>
+          <p className="text-fg-3 max-w-md text-[12.5px]">{t('rateOptions.emptyDescription')}</p>
           <Button type="button" variant="outline" className="mt-1.5 gap-1.5" onClick={() => onChange([newRateOption()])}>
             <Plus className="size-4" />
-            Add rate option
+            {t('rateOptions.add')}
           </Button>
         </div>
         {rootError && (
@@ -97,12 +90,12 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
   return (
     <div className="flex flex-col gap-2.5">
       <div className={cn(ROW_GRID, 'text-meta text-fg-3 hidden px-3.5 lg:grid')}>
-        <span>Label</span>
-        <span>Billing basis</span>
-        <span>Rate (USD)</span>
+        <span>{t('rateOptions.label')}</span>
+        <span>{t('rateOptions.billingBasis')}</span>
+        <span>{t('rateOptions.rate')}</span>
         <span className="bg-border h-3.5 justify-self-center" aria-hidden />
-        <span>Included miles</span>
-        <span>Unlimited</span>
+        <span>{t('rateOptions.includedMiles')}</span>
+        <span>{t('rateOptions.unlimited')}</span>
         <span />
       </div>
 
@@ -114,10 +107,10 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
         return (
           <div key={option.id} className={cn(ROW_GRID, 'border-border bg-surface-2 rounded-[9px] border p-3.5')}>
             <div className="flex flex-col gap-1">
-              <span className="text-meta text-fg-3 lg:hidden">Label</span>
+              <span className="text-meta text-fg-3 lg:hidden">{t('rateOptions.label')}</span>
               <Input
-                aria-label="Label"
-                placeholder="e.g. Weekend Package"
+                aria-label={t('rateOptions.label')}
+                placeholder={t('rateOptions.labelPlaceholder')}
                 value={option.label}
                 invalid={Boolean(labelError)}
                 onChange={(e) => update(option.id, { label: e.target.value })}
@@ -127,7 +120,7 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-meta text-fg-3 lg:hidden">Billing basis</span>
+              <span className="text-meta text-fg-3 lg:hidden">{t('rateOptions.billingBasis')}</span>
               <div className="flex gap-2">
                 <Select
                   value={option.basis}
@@ -143,16 +136,16 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                     })
                   }
                 >
-                  <SelectTrigger aria-label="Billing basis" className="min-w-0 flex-1">
+                  <SelectTrigger aria-label={t('rateOptions.billingBasis')} className="min-w-0 flex-1">
                     {/* Explicit children (not the default mirrored item content) so the hint text doesn't bleed into the closed trigger. */}
-                    <SelectValue>{BILLING_BASIS_LABELS[option.basis]}</SelectValue>
+                    <SelectValue>{domain.label('billingBasis', option.basis)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {BILLING_BASES.map((basis) => (
                       <SelectItem key={basis} value={basis}>
                         <span className="flex w-full items-center justify-between gap-6">
-                          {BILLING_BASIS_LABELS[basis]}
-                          <span className="text-fg-4 text-[11.5px]">{BASIS_HINT[basis]}</span>
+                          {domain.label('billingBasis', basis)}
+                          <span className="text-fg-4 text-[11.5px]">{domain.label('billingBasisHint', basis)}</span>
                         </span>
                       </SelectItem>
                     ))}
@@ -162,7 +155,7 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                 {option.basis === 'fixed' && (
                   <>
                     <Input
-                      aria-label="Block duration"
+                      aria-label={t('rateOptions.blockDuration')}
                       type="number"
                       className="w-[58px] shrink-0 px-2 text-center"
                       value={option.blockDuration ?? ''}
@@ -174,13 +167,13 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                       value={option.blockDurationUnit ?? 'days'}
                       onValueChange={(unit) => update(option.id, { blockDurationUnit: unit as DurationUnit })}
                     >
-                      <SelectTrigger aria-label="Duration unit" className="w-[86px] shrink-0 px-2">
-                        <SelectValue />
+                      <SelectTrigger aria-label={t('rateOptions.durationUnit')} className="w-[86px] shrink-0 px-2">
+                        <SelectValue>{domain.durationUnit(option.blockDurationUnit ?? 'days', 2)}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {DURATION_UNITS.map((unit) => (
                           <SelectItem key={unit} value={unit}>
-                            {unit}
+                            {domain.durationUnit(unit, 2)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -192,9 +185,9 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-meta text-fg-3 lg:hidden">Rate (USD)</span>
+              <span className="text-meta text-fg-3 lg:hidden">{t('rateOptions.rate')}</span>
               <Input
-                aria-label="Rate (USD)"
+                aria-label={t('rateOptions.rate')}
                 type="number"
                 step="0.01"
                 placeholder="0.00"
@@ -209,13 +202,11 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
             <div className="bg-border hidden h-9 justify-self-center lg:block" aria-hidden />
 
             <div className="flex flex-col gap-1">
-              <span className="text-meta text-fg-3 lg:hidden">
-                Included miles {option.basis === 'fixed' ? '(total)' : `(per ${option.basis})`}
-              </span>
+              <span className="text-meta text-fg-3 lg:hidden">{includedMilesLabel(option.basis)}</span>
               <Input
-                aria-label={`Included miles ${option.basis === 'fixed' ? '(total)' : `(per ${option.basis})`}`}
+                aria-label={includedMilesLabel(option.basis)}
                 type="number"
-                placeholder={option.unlimitedMileage ? 'Unlimited' : 'e.g. 200'}
+                placeholder={option.unlimitedMileage ? t('rateOptions.unlimited') : t('rateOptions.includedMilesPlaceholder')}
                 disabled={option.unlimitedMileage}
                 value={option.includedMiles ?? ''}
                 onChange={(e) => update(option.id, { includedMiles: e.target.valueAsNumber })}
@@ -224,13 +215,13 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
 
             <div className="flex items-center gap-2 lg:h-9">
               <Switch
-                aria-label="Unlimited miles"
+                aria-label={t('rateOptions.unlimitedMiles')}
                 checked={option.unlimitedMileage}
                 onCheckedChange={(checked) =>
                   update(option.id, { unlimitedMileage: checked, ...(checked ? { includedMiles: undefined } : {}) })
                 }
               />
-              <span className="text-fg-3 text-[12.5px] lg:hidden">Unlimited miles</span>
+              <span className="text-fg-3 text-[12.5px] lg:hidden">{t('rateOptions.unlimitedMiles')}</span>
             </div>
 
             <div className="flex lg:h-9 lg:items-center lg:justify-end">
@@ -238,7 +229,7 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`Remove ${option.label || 'rate option'}`}
+                aria-label={t('rateOptions.remove', { label: option.label || t('rateOptions.removeFallback') })}
                 className="text-fg-4 hover:text-error size-8"
                 onClick={() => onChange(value.filter((o) => o.id !== option.id))}
               >
@@ -256,7 +247,7 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
         onClick={() => onChange([...value, newRateOption()])}
       >
         <Plus className="size-4" />
-        Add rate option
+        {t('rateOptions.add')}
       </Button>
 
       {rootError && (

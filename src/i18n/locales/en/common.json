@@ -1,0 +1,66 @@
+{
+  "brand": "Veltrio",
+  "actions": {
+    "apply": "Apply",
+    "back": "Back",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "confirm": "Confirm",
+    "discard": "Discard",
+    "edit": "Edit",
+    "export": "Export",
+    "next": "Next",
+    "previous": "Previous",
+    "retry": "Try again",
+    "saveChanges": "Save changes",
+    "search": "Search",
+    "close": "Close",
+    "dismiss": "Dismiss",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide"
+  },
+  "filters": {
+    "more": "More filters",
+    "apply": "Apply filters",
+    "any": "Any",
+    "all": "All",
+    "allCount": "All {{count}}",
+    "sortBy": "Sort by",
+    "applied": "Filters applied",
+    "appliedCount_one": "{{count}} filter applied to the results.",
+    "appliedCount_other": "{{count}} filters applied to the results.",
+    "appliedNone": "No extra filters selected."
+  },
+  "table": {
+    "rowActions": "Row actions",
+    "rowsPerPage": "Rows per page",
+    "noResults": "No results",
+    "noResultsDescription": "Nothing matches your current filters yet.",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "countOf": "{{count}} of {{total}}",
+    "firstPage": "First page",
+    "lastPage": "Last page",
+    "nextPage": "Next page",
+    "previousPage": "Previous page",
+    "pagination": "Pagination"
+  },
+  "states": {
+    "loading": "Loading…",
+    "errorTitle": "Something went wrong",
+    "errorDescription": "We couldn't load this data.",
+    "emptyTitle": "Nothing here yet"
+  },
+  "combobox": {
+    "empty": "No matches — press Enter to use this value"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or has moved.",
+    "backToDashboard": "Back to dashboard"
+  },
+  "language": {
+    "label": "Language",
+    "switch": "Change language"
+  },
+  "placeholder": "—"
+}

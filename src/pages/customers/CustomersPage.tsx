@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Download, IdCard, Plus, Repeat, Users } from 'lucide-react'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -7,6 +8,7 @@ import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
 import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
+import { useFormatters } from '@/i18n'
 import { CUSTOMERS } from '@/modules/customers/mock/customer.mock'
 import { customerColumns, customerRow } from '@/modules/customers/utils/customer.utils'
 
@@ -15,9 +17,15 @@ type Tab = (typeof TABS)[number]
 
 const NEEDS_REVIEW = new Set(['Verify docs', 'Flagged'])
 
+const TOTAL_CUSTOMERS = 1284
+
 export function CustomersPage() {
+  const { t } = useTranslation('customers')
+  const { t: tCommon } = useTranslation('common')
+  const format = useFormatters()
   const [tab, setTab] = useState<Tab>('All')
-  usePageHeaderActions([{ label: 'Add customer', icon: Plus }])
+
+  usePageHeaderActions([{ label: t('list.addCustomer'), icon: Plus }], [t])
 
   const customers =
     tab === 'All' ? CUSTOMERS : tab === 'Active' ? CUSTOMERS.filter((c) => c[6] === 'Active') : CUSTOMERS.filter((c) => NEEDS_REVIEW.has(c[6]))
@@ -26,33 +34,43 @@ export function CustomersPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Customers"
-        description="Renter profiles, documents and rental history"
-        actions={<PageActionButton icon={Download} label="Export" />}
+        title={t('list.title')}
+        description={t('list.description')}
+        actions={<PageActionButton icon={Download} label={t('list.export')} />}
       />
 
       <FilterBar
-        searchPlaceholder="Search name, email or licence"
+        searchPlaceholder={t('list.searchPlaceholder')}
         filters={[
-          { label: 'Status', value: 'Any' },
-          { label: 'Joined', value: 'Last 12 mo' },
+          { label: t('list.filters.status'), value: tCommon('filters.any') },
+          { label: t('list.filters.joined'), value: t('list.filters.joinedValue') },
         ]}
       />
 
       <StatStrip
         stats={[
-          { icon: Users, label: 'Total customers', value: '1,284', note: '46 new this month' },
-          { icon: Repeat, label: 'Repeat rate', value: '38%', note: '2+ rentals in 12 months' },
-          { icon: IdCard, label: 'Docs to verify', value: '5', note: 'Blocks pickup until cleared' },
+          {
+            icon: Users,
+            label: t('list.stats.total'),
+            value: format.number(TOTAL_CUSTOMERS),
+            note: t('list.stats.totalNote'),
+          },
+          { icon: Repeat, label: t('list.stats.repeatRate'), value: '38%', note: t('list.stats.repeatRateNote') },
+          { icon: IdCard, label: t('list.stats.docsToVerify'), value: '5', note: t('list.stats.docsToVerifyNote') },
         ]}
       />
 
       <RecordTable
-        tabs={TABS.map((t) => ({ label: t, selected: tab === t, onClick: () => setTab(t) }))}
-        columns={customerColumns()}
+        tabs={TABS.map((value) => ({
+          key: value,
+          label: t(`list.tabs.${value}`),
+          selected: tab === value,
+          onClick: () => setTab(value),
+        }))}
+        columns={customerColumns(t)}
         rows={rows}
-        rowCountLabel={`${rows.length} of 1,284`}
-        pageNote={`Showing 1–${rows.length} of 1,284 customers`}
+        rowCountLabel={tCommon('table.countOf', { count: rows.length, total: format.number(TOTAL_CUSTOMERS) })}
+        pageNote={t('list.pageNote', { shown: rows.length, total: format.number(TOTAL_CUSTOMERS) })}
         minWidth="860px"
       />
     </PageContainer>

@@ -1,0 +1,42 @@
+{
+  "list": {
+    "title": "Clientes",
+    "description": "Perfiles de arrendatarios, documentos e historial de alquileres",
+    "addCustomer": "Añadir cliente",
+    "export": "Exportar",
+    "searchPlaceholder": "Buscar nombre, correo o licencia",
+    "pageNote": "Mostrando 1–{{shown}} de {{total}} clientes",
+    "tabs": {
+      "All": "Todos",
+      "Active": "Activos",
+      "Needs review": "Requieren revisión"
+    },
+    "filters": {
+      "status": "Estado",
+      "joined": "Alta",
+      "joinedValue": "Últimos 12 meses"
+    },
+    "stats": {
+      "total": "Total de clientes",
+      "totalNote": "46 nuevos este mes",
+      "repeatRate": "Tasa de repetición",
+      "repeatRateNote": "2 o más alquileres en 12 meses",
+      "docsToVerify": "Documentos por verificar",
+      "docsToVerifyNote": "Bloquea la entrega hasta su aprobación"
+    }
+  },
+  "columns": {
+    "customer": "Cliente",
+    "phone": "Teléfono",
+    "licence": "Licencia de conducir",
+    "rentals": "Alquileres",
+    "status": "Estado",
+    "lifetimeValue": "Valor acumulado"
+  },
+  "details": {
+    "title": "Cliente {{id}}",
+    "description": "Perfil del cliente, reservas e historial de pagos",
+    "comingSoonTitle": "Detalles del cliente próximamente",
+    "comingSoonDescription": "Este módulo se construirá a continuación."
+  }
+}

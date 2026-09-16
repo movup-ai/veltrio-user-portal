@@ -1,0 +1,31 @@
+{
+  "list": {
+    "title": "Tarifas",
+    "description": "Recargos de temporada, suplementos y tarifas negociadas",
+    "newRule": "Nueva regla",
+    "rateCalendar": "Calendario de tarifas",
+    "searchPlaceholder": "Buscar nombre de regla",
+    "rulesTitle": "Reglas de tarifas",
+    "pageNote": "Mostrando 1–{{shown}} de {{total}} reglas",
+    "filters": {
+      "status": "Estado",
+      "scope": "Alcance",
+      "scopeValue": "Todas las categorías"
+    },
+    "stats": {
+      "activeRules": "Reglas activas",
+      "activeRulesNote": "1 programada, 1 pausada",
+      "blendedRate": "Tarifa combinada",
+      "blendedRateNote": "En todas las categorías",
+      "upliftEarned": "Recargo generado (mes en curso)",
+      "upliftEarnedNote": "6,5 % de los ingresos brutos"
+    }
+  },
+  "columns": {
+    "rule": "Regla",
+    "appliesTo": "Se aplica a",
+    "adjustment": "Ajuste",
+    "status": "Estado",
+    "enabled": "Activa"
+  }
+}

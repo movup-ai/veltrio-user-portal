@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { GripVertical, ImagePlus, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
 import type { VehiclePhoto } from '@/modules/vehicles/types/vehicle.types'
@@ -23,6 +24,7 @@ function readAsDataUrl(file: File): Promise<string> {
 }
 
 export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDropzoneProps) {
+  const { t } = useTranslation('vehicles')
   const [isDragging, setIsDragging] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
@@ -33,7 +35,7 @@ export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDro
 
     const remaining = max - value.length
     if (remaining <= 0) {
-      toast({ title: 'Photo limit reached', description: `You can upload up to ${max} photos.`, variant: 'error' })
+      toast({ title: t('photos.limitReached'), description: t('photos.limitReachedDescription', { max }), variant: 'error' })
       return
     }
 
@@ -42,10 +44,10 @@ export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDro
     const accepted = files.filter((f) => f.size <= MAX_FILE_SIZE_MB * 1024 * 1024).slice(0, remaining)
 
     if (oversized.length > 0) {
-      toast({ title: 'Some photos were skipped', description: `Each photo must be under ${MAX_FILE_SIZE_MB}MB.`, variant: 'error' })
+      toast({ title: t('photos.skipped'), description: t('photos.skippedDescription', { size: MAX_FILE_SIZE_MB }), variant: 'error' })
     }
     if (files.length > remaining) {
-      toast({ title: 'Photo limit reached', description: `Only added ${remaining} more — max ${max} photos total.`, variant: 'error' })
+      toast({ title: t('photos.limitReached'), description: t('photos.limitPartial', { added: remaining, max }), variant: 'error' })
     }
 
     const uploaded = await Promise.all(
@@ -90,9 +92,9 @@ export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDro
         )}
       >
         <ImagePlus className="text-fg-4 size-6" />
-        <p className="text-[13px] font-semibold">Drag & drop photos here, or click to browse</p>
+        <p className="text-[13px] font-semibold">{t('photos.dropzone')}</p>
         <p className="text-fg-4 text-[12px]">
-          Up to {max} photos, {MAX_FILE_SIZE_MB}MB each · {value.length}/{max} uploaded
+          {t('photos.dropzoneHint', { max, size: MAX_FILE_SIZE_MB, used: value.length })}
         </p>
         <input
           ref={inputRef}
@@ -109,9 +111,7 @@ export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDro
 
       {value.length > 0 && (
         <>
-          <p className="text-fg-4 mt-3 text-[12px]">
-            The first photo is used as the cover image on the vehicle listing — drag photos to reorder.
-          </p>
+          <p className="text-fg-4 mt-3 text-[12px]">{t('photos.coverHint')}</p>
           <div className="mt-2 grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-6">
             {value.map((photo, index) => (
               <div
@@ -145,7 +145,7 @@ export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDro
 
                 {index === 0 && (
                   <span className="bg-foreground/70 text-background absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold">
-                    Cover
+                    {t('photos.cover')}
                   </span>
                 )}
 
@@ -155,7 +155,7 @@ export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDro
 
                 <button
                   type="button"
-                  aria-label={`Remove ${photo.name}`}
+                  aria-label={t('photos.remove', { name: photo.name })}
                   onClick={() => onChange(value.filter((p) => p.id !== photo.id))}
                   className="bg-foreground/70 text-background absolute top-1 right-1 flex size-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100"
                 >

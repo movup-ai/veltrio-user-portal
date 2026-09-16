@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Car } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel'
 import { cn } from '@/lib/utils'
 import type { VehiclePhoto } from '../types/vehicle.types'
 
 /** The shots we prompt for when a vehicle has no photos — mirrors what ops actually needs on file. */
-const SUGGESTED_SHOTS = ['Front 3/4', 'Rear 3/4', 'Interior', 'Odometer']
+const SUGGESTED_SHOTS = ['front', 'rear', 'interior', 'odometer'] as const
 
 const PAGE_SIZE = 4
 
 export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
+  const { t } = useTranslation('vehicles')
   const [activeIndex, setActiveIndex] = useState(0)
   const [api, setApi] = useState<CarouselApi>()
   const [page, setPage] = useState(0)
@@ -41,7 +43,7 @@ export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
         ) : (
           <div className="flex flex-col items-center gap-2">
             <Car className="text-fg-4 size-8" aria-hidden />
-            <p className="text-fg-3 text-[12.5px] font-semibold">Primary photo · 1600 × 900</p>
+            <p className="text-fg-3 text-[12.5px] font-semibold">{t('gallery.primaryPhoto')}</p>
           </div>
         )}
       </div>
@@ -55,7 +57,7 @@ export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
                   <button
                     type="button"
                     onClick={() => setActiveIndex(index)}
-                    aria-label={`Show ${photo.name}`}
+                    aria-label={t('gallery.showPhoto', { name: photo.name })}
                     aria-current={index === activeIndex}
                     className={cn(
                       'group relative aspect-[4/3] w-full overflow-hidden rounded-[7px] ring-inset transition-all',
@@ -73,7 +75,7 @@ export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
                     />
                     {index === 0 && (
                       <span className="bg-foreground text-background absolute top-1 left-1 rounded-full px-1.5 py-[1px] text-[9.5px] font-semibold">
-                        Cover
+                        {t('gallery.cover')}
                       </span>
                     )}
                   </button>
@@ -96,7 +98,7 @@ export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
                   key={i}
                   type="button"
                   onClick={() => api?.scrollTo(i)}
-                  aria-label={`Go to photo page ${i + 1}`}
+                  aria-label={t('gallery.goToPage', { page: i + 1 })}
                   aria-current={i === page}
                   className={cn('h-1.5 rounded-full transition-all', i === page ? 'bg-primary w-4' : 'bg-border-strong w-1.5')}
                 />
@@ -111,7 +113,7 @@ export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
               key={shot}
               className="border-border-strong text-fg-4 flex aspect-[4/3] items-center justify-center rounded-[7px] border border-dashed text-[11.5px]"
             >
-              {shot}
+              {t(`gallery.suggestedShots.${shot}`)}
             </div>
           ))}
         </div>

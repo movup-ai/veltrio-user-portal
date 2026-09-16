@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CarFront, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/state/ui.store'
@@ -11,6 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
+  const { t } = useTranslation(['nav', 'common'])
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
   const theme = useUIStore((state) => state.theme)
@@ -37,17 +39,17 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           </div>
           {expanded && (
             <span className="font-[family-name:var(--font-display)] text-[16px] font-bold tracking-tight">
-              Veltrio
+              {t('common:brand')}
             </span>
           )}
         </div>
 
-        <nav className="vx-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden p-3" aria-label="Primary">
+        <nav className="vx-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden p-3" aria-label={t('nav:sidebar.primary')}>
           {NAV_ITEMS.map((item) => {
             if (item.type === 'group') {
               return expanded ? (
-                <div key={item.label} className="text-fg-4 px-[9px] pt-3.5 pb-1.5 text-[10.5px] font-semibold tracking-wider uppercase">
-                  {item.label}
+                <div key={item.key} className="text-fg-4 px-[9px] pt-3.5 pb-1.5 text-[10.5px] font-semibold tracking-wider uppercase">
+                  {t(`nav:groups.${item.key}`)}
                 </div>
               ) : null
             }
@@ -57,7 +59,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 key={item.to}
                 to={item.to}
                 onClick={onMobileClose}
-                title={item.label}
+                title={t(`nav:links.${item.key}`)}
                 className={({ isActive }) =>
                   cn(
                     'hover:bg-surface-3 flex w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-left text-[13.5px] font-medium transition-colors',
@@ -67,7 +69,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 }
               >
                 <item.icon className="size-[17px] shrink-0" />
-                {expanded && <span className="flex-1 overflow-hidden whitespace-nowrap">{item.label}</span>}
+                {expanded && <span className="flex-1 overflow-hidden whitespace-nowrap">{t(`nav:links.${item.key}`)}</span>}
                 {item.badge && expanded && (
                   <span
                     className="min-w-5 shrink-0 rounded-full px-1.5 py-px text-center font-mono text-[11px] font-semibold"
@@ -87,21 +89,21 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         <div className="border-border-soft border-t px-3 py-2.5">
           <button
             type="button"
-            aria-label="Toggle dark mode"
+            aria-label={t('nav:sidebar.toggleDarkMode')}
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
             className="text-fg-3 hover:bg-surface-3 hover:text-foreground flex w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-[13px] transition-colors"
           >
             {isDark ? <Sun className="size-[17px] shrink-0" /> : <Moon className="size-[17px] shrink-0" />}
-            {expanded && <span>{isDark ? 'Light mode' : 'Dark mode'}</span>}
+            {expanded && <span>{isDark ? t('nav:sidebar.lightMode') : t('nav:sidebar.darkMode')}</span>}
           </button>
           <button
             type="button"
-            aria-label="Toggle sidebar"
+            aria-label={t('nav:sidebar.toggle')}
             onClick={toggleSidebar}
             className="text-fg-3 hover:bg-surface-3 hover:text-foreground flex w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-[13px] transition-colors"
           >
             {collapsed ? <PanelLeftOpen className="size-[17px] shrink-0" /> : <PanelLeftClose className="size-[17px] shrink-0" />}
-            {expanded && <span>Collapse</span>}
+            {expanded && <span>{t('nav:sidebar.collapse')}</span>}
           </button>
           <div className="hover:bg-surface-3 mt-0.5 flex items-center gap-2.5 rounded-[9px] px-[9px] py-2 transition-colors">
             <span className="bg-tint text-primary flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
@@ -110,7 +112,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             {expanded && (
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12.5px] font-semibold">Diego Rivas</span>
-                <span className="text-fg-4 block text-[11px]">Owner · Sunstate Car Co.</span>
+                <span className="text-fg-4 block text-[11px]">{t('nav:sidebar.userRole', { organization: 'Sunstate Car Co.' })}</span>
               </span>
             )}
           </div>

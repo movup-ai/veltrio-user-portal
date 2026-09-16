@@ -1,0 +1,39 @@
+{
+  "list": {
+    "title": "Payments",
+    "description": "Invoices, captures, refunds and failed charges",
+    "recordPayment": "Record payment",
+    "payoutReport": "Payout report",
+    "searchPlaceholder": "Search invoice, customer or booking",
+    "pageNote": "Showing 1–{{shown}} of {{total}} payments",
+    "tabs": {
+      "All": "All",
+      "Paid": "Paid",
+      "Pending": "Pending",
+      "Failed": "Failed",
+      "Refunded": "Refunded"
+    },
+    "filters": {
+      "status": "Status",
+      "method": "Method",
+      "period": "Period"
+    },
+    "stats": {
+      "collected": "Collected (MTD)",
+      "collectedNote": "Net of $1,240 refunds",
+      "outstanding": "Outstanding",
+      "outstandingNote": "2 invoices unpaid",
+      "failed": "Failed charges",
+      "failedNote": "Retry scheduled tonight",
+      "nextPayout": "Next payout",
+      "nextPayoutNote": "Sep 16 · Chase ·· 8821"
+    }
+  },
+  "columns": {
+    "invoice": "Invoice",
+    "customer": "Customer",
+    "method": "Method",
+    "status": "Status",
+    "amount": "Amount"
+  }
+}

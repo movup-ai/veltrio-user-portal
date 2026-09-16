@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Banknote, CreditCard, Download, Landmark, Plus, ReceiptText } from 'lucide-react'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -7,15 +8,23 @@ import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
 import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
+import { useFormatters } from '@/i18n'
 import { PAYMENTS } from '@/modules/payments/mock/payment.mock'
 import { paymentColumns, paymentRow } from '@/modules/payments/utils/payment.utils'
 
+/** 'All' is a view filter; the rest are canonical payment statuses matched against the data. */
 const TABS = ['All', 'Paid', 'Pending', 'Failed', 'Refunded'] as const
 type Tab = (typeof TABS)[number]
 
+const TOTAL_PAYMENTS = 612
+
 export function PaymentsPage() {
+  const { t } = useTranslation('payments')
+  const { t: tCommon } = useTranslation('common')
+  const format = useFormatters()
   const [tab, setTab] = useState<Tab>('All')
-  usePageHeaderActions([{ label: 'Record payment', icon: Plus }])
+
+  usePageHeaderActions([{ label: t('list.recordPayment'), icon: Plus }], [t])
 
   const payments = tab === 'All' ? PAYMENTS : PAYMENTS.filter((p) => p[5] === tab)
   const rows = payments.map(paymentRow)
@@ -23,35 +32,55 @@ export function PaymentsPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Payments"
-        description="Invoices, captures, refunds and failed charges"
-        actions={<PageActionButton icon={Download} label="Payout report" />}
+        title={t('list.title')}
+        description={t('list.description')}
+        actions={<PageActionButton icon={Download} label={t('list.payoutReport')} />}
       />
 
       <FilterBar
-        searchPlaceholder="Search invoice, customer or booking"
+        searchPlaceholder={t('list.searchPlaceholder')}
         filters={[
-          { label: 'Status', value: 'Any' },
-          { label: 'Method', value: 'All' },
-          { label: 'Period', value: 'Sep 2026' },
+          { label: t('list.filters.status'), value: tCommon('filters.any') },
+          { label: t('list.filters.method'), value: tCommon('filters.all') },
+          { label: t('list.filters.period'), value: format.date(new Date(2026, 8, 1), { month: 'short', year: 'numeric' }) },
         ]}
       />
 
       <StatStrip
         stats={[
-          { icon: Banknote, label: 'Collected (MTD)', value: '$284,610', note: 'Net of $1,240 refunds' },
-          { icon: ReceiptText, label: 'Outstanding', value: '$2,283', note: '2 invoices unpaid' },
-          { icon: CreditCard, label: 'Failed charges', value: '1', note: 'Retry scheduled tonight' },
-          { icon: Landmark, label: 'Next payout', value: '$41,905', note: 'Sep 16 · Chase ·· 8821' },
+          {
+            icon: Banknote,
+            label: t('list.stats.collected'),
+            value: format.currency(284610),
+            note: t('list.stats.collectedNote'),
+          },
+          {
+            icon: ReceiptText,
+            label: t('list.stats.outstanding'),
+            value: format.currency(2283),
+            note: t('list.stats.outstandingNote'),
+          },
+          { icon: CreditCard, label: t('list.stats.failed'), value: '1', note: t('list.stats.failedNote') },
+          {
+            icon: Landmark,
+            label: t('list.stats.nextPayout'),
+            value: format.currency(41905),
+            note: t('list.stats.nextPayoutNote'),
+          },
         ]}
       />
 
       <RecordTable
-        tabs={TABS.map((t) => ({ label: t, selected: tab === t, onClick: () => setTab(t) }))}
-        columns={paymentColumns()}
+        tabs={TABS.map((value) => ({
+          key: value,
+          label: t(`list.tabs.${value}`),
+          selected: tab === value,
+          onClick: () => setTab(value),
+        }))}
+        columns={paymentColumns(t)}
         rows={rows}
-        rowCountLabel={`${rows.length} of 612`}
-        pageNote={`Showing 1–${rows.length} of 612 payments`}
+        rowCountLabel={tCommon('table.countOf', { count: rows.length, total: TOTAL_PAYMENTS })}
+        pageNote={t('list.pageNote', { shown: rows.length, total: TOTAL_PAYMENTS })}
         minWidth="840px"
       />
     </PageContainer>

@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { ApiError } from '@/types/api'
 import { FUEL_TYPES, TRANSMISSIONS, VEHICLE_CLASSES, type FuelType, type Transmission, type VehicleClass } from '../types/vehicle.types'
 import { VEHICLE_MAKES, modelsForMake } from '../data/vehicle-catalog'
@@ -83,29 +84,30 @@ function fieldValue(rows: NhtsaResultRow[], variable: string): string | undefine
 export async function decodeVin(vin: string): Promise<VinDecodeResult> {
   const trimmed = vin.trim().toUpperCase()
   if (trimmed.length < 11) {
-    throw new ApiError('validation', 'Enter a full VIN (at least 11 characters) before decoding.')
+    throw new ApiError('validation', i18n.t('vehicles:errors.vinTooShort'))
   }
 
   let res: Response
   try {
     res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${encodeURIComponent(trimmed)}?format=json`)
   } catch (cause) {
-    throw new ApiError('network_error', 'Could not reach the VIN decode service.', { cause })
+    throw new ApiError('network_error', i18n.t('vehicles:errors.vinServiceUnreachable'), { cause })
   }
   if (!res.ok) {
-    throw new ApiError('server_error', 'VIN decode service is unavailable right now.', { status: res.status })
+    throw new ApiError('server_error', i18n.t('vehicles:errors.vinServiceUnavailable'), { status: res.status })
   }
 
   const body = (await res.json()) as { Results?: Array<Record<string, string | null>> }
   const row = body.Results?.[0]
   if (!row) {
-    throw new ApiError('server_error', 'VIN decode service returned no data.')
+    throw new ApiError('server_error', i18n.t('vehicles:errors.vinNoData'))
   }
 
   const rows: NhtsaResultRow[] = Object.entries(row).map(([Variable, Value]) => ({ Variable, Value }))
   const errorCode = fieldValue(rows, 'ErrorCode')
   if (errorCode && errorCode !== '0') {
-    const errorText = fieldValue(rows, 'ErrorText') ?? 'This VIN could not be decoded.'
+    // NHTSA's own ErrorText is English-only; our fallback at least localizes the common case.
+    const errorText = fieldValue(rows, 'ErrorText') ?? i18n.t('vehicles:errors.vinUndecodable')
     throw new ApiError('validation', errorText)
   }
 
