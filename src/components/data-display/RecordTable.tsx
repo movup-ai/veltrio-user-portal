@@ -125,12 +125,15 @@ interface RecordTableProps {
   tabs?: TabDef[]
   columns: Column[]
   rows: Row[]
-  rowCountLabel: string
+  /** Omit to hide entirely — not every table needs a count next to its title. */
+  rowCountLabel?: string
   pageNote: string
   minWidth?: string
   onRowClick?: (key: string) => void
   /** Omit to keep the footer's static/disabled Previous-Next look used elsewhere. */
   pagination?: { page: number; hasNextPage: boolean; onPageChange: (page: number) => void }
+  /** Rendered at the end of the header row (e.g. an Export button) — after the row count label. */
+  actions?: React.ReactNode
 }
 
 export function RecordTable({
@@ -143,6 +146,7 @@ export function RecordTable({
   minWidth = '800px',
   onRowClick,
   pagination,
+  actions,
 }: RecordTableProps) {
   return (
     <Card as="section" className="overflow-hidden">
@@ -170,7 +174,8 @@ export function RecordTable({
           </div>
         )}
         <div className="flex-1" />
-        <span className="text-fg-4 text-[12.5px] tabular-nums">{rowCountLabel}</span>
+        {rowCountLabel && <span className="text-fg-4 text-[12.5px] tabular-nums">{rowCountLabel}</span>}
+        {actions}
       </div>
 
       <div className="vx-scroll overflow-x-auto">

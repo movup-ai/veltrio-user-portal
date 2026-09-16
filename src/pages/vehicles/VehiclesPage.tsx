@@ -81,7 +81,7 @@ export function VehiclesPage() {
     vehicleRow(v, [
       { label: 'View details', onClick: () => navigate(`/app/vehicles/${v.id}`) },
       { label: 'Edit vehicle', onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
-      { label: 'Delete vehicle', onClick: () => setDeleteTarget(v), destructive: true },
+      { label: 'Archive vehicle', onClick: () => setDeleteTarget(v), destructive: true },
     ]),
   )
 
@@ -163,9 +163,9 @@ export function VehiclesPage() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Delete vehicle?"
-        description={deleteTarget ? `${deleteTarget.make} ${deleteTarget.model} (${deleteTarget.plate}) will be removed from the fleet. This can't be undone.` : undefined}
-        confirmLabel="Delete vehicle"
+        title="Archive vehicle?"
+        description={deleteTarget ? `${deleteTarget.make} ${deleteTarget.model} (${deleteTarget.plate}) will be archived and removed from the active fleet. This can't be undone.` : undefined}
+        confirmLabel="Archive vehicle"
         loading={deleteVehicle.isPending}
         onConfirm={() => {
           if (!deleteTarget) return

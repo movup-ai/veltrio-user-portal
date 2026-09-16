@@ -31,7 +31,6 @@ import {
   TRANSMISSIONS,
   VEHICLE_CLASSES,
   VEHICLE_STATUSES,
-  type Vehicle,
   type VehicleInput,
 } from '@/modules/vehicles/types/vehicle.types'
 import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/modules/vehicles/hooks/use-vehicles'
@@ -48,6 +47,7 @@ import {
   formatRateOptionBasis,
   formatRateOptionMileage,
   formatRateOptionPrice,
+  valuesFromVehicle,
 } from '@/modules/vehicles/utils/vehicle.utils'
 
 const STEPS: StepDef[] = [
@@ -83,36 +83,6 @@ const EMPTY_VALUES: VehicleFormValues = {
   overageRatePerMile: undefined as unknown as number,
   fuelChargeRate: undefined,
   taxRatePct: undefined,
-}
-
-function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
-  return {
-    make: vehicle.make,
-    model: vehicle.model,
-    year: vehicle.year,
-    class: vehicle.class,
-    color: vehicle.color,
-    plate: vehicle.plate,
-    vin: vehicle.vin,
-    location: vehicle.location,
-    status: vehicle.status,
-    mileage: vehicle.mileage,
-    transmission: vehicle.specs.transmission,
-    fuelType: vehicle.specs.fuelType,
-    seats: vehicle.specs.seats,
-    doors: vehicle.specs.doors,
-    topSpeedMph: vehicle.specs.topSpeedMph,
-    horsepower: vehicle.specs.horsepower,
-    zeroToSixtySec: vehicle.specs.zeroToSixtySec,
-    cylinders: vehicle.specs.cylinders,
-    description: vehicle.description ?? '',
-    photos: vehicle.photos,
-    rateOptions: vehicle.rateOptions,
-    deposit: vehicle.fees.deposit ?? 0,
-    overageRatePerMile: vehicle.fees.overageRatePerMile ?? 0,
-    fuelChargeRate: vehicle.fees.fuelChargeRate,
-    taxRatePct: vehicle.fees.taxRatePct,
-  }
 }
 
 /**

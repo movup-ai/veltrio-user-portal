@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Gauge, MapPin, Pencil, Trash2 } from 'lucide-react'
+import { Archive, ArrowLeft, ChevronLeft, ChevronRight, Download, SquarePen } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
@@ -10,9 +10,22 @@ import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
-import { StatusBadge } from '@/components/data-display/StatusBadge'
-import { VEHICLE_STATUSES, type VehicleStatus } from '@/modules/vehicles/types/vehicle.types'
-import { useDeleteVehicle, useUpdateVehicle, useVehicle } from '@/modules/vehicles/hooks/use-vehicles'
+import { RecordTable } from '@/components/data-display/RecordTable'
+import type { Row } from '@/components/data-display/record-table.types'
+import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
+import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
+import { initials } from '@/utils/formatting'
+import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
+import type { BookingTuple } from '@/modules/bookings/types/booking.types'
+import { downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils/booking.utils'
+import { AvailabilityStrip } from '@/modules/vehicles/components/AvailabilityStrip'
+import { VehiclePerformance } from '@/modules/vehicles/components/VehiclePerformance'
+import { VehiclePhotoGallery } from '@/modules/vehicles/components/VehiclePhotoGallery'
+import { VehicleSpecs } from '@/modules/vehicles/components/VehicleSpecs'
+import { VehicleStatusCard } from '@/modules/vehicles/components/VehicleStatusCard'
+import { availabilityForVehicle } from '@/modules/vehicles/utils/availability'
+import type { VehicleStatus } from '@/modules/vehicles/types/vehicle.types'
+import { useDeleteVehicle, useUpdateVehicle, useVehicle, useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
 import {
   formatCurrency,
   formatRateOptionBasis,
@@ -22,7 +35,10 @@ import {
   vehicleSubtitle,
 } from '@/modules/vehicles/utils/vehicle.utils'
 
-function SpecRow({ label, value }: { label: string; value: React.ReactNode }) {
+/** Statuses that mean the money never landed — excluded from booked-value totals. */
+const NON_EARNING_STATUSES = ['Refunded', 'Payment failed']
+
+function FeeRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 py-2">
       <span className="text-fg-3 text-[13px]">{label}</span>
@@ -31,14 +47,56 @@ function SpecRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
+function bookingHistoryColumns() {
+  return [
+    { label: 'Customer', align: 'left' as const },
+    { label: 'Rental window', align: 'left' as const },
+    { label: 'Location', align: 'left' as const },
+    { label: 'Status', align: 'left' as const },
+    { label: 'Total', align: 'right' as const },
+  ]
+}
+
+/** Same shape as bookingRow(), minus the Vehicle column — redundant on a page already scoped to one vehicle. */
+function bookingHistoryRow(b: BookingTuple): Row {
+  const [customer, reference, , , window, note, location, status, total] = b
+
+  return {
+    key: reference,
+    cells: [
+      {
+        kind: 'avatar',
+        primary: customer,
+        secondary: reference,
+        initials: initials(customer),
+        avatarBg: 'var(--color-surface-3)',
+        avatarFg: 'var(--color-fg-2)',
+        avatarRadius: '99px',
+        subFontMono: true,
+      },
+      { kind: 'stack', primary: window, secondary: note, weight: 500, subFontMono: false },
+      { kind: 'text', primary: location },
+      { kind: 'badge', status },
+      { kind: 'amount', primary: total, align: 'right', tone: total.charAt(0) === '−' ? 'var(--color-fg-3)' : 'var(--color-foreground)' },
+    ],
+  }
+}
+
 export function VehicleDetailsPage() {
   const { vehicleId } = useParams()
   const navigate = useNavigate()
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmArchive, setConfirmArchive] = useState(false)
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
+  const { data: fleet } = useVehicles({ page: 1, pageSize: 100 })
   const updateVehicle = useUpdateVehicle(vehicleId ?? '')
   const deleteVehicle = useDeleteVehicle()
+
+  usePageBreadcrumb(vehicle ? vehicleDisplayName(vehicle) : undefined)
+  usePageHeaderActions(
+    vehicle ? [{ label: 'Edit vehicle', icon: SquarePen, onClick: () => navigate(`/app/vehicles/${vehicle.id}/edit`) }] : [],
+    [vehicle?.id],
+  )
 
   if (isLoading) {
     return (
@@ -61,127 +119,132 @@ export function VehicleDetailsPage() {
     )
   }
 
-  const pct = Math.round(vehicle.utilization * 100)
+  // No bookings API yet — mock data, matched to this vehicle by plate. See vehicle.api.ts for the same temporary pattern.
+  const bookings = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT].filter((b) => b[3] === vehicle.plate)
+  const revenue = bookings
+    .filter((b) => !NON_EARNING_STATUSES.includes(b[7]))
+    .reduce((sum, b) => sum + parseBookingTotal(b[8]), 0)
+  const activeBooking = vehicle.status === 'On rent' ? BOOKINGS_UPCOMING.find((b) => b[3] === vehicle.plate) : undefined
+  const currentRental = activeBooking ? { customer: activeBooking[0], reference: activeBooking[1], window: activeBooking[4] } : undefined
+
+  const daysOnRent = availabilityForVehicle(vehicle).filter((d) => d.state === 'booked').length
+  const fleetItems = fleet?.items ?? []
+  const fleetUtilization = fleetItems.length
+    ? fleetItems.reduce((sum, v) => sum + v.utilization, 0) / fleetItems.length
+    : vehicle.utilization
+
+  const fleetIds = fleetItems.map((v) => v.id)
+  const fleetIndex = fleetIds.indexOf(vehicle.id)
+  const positionLabel = fleetIndex >= 0 ? `${fleetIndex + 1} of ${fleet?.total ?? fleetIds.length}` : null
+  const prevVehicleId = fleetIndex > 0 ? fleetIds[fleetIndex - 1] : undefined
+  const nextVehicleId = fleetIndex >= 0 && fleetIndex < fleetIds.length - 1 ? fleetIds[fleetIndex + 1] : undefined
+
+  const handleStatusChange = (status: VehicleStatus) => {
+    updateVehicle.mutate({
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      class: vehicle.class,
+      color: vehicle.color,
+      plate: vehicle.plate,
+      vin: vehicle.vin,
+      location: vehicle.location,
+      mileage: vehicle.mileage,
+      description: vehicle.description,
+      notes: vehicle.notes,
+      photos: vehicle.photos,
+      rateOptions: vehicle.rateOptions,
+      fees: vehicle.fees,
+      specs: vehicle.specs,
+      status,
+    })
+  }
 
   return (
     <PageContainer>
       <PageHeader
+        leading={
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label="Back to vehicles">
+            <ArrowLeft className="size-4" />
+          </Button>
+        }
         title={vehicleDisplayName(vehicle)}
-        description={`${vehicle.plate} · ${vehicle.location}`}
+        description={`${vehicleSubtitle(vehicle)} · ${vehicle.plate} · ${vehicle.location}`}
         actions={
           <>
-            <PageActionButton icon={Pencil} label="Edit vehicle" onClick={() => navigate(`/app/vehicles/${vehicle.id}/edit`)} />
-            <PageActionButton icon={Trash2} label="Delete" onClick={() => setConfirmDelete(true)} />
+            {positionLabel && (
+              <>
+                <span className="text-fg-4 text-[12.5px] tabular-nums">{positionLabel}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-[30px]"
+                  disabled={!prevVehicleId}
+                  onClick={() => prevVehicleId && navigate(`/app/vehicles/${prevVehicleId}`)}
+                  aria-label="Previous vehicle"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-[30px]"
+                  disabled={!nextVehicleId}
+                  onClick={() => nextVehicleId && navigate(`/app/vehicles/${nextVehicleId}`)}
+                  aria-label="Next vehicle"
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </>
+            )}
+            <PageActionButton icon={Archive} label="Archive" onClick={() => setConfirmArchive(true)} />
           </>
         }
       />
 
-      <div className="flex flex-wrap gap-4">
-        <Card className="flex min-w-0 flex-[2_1_360px] flex-col gap-4 p-[18px]">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <PanelHeading title="Overview" description={vehicleSubtitle(vehicle)} />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button type="button" className="cursor-pointer">
-                  <StatusBadge status={vehicle.status} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {VEHICLE_STATUSES.map((status) => (
-                  <DropdownMenuItem
-                    key={status}
-                    onSelect={() => {
-                      if (status === vehicle.status) return
-                      updateVehicle.mutate({
-                        make: vehicle.make,
-                        model: vehicle.model,
-                        year: vehicle.year,
-                        class: vehicle.class,
-                        color: vehicle.color,
-                        plate: vehicle.plate,
-                        vin: vehicle.vin,
-                        location: vehicle.location,
-                        mileage: vehicle.mileage,
-                        description: vehicle.description,
-                        notes: vehicle.notes,
-                        photos: vehicle.photos,
-                        rateOptions: vehicle.rateOptions,
-                        fees: vehicle.fees,
-                        specs: vehicle.specs,
-                        status: status as VehicleStatus,
-                      })
-                    }}
-                  >
-                    {status}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
-            <SpecRow label="Make" value={vehicle.make} />
-            <SpecRow label="Model" value={vehicle.model} />
-            <SpecRow label="Year" value={vehicle.year} />
-            <SpecRow label="Vehicle type" value={vehicle.class} />
-            <SpecRow label="Color" value={vehicle.color} />
-            <SpecRow label="Plate" value={<span className="font-mono">{vehicle.plate}</span>} />
-            <SpecRow label="VIN" value={<span className="font-mono">{vehicle.vin}</span>} />
-            <SpecRow label="Mileage" value={`${vehicle.mileage.toLocaleString('en-US')} mi`} />
-            <SpecRow label="Transmission" value={vehicle.specs.transmission} />
-            <SpecRow label="Fuel type" value={vehicle.specs.fuelType} />
-            <SpecRow label="Seats / Doors" value={`${vehicle.specs.seats} seats · ${vehicle.specs.doors} doors`} />
-            {vehicle.specs.topSpeedMph != null && <SpecRow label="Top speed" value={`${vehicle.specs.topSpeedMph} mph`} />}
-            {vehicle.specs.horsepower != null && <SpecRow label="Power" value={`${vehicle.specs.horsepower} hp`} />}
-            {vehicle.specs.zeroToSixtySec != null && <SpecRow label="0–60 mph" value={`${vehicle.specs.zeroToSixtySec}s`} />}
-            {vehicle.specs.cylinders != null && <SpecRow label="Cylinders" value={vehicle.specs.cylinders} />}
-          </div>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="flex min-w-0 flex-[2_1_560px] flex-col gap-4">
+          <VehiclePhotoGallery key={vehicle.id} photos={vehicle.photos} />
+          <AvailabilityStrip vehicle={vehicle} />
+          <VehicleSpecs vehicle={vehicle} />
 
           {vehicle.description && (
-            <div className="border-border-soft border-t pt-3.5">
-              <p className="text-meta text-fg-3 mb-1.5">Description</p>
+            <Card className="flex flex-col gap-2 p-[18px]">
+              <PanelHeading title="Description" description="Customer-facing summary shown on the listing" />
               <p className="text-[13px]" style={{ textWrap: 'pretty' }}>
                 {vehicle.description}
               </p>
-            </div>
+            </Card>
           )}
 
-          {vehicle.photos.length > 0 && (
-            <div className="border-border-soft border-t pt-3.5">
-              <p className="text-meta text-fg-3 mb-2">Photos ({vehicle.photos.length})</p>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                {vehicle.photos.map((photo) => (
-                  <div key={photo.id} className="border-border aspect-square overflow-hidden rounded-[7px] border">
-                    <img src={photo.url} alt={photo.name} className="size-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            </div>
+          {bookings.length > 0 ? (
+            <RecordTable
+              title="Booking history"
+              columns={bookingHistoryColumns()}
+              rows={bookings.map(bookingHistoryRow)}
+              pageNote={`Showing ${bookings.length} of ${bookings.length} rentals`}
+              minWidth="680px"
+              actions={
+                <PageActionButton
+                  icon={Download}
+                  label="Export History"
+                  className="!text-[11.5px]"
+                  onClick={() => downloadBookingsCsv(bookings, `${vehicle.plate}-booking-history.csv`)}
+                />
+              }
+            />
+          ) : (
+            <Card className="flex flex-col gap-1 p-[18px]">
+              <PanelHeading title="Booking history" />
+              <p className="text-fg-3 text-[13px]">No bookings for this vehicle yet.</p>
+            </Card>
           )}
-        </Card>
+        </div>
 
-        <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-4">
-          <Card className="flex flex-col gap-3 p-[18px]">
-            <PanelHeading title="Utilization" description="Last 30 days" />
-            <div className="flex items-center gap-3">
-              <Gauge className="text-fg-4 size-[18px]" />
-              <span className="text-stat-md">{pct}%</span>
-            </div>
-            <span className="bg-surface-3 h-1.5 overflow-hidden rounded-full">
-              <span
-                className="block h-full rounded-full"
-                style={{ width: `${pct}%`, background: pct >= 70 ? 'var(--color-success)' : pct >= 40 ? 'var(--color-warning)' : 'var(--color-error)' }}
-              />
-            </span>
-          </Card>
+        <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-4">
+          <VehicleStatusCard vehicle={vehicle} currentRental={currentRental} onStatusChange={handleStatusChange} />
 
-          <Card className="flex flex-col gap-3 p-[18px]">
-            <PanelHeading title="Location" />
-            <div className="flex items-center gap-2.5">
-              <MapPin className="text-fg-4 size-[18px] shrink-0" />
-              <span className="text-[13.5px] font-semibold">{vehicle.location}</span>
-            </div>
-          </Card>
+          <VehiclePerformance vehicle={vehicle} fleetUtilization={fleetUtilization} revenue={revenue} daysOnRent={daysOnRent} />
 
           <Card className="flex flex-col gap-3 p-[18px]">
             <PanelHeading title="Rate options" description={`${vehicle.rateOptions.length} available`} />
@@ -204,14 +267,14 @@ export function VehicleDetailsPage() {
 
           <Card className="flex flex-col gap-1 p-[18px]">
             <PanelHeading title="Deposit, fees &amp; tax" className="mb-1.5" />
-            {vehicle.fees.deposit != null && <SpecRow label="Deposit" value={formatCurrency(vehicle.fees.deposit)} />}
+            {vehicle.fees.deposit != null && <FeeRow label="Deposit" value={formatCurrency(vehicle.fees.deposit)} />}
             {vehicle.fees.overageRatePerMile != null && (
-              <SpecRow label="Overage rate" value={`${formatCurrency(vehicle.fees.overageRatePerMile)}/mi`} />
+              <FeeRow label="Overage rate" value={`${formatCurrency(vehicle.fees.overageRatePerMile)}/mi`} />
             )}
             {vehicle.fees.fuelChargeRate != null && (
-              <SpecRow label="Fuel charge" value={`${formatCurrency(vehicle.fees.fuelChargeRate)} / 1/8 tank`} />
+              <FeeRow label="Fuel charge" value={`${formatCurrency(vehicle.fees.fuelChargeRate)} / 1/8 tank`} />
             )}
-            {vehicle.fees.taxRatePct != null && <SpecRow label="Tax rate" value={`${vehicle.fees.taxRatePct}%`} />}
+            {vehicle.fees.taxRatePct != null && <FeeRow label="Tax rate" value={`${vehicle.fees.taxRatePct}%`} />}
           </Card>
 
           <Card className="flex flex-col gap-2.5 p-[18px]">
@@ -224,11 +287,11 @@ export function VehicleDetailsPage() {
       </div>
 
       <ConfirmDialog
-        open={confirmDelete}
-        onOpenChange={setConfirmDelete}
-        title="Delete vehicle?"
-        description={`${vehicleDisplayName(vehicle)} (${vehicle.plate}) will be removed from the fleet. This can't be undone.`}
-        confirmLabel="Delete vehicle"
+        open={confirmArchive}
+        onOpenChange={setConfirmArchive}
+        title="Archive vehicle?"
+        description={`${vehicleDisplayName(vehicle)} (${vehicle.plate}) will be archived and removed from the active fleet. This can't be undone.`}
+        confirmLabel="Archive vehicle"
         loading={deleteVehicle.isPending}
         onConfirm={() => {
           deleteVehicle.mutate(vehicle, { onSuccess: () => navigate('/app/vehicles') })

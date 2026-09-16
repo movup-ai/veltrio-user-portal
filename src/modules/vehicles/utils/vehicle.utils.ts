@@ -1,5 +1,37 @@
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
+import type { VehicleFormValues } from '../schema/vehicle.schema'
 import { BILLING_BASIS_LABELS, type RateOption, type Vehicle } from '../types/vehicle.types'
+
+/** Flattens a Vehicle's nested specs/fees into the form's flat shape — used to prefill Edit and Duplicate. */
+export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
+  return {
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    class: vehicle.class,
+    color: vehicle.color,
+    plate: vehicle.plate,
+    vin: vehicle.vin,
+    location: vehicle.location,
+    status: vehicle.status,
+    mileage: vehicle.mileage,
+    transmission: vehicle.specs.transmission,
+    fuelType: vehicle.specs.fuelType,
+    seats: vehicle.specs.seats,
+    doors: vehicle.specs.doors,
+    topSpeedMph: vehicle.specs.topSpeedMph,
+    horsepower: vehicle.specs.horsepower,
+    zeroToSixtySec: vehicle.specs.zeroToSixtySec,
+    cylinders: vehicle.specs.cylinders,
+    description: vehicle.description ?? '',
+    photos: vehicle.photos,
+    rateOptions: vehicle.rateOptions,
+    deposit: vehicle.fees.deposit ?? 0,
+    overageRatePerMile: vehicle.fees.overageRatePerMile ?? 0,
+    fuelChargeRate: vehicle.fees.fuelChargeRate,
+    taxRatePct: vehicle.fees.taxRatePct,
+  }
+}
 
 export function vehicleColumns() {
   return [

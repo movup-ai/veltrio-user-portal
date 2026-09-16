@@ -8,6 +8,7 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
   const location = useLocation()
   const title = navLabelForPath(location.pathname)
   const headerActions = usePageActionsStore((state) => state.headerActions)
+  const breadcrumbExtra = usePageActionsStore((state) => state.breadcrumbExtra)
 
   return (
     <header className="bg-header border-border sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3.5 border-b py-0 pr-5 pl-4 backdrop-blur-lg lg:pl-6">
@@ -18,7 +19,15 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
       <nav aria-label="Breadcrumb" className="text-fg-4 hidden shrink-0 items-center gap-[7px] text-[13px] whitespace-nowrap sm:flex">
         <span>Sunstate Car Co.</span>
         <span>/</span>
-        <span className="text-foreground font-semibold">{title}</span>
+        {breadcrumbExtra ? (
+          <>
+            <span>{title}</span>
+            <span>/</span>
+            <span className="text-foreground max-w-[220px] truncate font-semibold">{breadcrumbExtra}</span>
+          </>
+        ) : (
+          <span className="text-foreground font-semibold">{title}</span>
+        )}
       </nav>
 
       <div className="flex-1" />

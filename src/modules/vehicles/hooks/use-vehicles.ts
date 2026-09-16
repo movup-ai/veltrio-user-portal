@@ -67,10 +67,10 @@ export function useDeleteVehicle() {
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
       queryClient.removeQueries({ queryKey: vehicleKeys.detail(vehicle.id) })
-      toast({ title: 'Vehicle removed', description: `${vehicle.make} ${vehicle.model} was removed from the fleet.`, variant: 'success' })
+      toast({ title: 'Vehicle archived', description: `${vehicle.make} ${vehicle.model} was archived and removed from the active fleet.`, variant: 'success' })
     },
     onError: (error) => {
-      toast({ title: 'Could not remove vehicle', description: normalizeApiError(error).message, variant: 'error' })
+      toast({ title: 'Could not archive vehicle', description: normalizeApiError(error).message, variant: 'error' })
     },
   })
 }
