@@ -19,8 +19,9 @@ import { LoadingState } from '@/components/feedback/LoadingState'
 import { FormField } from '@/components/forms/FormField'
 import { PhotoDropzone } from '@/components/forms/PhotoDropzone'
 import { RateOptionsEditor } from '@/modules/vehicles/components/RateOptionsEditor'
+import { VehicleFeatureChips } from '@/modules/vehicles/components/VehicleFeatureChips'
 import { VehicleFeaturesPicker } from '@/modules/vehicles/components/VehicleFeaturesPicker'
-import { ReviewRow, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
+import { ReviewRow, ReviewRowGrid, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
 import { Stepper, type StepDef } from '@/components/forms/Stepper'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -807,7 +808,7 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-wrap items-center gap-4 pb-5">
-        <div className="border-border bg-surface-2 flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border">
+        <div className="border-border bg-surface-2 flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border">
           {cover ? (
             <img src={cover.url} alt={cover.name} className="size-full object-cover" />
           ) : (
@@ -827,10 +828,13 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
-        <div className="flex flex-col">
+      {/* Two columns of stacked cards, filling the available width. Rows inside each card are
+          stacked label/value cells (see ReviewRow), so a wider card reflows cells into more
+          columns rather than stretching any single row. */}
+      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-2">
+        <div className="flex flex-col gap-3.5">
           <ReviewSection title={t('form.review.identity')} onEdit={editDetails}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+            <ReviewRowGrid>
               <ReviewRow label={t('specs.make')} value={values.make || '—'} />
               <ReviewRow label={t('specs.model')} value={values.model || '—'} />
               <ReviewRow label={t('specs.year')} value={values.year || '—'} />
@@ -839,20 +843,21 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
                 value={values.class ? domain.label('vehicleClass', values.class) : '—'}
               />
               <ReviewRow label={t('specs.color')} value={values.color || '—'} />
-            </div>
+              {/* Grouped with Identity to mirror the form, where Location sits in the same block. */}
+              <ReviewRow label={t('specs.location')} value={values.location || '—'} />
+            </ReviewRowGrid>
           </ReviewSection>
 
           <ReviewSection title={t('form.review.registration')} onEdit={editDetails}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+            <ReviewRowGrid>
               <ReviewRow label={t('specs.plate')} value={values.plate || '—'} />
               <ReviewRow label={t('specs.vin')} value={values.vin || '—'} />
               <ReviewRow label={t('specs.status')} value={values.status ? domain.status(values.status) : '—'} />
-            </div>
+            </ReviewRowGrid>
           </ReviewSection>
 
           <ReviewSection title={t('form.review.specs')} onEdit={editDetails}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
-              <ReviewRow label={t('specs.location')} value={values.location || '—'} />
+            <ReviewRowGrid>
               <ReviewRow label={t('specs.currentMileage')} value={`${format.number(values.mileage ?? 0)} mi`} />
               <ReviewRow
                 label={t('specs.transmission')}
@@ -866,30 +871,32 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
                 label={t('form.review.seatsDoors')}
                 value={t('form.review.seatsDoorsValue', { seats: values.seats, doors: values.doors })}
               />
-            </div>
+            </ReviewRowGrid>
           </ReviewSection>
 
           {values.features.length > 0 && (
             <ReviewSection title={t('form.review.features')} onEdit={editDetails}>
-              <p className="text-fg-3 text-[13px]" style={{ textWrap: 'pretty' }}>
-                {values.features.map((f) => t(`features.${f}.label`)).join(' · ')}
-              </p>
+              <VehicleFeatureChips features={values.features} />
             </ReviewSection>
           )}
 
           {values.description && (
             <ReviewSection title={t('form.review.description')} onEdit={editDetails}>
-              <p className="text-fg-3 text-[13px]" style={{ textWrap: 'pretty' }}>
+              <p className="text-fg-2 text-[13px]" style={{ textWrap: 'pretty' }}>
                 {values.description}
               </p>
             </ReviewSection>
           )}
         </div>
 
-        <div className="flex flex-col">
-          <ReviewSection title={t('form.review.photos')} count={values.photos.length} onEdit={() => onEditStep('photos')}>
+        <div className="flex flex-col gap-3.5">
+          <ReviewSection
+            title={t('form.review.photos')}
+            count={values.photos.length}
+            onEdit={() => onEditStep('photos')}
+          >
             {values.photos.length > 0 ? (
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-4">
+              <div className="grid grid-cols-5 gap-2">
                 {values.photos.map((p, index) => (
                   <div key={p.id} className="border-border relative aspect-square overflow-hidden rounded-[7px] border">
                     <img src={p.url} alt={p.name} className="size-full object-cover" />
@@ -906,15 +913,19 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
             )}
           </ReviewSection>
 
-          <ReviewSection title={t('form.review.rateOptions')} count={values.rateOptions.length} onEdit={() => onEditStep('pricing')}>
+          <ReviewSection
+            title={t('form.review.rateOptions')}
+            count={values.rateOptions.length}
+            onEdit={() => onEditStep('pricing')}
+          >
             {values.rateOptions.length > 0 ? (
-              <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+              <div className="divide-y divide-[var(--color-border-soft)]">
                 {values.rateOptions.map((option) => (
-                  <div key={option.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+                  <div key={option.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2">
                     <span className="text-[13px] font-semibold">{option.label || t('form.review.untitledOption')}</span>
-                    <span className="text-fg-3 flex items-center gap-2.5 text-[12.5px]">
+                    <span className="text-fg-3 flex flex-wrap items-center gap-x-2 text-[12.5px]">
                       <span>{formatRateOptionBasis(option, t)}</span>
-                      <span>·</span>
+                      <span aria-hidden>·</span>
                       <span>{formatRateOptionMileage(option, t)}</span>
                       <span className="text-foreground font-semibold">{formatRateOptionPrice(option)}</span>
                     </span>
@@ -927,7 +938,7 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
           </ReviewSection>
 
           <ReviewSection title={t('form.review.fees')} onEdit={() => onEditStep('pricing')}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+            <ReviewRowGrid>
               {hasValue(values.deposit) && (
                 <ReviewRow label={t('fees.securityDeposit')} value={format.currency(values.deposit)} />
               )}
@@ -941,7 +952,7 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
                 />
               )}
               {hasValue(values.taxRatePct) && <ReviewRow label={t('fees.taxRate')} value={`${values.taxRatePct}%`} />}
-            </div>
+            </ReviewRowGrid>
           </ReviewSection>
         </div>
       </div>

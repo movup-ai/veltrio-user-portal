@@ -4,7 +4,7 @@ import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
 import { cn } from '@/lib/utils'
-import { VEHICLE_FEATURE_ICONS } from '../data/vehicle-features'
+import { VehicleFeatureChips } from './VehicleFeatureChips'
 import type { Vehicle } from '../types/vehicle.types'
 
 interface SpecItem {
@@ -61,20 +61,7 @@ export function VehicleSpecs({ vehicle }: { vehicle: Vehicle }) {
       <div className="border-border-soft flex flex-col gap-2.5 border-t pt-4">
         <p className="text-meta text-fg-3">{t('features.title')}</p>
         {features.length > 0 ? (
-          <ul className="flex flex-wrap gap-2">
-            {features.map((feature) => {
-              const Icon = VEHICLE_FEATURE_ICONS[feature]
-              return (
-                <li
-                  key={feature}
-                  className="border-border bg-surface-2 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[13px] font-medium"
-                >
-                  <Icon className="text-fg-3 size-3.5" aria-hidden />
-                  {t(`features.${feature}.label`)}
-                </li>
-              )
-            })}
-          </ul>
+          <VehicleFeatureChips features={features} />
         ) : (
           <p className="text-fg-4 text-[13px]">{t('features.none')}</p>
         )}
