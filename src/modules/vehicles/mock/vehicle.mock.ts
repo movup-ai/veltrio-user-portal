@@ -16,7 +16,17 @@ export const VEHICLES_SEED: Vehicle[] = [
     utilization: 0.92,
     description: 'A refined full-size SUV with adaptive suspension and third-row-ready comfort for family trips.',
     notes: '',
-    photos: [],
+    photos: [
+      { id: 'veh_1_photo_1', url: 'https://picsum.photos/seed/veh1-front/800/600', name: 'Front 3/4' },
+      { id: 'veh_1_photo_2', url: 'https://picsum.photos/seed/veh1-rear/800/600', name: 'Rear 3/4' },
+      { id: 'veh_1_photo_3', url: 'https://picsum.photos/seed/veh1-interior/800/600', name: 'Interior' },
+      { id: 'veh_1_photo_4', url: 'https://picsum.photos/seed/veh1-odometer/800/600', name: 'Odometer' },
+      { id: 'veh_1_photo_5', url: 'https://picsum.photos/seed/veh1-side/800/600', name: 'Side profile' },
+      { id: 'veh_1_photo_6', url: 'https://picsum.photos/seed/veh1-dash/800/600', name: 'Dashboard' },
+      { id: 'veh_1_photo_7', url: 'https://picsum.photos/seed/veh1-trunk/800/600', name: 'Trunk' },
+      { id: 'veh_1_photo_8', url: 'https://picsum.photos/seed/veh1-engine/800/600', name: 'Engine bay' },
+      { id: 'veh_1_photo_9', url: 'https://picsum.photos/seed/veh1-wheel/800/600', name: 'Wheel detail' },
+    ],
     rateOptions: [
       { id: 'veh_1_hourly', label: 'Hourly', basis: 'hour', rate: 22, includedMiles: 40, unlimitedMileage: false },
       { id: 'veh_1_daily', label: 'Daily', basis: 'day', rate: 189, includedMiles: 150, unlimitedMileage: false },

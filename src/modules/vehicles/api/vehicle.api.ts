@@ -3,7 +3,8 @@ import { mockDelay, useMocks } from '@/lib/mock'
 import { ApiError } from '@/types/api'
 import type { PaginatedResult } from '@/types/common'
 import { VEHICLES_SEED } from '../mock/vehicle.mock'
-import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
+import { VEHICLE_PRICE_BANDS, type Vehicle, type VehicleInput, type VehicleListParams } from '../types/vehicle.types'
+import { dailyRateOption } from '../utils/vehicle.utils'
 
 /** In-memory mutable copy of the seed so create/update/delete persist for the session. */
 let db: Vehicle[] = VEHICLES_SEED.map((v) => ({ ...v }))
@@ -24,6 +25,20 @@ function mockList(params: VehicleListParams): PaginatedResult<Vehicle> {
   if (params.status && params.status !== 'Any') items = items.filter((v) => v.status === params.status)
   if (params.location && params.location !== 'All') items = items.filter((v) => v.location === params.location)
   if (params.class && params.class !== 'All') items = items.filter((v) => v.class === params.class)
+  if (params.transmission && params.transmission !== 'Any') items = items.filter((v) => v.specs.transmission === params.transmission)
+  if (params.fuelType && params.fuelType !== 'Any') items = items.filter((v) => v.specs.fuelType === params.fuelType)
+  if (params.priceBands && params.priceBands.length > 0) {
+    const bands = VEHICLE_PRICE_BANDS.filter((b) => params.priceBands!.includes(b.value))
+    items = items.filter((v) => {
+      const rate = dailyRateOption(v)?.rate
+      if (rate == null) return false
+      return bands.some((b) => rate >= b.min && rate < b.max)
+    })
+  }
+
+  if (params.sortBy === 'utilization') items = [...items].sort((a, b) => b.utilization - a.utilization)
+  else if (params.sortBy === 'dailyRate') items = [...items].sort((a, b) => (dailyRateOption(b)?.rate ?? 0) - (dailyRateOption(a)?.rate ?? 0))
+  else if (params.sortBy === 'name') items = [...items].sort((a, b) => `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`))
 
   const total = items.length
   const totalPages = Math.max(1, Math.ceil(total / params.pageSize))

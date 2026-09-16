@@ -14,6 +14,34 @@ export function bookingColumns() {
   ]
 }
 
+/** Parses a formatted total like "$1,240" or "−$310" into a signed number. */
+export function parseBookingTotal(total: string): number {
+  const negative = total.trim().startsWith('−') || total.trim().startsWith('-')
+  const amount = Number(total.replace(/[^0-9.]/g, ''))
+  return negative ? -amount : amount
+}
+
+const CSV_HEADER = ['Customer', 'Reference', 'Vehicle', 'Plate', 'Rental window', 'Note', 'Location', 'Status', 'Total']
+
+function toCsvCell(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`
+}
+
+/** Builds a CSV from booking tuples and triggers a browser download — no backend export endpoint yet. */
+export function downloadBookingsCsv(bookings: BookingTuple[], filename: string): void {
+  const csv = [CSV_HEADER, ...bookings].map((row) => row.map(toCsvCell).join(',')).join('\r\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 export function bookingRow(b: BookingTuple): Row {
   const [customer, reference, vehicle, plate, window, note, location, status, total] = b
 

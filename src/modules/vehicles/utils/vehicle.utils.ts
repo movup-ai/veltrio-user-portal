@@ -1,5 +1,37 @@
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
+import type { VehicleFormValues } from '../schema/vehicle.schema'
 import { BILLING_BASIS_LABELS, type RateOption, type Vehicle } from '../types/vehicle.types'
+
+/** Flattens a Vehicle's nested specs/fees into the form's flat shape — used to prefill Edit and Duplicate. */
+export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
+  return {
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    class: vehicle.class,
+    color: vehicle.color,
+    plate: vehicle.plate,
+    vin: vehicle.vin,
+    location: vehicle.location,
+    status: vehicle.status,
+    mileage: vehicle.mileage,
+    transmission: vehicle.specs.transmission,
+    fuelType: vehicle.specs.fuelType,
+    seats: vehicle.specs.seats,
+    doors: vehicle.specs.doors,
+    topSpeedMph: vehicle.specs.topSpeedMph,
+    horsepower: vehicle.specs.horsepower,
+    zeroToSixtySec: vehicle.specs.zeroToSixtySec,
+    cylinders: vehicle.specs.cylinders,
+    description: vehicle.description ?? '',
+    photos: vehicle.photos,
+    rateOptions: vehicle.rateOptions,
+    deposit: vehicle.fees.deposit ?? 0,
+    overageRatePerMile: vehicle.fees.overageRatePerMile ?? 0,
+    fuelChargeRate: vehicle.fees.fuelChargeRate,
+    taxRatePct: vehicle.fees.taxRatePct,
+  }
+}
 
 export function vehicleColumns() {
   return [
@@ -8,7 +40,8 @@ export function vehicleColumns() {
     { label: 'Location', align: 'left' as const },
     { label: 'Status', align: 'left' as const },
     { label: 'Utilization (30d)', align: 'left' as const },
-    { label: 'From', align: 'right' as const },
+    { label: 'Trips', align: 'right' as const },
+    { label: 'Daily rate', align: 'right' as const },
     { label: '', align: 'right' as const },
   ]
 }
@@ -70,9 +103,9 @@ function meterTone(utilization: number): string {
   return 'var(--color-error)'
 }
 
-export function vehicleRow(v: Vehicle, actions: RowActionItem[]): Row {
+export function vehicleRow(v: Vehicle, tripsCount: number, actions: RowActionItem[]): Row {
   const pct = Math.round(v.utilization * 100)
-  const headline = headlineRateOption(v)
+  const daily = dailyRateOption(v)
 
   return {
     key: v.id,
@@ -91,9 +124,10 @@ export function vehicleRow(v: Vehicle, actions: RowActionItem[]): Row {
       { kind: 'text', primary: v.location },
       { kind: 'badge', status: v.status },
       { kind: 'meter', primary: `${pct}%`, pct: `${pct}%`, tone: meterTone(v.utilization) },
+      { kind: 'text', primary: String(tripsCount), align: 'right' },
       {
         kind: 'amount',
-        primary: headline ? formatRateOptionPrice(headline) : '—',
+        primary: daily ? formatCurrency(daily.rate) : '—',
         align: 'right',
         tone: 'var(--color-foreground)',
       },
