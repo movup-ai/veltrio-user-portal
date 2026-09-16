@@ -1,0 +1,41 @@
+{
+  "greeting": "Good morning, {{name}}",
+  "subtitle": "{{date}} · {{pickups}} pickups and {{returns}} returns scheduled today",
+  "newBooking": "New booking",
+  "export": "Export",
+  "kpi": {
+    "revenueMtd": "Revenue (MTD)",
+    "activeRentals": "Active rentals",
+    "fleetUtilization": "Fleet utilization",
+    "bookings7d": "Bookings (7d)",
+    "vsAug": "vs. Aug",
+    "outToday": "out today",
+    "vsLastWeek": "vs. last wk",
+    "vsPriorWeek": "vs. prior wk"
+  },
+  "ops": {
+    "pickupsToday": "Pickups today",
+    "returnsToday": "Returns today",
+    "overdueReturns": "Overdue returns",
+    "unpaidInvoices": "Unpaid invoices"
+  },
+  "revenue": {
+    "title": "Revenue",
+    "description": "Daily gross, last 14 days",
+    "delta": "+9.8% vs. prior 14d"
+  },
+  "fleet": {
+    "title": "Fleet status",
+    "description": "{{vehicles}} vehicles across {{locations}} locations",
+    "utilized": "utilized",
+    "openFleet": "Open fleet"
+  },
+  "bookings": {
+    "title": "Bookings",
+    "tabs": {
+      "upcoming": "Upcoming",
+      "recent": "Recent activity"
+    },
+    "pageNote": "Showing 1–{{shown}} of {{total}} bookings"
+  }
+}

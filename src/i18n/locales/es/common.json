@@ -1,0 +1,66 @@
+{
+  "brand": "Veltrio",
+  "actions": {
+    "apply": "Aplicar",
+    "back": "Volver",
+    "cancel": "Cancelar",
+    "clear": "Limpiar",
+    "confirm": "Confirmar",
+    "discard": "Descartar",
+    "edit": "Editar",
+    "export": "Exportar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "retry": "Reintentar",
+    "saveChanges": "Guardar cambios",
+    "search": "Buscar",
+    "close": "Cerrar",
+    "dismiss": "Descartar",
+    "previousSlide": "Diapositiva anterior",
+    "nextSlide": "Diapositiva siguiente"
+  },
+  "filters": {
+    "more": "Más filtros",
+    "apply": "Aplicar filtros",
+    "any": "Cualquiera",
+    "all": "Todas",
+    "allCount": "Todas ({{count}})",
+    "sortBy": "Ordenar por",
+    "applied": "Filtros aplicados",
+    "appliedCount_one": "{{count}} filtro aplicado a los resultados.",
+    "appliedCount_other": "{{count}} filtros aplicados a los resultados.",
+    "appliedNone": "No se seleccionaron filtros adicionales."
+  },
+  "table": {
+    "rowActions": "Acciones de fila",
+    "rowsPerPage": "Filas por página",
+    "noResults": "Sin resultados",
+    "noResultsDescription": "Nada coincide con sus filtros actuales.",
+    "range": "{{from}}–{{to}} de {{total}}",
+    "countOf": "{{count}} de {{total}}",
+    "firstPage": "Primera página",
+    "lastPage": "Última página",
+    "nextPage": "Página siguiente",
+    "previousPage": "Página anterior",
+    "pagination": "Paginación"
+  },
+  "states": {
+    "loading": "Cargando…",
+    "errorTitle": "Algo salió mal",
+    "errorDescription": "No pudimos cargar estos datos.",
+    "emptyTitle": "Todavía no hay nada aquí"
+  },
+  "combobox": {
+    "empty": "Sin coincidencias — presione Enter para usar este valor"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que busca no existe o fue movida.",
+    "backToDashboard": "Volver al panel"
+  },
+  "language": {
+    "label": "Idioma",
+    "switch": "Cambiar idioma"
+  },
+  "placeholder": "—"
+}

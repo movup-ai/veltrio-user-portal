@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useLocation, useNavigate, type Location } from 'react-router-dom'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -11,14 +13,17 @@ import { normalizeApiError } from '@/services/api/errors'
 import { useAuthStore } from '@/state/auth.store'
 import { useOrganizationStore } from '@/state/organization.store'
 
-const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
+function loginSchema(t: TFunction<'auth'>) {
+  return z.object({
+    email: z.string().min(1, t('errors.emailRequired')).email(t('errors.emailInvalid')),
+    password: z.string().min(1, t('errors.passwordRequired')),
+  })
+}
 
-type LoginFormValues = z.infer<typeof loginSchema>
+type LoginFormValues = z.infer<ReturnType<typeof loginSchema>>
 
 export function LoginPage() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const location = useLocation()
   const setSession = useAuthStore((state) => state.setSession)
@@ -29,7 +34,7 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) })
+  } = useForm<LoginFormValues>({ resolver: zodResolver(useMemo(() => loginSchema(t), [t])) })
 
   const onSubmit = async (values: LoginFormValues) => {
     setFormError(null)
@@ -48,16 +53,16 @@ export function LoginPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-section-title">Sign in</h1>
-        <p className="text-description">Manage your fleet, bookings, and customers.</p>
+        <h1 className="text-section-title">{t('login.title')}</h1>
+        <p className="text-description">{t('login.subtitle')}</p>
       </div>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <FormField label="Email" error={errors.email?.message} required>
+        <FormField label={t('login.email')} error={errors.email?.message} required>
           {(fieldProps) => <Input type="email" autoComplete="email" {...register('email')} {...fieldProps} />}
         </FormField>
 
-        <FormField label="Password" error={errors.password?.message} required>
+        <FormField label={t('login.password')} error={errors.password?.message} required>
           {(fieldProps) => (
             <Input type="password" autoComplete="current-password" {...register('password')} {...fieldProps} />
           )}
@@ -70,7 +75,7 @@ export function LoginPage() {
         )}
 
         <Button type="submit" loading={isSubmitting} className="mt-2 w-full">
-          Sign in
+          {t('login.submit')}
         </Button>
       </form>
     </div>

@@ -6,6 +6,7 @@ import {
   type OnChangeFn,
   type SortingState,
 } from '@tanstack/react-table'
+import { useTranslation } from 'react-i18next'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -41,8 +42,8 @@ export function DataTable<TData, TValue>({
   isLoading,
   isError,
   onRetry,
-  emptyTitle = 'No results',
-  emptyDescription = 'Nothing matches your current filters yet.',
+  emptyTitle,
+  emptyDescription,
   emptyAction,
   sorting,
   onSortingChange,
@@ -50,6 +51,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
   className,
 }: DataTableProps<TData, TValue>) {
+  const { t } = useTranslation('common')
   const table = useReactTable({
     data,
     columns,
@@ -93,7 +95,12 @@ export function DataTable<TData, TValue>({
                 </td>
               </tr>
             ) : table.getRowModel().rows.length === 0 ? (
-              <DataTableEmpty colSpan={columns.length} title={emptyTitle} description={emptyDescription} action={emptyAction} />
+              <DataTableEmpty
+                colSpan={columns.length}
+                title={emptyTitle ?? t('table.noResults')}
+                description={emptyDescription ?? t('table.noResultsDescription')}
+                action={emptyAction}
+              />
             ) : (
               table.getRowModel().rows.map((row) => (
                 <tr

@@ -1,0 +1,108 @@
+{
+  "_comment": "Las claves son los valores canónicos en inglés que viaja a la API — nunca se traducen. Solo se traducen sus valores.",
+  "status": {
+    "Active": "Activo",
+    "Available": "Disponible",
+    "Awaiting ID": "Falta identificación",
+    "Completed": "Completado",
+    "Confirmed": "Confirmado",
+    "Deposit due": "Depósito pendiente",
+    "Dormant": "Inactivo",
+    "Failed": "Fallido",
+    "Flagged": "Marcado",
+    "Limited hours": "Horario reducido",
+    "Maintenance": "Mantenimiento",
+    "New": "Nuevo",
+    "On rent": "Alquilado",
+    "Open": "Abierto",
+    "Out of service": "Fuera de servicio",
+    "Overdue": "Vencido",
+    "Overdue fee": "Cargo por retraso",
+    "Paid": "Pagado",
+    "Paused": "Pausado",
+    "Payment failed": "Pago fallido",
+    "Pending": "Pendiente",
+    "Refunded": "Reembolsado",
+    "Scheduled": "Programado",
+    "Verify docs": "Verificar documentos"
+  },
+  "vehicleClass": {
+    "Convertible": "Convertible",
+    "Coupe": "Cupé",
+    "Crossover": "Crossover",
+    "Hatchback": "Hatchback",
+    "Minivan": "Minivan",
+    "Pickup-truck": "Camioneta pickup",
+    "Sedan": "Sedán",
+    "Sport": "Deportivo",
+    "SUV": "SUV",
+    "Van": "Furgoneta",
+    "Wagon": "Familiar"
+  },
+  "transmission": {
+    "Automatic": "Automática",
+    "Manual": "Manual"
+  },
+  "fuelType": {
+    "Petrol": "Gasolina",
+    "Diesel": "Diésel",
+    "Hybrid": "Híbrido",
+    "Electric": "Eléctrico"
+  },
+  "billingBasis": {
+    "hour": "Por hora",
+    "day": "Por día",
+    "week": "Por semana",
+    "month": "Por mes",
+    "fixed": "Duración fija"
+  },
+  "billingBasisHint": {
+    "hour": "Cobro por hora",
+    "day": "El más común",
+    "week": "Cobro semanal",
+    "month": "Largo plazo",
+    "fixed": "Tarifa plana · duración fija"
+  },
+  "billingBasisSuffix": {
+    "hour": "/h",
+    "day": "/día",
+    "week": "/sem",
+    "month": "/mes",
+    "fixed": ""
+  },
+  "billingBasisPer": {
+    "hour": "/hora",
+    "day": "/día",
+    "week": "/semana",
+    "month": "/mes",
+    "fixed": "en total"
+  },
+  "billingBasisUnit": {
+    "hour": "hora",
+    "day": "día",
+    "week": "semana",
+    "month": "mes",
+    "fixed": "bloque"
+  },
+  "durationUnit": {
+    "hours_one": "hora",
+    "hours_other": "horas",
+    "days_one": "día",
+    "days_other": "días",
+    "weeks_one": "semana",
+    "weeks_other": "semanas",
+    "months_one": "mes",
+    "months_other": "meses"
+  },
+  "units": {
+    "miles": "mi",
+    "milesLong_one": "milla",
+    "milesLong_other": "millas",
+    "mph": "mph",
+    "hp": "hp",
+    "seconds": "s",
+    "perMile": "/mi",
+    "unlimitedMiles": "Millaje ilimitado",
+    "eighthTank": "/ 1/8 de tanque"
+  }
+}

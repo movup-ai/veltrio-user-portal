@@ -1,4 +1,6 @@
+import type { TFunction } from 'i18next'
 import { z } from 'zod'
+import { translateDurationUnit } from '@/i18n/domain'
 import {
   BILLING_BASES,
   DURATION_UNITS,
@@ -24,74 +26,92 @@ const MAX_BLOCK_DURATION: Record<(typeof DURATION_UNITS)[number], number> = {
   months: 12,
 }
 
-export const rateOptionSchema = z
-  .object({
-    id: z.string(),
-    label: z.string().min(1, 'Label is required').max(40),
-    basis: z.enum(BILLING_BASES, { message: 'Pick a billing basis' }),
-    rate: z.number({ message: 'Enter a rate' }).positive('Rate must be greater than 0'),
-    blockDuration: optionalNumber,
-    blockDurationUnit: z.enum(DURATION_UNITS).optional(),
-    includedMiles: optionalNumber,
-    unlimitedMileage: z.boolean(),
+const MAX_PHOTOS = 10
+
+type ValidationT = TFunction<'validation'>
+
+export function rateOptionSchema(t: ValidationT) {
+  return z
+    .object({
+      id: z.string(),
+      label: z.string().min(1, t('rateOption.labelRequired')).max(40),
+      basis: z.enum(BILLING_BASES, { message: t('rateOption.basisRequired') }),
+      rate: z.number({ message: t('rateOption.rateRequired') }).positive(t('rateOption.ratePositive')),
+      blockDuration: optionalNumber,
+      blockDurationUnit: z.enum(DURATION_UNITS).optional(),
+      includedMiles: optionalNumber,
+      unlimitedMileage: z.boolean(),
+    })
+    .superRefine((option, ctx) => {
+      if (option.basis !== 'fixed') return
+
+      if (option.blockDuration == null || option.blockDuration <= 0) {
+        ctx.addIssue({ code: 'custom', path: ['blockDuration'], message: t('rateOption.durationRequired') })
+        return
+      }
+      const unit = option.blockDurationUnit ?? 'days'
+      const max = MAX_BLOCK_DURATION[unit]
+      if (!Number.isInteger(option.blockDuration) || option.blockDuration > max) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['blockDuration'],
+          message: t('rateOption.durationRange', { max, unit: translateDurationUnit(unit, max) }),
+        })
+      }
+    })
+}
+
+/**
+ * Built as a factory rather than a module-level constant so every message resolves in the
+ * language that is active when the form mounts — callers memoize it on `i18n.language`.
+ */
+export function vehicleFormSchema(t: ValidationT) {
+  return z.object({
+    // Step 1 — Vehicle details
+    make: z.string().min(1, t('vehicle.makeRequired')).max(40),
+    model: z.string().min(1, t('vehicle.modelRequired')).max(40),
+    year: z
+      .number({ message: t('vehicle.yearInvalid') })
+      .int()
+      .min(1990, t('vehicle.yearTooEarly'))
+      .max(new Date().getFullYear() + 1, t('vehicle.yearTooLate')),
+    class: z.enum(VEHICLE_CLASSES, { message: t('vehicle.classRequired') }),
+    color: z.string().min(1, t('vehicle.colorRequired')).max(30),
+    plate: z
+      .string()
+      .min(1, t('vehicle.plateRequired'))
+      .max(15)
+      .regex(/^[A-Za-z0-9·\-\s]+$/, t('vehicle.plateInvalid')),
+    vin: z.string().min(11, t('vehicle.vinTooShort')).max(20, t('vehicle.vinTooLong')),
+    location: z.string().min(1, t('vehicle.locationRequired')),
+    status: z.enum(VEHICLE_STATUSES, { message: t('vehicle.statusRequired') }),
+    mileage: z.number({ message: t('vehicle.mileageRequired') }).int().min(0, t('vehicle.mileageNegative')),
+    transmission: z.enum(TRANSMISSIONS, { message: t('vehicle.transmissionRequired') }),
+    fuelType: z.enum(FUEL_TYPES, { message: t('vehicle.fuelTypeRequired') }),
+    seats: z.number({ message: t('vehicle.seatsRequired') }).int().min(1).max(15),
+    doors: z.number({ message: t('vehicle.doorsRequired') }).int().min(1).max(6),
+    topSpeedMph: optionalNumber,
+    horsepower: optionalNumber,
+    zeroToSixtySec: optionalNumber,
+    cylinders: optionalNumber,
+    description: z.string().max(600).optional().or(z.literal('')),
+
+    // Step 2 — Photos
+    photos: z.array(vehiclePhotoSchema).max(MAX_PHOTOS, t('vehicle.photosMax', { max: MAX_PHOTOS })),
+
+    // Step 3 — Pricing
+    rateOptions: z.array(rateOptionSchema(t)).min(1, t('vehicle.rateOptionsMin')),
+    deposit: z.number({ message: t('vehicle.depositRequired') }).nonnegative(t('vehicle.depositRequired')),
+    overageRatePerMile: z
+      .number({ message: t('vehicle.overageRateRequired') })
+      .nonnegative(t('vehicle.overageRateRequired')),
+    fuelChargeRate: optionalNumber,
+    taxRatePct: z.number().min(0).max(100).optional().or(z.nan().transform(() => undefined)),
   })
-  .superRefine((option, ctx) => {
-    if (option.basis !== 'fixed') return
+}
 
-    if (option.blockDuration == null || option.blockDuration <= 0) {
-      ctx.addIssue({ code: 'custom', path: ['blockDuration'], message: 'Enter a block duration' })
-      return
-    }
-    const unit = option.blockDurationUnit ?? 'days'
-    const max = MAX_BLOCK_DURATION[unit]
-    if (!Number.isInteger(option.blockDuration) || option.blockDuration > max) {
-      ctx.addIssue({ code: 'custom', path: ['blockDuration'], message: `Must be a whole number, 1–${max} ${unit}` })
-    }
-  })
-
-export const vehicleFormSchema = z.object({
-  // Step 1 — Vehicle details
-  make: z.string().min(1, 'Make is required').max(40),
-  model: z.string().min(1, 'Model is required').max(40),
-  year: z
-    .number({ message: 'Enter a valid year' })
-    .int()
-    .min(1990, 'Year must be 1990 or later')
-    .max(new Date().getFullYear() + 1, 'Year is too far in the future'),
-  class: z.enum(VEHICLE_CLASSES, { message: 'Select a vehicle type' }),
-  color: z.string().min(1, 'Color is required').max(30),
-  plate: z
-    .string()
-    .min(1, 'Plate is required')
-    .max(15)
-    .regex(/^[A-Za-z0-9·\-\s]+$/, 'Plate contains invalid characters'),
-  vin: z.string().min(11, 'VIN looks too short').max(20, 'VIN looks too long'),
-  location: z.string().min(1, 'Select a location'),
-  status: z.enum(VEHICLE_STATUSES, { message: 'Select a status' }),
-  mileage: z.number({ message: 'Enter mileage' }).int().min(0, 'Mileage cannot be negative'),
-  transmission: z.enum(TRANSMISSIONS, { message: 'Select a transmission' }),
-  fuelType: z.enum(FUEL_TYPES, { message: 'Select a fuel type' }),
-  seats: z.number({ message: 'Enter seat count' }).int().min(1).max(15),
-  doors: z.number({ message: 'Enter door count' }).int().min(1).max(6),
-  topSpeedMph: optionalNumber,
-  horsepower: optionalNumber,
-  zeroToSixtySec: optionalNumber,
-  cylinders: optionalNumber,
-  description: z.string().max(600).optional().or(z.literal('')),
-
-  // Step 2 — Photos
-  photos: z.array(vehiclePhotoSchema).max(10, 'You can upload up to 10 photos'),
-
-  // Step 3 — Pricing
-  rateOptions: z.array(rateOptionSchema).min(1, 'Add at least one rate option to make this vehicle bookable'),
-  deposit: z.number({ message: 'Enter a security deposit' }).nonnegative('Enter a security deposit'),
-  overageRatePerMile: z.number({ message: 'Enter an overage rate' }).nonnegative('Enter an overage rate'),
-  fuelChargeRate: optionalNumber,
-  taxRatePct: z.number().min(0).max(100).optional().or(z.nan().transform(() => undefined)),
-})
-
-export type VehicleFormValues = z.infer<typeof vehicleFormSchema>
-export type RateOptionValues = z.infer<typeof rateOptionSchema>
+export type VehicleFormValues = z.infer<ReturnType<typeof vehicleFormSchema>>
+export type RateOptionValues = z.infer<ReturnType<typeof rateOptionSchema>>
 
 export const STEP_FIELDS = {
   details: [

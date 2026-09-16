@@ -1,7 +1,8 @@
 import { TrendingDown, TrendingUp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { PanelHeading } from '@/components/layout/PanelHeading'
-import { formatCurrency } from '../utils/vehicle.utils'
+import { useFormatters } from '@/i18n'
 import type { Vehicle } from '../types/vehicle.types'
 
 function Meter({ label, value, pct, note, tone }: { label: string; value: string; pct: number; note: string; tone: string }) {
@@ -39,6 +40,8 @@ interface VehiclePerformanceProps {
 }
 
 export function VehiclePerformance({ vehicle, fleetUtilization, revenue, daysOnRent }: VehiclePerformanceProps) {
+  const { t } = useTranslation('vehicles')
+  const format = useFormatters()
   const pct = Math.round(vehicle.utilization * 100)
   const utilizationTone = pct >= 70 ? 'var(--color-success)' : pct >= 40 ? 'var(--color-warning)' : 'var(--color-error)'
   const trend = bookedValueTrend(vehicle)
@@ -46,12 +49,12 @@ export function VehiclePerformance({ vehicle, fleetUtilization, revenue, daysOnR
 
   return (
     <Card className="flex flex-col gap-4 p-[18px]">
-      <PanelHeading title="Performance" description="Last 30 days" />
+      <PanelHeading title={t('performance.title')} description={t('performance.description')} />
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-meta text-fg-3 mb-1">Revenue</p>
-          <p className="text-stat-md">{formatCurrency(revenue)}</p>
+          <p className="text-meta text-fg-3 mb-1">{t('performance.revenue')}</p>
+          <p className="text-stat-md">{format.currency(revenue)}</p>
           <span
             className="mt-1.5 inline-flex items-center gap-[3px] rounded-full py-px pr-1.5 pl-1 text-[11.5px] font-semibold tabular-nums"
             style={{
@@ -60,21 +63,26 @@ export function VehiclePerformance({ vehicle, fleetUtilization, revenue, daysOnR
             }}
           >
             <TrendIcon className="size-[11px]" strokeWidth={2.75} />
-            {trend >= 0 ? '+' : ''}
-            {trend}% vs last month
+            {t('performance.trendVsLastMonth', { value: `${trend >= 0 ? '+' : ''}${trend}` })}
           </span>
         </div>
         <div>
-          <p className="text-meta text-fg-3 mb-1">Days on rent</p>
+          <p className="text-meta text-fg-3 mb-1">{t('performance.daysOnRent')}</p>
           <p className="text-stat-md">
             {daysOnRent}
-            <span className="text-fg-4 ml-1 text-[13px] font-normal">/ 30</span>
+            <span className="text-fg-4 ml-1 text-[13px] font-normal">{t('performance.outOf30')}</span>
           </p>
         </div>
       </div>
 
       <div className="border-border-soft flex flex-col gap-4 border-t pt-4">
-        <Meter label="Utilization (30d)" value={`${pct}%`} pct={pct} note={`Fleet average ${Math.round(fleetUtilization * 100)}%`} tone={utilizationTone} />
+        <Meter
+          label={t('performance.utilization30d')}
+          value={`${pct}%`}
+          pct={pct}
+          note={t('performance.fleetAverage', { value: Math.round(fleetUtilization * 100) })}
+          tone={utilizationTone}
+        />
       </div>
     </Card>
   )

@@ -1,4 +1,5 @@
 import { apiClient } from '@/services/api/client'
+import i18n from '@/i18n'
 import { mockDelay, useMocks } from '@/lib/mock'
 import { ApiError } from '@/types/api'
 import type { PaginatedResult } from '@/types/common'
@@ -51,7 +52,7 @@ function mockList(params: VehicleListParams): PaginatedResult<Vehicle> {
 
 function mockGet(id: string): Vehicle {
   const found = db.find((v) => v.id === id)
-  if (!found) throw new ApiError('not_found', 'Vehicle not found', { status: 404 })
+  if (!found) throw new ApiError('not_found', i18n.t('vehicles:errors.notFound'), { status: 404 })
   return found
 }
 

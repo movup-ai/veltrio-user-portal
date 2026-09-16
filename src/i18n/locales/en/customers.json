@@ -1,0 +1,42 @@
+{
+  "list": {
+    "title": "Customers",
+    "description": "Renter profiles, documents and rental history",
+    "addCustomer": "Add customer",
+    "export": "Export",
+    "searchPlaceholder": "Search name, email or licence",
+    "pageNote": "Showing 1–{{shown}} of {{total}} customers",
+    "tabs": {
+      "All": "All",
+      "Active": "Active",
+      "Needs review": "Needs review"
+    },
+    "filters": {
+      "status": "Status",
+      "joined": "Joined",
+      "joinedValue": "Last 12 mo"
+    },
+    "stats": {
+      "total": "Total customers",
+      "totalNote": "46 new this month",
+      "repeatRate": "Repeat rate",
+      "repeatRateNote": "2+ rentals in 12 months",
+      "docsToVerify": "Docs to verify",
+      "docsToVerifyNote": "Blocks pickup until cleared"
+    }
+  },
+  "columns": {
+    "customer": "Customer",
+    "phone": "Phone",
+    "licence": "Driver licence",
+    "rentals": "Rentals",
+    "status": "Status",
+    "lifetimeValue": "Lifetime value"
+  },
+  "details": {
+    "title": "Customer {{id}}",
+    "description": "Customer profile, bookings, and payment history",
+    "comingSoonTitle": "Customer details coming soon",
+    "comingSoonDescription": "This module is being built next."
+  }
+}

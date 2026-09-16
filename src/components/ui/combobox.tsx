@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Check, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -25,13 +26,14 @@ export function Combobox({
   onChange,
   options,
   placeholder,
-  emptyText = 'No matches — press Enter to use this value',
+  emptyText,
   invalid,
   disabled,
   className,
   id,
   ...aria
 }: ComboboxProps) {
+  const { t } = useTranslation('common')
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState(value)
   // Separate from `query` so reopening a field that already has a value shows the full list
@@ -136,7 +138,7 @@ export function Combobox({
       >
         <div ref={listRef} className="max-h-60 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="text-fg-4 px-2 py-2 text-[12.5px]">{emptyText}</p>
+            <p className="text-fg-4 px-2 py-2 text-[12.5px]">{emptyText ?? t('combobox.empty')}</p>
           ) : (
             filtered.map((option, index) => (
               <button

@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Car, ChevronDown, Download, Gauge, GripVertical, Plus, Tag, Wrench } from 'lucide-react'
+import { useDomainLabels } from '@/i18n/domain'
+import { useFormatters } from '@/i18n'
 import { cn } from '@/lib/utils'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -22,7 +25,6 @@ import {
   TRANSMISSIONS,
   VEHICLE_CLASSES,
   VEHICLE_PRICE_BANDS,
-  VEHICLE_SORT_LABELS,
   VEHICLE_SORTS,
   VEHICLE_STATUSES,
   type FuelType,
@@ -33,7 +35,7 @@ import {
   type VehicleStatus,
 } from '@/modules/vehicles/types/vehicle.types'
 import { useDeleteVehicle, useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
-import { dailyRateOption, formatCurrency, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
+import { dailyRateOption, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
 
 /** No bookings API yet — mock data, matched to a vehicle by plate. See VehicleDetailsPage for the same temporary pattern. */
 const ALL_BOOKINGS = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]
@@ -41,6 +43,7 @@ function tripsForVehicle(v: Vehicle): number {
   return ALL_BOOKINGS.filter((b) => b[3] === v.plate).length
 }
 
+/** Canonical values — `All` means "no status filter", the rest map 1:1 to VehicleStatus. */
 const TABS = ['All', 'Available', 'On rent', 'Maintenance'] as const
 type Tab = (typeof TABS)[number]
 
@@ -67,6 +70,10 @@ function applyManualOrder(items: Vehicle[], order: string[]): Vehicle[] {
 }
 
 export function VehiclesPage() {
+  const { t } = useTranslation('vehicles')
+  const { t: tCommon } = useTranslation('common')
+  const domain = useDomainLabels()
+  const format = useFormatters()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('All')
   const [search, setSearch] = useState('')
@@ -87,7 +94,7 @@ export function VehiclesPage() {
   const [page, setPage] = useState(1)
   const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null)
 
-  usePageHeaderActions([{ label: 'Add vehicle', icon: Plus, onClick: () => navigate('/app/vehicles/new') }])
+  usePageHeaderActions([{ label: t('list.addVehicle'), icon: Plus, onClick: () => navigate('/app/vehicles/new') }], [t])
 
   const effectiveStatus: VehicleStatus | 'Any' = tab === 'All' ? statusFilter : (tab as VehicleStatus)
 
@@ -131,8 +138,9 @@ export function VehiclesPage() {
     resetToFirstPage()
     const activeCount = (draftTransmission !== 'Any' ? 1 : 0) + (draftFuelType !== 'Any' ? 1 : 0) + (draftPriceBands.length > 0 ? 1 : 0)
     toast({
-      title: 'Filters applied',
-      description: activeCount > 0 ? `${activeCount} filter${activeCount === 1 ? '' : 's'} applied to the results.` : 'No extra filters selected.',
+      title: tCommon('filters.applied'),
+      description:
+        activeCount > 0 ? tCommon('filters.appliedCount', { count: activeCount }) : tCommon('filters.appliedNone'),
       variant: 'success',
     })
   }
@@ -149,19 +157,29 @@ export function VehiclesPage() {
     : null
 
   const stats = [
-    { icon: Car, label: 'Fleet size', value: String(fleet.length), note: `${fleet.filter((v) => v.status === 'Available').length} available now` },
+    {
+      icon: Car,
+      label: t('list.stats.fleetSize'),
+      value: String(fleet.length),
+      note: t('list.stats.fleetSizeNote', { count: fleet.filter((v) => v.status === 'Available').length }),
+    },
     {
       icon: Gauge,
-      label: 'Utilization',
+      label: t('list.stats.utilization'),
       value: fleet.length ? `${Math.round((fleet.reduce((sum, v) => sum + v.utilization, 0) / fleet.length) * 100)}%` : '0%',
-      note: 'Target 70%',
+      note: t('list.stats.utilizationNote'),
     },
-    { icon: Wrench, label: 'In maintenance', value: String(fleet.filter((v) => v.status === 'Maintenance').length), note: 'Vehicles currently serviced' },
+    {
+      icon: Wrench,
+      label: t('list.stats.inMaintenance'),
+      value: String(fleet.filter((v) => v.status === 'Maintenance').length),
+      note: t('list.stats.inMaintenanceNote'),
+    },
     {
       icon: Tag,
-      label: 'Avg. daily rate',
-      value: avgDailyRate != null ? formatCurrency(avgDailyRate) : '—',
-      note: 'Across vehicles with a daily rate',
+      label: t('list.stats.avgDailyRate'),
+      value: avgDailyRate != null ? format.currency(avgDailyRate) : '—',
+      note: t('list.stats.avgDailyRateNote'),
     },
   ]
 
@@ -170,24 +188,24 @@ export function VehiclesPage() {
 
   const rows = orderedItems.map((v) =>
     vehicleRow(v, tripsForVehicle(v), [
-      { label: 'View details', onClick: () => navigate(`/app/vehicles/${v.id}`) },
-      { label: 'Edit vehicle', onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
-      { label: 'Archive vehicle', onClick: () => setDeleteTarget(v), destructive: true },
+      { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/vehicles/${v.id}`) },
+      { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
+      { label: t('list.rowActions.archiveVehicle'), onClick: () => setDeleteTarget(v), destructive: true },
     ]),
   )
 
   return (
     <PageContainer>
       <PageHeader
-        title="Vehicles"
-        description="Manage your rental fleet"
-        actions={<PageActionButton icon={Download} label="Import CSV" className="!text-[13px]" />}
+        title={t('list.title')}
+        description={t('list.description')}
+        actions={<PageActionButton icon={Download} label={t('list.importCsv')} className="!text-[13px]" />}
       />
 
       <StatStrip stats={stats} />
 
       <FilterBar
-        searchPlaceholder="Search make, model, plate or VIN"
+        searchPlaceholder={t('list.searchPlaceholder')}
         searchValue={search}
         onSearchChange={(value) => {
           setSearch(value)
@@ -195,9 +213,12 @@ export function VehiclesPage() {
         }}
         filters={[
           {
-            label: 'Status',
-            value: statusFilter,
-            options: ['Any', ...VEHICLE_STATUSES],
+            label: t('filters.status'),
+            value: statusFilter === 'Any' ? tCommon('filters.any') : domain.status(statusFilter),
+            options: [
+              { value: 'Any', label: tCommon('filters.any') },
+              ...VEHICLE_STATUSES.map((s) => ({ value: s, label: domain.status(s) })),
+            ],
             onChange: (value) => {
               setStatusFilter(value as VehicleStatus | 'Any')
               setTab('All')
@@ -205,18 +226,24 @@ export function VehiclesPage() {
             },
           },
           {
-            label: 'Location',
-            value: locationFilter === 'All' ? `All ${LOCATIONS.length}` : locationFilter,
-            options: ['All', ...LOCATIONS.map((l) => l.name)],
+            label: t('filters.location'),
+            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: LOCATIONS.length }) : locationFilter,
+            options: [
+              { value: 'All', label: tCommon('filters.all') },
+              ...LOCATIONS.map((l) => ({ value: l.name, label: l.name })),
+            ],
             onChange: (value) => {
               setLocationFilter(value)
               resetToFirstPage()
             },
           },
           {
-            label: 'Vehicle type',
-            value: classFilter,
-            options: ['All', ...VEHICLE_CLASSES],
+            label: t('filters.vehicleType'),
+            value: classFilter === 'All' ? tCommon('filters.all') : domain.label('vehicleClass', classFilter),
+            options: [
+              { value: 'All', label: tCommon('filters.all') },
+              ...VEHICLE_CLASSES.map((c) => ({ value: c, label: domain.label('vehicleClass', c) })),
+            ],
             onChange: (value) => {
               setClassFilter(value)
               resetToFirstPage()
@@ -226,22 +253,28 @@ export function VehiclesPage() {
         moreFilters={[
           {
             kind: 'select',
-            label: 'Transmission',
-            value: draftTransmission,
-            options: ['Any', ...TRANSMISSIONS],
+            label: t('filters.transmission'),
+            value: draftTransmission === 'Any' ? tCommon('filters.any') : domain.label('transmission', draftTransmission),
+            options: [
+              { value: 'Any', label: tCommon('filters.any') },
+              ...TRANSMISSIONS.map((tr) => ({ value: tr, label: domain.label('transmission', tr) })),
+            ],
             onChange: (value) => setDraftTransmission(value as Transmission | 'Any'),
           },
           {
             kind: 'select',
-            label: 'Fuel type',
-            value: draftFuelType,
-            options: ['Any', ...FUEL_TYPES],
+            label: t('filters.fuelType'),
+            value: draftFuelType === 'Any' ? tCommon('filters.any') : domain.label('fuelType', draftFuelType),
+            options: [
+              { value: 'Any', label: tCommon('filters.any') },
+              ...FUEL_TYPES.map((f) => ({ value: f, label: domain.label('fuelType', f) })),
+            ],
             onChange: (value) => setDraftFuelType(value as FuelType | 'Any'),
           },
           {
             kind: 'checkboxGroup',
-            label: 'Daily price',
-            options: VEHICLE_PRICE_BANDS.map((b) => ({ label: b.label, value: b.value })),
+            label: t('filters.dailyPrice'),
+            options: VEHICLE_PRICE_BANDS.map((b) => ({ label: t(`filters.priceBand.${b.value}`), value: b.value })),
             selected: draftPriceBands,
             onToggle: toggleDraftPriceBand,
           },
@@ -261,22 +294,23 @@ export function VehiclesPage() {
       />
 
       {isLoading && !data ? (
-        <LoadingState label="Loading vehicles…" />
+        <LoadingState label={t('list.loading')} />
       ) : isError ? (
-        <ErrorState description="We couldn't load the fleet." onRetry={() => refetch()} />
+        <ErrorState description={t('list.loadError')} onRetry={() => refetch()} />
       ) : rows.length === 0 ? (
-        <EmptyState icon={Car} title="No vehicles match your filters" description="Try adjusting the search or filters." />
+        <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
       ) : (
         <RecordTable
-          tabs={TABS.map((t) => ({
-            label: t,
-            selected: tab === t,
+          tabs={TABS.map((value) => ({
+            key: value,
+            label: t(`list.tabs.${value}`),
+            selected: tab === value,
             onClick: () => {
-              setTab(t)
+              setTab(value)
               resetToFirstPage()
             },
           }))}
-          columns={vehicleColumns()}
+          columns={vehicleColumns(t)}
           rows={rows}
           actions={
             <div className="flex items-center gap-2">
@@ -287,8 +321,8 @@ export function VehiclesPage() {
                       type="button"
                       className="bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground flex h-8 shrink-0 items-center gap-2 rounded-[9px] border px-[11px] text-[12.5px] whitespace-nowrap transition-colors"
                     >
-                      <span className="text-fg-4">Sort by</span>
-                      <span className="font-semibold">{VEHICLE_SORT_LABELS[sortBy]}</span>
+                      <span className="text-fg-4">{tCommon('filters.sortBy')}</span>
+                      <span className="font-semibold">{t(`sort.${sortBy}`)}</span>
                       <ChevronDown className="text-fg-4 size-3.5" />
                     </button>
                   </DropdownMenuTrigger>
@@ -301,7 +335,7 @@ export function VehiclesPage() {
                           resetToFirstPage()
                         }}
                       >
-                        {VEHICLE_SORT_LABELS[s]}
+                        {t(`sort.${s}`)}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -318,16 +352,20 @@ export function VehiclesPage() {
                 )}
               >
                 <GripVertical className="size-3.5" />
-                {manualOrderMode ? 'Done ordering' : 'Set vehicle order'}
+                {manualOrderMode ? t('list.doneOrdering') : t('list.setOrder')}
               </button>
             </div>
           }
           pageNote={
             manualOrderMode
-              ? `${orderedItems.length} ${orderedItems.length === 1 ? 'vehicle' : 'vehicles'} · drag to reorder`
+              ? t('list.dragToReorder', { count: orderedItems.length })
               : data && data.total > 0
-                ? `Showing ${(data.page - 1) * PAGE_SIZE + 1}–${Math.min(data.page * PAGE_SIZE, data.total)} of ${data.total} vehicles`
-                : 'No vehicles found'
+                ? t('list.pageNote', {
+                    from: (data.page - 1) * PAGE_SIZE + 1,
+                    to: Math.min(data.page * PAGE_SIZE, data.total),
+                    total: data.total,
+                  })
+                : t('list.noneFound')
           }
           minWidth="960px"
           onRowClick={manualOrderMode ? undefined : (id) => navigate(`/app/vehicles/${id}`)}
@@ -340,9 +378,16 @@ export function VehiclesPage() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Archive vehicle?"
-        description={deleteTarget ? `${deleteTarget.make} ${deleteTarget.model} (${deleteTarget.plate}) will be archived and removed from the active fleet. This can't be undone.` : undefined}
-        confirmLabel="Archive vehicle"
+        title={t('archiveDialog.title')}
+        description={
+          deleteTarget
+            ? t('archiveDialog.description', {
+                name: `${deleteTarget.make} ${deleteTarget.model}`,
+                plate: deleteTarget.plate,
+              })
+            : undefined
+        }
+        confirmLabel={t('archiveDialog.confirm')}
         loading={deleteVehicle.isPending}
         onConfirm={() => {
           if (!deleteTarget) return

@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Settings",
+    "description": "Organization profile, rental policy and team access",
+    "auditLog": "View audit log"
+  },
+  "sections": {
+    "organization": {
+      "title": "Organization",
+      "description": "Appears on invoices, rental agreements and customer emails.",
+      "fields": {
+        "legalName": "Legal name",
+        "tradingName": "Trading name",
+        "taxId": "Tax ID",
+        "currency": "Currency",
+        "currencyHelp": "Applies to all rates and invoices.",
+        "currencyValue": "USD — US Dollar",
+        "timezone": "Timezone",
+        "timezoneHelp": "Pickup and return times are shown in this zone."
+      }
+    },
+    "rentalPolicy": {
+      "title": "Rental policy",
+      "description": "Defaults applied to new bookings unless overridden per location.",
+      "fields": {
+        "minimumAge": "Minimum driver age",
+        "minimumAgeValue": "{{count}} years",
+        "minimumAgeHelp": "Under-25 fee is set in Pricing.",
+        "securityDeposit": "Security deposit",
+        "securityDepositHelp": "Held on the card at pickup.",
+        "gracePeriod": "Grace period",
+        "gracePeriodValue": "{{count}} minutes",
+        "gracePeriodHelp": "Before a late-return fee applies.",
+        "fuelPolicy": "Fuel policy",
+        "fuelPolicyValue": "Same-to-same",
+        "requireId": "Require ID verification",
+        "requireIdValue": "Required before pickup",
+        "requireIdHelp": "Blocks counter handover until documents clear.",
+        "autoChargeLateFees": "Auto-charge late fees",
+        "autoChargeLateFeesValue": "Enabled"
+      }
+    }
+  },
+  "toggle": {
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  }
+}

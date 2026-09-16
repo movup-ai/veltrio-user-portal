@@ -1,0 +1,20 @@
+{
+  "list": {
+    "title": "Sucursales",
+    "description": "Sucursales, horarios de mostrador y flota en sitio",
+    "addLocation": "Añadir sucursal"
+  },
+  "card": {
+    "manage": "Gestionar sucursal",
+    "metrics": {
+      "vehicles": "Vehículos",
+      "utilization": "Uso",
+      "revenueMtd": "Ingresos del mes"
+    },
+    "branchManager": "Gerente de sucursal"
+  },
+  "hours": {
+    "monSun": "Lun–Dom",
+    "monFri": "Lun–Vie"
+  }
+}

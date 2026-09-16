@@ -1,0 +1,20 @@
+{
+  "list": {
+    "title": "Locations",
+    "description": "Branches, counter hours and on-site fleet",
+    "addLocation": "Add location"
+  },
+  "card": {
+    "manage": "Manage location",
+    "metrics": {
+      "vehicles": "Vehicles",
+      "utilization": "Utilization",
+      "revenueMtd": "Revenue MTD"
+    },
+    "branchManager": "Branch manager"
+  },
+  "hours": {
+    "monSun": "Mon–Sun",
+    "monFri": "Mon–Fri"
+  }
+}

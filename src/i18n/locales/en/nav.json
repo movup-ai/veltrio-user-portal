@@ -1,0 +1,34 @@
+{
+  "groups": {
+    "Operations": "Operations",
+    "Revenue": "Revenue",
+    "Setup": "Setup"
+  },
+  "links": {
+    "Dashboard": "Dashboard",
+    "Bookings": "Bookings",
+    "Vehicles": "Vehicles",
+    "Customers": "Customers",
+    "Payments": "Payments",
+    "Pricing": "Pricing",
+    "Locations": "Locations",
+    "Settings": "Settings"
+  },
+  "sidebar": {
+    "primary": "Primary",
+    "collapse": "Collapse",
+    "toggle": "Toggle sidebar",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "toggleDarkMode": "Toggle dark mode",
+    "userRole": "Owner · {{organization}}"
+  },
+  "header": {
+    "openMenu": "Open menu",
+    "breadcrumb": "Breadcrumb",
+    "globalSearch": "Global search",
+    "searchPlaceholder": "Search plate, booking, customer",
+    "notifications_one": "Notifications, {{count}} unread",
+    "notifications_other": "Notifications, {{count}} unread"
+  }
+}

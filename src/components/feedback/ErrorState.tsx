@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -9,12 +10,9 @@ interface ErrorStateProps {
   className?: string
 }
 
-export function ErrorState({
-  title = 'Something went wrong',
-  description = "We couldn't load this data.",
-  onRetry,
-  className,
-}: ErrorStateProps) {
+export function ErrorState({ title, description, onRetry, className }: ErrorStateProps) {
+  const { t } = useTranslation('common')
+
   return (
     <div
       role="alert"
@@ -27,12 +25,12 @@ export function ErrorState({
         <AlertTriangle className="size-6" aria-hidden />
       </div>
       <div className="flex flex-col gap-1">
-        <p className="text-card-title">{title}</p>
-        <p className="max-w-sm text-description">{description}</p>
+        <p className="text-card-title">{title ?? t('states.errorTitle')}</p>
+        <p className="max-w-sm text-description">{description ?? t('states.errorDescription')}</p>
       </div>
       {onRetry && (
         <Button variant="outline" onClick={onRetry}>
-          Try again
+          {t('actions.retry')}
         </Button>
       )}
     </div>

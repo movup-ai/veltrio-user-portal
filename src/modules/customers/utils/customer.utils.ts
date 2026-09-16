@@ -1,15 +1,16 @@
+import type { TFunction } from 'i18next'
 import type { Row } from '@/components/data-display/record-table.types'
 import { initials } from '@/utils/formatting'
 import type { CustomerTuple } from '../types/customer.types'
 
-export function customerColumns() {
+export function customerColumns(t: TFunction<'customers'>) {
   return [
-    { label: 'Customer', align: 'left' as const },
-    { label: 'Phone', align: 'left' as const },
-    { label: 'Driver licence', align: 'left' as const },
-    { label: 'Rentals', align: 'left' as const },
-    { label: 'Status', align: 'left' as const },
-    { label: 'Lifetime value', align: 'right' as const },
+    { label: t('columns.customer'), align: 'left' as const },
+    { label: t('columns.phone'), align: 'left' as const },
+    { label: t('columns.licence'), align: 'left' as const },
+    { label: t('columns.rentals'), align: 'left' as const },
+    { label: t('columns.status'), align: 'left' as const },
+    { label: t('columns.lifetimeValue'), align: 'right' as const },
     { label: '', align: 'right' as const },
   ]
 }

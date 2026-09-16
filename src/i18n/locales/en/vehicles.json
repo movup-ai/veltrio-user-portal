@@ -1,0 +1,358 @@
+{
+  "list": {
+    "title": "Vehicles",
+    "description": "Manage your rental fleet",
+    "addVehicle": "Add vehicle",
+    "importCsv": "Import CSV",
+    "searchPlaceholder": "Search make, model, plate or VIN",
+    "loading": "Loading vehicles…",
+    "loadError": "We couldn't load the fleet.",
+    "emptyTitle": "No vehicles match your filters",
+    "emptyDescription": "Try adjusting the search or filters.",
+    "setOrder": "Set vehicle order",
+    "doneOrdering": "Done ordering",
+    "dragToReorder_one": "{{count}} vehicle · drag to reorder",
+    "dragToReorder_other": "{{count}} vehicles · drag to reorder",
+    "pageNote": "Showing {{from}}–{{to}} of {{total}} vehicles",
+    "noneFound": "No vehicles found",
+    "tabs": {
+      "All": "All",
+      "Available": "Available",
+      "On rent": "On rent",
+      "Maintenance": "Maintenance"
+    },
+    "stats": {
+      "fleetSize": "Fleet size",
+      "fleetSizeNote": "{{count}} available now",
+      "utilization": "Utilization",
+      "utilizationNote": "Target 70%",
+      "inMaintenance": "In maintenance",
+      "inMaintenanceNote": "Vehicles currently serviced",
+      "avgDailyRate": "Avg. daily rate",
+      "avgDailyRateNote": "Across vehicles with a daily rate"
+    },
+    "rowActions": {
+      "viewDetails": "View details",
+      "editVehicle": "Edit vehicle",
+      "archiveVehicle": "Archive vehicle"
+    }
+  },
+  "filters": {
+    "status": "Status",
+    "location": "Location",
+    "vehicleType": "Vehicle type",
+    "transmission": "Transmission",
+    "fuelType": "Fuel type",
+    "dailyPrice": "Daily price",
+    "priceBand": {
+      "0-50": "$0 – $50 / day",
+      "50-100": "$50 – $100 / day",
+      "100-200": "$100 – $200 / day",
+      "200+": "$200+ / day"
+    }
+  },
+  "sort": {
+    "utilization": "Utilization",
+    "dailyRate": "Daily rate",
+    "name": "Vehicle name"
+  },
+  "columns": {
+    "vehicle": "Vehicle",
+    "plateVin": "Plate / VIN",
+    "location": "Location",
+    "status": "Status",
+    "utilization30d": "Utilization (30d)",
+    "trips": "Trips",
+    "dailyRate": "Daily rate"
+  },
+  "details": {
+    "loading": "Loading vehicle…",
+    "notFoundTitle": "Vehicle not found",
+    "notFoundDescription": "This vehicle may have been removed.",
+    "notFoundError": "We couldn't find that vehicle. It may have been deleted.",
+    "backToVehicles": "Back to vehicles",
+    "previousVehicle": "Previous vehicle",
+    "nextVehicle": "Next vehicle",
+    "position": "{{index}} of {{total}}",
+    "archive": "Archive",
+    "editVehicle": "Edit vehicle",
+    "descriptionTitle": "Description",
+    "descriptionSubtitle": "Customer-facing summary shown on the listing",
+    "bookingHistory": "Booking history",
+    "bookingHistoryNote": "Showing {{count}} of {{total}} rentals",
+    "exportHistory": "Export History",
+    "noBookings": "No bookings for this vehicle yet.",
+    "rateOptions": "Rate options",
+    "rateOptionsCount": "{{count}} available",
+    "feesTitle": "Deposit, fees & tax",
+    "notes": "Notes",
+    "noNotes": "No notes for this vehicle yet.",
+    "bookingColumns": {
+      "customer": "Customer",
+      "rentalWindow": "Rental window",
+      "location": "Location",
+      "status": "Status",
+      "total": "Total"
+    }
+  },
+  "fees": {
+    "deposit": "Deposit",
+    "overageRate": "Overage rate",
+    "fuelCharge": "Fuel charge",
+    "taxRate": "Tax rate",
+    "securityDeposit": "Security deposit"
+  },
+  "statusCard": {
+    "currentRenter": "Current renter",
+    "rentalWindow": "Rental window",
+    "homeBranch": "Home branch",
+    "odometer": "Odometer",
+    "inFleetSince": "In fleet since",
+    "newBooking": "New booking"
+  },
+  "performance": {
+    "title": "Performance",
+    "description": "Last 30 days",
+    "revenue": "Revenue",
+    "trendVsLastMonth": "{{value}}% vs last month",
+    "daysOnRent": "Days on rent",
+    "outOf30": "/ 30",
+    "utilization30d": "Utilization (30d)",
+    "fleetAverage": "Fleet average {{value}}%"
+  },
+  "availability": {
+    "title": "Availability",
+    "openCalendar": "Open Calendar",
+    "next14Days": "Next 14 days",
+    "availableDays_one": "{{count}} available day",
+    "availableDays_other": "{{count}} available days",
+    "nextGap": "next gap {{date}}",
+    "fullyBooked": "fully booked",
+    "dayInitials": "S,M,T,W,T,F,S",
+    "state": {
+      "booked": "Booked",
+      "available": "Available",
+      "disabled": "Disabled"
+    }
+  },
+  "specs": {
+    "title": "Specifications",
+    "description": "Exactly as entered on the vehicle form",
+    "make": "Make",
+    "model": "Model",
+    "vehicleType": "Vehicle type",
+    "year": "Year",
+    "color": "Color",
+    "plate": "Plate",
+    "vin": "VIN",
+    "status": "Status",
+    "location": "Location",
+    "currentMileage": "Current mileage",
+    "transmission": "Transmission",
+    "fuelType": "Fuel type",
+    "seats": "Seats",
+    "doors": "Doors",
+    "topSpeed": "Top speed",
+    "power": "Power",
+    "zeroToSixty": "0–60 mph",
+    "cylinders": "Cylinders"
+  },
+  "gallery": {
+    "primaryPhoto": "Primary photo · 1600 × 900",
+    "cover": "Cover",
+    "showPhoto": "Show {{name}}",
+    "goToPage": "Go to photo page {{page}}",
+    "suggestedShots": {
+      "front": "Front 3/4",
+      "rear": "Rear 3/4",
+      "interior": "Interior",
+      "odometer": "Odometer"
+    }
+  },
+  "form": {
+    "addTitle": "Add vehicle",
+    "editTitle": "Edit vehicle",
+    "subtitle": "Vehicle details and pricing",
+    "loadError": "We couldn't load this vehicle.",
+    "steps": {
+      "details": "Vehicle details",
+      "photos": "Photos",
+      "pricing": "Pricing",
+      "review": "Review"
+    },
+    "stepsLabel": "Form steps",
+    "draft": {
+      "foundTitle": "Unsaved changes found",
+      "foundDescription": "We found a draft you were working on {{when}}. Restore it, or start fresh.",
+      "discard": "Discard draft",
+      "restore": "Restore draft",
+      "saved": "Draft saved {{when}}",
+      "saveAndExit": "Save draft & exit"
+    },
+    "vin": {
+      "decodeLabel": "Decode VIN",
+      "placeholder": "Enter a VIN to auto-fill make, model, year & specs",
+      "decode": "Decode",
+      "decoded": "VIN decoded",
+      "decodedDescription": "Filled in {{fields}} from the VIN.",
+      "decodedNothing": "Didn't recognize enough to auto-fill any fields.",
+      "decodeFailed": "Couldn't decode VIN",
+      "decodeFailedDescription": "Something went wrong decoding this VIN.",
+      "fields": {
+        "make": "make",
+        "model": "model",
+        "year": "year",
+        "vehicleType": "vehicle type",
+        "transmission": "transmission",
+        "fuelType": "fuel type",
+        "doors": "doors",
+        "cylinders": "cylinders",
+        "horsepower": "power"
+      }
+    },
+    "sections": {
+      "identity": "Identity",
+      "registration": "Registration & status",
+      "specs": "Specs",
+      "performance": "Performance (optional)",
+      "rateOptions": "Rate options",
+      "rateOptionsHint": "Each option is one way a renter can book this vehicle, with its own mileage allowance.",
+      "fees": "Deposit, fees & tax",
+      "feesHint": "Applied to every booking, whichever rate option is used."
+    },
+    "fields": {
+      "make": "Make",
+      "makePlaceholder": "Select or type a make",
+      "model": "Model",
+      "modelPlaceholder": "Select or type a model",
+      "modelPickMakeFirst": "Pick a make first",
+      "year": "Year",
+      "yearPlaceholder": "e.g. 2024",
+      "vehicleType": "Vehicle type",
+      "vehicleTypePlaceholder": "Select vehicle type",
+      "color": "Color",
+      "colorPlaceholder": "Select or type a color",
+      "location": "Location",
+      "locationPlaceholder": "Select location",
+      "plate": "Plate",
+      "vin": "VIN",
+      "status": "Status",
+      "statusPlaceholder": "Select status",
+      "mileage": "Current mileage (mi)",
+      "mileagePlaceholder": "e.g. 12000",
+      "transmission": "Transmission",
+      "transmissionPlaceholder": "Select transmission",
+      "fuelType": "Fuel type",
+      "fuelTypePlaceholder": "Select fuel type",
+      "seats": "Seats",
+      "doors": "Doors",
+      "topSpeed": "Top speed (mph)",
+      "horsepower": "Power (hp)",
+      "zeroToSixty": "0–60 mph (sec)",
+      "cylinders": "Cylinders",
+      "description": "Description",
+      "descriptionHint": "Customer-facing summary shown on the vehicle listing.",
+      "deposit": "Security deposit (USD)",
+      "depositPlaceholder": "e.g. 500",
+      "overageRate": "Overage rate (per mile)",
+      "overageRatePlaceholder": "e.g. 0.35",
+      "fuelCharge": "Fuel charge (per 1/8 tank)",
+      "fuelChargeUnit": "/ 1/8 tank",
+      "taxRate": "Tax rate (%)"
+    },
+    "ai": {
+      "generate": "Generate",
+      "improve": "Improve wording",
+      "shorten": "Shorten",
+      "expand": "Expand",
+      "failed": "Couldn't generate description",
+      "failedDescription": "Something went wrong generating this description."
+    },
+    "nav": {
+      "previousStep": "Previous step",
+      "nextStep": "Next step",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes",
+      "publish": "Publish vehicle"
+    },
+    "review": {
+      "makeFallback": "Make",
+      "modelFallback": "Model",
+      "identity": "Identity",
+      "registration": "Registration & status",
+      "specs": "Specs",
+      "performance": "Performance",
+      "description": "Description",
+      "photos": "Photos",
+      "noPhotos": "No photos added.",
+      "rateOptions": "Rate options",
+      "noRateOptions": "No rate options added.",
+      "untitledOption": "Untitled option",
+      "fees": "Deposit, fees & tax",
+      "seatsDoors": "Seats / Doors",
+      "seatsDoorsValue": "{{seats}} seats · {{doors}} doors"
+    }
+  },
+  "rateOptions": {
+    "emptyTitle": "No rate options yet",
+    "emptyDescription": "Each option is one way a renter can book this vehicle — Daily, Weekly, a Weekend Package. Add at least one to make the vehicle bookable.",
+    "add": "Add rate option",
+    "label": "Label",
+    "labelPlaceholder": "e.g. Weekend Package",
+    "billingBasis": "Billing basis",
+    "blockDuration": "Block duration",
+    "durationUnit": "Duration unit",
+    "rate": "Rate (USD)",
+    "includedMiles": "Included miles",
+    "includedMilesTotal": "Included miles (total)",
+    "includedMilesPer": "Included miles (per {{unit}})",
+    "includedMilesPlaceholder": "e.g. 200",
+    "unlimited": "Unlimited",
+    "unlimitedMiles": "Unlimited miles",
+    "remove": "Remove {{label}}",
+    "removeFallback": "rate option",
+    "fixedBasis": "Fixed · {{count}} {{unit}}"
+  },
+  "photos": {
+    "dropzone": "Drag & drop photos here, or click to browse",
+    "dropzoneHint": "Up to {{max}} photos, {{size}}MB each · {{used}}/{{max}} uploaded",
+    "coverHint": "The first photo is used as the cover image on the vehicle listing — drag photos to reorder.",
+    "cover": "Cover",
+    "remove": "Remove {{name}}",
+    "limitReached": "Photo limit reached",
+    "limitReachedDescription": "You can upload up to {{max}} photos.",
+    "limitPartial": "Only added {{added}} more — max {{max}} photos total.",
+    "skipped": "Some photos were skipped",
+    "skippedDescription": "Each photo must be under {{size}}MB."
+  },
+  "toast": {
+    "added": "Vehicle added",
+    "addedDescription": "{{name}} was added to the fleet.",
+    "addFailed": "Could not add vehicle",
+    "updated": "Vehicle updated",
+    "updatedDescription": "{{name}} was updated.",
+    "updateFailed": "Could not update vehicle",
+    "archived": "Vehicle archived",
+    "archivedDescription": "{{name}} was archived and removed from the active fleet.",
+    "archiveFailed": "Could not archive vehicle"
+  },
+  "archiveDialog": {
+    "title": "Archive vehicle?",
+    "description": "{{name}} ({{plate}}) will be archived and removed from the active fleet. This can't be undone.",
+    "confirm": "Archive vehicle"
+  },
+  "timeAgo": {
+    "justNow": "just now",
+    "seconds": "{{count}}s ago",
+    "minutes": "{{count}}m ago",
+    "hours": "{{count}}h ago"
+  },
+  "errors": {
+    "notFound": "Vehicle not found",
+    "vinTooShort": "Enter a full VIN (at least 11 characters) before decoding.",
+    "vinServiceUnreachable": "Could not reach the VIN decode service.",
+    "vinServiceUnavailable": "VIN decode service is unavailable right now.",
+    "vinNoData": "VIN decode service returned no data.",
+    "vinUndecodable": "This VIN could not be decoded."
+  }
+}

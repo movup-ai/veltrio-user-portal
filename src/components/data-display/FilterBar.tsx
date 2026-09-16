@@ -1,15 +1,26 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
+/**
+ * `value` is the canonical (English) value the caller filters on; `label` is what the user
+ * sees. Keeping them separate is what lets the UI translate while the query stays stable.
+ */
+export interface FilterOption {
+  value: string
+  label: string
+}
+
 interface FilterDef {
   label: string
+  /** Display text for the current selection. */
   value: string
   /** When provided (with onChange), the filter renders as a working dropdown instead of a static display. */
-  options?: string[]
+  options?: FilterOption[]
   onChange?: (value: string) => void
 }
 
@@ -18,7 +29,7 @@ interface MoreFilterSelect {
   kind?: 'select'
   label: string
   value: string
-  options: string[]
+  options: FilterOption[]
   onChange: (value: string) => void
 }
 
@@ -61,6 +72,7 @@ export function FilterBar({
   onApplyFilters,
   onOpenMoreFilters,
 }: FilterBarProps) {
+  const { t } = useTranslation('common')
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
 
   function handleMoreFiltersOpenChange(open: boolean) {
@@ -96,8 +108,8 @@ export function FilterBar({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {f.options.map((opt) => (
-                <DropdownMenuItem key={opt} onSelect={() => f.onChange?.(opt)}>
-                  {opt}
+                <DropdownMenuItem key={opt.value} onSelect={() => f.onChange?.(opt.value)}>
+                  {opt.label}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -130,7 +142,7 @@ export function FilterBar({
               )}
             >
               <SlidersHorizontal className="size-3.5" />
-              <span>More filters</span>
+              <span>{t('filters.more')}</span>
               {moreFiltersActiveCount > 0 && (
                 <span className="bg-primary flex size-[16px] items-center justify-center rounded-full text-[10px] font-bold text-white">
                   {moreFiltersActiveCount}
@@ -140,7 +152,7 @@ export function FilterBar({
           </PopoverTrigger>
           <PopoverContent align="end" className="flex w-80 flex-col gap-4 p-4">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-semibold">More filters</span>
+              <span className="text-[13px] font-semibold">{t('filters.more')}</span>
               {moreFiltersActiveCount > 0 && onClearMoreFilters && (
                 <button
                   type="button"
@@ -148,7 +160,7 @@ export function FilterBar({
                   className="text-fg-4 hover:text-foreground flex items-center gap-1 text-[11.5px] font-medium transition-colors"
                 >
                   <X className="size-3" />
-                  Clear
+                  {t('actions.clear')}
                 </button>
               )}
             </div>
@@ -180,8 +192,8 @@ export function FilterBar({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
                       {f.options.map((opt) => (
-                        <DropdownMenuItem key={opt} onSelect={() => f.onChange(opt)}>
-                          {opt}
+                        <DropdownMenuItem key={opt.value} onSelect={() => f.onChange(opt.value)}>
+                          {opt.label}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -199,7 +211,7 @@ export function FilterBar({
                 className="bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover mt-1 flex h-9 w-full items-center justify-center gap-[7px] rounded-[9px] text-[12.5px] font-semibold transition-colors"
               >
                 <Check className="size-3.5" />
-                Apply filters
+                {t('filters.apply')}
               </button>
             )}
           </PopoverContent>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { CalendarDays, Gauge, Plus, Tag, TrendingUp } from 'lucide-react'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -6,43 +7,61 @@ import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
 import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
+import { useFormatters } from '@/i18n'
 import { PRICING } from '@/modules/pricing/mock/pricing.mock'
 import { pricingColumns, pricingRow } from '@/modules/pricing/utils/pricing.utils'
 
+const TOTAL_RULES = 8
+
 export function PricingPage() {
-  usePageHeaderActions([{ label: 'New rule', icon: Plus }])
+  const { t } = useTranslation('pricing')
+  const { t: tCommon } = useTranslation('common')
+  const { t: tDomain } = useTranslation('domain')
+  const format = useFormatters()
+
+  usePageHeaderActions([{ label: t('list.newRule'), icon: Plus }], [t])
   const rows = PRICING.map(pricingRow)
 
   return (
     <PageContainer>
       <PageHeader
-        title="Pricing"
-        description="Seasonal uplifts, surcharges and negotiated rates"
-        actions={<PageActionButton icon={CalendarDays} label="Rate calendar" />}
+        title={t('list.title')}
+        description={t('list.description')}
+        actions={<PageActionButton icon={CalendarDays} label={t('list.rateCalendar')} />}
       />
 
       <FilterBar
-        searchPlaceholder="Search rule name"
+        searchPlaceholder={t('list.searchPlaceholder')}
         filters={[
-          { label: 'Status', value: 'Any' },
-          { label: 'Scope', value: 'All classes' },
+          { label: t('list.filters.status'), value: tCommon('filters.any') },
+          { label: t('list.filters.scope'), value: t('list.filters.scopeValue') },
         ]}
       />
 
       <StatStrip
         stats={[
-          { icon: Tag, label: 'Active rules', value: '6', note: '1 scheduled, 1 paused' },
-          { icon: Gauge, label: 'Blended rate', value: '$163/day', note: 'Across all classes' },
-          { icon: TrendingUp, label: 'Uplift earned (MTD)', value: '$18,420', note: '6.5% of gross revenue' },
+          { icon: Tag, label: t('list.stats.activeRules'), value: '6', note: t('list.stats.activeRulesNote') },
+          {
+            icon: Gauge,
+            label: t('list.stats.blendedRate'),
+            value: `${format.currency(163)}${tDomain('billingBasisSuffix.day')}`,
+            note: t('list.stats.blendedRateNote'),
+          },
+          {
+            icon: TrendingUp,
+            label: t('list.stats.upliftEarned'),
+            value: format.currency(18420),
+            note: t('list.stats.upliftEarnedNote'),
+          },
         ]}
       />
 
       <RecordTable
-        title="Pricing rules"
-        columns={pricingColumns()}
+        title={t('list.rulesTitle')}
+        columns={pricingColumns(t)}
         rows={rows}
-        rowCountLabel={`${rows.length} of 8`}
-        pageNote={`Showing 1–${rows.length} of 8 rules`}
+        rowCountLabel={tCommon('table.countOf', { count: rows.length, total: TOTAL_RULES })}
+        pageNote={t('list.pageNote', { shown: rows.length, total: TOTAL_RULES })}
         minWidth="820px"
       />
     </PageContainer>

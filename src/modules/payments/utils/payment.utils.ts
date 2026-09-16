@@ -1,13 +1,14 @@
+import type { TFunction } from 'i18next'
 import type { Row } from '@/components/data-display/record-table.types'
 import type { PaymentTuple } from '../types/payment.types'
 
-export function paymentColumns() {
+export function paymentColumns(t: TFunction<'payments'>) {
   return [
-    { label: 'Invoice', align: 'left' as const },
-    { label: 'Customer', align: 'left' as const },
-    { label: 'Method', align: 'left' as const },
-    { label: 'Status', align: 'left' as const },
-    { label: 'Amount', align: 'right' as const },
+    { label: t('columns.invoice'), align: 'left' as const },
+    { label: t('columns.customer'), align: 'left' as const },
+    { label: t('columns.method'), align: 'left' as const },
+    { label: t('columns.status'), align: 'left' as const },
+    { label: t('columns.amount'), align: 'right' as const },
     { label: '', align: 'right' as const },
   ]
 }

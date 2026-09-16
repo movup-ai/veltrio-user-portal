@@ -12,12 +12,14 @@ interface StepperProps {
   /** Steps the user has already visited/completed — lets them jump back. */
   furthestIndex: number
   onStepClick?: (index: number) => void
+  /** Accessible name for the step list — pass a translated string. */
+  ariaLabel: string
   className?: string
 }
 
-export function Stepper({ steps, currentIndex, furthestIndex, onStepClick, className }: StepperProps) {
+export function Stepper({ steps, currentIndex, furthestIndex, onStepClick, ariaLabel, className }: StepperProps) {
   return (
-    <div className={cn('flex flex-wrap items-center gap-x-2 gap-y-1.5', className)} role="tablist" aria-label="Form steps">
+    <div className={cn('flex flex-wrap items-center gap-x-2 gap-y-1.5', className)} role="tablist" aria-label={ariaLabel}>
       {steps.map((step, i) => {
         const state = i < currentIndex ? 'complete' : i === currentIndex ? 'current' : 'upcoming'
         const clickable = Boolean(onStepClick) && i <= furthestIndex

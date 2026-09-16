@@ -1,0 +1,41 @@
+{
+  "greeting": "Buenos días, {{name}}",
+  "subtitle": "{{date}} · {{pickups}} entregas y {{returns}} devoluciones programadas para hoy",
+  "newBooking": "Nueva reserva",
+  "export": "Exportar",
+  "kpi": {
+    "revenueMtd": "Ingresos (mes en curso)",
+    "activeRentals": "Alquileres activos",
+    "fleetUtilization": "Uso de la flota",
+    "bookings7d": "Reservas (7 días)",
+    "vsAug": "vs. ago.",
+    "outToday": "salen hoy",
+    "vsLastWeek": "vs. sem. pasada",
+    "vsPriorWeek": "vs. sem. previa"
+  },
+  "ops": {
+    "pickupsToday": "Entregas de hoy",
+    "returnsToday": "Devoluciones de hoy",
+    "overdueReturns": "Devoluciones vencidas",
+    "unpaidInvoices": "Facturas sin pagar"
+  },
+  "revenue": {
+    "title": "Ingresos",
+    "description": "Bruto diario, últimos 14 días",
+    "delta": "+9,8 % vs. 14 días previos"
+  },
+  "fleet": {
+    "title": "Estado de la flota",
+    "description": "{{vehicles}} vehículos en {{locations}} sucursales",
+    "utilized": "en uso",
+    "openFleet": "Abrir flota"
+  },
+  "bookings": {
+    "title": "Reservas",
+    "tabs": {
+      "upcoming": "Próximas",
+      "recent": "Actividad reciente"
+    },
+    "pageNote": "Mostrando 1–{{shown}} de {{total}} reservas"
+  }
+}

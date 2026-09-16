@@ -1,0 +1,34 @@
+{
+  "groups": {
+    "Operations": "Operaciones",
+    "Revenue": "Ingresos",
+    "Setup": "Configuración"
+  },
+  "links": {
+    "Dashboard": "Panel",
+    "Bookings": "Reservas",
+    "Vehicles": "Vehículos",
+    "Customers": "Clientes",
+    "Payments": "Pagos",
+    "Pricing": "Tarifas",
+    "Locations": "Sucursales",
+    "Settings": "Ajustes"
+  },
+  "sidebar": {
+    "primary": "Principal",
+    "collapse": "Contraer",
+    "toggle": "Alternar barra lateral",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro",
+    "toggleDarkMode": "Alternar modo oscuro",
+    "userRole": "Propietario · {{organization}}"
+  },
+  "header": {
+    "openMenu": "Abrir menú",
+    "breadcrumb": "Ruta de navegación",
+    "globalSearch": "Búsqueda global",
+    "searchPlaceholder": "Buscar matrícula, reserva, cliente",
+    "notifications_one": "Notificaciones, {{count}} sin leer",
+    "notifications_other": "Notificaciones, {{count}} sin leer"
+  }
+}

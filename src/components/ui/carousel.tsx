@@ -1,6 +1,7 @@
 import * as React from 'react'
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -133,13 +134,14 @@ function CarouselItem({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 function CarouselPrevious({ className, ...props }: React.ComponentProps<typeof Button>) {
+  const { t } = useTranslation('common')
   const { orientation, scrollPrev, canScrollPrev } = useCarousel()
 
   return (
     <Button
       variant="outline"
       size="icon"
-      aria-label="Previous slide"
+      aria-label={t('actions.previousSlide')}
       className={cn(
         'absolute rounded-full',
         orientation === 'horizontal' ? 'top-1/2 left-2 -translate-y-1/2' : '-top-9 left-1/2 -translate-x-1/2 rotate-90',
@@ -155,13 +157,14 @@ function CarouselPrevious({ className, ...props }: React.ComponentProps<typeof B
 }
 
 function CarouselNext({ className, ...props }: React.ComponentProps<typeof Button>) {
+  const { t } = useTranslation('common')
   const { orientation, scrollNext, canScrollNext } = useCarousel()
 
   return (
     <Button
       variant="outline"
       size="icon"
-      aria-label="Next slide"
+      aria-label={t('actions.nextSlide')}
       className={cn(
         'absolute rounded-full',
         orientation === 'horizontal' ? 'top-1/2 right-2 -translate-y-1/2' : '-bottom-9 left-1/2 -translate-x-1/2 rotate-90',
