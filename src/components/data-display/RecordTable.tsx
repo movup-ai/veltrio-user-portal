@@ -124,6 +124,8 @@ interface TabDef {
   label: string
   selected: boolean
   onClick: () => void
+  /** Matching-row count shown next to the label — omit to render the label alone. */
+  count?: number
 }
 
 interface RecordTableProps {
@@ -144,6 +146,8 @@ interface RecordTableProps {
   reorderable?: boolean
   /** Called with the full list of row keys in their new order after a drag-drop. */
   onReorder?: (orderedKeys: string[]) => void
+  /** Shown in place of the rows when there are none — keeps the tabs/filters reachable. */
+  emptyState?: React.ReactNode
 }
 
 export function RecordTable({
@@ -159,6 +163,7 @@ export function RecordTable({
   actions,
   reorderable = false,
   onReorder,
+  emptyState,
 }: RecordTableProps) {
   const { t } = useTranslation('common')
   const [dragKey, setDragKey] = useState<string | null>(null)
@@ -202,6 +207,13 @@ export function RecordTable({
                 }}
               >
                 {tab.label}
+                {/* Proportional figures on purpose — tabular ones pad each digit to a uniform
+                    (wider) advance, which reads as stretched next to the parentheses. */}
+                {tab.count !== undefined && (
+                  <span className="ml-1" style={{ color: 'var(--color-fg-4)' }}>
+                    ({tab.count})
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -229,6 +241,11 @@ export function RecordTable({
             </tr>
           </thead>
           <tbody>
+            {rows.length === 0 && emptyState && (
+              <tr>
+                <td colSpan={columns.length + (reorderable ? 1 : 0)}>{emptyState}</td>
+              </tr>
+            )}
             {rows.map((row) => (
               <tr
                 key={row.key}

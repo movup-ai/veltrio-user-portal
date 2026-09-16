@@ -11,8 +11,6 @@ export interface VinDecodeResult {
   transmission?: Transmission
   fuelType?: FuelType
   doors?: number
-  cylinders?: number
-  horsepower?: number
 }
 
 interface NhtsaResultRow {
@@ -128,7 +126,5 @@ export async function decodeVin(vin: string): Promise<VinDecodeResult> {
     transmission: transmission ? mapTransmission(transmission) : undefined,
     fuelType: fuelType ? mapFuelType(fuelType) : undefined,
     doors: toNumber(fieldValue(rows, 'Doors')),
-    cylinders: toNumber(fieldValue(rows, 'EngineCylinders')),
-    horsepower: toNumber(fieldValue(rows, 'EngineHP')),
   }
 }

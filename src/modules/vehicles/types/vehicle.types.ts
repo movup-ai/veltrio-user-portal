@@ -68,11 +68,20 @@ export interface VehicleSpecs {
   fuelType: FuelType
   seats: number
   doors: number
-  topSpeedMph?: number
-  horsepower?: number
-  zeroToSixtySec?: number
-  cylinders?: number
 }
+
+/** Renter-facing amenities, surfaced on the listing. Canonical keys — labels live in `vehicles:features`. */
+export const VEHICLE_FEATURES = [
+  'airConditioning',
+  'gpsNavigation',
+  'bluetoothAudio',
+  'usbCharging',
+  'sunroof',
+  'driverAssist',
+  'appleCarPlay',
+  'rearViewCamera',
+] as const
+export type VehicleFeature = (typeof VEHICLE_FEATURES)[number]
 
 export interface Vehicle {
   id: string
@@ -93,7 +102,10 @@ export interface Vehicle {
   rateOptions: RateOption[]
   fees: VehicleFees
   specs: VehicleSpecs
+  features: VehicleFeature[]
   createdAt: string
+  /** Saved via "Save & exit" mid-wizard — not yet published to the live fleet. Independent of `status`. */
+  isDraft?: boolean
 }
 
 /** Payload shape for create/update — server assigns id/createdAt/utilization. */
@@ -119,6 +131,8 @@ export interface VehicleListParams {
   transmission?: Transmission | 'Any'
   fuelType?: FuelType | 'Any'
   priceBands?: VehiclePriceBand[]
+  /** true = only drafts, false = only published vehicles, omitted = both. */
+  isDraft?: boolean
   sortBy?: VehicleSort
   page: number
   pageSize: number

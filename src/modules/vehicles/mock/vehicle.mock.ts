@@ -34,7 +34,8 @@ export const VEHICLES_SEED: Vehicle[] = [
       { id: 'veh_1_monthly', label: 'Monthly', basis: 'month', rate: 4200, includedMiles: 4500, unlimitedMileage: false },
     ],
     fees: { deposit: 500, overageRatePerMile: 0.35, fuelChargeRate: 16, taxRatePct: 7 },
-    specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 5, doors: 5, topSpeedMph: 130, horsepower: 375, zeroToSixtySec: 5.3, cylinders: 6 },
+    specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 5, doors: 5 },
+    features: ['airConditioning', 'gpsNavigation', 'bluetoothAudio', 'usbCharging', 'sunroof', 'driverAssist', 'appleCarPlay', 'rearViewCamera'],
     createdAt: '2024-01-14T00:00:00.000Z',
   },
   {
@@ -60,7 +61,8 @@ export const VEHICLES_SEED: Vehicle[] = [
       { id: 'veh_2_monthly', label: 'Monthly', basis: 'month', rate: 3100, includedMiles: 4500, unlimitedMileage: false },
     ],
     fees: { deposit: 400, overageRatePerMile: 0.3, fuelChargeRate: 16, taxRatePct: 7 },
-    specs: { transmission: 'Automatic', fuelType: 'Electric', seats: 5, doors: 4, topSpeedMph: 145, horsepower: 346, zeroToSixtySec: 4.2 },
+    specs: { transmission: 'Automatic', fuelType: 'Electric', seats: 5, doors: 4 },
+    features: ['airConditioning', 'gpsNavigation', 'bluetoothAudio', 'usbCharging', 'driverAssist', 'appleCarPlay', 'rearViewCamera'],
     createdAt: '2024-03-02T00:00:00.000Z',
   },
   {
@@ -87,6 +89,7 @@ export const VEHICLES_SEED: Vehicle[] = [
     ],
     fees: { deposit: 450, overageRatePerMile: 0.35, fuelChargeRate: 16, taxRatePct: 7 },
     specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 4, doors: 2 },
+    features: ['airConditioning', 'bluetoothAudio', 'usbCharging', 'appleCarPlay'],
     createdAt: '2023-08-21T00:00:00.000Z',
   },
   {
@@ -113,6 +116,7 @@ export const VEHICLES_SEED: Vehicle[] = [
     ],
     fees: { deposit: 200, overageRatePerMile: 0.2, fuelChargeRate: 16, taxRatePct: 7 },
     specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 5, doors: 4 },
+    features: ['airConditioning', 'bluetoothAudio', 'usbCharging', 'rearViewCamera'],
     createdAt: '2024-02-09T00:00:00.000Z',
   },
   {
@@ -147,7 +151,8 @@ export const VEHICLES_SEED: Vehicle[] = [
       },
     ],
     fees: { deposit: 700, overageRatePerMile: 0.45, fuelChargeRate: 16, taxRatePct: 7 },
-    specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 5, doors: 5, topSpeedMph: 130, horsepower: 255, zeroToSixtySec: 6.2, cylinders: 4 },
+    specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 5, doors: 5 },
+    features: ['airConditioning', 'gpsNavigation', 'bluetoothAudio', 'usbCharging', 'sunroof', 'appleCarPlay', 'rearViewCamera'],
     createdAt: '2025-01-05T00:00:00.000Z',
   },
   {
@@ -174,6 +179,7 @@ export const VEHICLES_SEED: Vehicle[] = [
     ],
     fees: { deposit: 650, overageRatePerMile: 0.4, fuelChargeRate: 16, taxRatePct: 7 },
     specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 5, doors: 5 },
+    features: ['airConditioning', 'bluetoothAudio', 'usbCharging', 'driverAssist', 'rearViewCamera'],
     createdAt: '2024-05-30T00:00:00.000Z',
   },
   {
@@ -200,6 +206,7 @@ export const VEHICLES_SEED: Vehicle[] = [
     ],
     fees: { deposit: 500, overageRatePerMile: 0.35, fuelChargeRate: 16, taxRatePct: 7 },
     specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 7, doors: 5 },
+    features: ['airConditioning', 'gpsNavigation', 'bluetoothAudio', 'usbCharging', 'rearViewCamera'],
     createdAt: '2024-04-11T00:00:00.000Z',
   },
   {
@@ -226,6 +233,7 @@ export const VEHICLES_SEED: Vehicle[] = [
     ],
     fees: { deposit: 600, overageRatePerMile: 0.4, fuelChargeRate: 16, taxRatePct: 7 },
     specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 7, doors: 5 },
+    features: ['airConditioning', 'bluetoothAudio', 'usbCharging'],
     createdAt: '2022-11-19T00:00:00.000Z',
   },
 ]

@@ -29,6 +29,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   'Out of service': { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' },
   Dormant: { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' },
   Paused: { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' },
+  Draft: { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' },
 }
 
 const FALLBACK = { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' }

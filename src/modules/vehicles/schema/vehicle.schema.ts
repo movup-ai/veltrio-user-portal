@@ -7,6 +7,7 @@ import {
   FUEL_TYPES,
   TRANSMISSIONS,
   VEHICLE_CLASSES,
+  VEHICLE_FEATURES,
   VEHICLE_STATUSES,
 } from '../types/vehicle.types'
 
@@ -90,10 +91,7 @@ export function vehicleFormSchema(t: ValidationT) {
     fuelType: z.enum(FUEL_TYPES, { message: t('vehicle.fuelTypeRequired') }),
     seats: z.number({ message: t('vehicle.seatsRequired') }).int().min(1).max(15),
     doors: z.number({ message: t('vehicle.doorsRequired') }).int().min(1).max(6),
-    topSpeedMph: optionalNumber,
-    horsepower: optionalNumber,
-    zeroToSixtySec: optionalNumber,
-    cylinders: optionalNumber,
+    features: z.array(z.enum(VEHICLE_FEATURES)),
     description: z.string().max(600).optional().or(z.literal('')),
 
     // Step 2 — Photos
@@ -129,10 +127,7 @@ export const STEP_FIELDS = {
     'fuelType',
     'seats',
     'doors',
-    'topSpeedMph',
-    'horsepower',
-    'zeroToSixtySec',
-    'cylinders',
+    'features',
     'description',
   ],
   photos: ['photos'],

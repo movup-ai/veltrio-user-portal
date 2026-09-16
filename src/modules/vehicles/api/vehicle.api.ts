@@ -28,6 +28,7 @@ function mockList(params: VehicleListParams): PaginatedResult<Vehicle> {
   if (params.class && params.class !== 'All') items = items.filter((v) => v.class === params.class)
   if (params.transmission && params.transmission !== 'Any') items = items.filter((v) => v.specs.transmission === params.transmission)
   if (params.fuelType && params.fuelType !== 'Any') items = items.filter((v) => v.specs.fuelType === params.fuelType)
+  if (params.isDraft !== undefined) items = items.filter((v) => Boolean(v.isDraft) === params.isDraft)
   if (params.priceBands && params.priceBands.length > 0) {
     const bands = VEHICLE_PRICE_BANDS.filter((b) => params.priceBands!.includes(b.value))
     items = items.filter((v) => {

@@ -1,4 +1,5 @@
 {
+  "untitledVehicle": "Vehículo sin título",
   "list": {
     "title": "Vehículos",
     "description": "Gestione su flota de alquiler",
@@ -19,7 +20,8 @@
       "All": "Todos",
       "Available": "Disponibles",
       "On rent": "Alquilados",
-      "Maintenance": "En mantenimiento"
+      "Maintenance": "En mantenimiento",
+      "Drafts": "Borradores"
     },
     "stats": {
       "fleetSize": "Tamaño de la flota",
@@ -147,15 +149,11 @@
     "vin": "VIN",
     "status": "Estado",
     "location": "Sucursal",
-    "currentMileage": "Kilometraje actual",
+    "currentMileage": "Odómetro",
     "transmission": "Transmisión",
     "fuelType": "Combustible",
     "seats": "Asientos",
-    "doors": "Puertas",
-    "topSpeed": "Velocidad máxima",
-    "power": "Potencia",
-    "zeroToSixty": "0–60 mph",
-    "cylinders": "Cilindros"
+    "doors": "Puertas"
   },
   "gallery": {
     "primaryPhoto": "Foto principal · 1600 × 900",
@@ -182,11 +180,6 @@
     },
     "stepsLabel": "Pasos del formulario",
     "draft": {
-      "foundTitle": "Se encontraron cambios sin guardar",
-      "foundDescription": "Encontramos un borrador en el que trabajaba {{when}}. Restáurelo o empiece de nuevo.",
-      "discard": "Descartar borrador",
-      "restore": "Restaurar borrador",
-      "saved": "Borrador guardado {{when}}",
       "saveAndExit": "Guardar borrador y salir"
     },
     "vin": {
@@ -205,20 +198,18 @@
         "vehicleType": "tipo de vehículo",
         "transmission": "transmisión",
         "fuelType": "combustible",
-        "doors": "puertas",
-        "cylinders": "cilindros",
-        "horsepower": "potencia"
+        "doors": "puertas"
       }
     },
     "sections": {
       "identity": "Identificación",
       "registration": "Matrícula y estado",
       "specs": "Especificaciones",
-      "performance": "Rendimiento (opcional)",
       "rateOptions": "Opciones de tarifa",
       "rateOptionsHint": "Cada opción es una forma en que un cliente puede reservar este vehículo, con su propio límite de millaje.",
       "fees": "Depósito, cargos e impuestos",
-      "feesHint": "Se aplican a cada reserva, sea cual sea la opción de tarifa."
+      "feesHint": "Se aplican a cada reserva, sea cual sea la opción de tarifa.",
+      "features": "Equipamiento"
     },
     "fields": {
       "make": "Marca",
@@ -238,7 +229,7 @@
       "vin": "VIN",
       "status": "Estado",
       "statusPlaceholder": "Seleccione el estado",
-      "mileage": "Kilometraje actual (mi)",
+      "mileage": "Odómetro (mi)",
       "mileagePlaceholder": "p. ej. 12000",
       "transmission": "Transmisión",
       "transmissionPlaceholder": "Seleccione la transmisión",
@@ -246,10 +237,6 @@
       "fuelTypePlaceholder": "Seleccione el combustible",
       "seats": "Asientos",
       "doors": "Puertas",
-      "topSpeed": "Velocidad máxima (mph)",
-      "horsepower": "Potencia (hp)",
-      "zeroToSixty": "0–60 mph (s)",
-      "cylinders": "Cilindros",
       "description": "Descripción",
       "descriptionHint": "Resumen que ve el cliente en el anuncio del vehículo.",
       "deposit": "Depósito de garantía (USD)",
@@ -281,7 +268,6 @@
       "identity": "Identificación",
       "registration": "Matrícula y estado",
       "specs": "Especificaciones",
-      "performance": "Rendimiento",
       "description": "Descripción",
       "photos": "Fotos",
       "noPhotos": "No se añadieron fotos.",
@@ -290,7 +276,8 @@
       "untitledOption": "Opción sin título",
       "fees": "Depósito, cargos e impuestos",
       "seatsDoors": "Asientos / Puertas",
-      "seatsDoorsValue": "{{seats}} asientos · {{doors}} puertas"
+      "seatsDoorsValue": "{{seats}} asientos · {{doors}} puertas",
+      "features": "Equipamiento"
     }
   },
   "rateOptions": {
@@ -326,6 +313,8 @@
     "skippedDescription": "Cada foto debe pesar menos de {{size}} MB."
   },
   "toast": {
+    "draftSaved": "Borrador guardado",
+    "draftSavedDescription": "Puede terminar este vehículo más tarde desde la pestaña Borradores.",
     "added": "Vehículo añadido",
     "addedDescription": "{{name}} se añadió a la flota.",
     "addFailed": "No se pudo añadir el vehículo",
@@ -341,12 +330,6 @@
     "description": "{{name}} ({{plate}}) se archivará y se retirará de la flota activa. Esta acción no se puede deshacer.",
     "confirm": "Archivar vehículo"
   },
-  "timeAgo": {
-    "justNow": "hace un momento",
-    "seconds": "hace {{count}} s",
-    "minutes": "hace {{count}} min",
-    "hours": "hace {{count}} h"
-  },
   "errors": {
     "notFound": "Vehículo no encontrado",
     "vinTooShort": "Introduzca un VIN completo (al menos 11 caracteres) antes de decodificar.",
@@ -354,5 +337,41 @@
     "vinServiceUnavailable": "El servicio de decodificación de VIN no está disponible en este momento.",
     "vinNoData": "El servicio de decodificación de VIN no devolvió datos.",
     "vinUndecodable": "No se pudo decodificar este VIN."
+  },
+  "features": {
+    "title": "Equipamiento",
+    "none": "Sin equipamiento seleccionado.",
+    "airConditioning": {
+      "label": "Aire acondicionado",
+      "description": "Sistema de climatización"
+    },
+    "gpsNavigation": {
+      "label": "Navegación GPS",
+      "description": "Mapa y rutas integrados"
+    },
+    "bluetoothAudio": {
+      "label": "Audio Bluetooth",
+      "description": "Emparejamiento inalámbrico"
+    },
+    "usbCharging": {
+      "label": "Carga USB",
+      "description": "Puertos delanteros y traseros"
+    },
+    "sunroof": {
+      "label": "Techo solar",
+      "description": "Techo panorámico de cristal"
+    },
+    "driverAssist": {
+      "label": "Asistencia a la conducción",
+      "description": "Mantenimiento de carril, crucero adaptativo"
+    },
+    "appleCarPlay": {
+      "label": "Apple CarPlay",
+      "description": "Inalámbrico o por cable"
+    },
+    "rearViewCamera": {
+      "label": "Cámara de marcha atrás",
+      "description": "Asistencia con guías"
+    }
   }
 }
