@@ -40,7 +40,8 @@ export function vehicleColumns() {
     { label: 'Location', align: 'left' as const },
     { label: 'Status', align: 'left' as const },
     { label: 'Utilization (30d)', align: 'left' as const },
-    { label: 'From', align: 'right' as const },
+    { label: 'Trips', align: 'right' as const },
+    { label: 'Daily rate', align: 'right' as const },
     { label: '', align: 'right' as const },
   ]
 }
@@ -102,9 +103,9 @@ function meterTone(utilization: number): string {
   return 'var(--color-error)'
 }
 
-export function vehicleRow(v: Vehicle, actions: RowActionItem[]): Row {
+export function vehicleRow(v: Vehicle, tripsCount: number, actions: RowActionItem[]): Row {
   const pct = Math.round(v.utilization * 100)
-  const headline = headlineRateOption(v)
+  const daily = dailyRateOption(v)
 
   return {
     key: v.id,
@@ -123,9 +124,10 @@ export function vehicleRow(v: Vehicle, actions: RowActionItem[]): Row {
       { kind: 'text', primary: v.location },
       { kind: 'badge', status: v.status },
       { kind: 'meter', primary: `${pct}%`, pct: `${pct}%`, tone: meterTone(v.utilization) },
+      { kind: 'text', primary: String(tripsCount), align: 'right' },
       {
         kind: 'amount',
-        primary: headline ? formatRateOptionPrice(headline) : '—',
+        primary: daily ? formatCurrency(daily.rate) : '—',
         align: 'right',
         tone: 'var(--color-foreground)',
       },

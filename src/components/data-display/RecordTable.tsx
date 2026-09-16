@@ -1,4 +1,5 @@
-import { Ellipsis } from 'lucide-react'
+import { useState } from 'react'
+import { Ellipsis, GripVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import {
@@ -134,6 +135,10 @@ interface RecordTableProps {
   pagination?: { page: number; hasNextPage: boolean; onPageChange: (page: number) => void }
   /** Rendered at the end of the header row (e.g. an Export button) — after the row count label. */
   actions?: React.ReactNode
+  /** Adds a drag handle column so rows can be manually reordered — pairs with onReorder. */
+  reorderable?: boolean
+  /** Called with the full list of row keys in their new order after a drag-drop. */
+  onReorder?: (orderedKeys: string[]) => void
 }
 
 export function RecordTable({
@@ -147,7 +152,29 @@ export function RecordTable({
   onRowClick,
   pagination,
   actions,
+  reorderable = false,
+  onReorder,
 }: RecordTableProps) {
+  const [dragKey, setDragKey] = useState<string | null>(null)
+
+  function handleDrop(overKey: string) {
+    if (!dragKey || dragKey === overKey || !onReorder) {
+      setDragKey(null)
+      return
+    }
+    const keys = rows.map((r) => r.key)
+    const from = keys.indexOf(dragKey)
+    const to = keys.indexOf(overKey)
+    if (from === -1 || to === -1) {
+      setDragKey(null)
+      return
+    }
+    const next = [...keys]
+    next.splice(from, 1)
+    next.splice(to, 0, dragKey)
+    onReorder(next)
+    setDragKey(null)
+  }
   return (
     <Card as="section" className="overflow-hidden">
       <div className="border-border-soft flex flex-wrap items-center gap-3.5 border-b px-4 py-3.5">
@@ -182,6 +209,7 @@ export function RecordTable({
         <table className="w-full border-collapse" style={{ minWidth }}>
           <thead>
             <tr>
+              {reorderable && <th scope="col" className="bg-surface-2 border-border w-9 border-b" />}
               {columns.map((c) => (
                 <th
                   key={c.label + c.align}
@@ -199,11 +227,26 @@ export function RecordTable({
               <tr
                 key={row.key}
                 onClick={onRowClick ? () => onRowClick(row.key) : undefined}
+                onDragOver={reorderable ? (e) => e.preventDefault() : undefined}
+                onDrop={reorderable ? () => handleDrop(row.key) : undefined}
                 className={cn(
                   'border-border-soft hover:bg-surface-2 border-b transition-colors last:border-0',
                   onRowClick && 'cursor-pointer',
+                  dragKey === row.key && 'opacity-40',
                 )}
               >
+                {reorderable && (
+                  <td className="px-2 py-[11px] align-middle" onClick={(e) => e.stopPropagation()}>
+                    <span
+                      draggable
+                      onDragStart={() => setDragKey(row.key)}
+                      onDragEnd={() => setDragKey(null)}
+                      className="text-fg-4 hover:text-foreground flex size-6 cursor-grab items-center justify-center active:cursor-grabbing"
+                    >
+                      <GripVertical className="size-4" />
+                    </span>
+                  </td>
+                )}
                 {row.cells.map((cell, i) => (
                   <td key={i} className="px-4 py-[11px] align-middle" style={{ textAlign: cell.align ?? 'left' }}>
                     <CellContent cell={cell} />

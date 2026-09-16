@@ -107,11 +107,32 @@ export interface Vehicle {
 /** Payload shape for create/update — server assigns id/createdAt/utilization. */
 export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization'>
 
+export const VEHICLE_SORTS = ['utilization', 'dailyRate', 'name'] as const
+export type VehicleSort = (typeof VEHICLE_SORTS)[number]
+
+export const VEHICLE_SORT_LABELS: Record<VehicleSort, string> = {
+  utilization: 'Utilization',
+  dailyRate: 'Daily rate',
+  name: 'Vehicle name',
+}
+
+export const VEHICLE_PRICE_BANDS = [
+  { value: '0-50', label: '$0 – $50 / day', min: 0, max: 50 },
+  { value: '50-100', label: '$50 – $100 / day', min: 50, max: 100 },
+  { value: '100-200', label: '$100 – $200 / day', min: 100, max: 200 },
+  { value: '200+', label: '$200+ / day', min: 200, max: Infinity },
+] as const
+export type VehiclePriceBand = (typeof VEHICLE_PRICE_BANDS)[number]['value']
+
 export interface VehicleListParams {
   search?: string
   status?: VehicleStatus | 'Any'
   location?: string | 'All'
   class?: VehicleClass | 'All'
+  transmission?: Transmission | 'Any'
+  fuelType?: FuelType | 'Any'
+  priceBands?: VehiclePriceBand[]
+  sortBy?: VehicleSort
   page: number
   pageSize: number
 }
