@@ -27,7 +27,7 @@
     "Scheduled": "Programado",
     "Verify docs": "Verificar documentos"
   },
-  "vehicleClass": {
+  "vehicleType": {
     "Convertible": "Convertible",
     "Coupe": "Cupé",
     "Crossover": "Crossover",

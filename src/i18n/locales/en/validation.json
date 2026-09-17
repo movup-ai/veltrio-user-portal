@@ -5,7 +5,7 @@
     "yearInvalid": "Enter a valid year",
     "yearTooEarly": "Year must be 1990 or later",
     "yearTooLate": "Year is too far in the future",
-    "classRequired": "Select a vehicle type",
+    "vehicleTypeRequired": "Select a vehicle type",
     "colorRequired": "Color is required",
     "plateRequired": "Plate is required",
     "plateInvalid": "Plate contains invalid characters",

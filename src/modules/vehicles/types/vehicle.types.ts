@@ -1,7 +1,7 @@
 export const VEHICLE_STATUSES = ['Available', 'On rent', 'Maintenance', 'Out of service'] as const
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number]
 
-export const VEHICLE_CLASSES = [
+export const VEHICLE_TYPES = [
   'Convertible',
   'Coupe',
   'Crossover',
@@ -14,7 +14,7 @@ export const VEHICLE_CLASSES = [
   'Van',
   'Wagon',
 ] as const
-export type VehicleClass = (typeof VEHICLE_CLASSES)[number]
+export type VehicleType = (typeof VEHICLE_TYPES)[number]
 
 export const TRANSMISSIONS = ['Automatic', 'Manual'] as const
 export type Transmission = (typeof TRANSMISSIONS)[number]
@@ -88,7 +88,7 @@ export interface Vehicle {
   make: string
   model: string
   year: number
-  class: VehicleClass
+  vehicleType: VehicleType
   color: string
   plate: string
   vin: string
@@ -127,7 +127,7 @@ export interface VehicleListParams {
   search?: string
   status?: VehicleStatus | 'Any'
   location?: string | 'All'
-  class?: VehicleClass | 'All'
+  vehicleType?: VehicleType | 'All'
   transmission?: Transmission | 'Any'
   fuelType?: FuelType | 'Any'
   priceBands?: VehiclePriceBand[]
