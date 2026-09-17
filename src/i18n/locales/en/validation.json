@@ -24,6 +24,21 @@
     "depositRequired": "Enter a security deposit",
     "overageRateRequired": "Enter an overage rate"
   },
+  "booking": {
+    "pickupLocationRequired": "Select a pickup location",
+    "returnLocationRequired": "Select a return location",
+    "pickupDateRequired": "Pick a pickup date",
+    "returnDateRequired": "Pick a return date",
+    "timeRequired": "Enter a valid time",
+    "returnBeforePickup": "Return must be after pickup",
+    "vehicleRequired": "Select a vehicle",
+    "rateOptionRequired": "Select a rate option",
+    "customerNameRequired": "Customer name is required",
+    "customerEmailInvalid": "Enter a valid email address",
+    "customerPhoneRequired": "Enter a contact phone number",
+    "customerLicenceRequired": "Driving licence is required",
+    "notesTooLong": "Notes are too long"
+  },
   "rateOption": {
     "labelRequired": "Label is required",
     "basisRequired": "Pick a billing basis",

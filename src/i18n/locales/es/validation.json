@@ -24,6 +24,21 @@
     "depositRequired": "Introduzca un depósito de garantía",
     "overageRateRequired": "Introduzca una tarifa por exceso"
   },
+  "booking": {
+    "pickupLocationRequired": "Seleccione una sucursal de recogida",
+    "returnLocationRequired": "Seleccione una sucursal de devolución",
+    "pickupDateRequired": "Elija una fecha de recogida",
+    "returnDateRequired": "Elija una fecha de devolución",
+    "timeRequired": "Introduzca una hora válida",
+    "returnBeforePickup": "La devolución debe ser posterior a la recogida",
+    "vehicleRequired": "Seleccione un vehículo",
+    "rateOptionRequired": "Seleccione una opción de tarifa",
+    "customerNameRequired": "El nombre del cliente es obligatorio",
+    "customerEmailInvalid": "Introduzca una dirección de correo válida",
+    "customerPhoneRequired": "Introduzca un teléfono de contacto",
+    "customerLicenceRequired": "El permiso de conducir es obligatorio",
+    "notesTooLong": "Las notas son demasiado largas"
+  },
   "rateOption": {
     "labelRequired": "La etiqueta es obligatoria",
     "basisRequired": "Elija una base de cobro",

@@ -6,25 +6,58 @@
     "export": "Export",
     "newBooking": "New booking",
     "searchPlaceholder": "Search reference, customer, plate",
-    "pageNote": "Showing 1–{{shown}} of {{total}} bookings",
+    "pageNote": "Showing {{shown}} of {{total}} bookings",
+    "noneFound": "No bookings found",
+    "loading": "Loading bookings…",
+    "loadError": "We couldn't load your bookings.",
+    "emptyTitle": "No bookings match your filters",
+    "emptyDescription": "Try adjusting the search or filters.",
     "tabs": {
       "Upcoming": "Upcoming",
       "Today": "Today",
       "Recent activity": "Recent activity",
       "Overdue": "Overdue"
     },
-    "filters": {
-      "status": "Status",
-      "location": "Location",
-      "pickup": "Pickup"
+    "rowActions": {
+      "viewDetails": "View details",
+      "editBooking": "Edit booking",
+      "exportBooking": "Export booking"
     },
     "stats": {
       "open": "Open bookings",
-      "openNote": "12 start in the next 48h",
+      "openNote_one": "{{count}} starts in the next 48h",
+      "openNote_other": "{{count}} start in the next 48h",
       "bookedValue": "Booked value",
       "bookedValueNote": "Confirmed, not yet invoiced",
       "needsAttention": "Needs attention",
-      "needsAttentionNote": "2 awaiting ID · 1 deposit due"
+      "needsAttentionNote": "{{awaitingId}} awaiting ID · {{depositDue}} deposit due"
+    }
+  },
+  "filters": {
+    "status": "Status",
+    "location": "Location",
+    "pickup": "Pickup",
+    "vehicleMake": "Vehicle make",
+    "duration": "Duration",
+    "bookingValue": "Booking value",
+    "pickupRange": {
+      "any": "Any dates",
+      "next7": "Next 7 days",
+      "next14": "Next 14 days",
+      "next30": "Next 30 days",
+      "past7": "Past 7 days",
+      "past30": "Past 30 days"
+    },
+    "durationBand": {
+      "1-2": "1 – 2 days",
+      "3-6": "3 – 6 days",
+      "7+": "7+ days"
+    },
+    "valueBand": {
+      "0-250": "$0 – $250",
+      "250-500": "$250 – $500",
+      "500-1000": "$500 – $1,000",
+      "1000+": "$1,000+"
     }
   },
   "columns": {
@@ -52,10 +85,111 @@
     "comingSoonTitle": "Booking details coming soon",
     "comingSoonDescription": "This module is being built next."
   },
+  "extras": {
+    "additionalDriver": { "label": "Additional driver", "description": "A second named driver on the agreement" },
+    "childSeat": { "label": "Child seat", "description": "Forward-facing, fitted at pickup" },
+    "gpsUnit": { "label": "GPS unit", "description": "Dash-mounted satellite navigation" },
+    "roadsideAssist": { "label": "Roadside assistance", "description": "24/7 recovery and jump-start cover" }
+  },
+  "toast": {
+    "created": "Booking created",
+    "createdDescription": "{{reference}} for {{name}} is on the schedule.",
+    "createFailed": "Could not create booking"
+  },
   "form": {
     "title": "New booking",
     "description": "Create a new rental booking",
-    "comingSoonTitle": "Booking form coming soon",
-    "comingSoonDescription": "This module is being built next."
+    "stepsLabel": "Booking steps",
+    "steps": {
+      "trip": "Trip",
+      "vehicle": "Vehicle & rate",
+      "customer": "Customer",
+      "review": "Review"
+    },
+    "sections": {
+      "pickup": "Pickup",
+      "return": "Return",
+      "vehicle": "Vehicle",
+      "rate": "Rate option",
+      "extras": "Extras",
+      "customer": "Customer"
+    },
+    "fields": {
+      "pickupLocation": "Pickup location",
+      "pickupDate": "Pickup date",
+      "pickupTime": "Pickup time",
+      "returnLocation": "Return location",
+      "returnDate": "Return date",
+      "returnTime": "Return time",
+      "locationPlaceholder": "Select a branch",
+      "customerName": "Customer",
+      "customerNamePlaceholder": "Search or type a name",
+      "customerEmail": "Email",
+      "customerPhone": "Phone",
+      "customerLicence": "Driving licence",
+      "notes": "Notes",
+      "notesPlaceholder": "Anything the branch should know before handover",
+      "notesHint": "Internal only — not shown to the customer."
+    },
+    "trip": {
+      "duration_one": "{{count}} day · {{hours}}h",
+      "duration_other": "{{count}} days · {{hours}}h"
+    },
+    "vehicle": {
+      "hint": "Available vehicles at {{location}} for this window.",
+      "pick": "Pick a vehicle",
+      "loading": "Loading available vehicles…",
+      "loadError": "We couldn't load the fleet.",
+      "noneTitle": "No vehicles available",
+      "noneDescription": "Nothing is free at this branch right now. Try another pickup location."
+    },
+    "rate": {
+      "hint": "Priced for the trip length you entered.",
+      "pick": "Pick a rate option",
+      "none": "This vehicle has no rate options yet.",
+      "unitBreakdown_one": "{{count}} × {{price}}",
+      "unitBreakdown_other": "{{count}} × {{price}}"
+    },
+    "extras": {
+      "hint": "Billed per rental day, added to the total.",
+      "pricing": "{{perDay}}/day · {{total}} total"
+    },
+    "customer": {
+      "hint": "Pick someone from the customer book, or type a new name to add them.",
+      "newHint": "A name that isn't on file creates a new customer with this booking."
+    },
+    "summary": {
+      "title": "Price breakdown",
+      "duration_one": "{{count}} day · {{hours}}h rental",
+      "duration_other": "{{count}} days · {{hours}}h rental",
+      "rental": "{{label}} · {{basis}}",
+      "units_one": "{{count}} unit × {{price}}",
+      "units_other": "{{count}} units × {{price}}",
+      "extraDays_one": "{{count}} day",
+      "extraDays_other": "{{count}} days",
+      "subtotal": "Subtotal",
+      "tax": "Tax ({{rate}}%)",
+      "total": "Total due",
+      "deposit": "Deposit (held)",
+      "mileage": "Mileage included",
+      "milesIncluded": "{{count}} mi"
+    },
+    "review": {
+      "trip": "Trip",
+      "duration": "Duration",
+      "vehicle": "Vehicle",
+      "vehicleName": "Vehicle",
+      "plate": "Plate",
+      "rate": "Rate option",
+      "noVehicle": "No vehicle selected yet.",
+      "extras": "Extras",
+      "noExtras": "No extras added.",
+      "customer": "Customer"
+    },
+    "nav": {
+      "previousStep": "Previous step",
+      "nextStep": "Next step",
+      "create": "Create booking"
+    }
   }
 }
