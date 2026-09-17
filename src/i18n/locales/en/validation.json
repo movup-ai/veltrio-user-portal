@@ -37,7 +37,12 @@
     "customerEmailInvalid": "Enter a valid email address",
     "customerPhoneRequired": "Enter a contact phone number",
     "customerLicenceRequired": "Driving licence is required",
-    "notesTooLong": "Notes are too long"
+    "driverNameRequired": "Enter the driver's name",
+    "driverLicenceRequired": "Enter a licence number",
+    "addressTooLong": "Address is too long",
+    "driverRateInvalid": "Enter a valid rate",
+    "feeLabelRequired": "Enter a description",
+    "feeAmountInvalid": "Enter a valid amount"
   },
   "rateOption": {
     "labelRequired": "Label is required",

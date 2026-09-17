@@ -2,6 +2,7 @@ import { apiClient } from '@/services/api/client'
 import { mockDelay, useMocks } from '@/lib/mock'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '../mock/booking.mock'
 import type { Booking, BookingInput, BookingLists, BookingTuple } from '../types/booking.types'
+import { scheduleFromBookings, scheduleFromTuples } from '../utils/booking.schedule'
 import { bookingToTuple } from '../utils/booking.utils'
 
 /**
@@ -19,7 +20,16 @@ function nextReference(): string {
 
 function mockList(): BookingLists {
   const createdTuples: BookingTuple[] = created.map(bookingToTuple)
-  return { upcoming: [...createdTuples, ...BOOKINGS_UPCOMING], recent: BOOKINGS_RECENT }
+  return {
+    upcoming: [...createdTuples, ...BOOKINGS_UPCOMING],
+    recent: BOOKINGS_RECENT,
+    // Built from the bookings themselves (not the tuples) where possible, so session-created
+    // rentals keep their exact timestamps instead of being round-tripped through display text.
+    schedule: [
+      ...scheduleFromBookings(created),
+      ...scheduleFromTuples([...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]),
+    ],
+  }
 }
 
 /**

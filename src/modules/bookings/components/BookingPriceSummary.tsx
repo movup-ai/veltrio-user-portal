@@ -10,10 +10,10 @@ function Line({ label, value, hint, muted }: { label: string; value: string; hin
   return (
     <div className="flex items-baseline justify-between gap-3 py-1.5">
       <span className="min-w-0">
-        <span className={cn('block text-[12.5px]', muted ? 'text-fg-4' : 'text-fg-2')}>{label}</span>
-        {hint && <span className="text-fg-4 block text-[11px] tabular-nums">{hint}</span>}
+        <span className={cn('block text-[13.5px]', muted ? 'text-fg-4' : 'text-fg-2')}>{label}</span>
+        {hint && <span className="text-fg-4 block text-[12px] tabular-nums">{hint}</span>}
       </span>
-      <span className={cn('shrink-0 text-[12.5px] tabular-nums', muted ? 'text-fg-4' : 'font-semibold')}>{value}</span>
+      <span className={cn('shrink-0 text-[13.5px] tabular-nums', muted ? 'text-fg-4' : 'font-semibold')}>{value}</span>
     </div>
   )
 }
@@ -32,8 +32,8 @@ export function BookingPriceSummary({ pricing, option, className }: BookingPrice
 
   return (
     <Card className={cn('p-4 shadow-none', className)}>
-      <p className="text-[14px] font-semibold">{t('form.summary.title')}</p>
-      <p className="text-fg-4 mt-0.5 text-[11.5px]">
+      <p className="text-[15.5px] font-semibold">{t('form.summary.title')}</p>
+      <p className="text-fg-4 mt-0.5 text-[12.5px]">
         {t('form.summary.duration', { count: pricing.days, hours: Math.round(pricing.hours) })}
       </p>
 
@@ -44,12 +44,15 @@ export function BookingPriceSummary({ pricing, option, className }: BookingPrice
           value={format.currency(pricing.rentalSubtotal)}
         />
 
-        {pricing.extras.map((extra) => (
+        {pricing.drivers && (
           <Line
-            key={extra.key}
-            label={`${t(`extras.${extra.key}.label`)} · ${t('form.summary.extraDays', { count: pricing.days })}`}
-            value={format.currency(extra.amount)}
+            label={`${t('form.summary.drivers', { count: pricing.drivers.count })} · ${t('form.summary.extraDays', { count: pricing.days })}`}
+            value={format.currency(pricing.drivers.amount)}
           />
+        )}
+
+        {pricing.fees.map((fee) => (
+          <Line key={fee.id} label={fee.label} value={format.currency(fee.amount)} />
         ))}
 
         <Line label={t('form.summary.subtotal')} value={format.currency(pricing.subtotal)} />
@@ -59,8 +62,8 @@ export function BookingPriceSummary({ pricing, option, className }: BookingPrice
         )}
 
         <div className="flex items-baseline justify-between gap-3 pt-2.5">
-          <span className="text-[13px] font-semibold">{t('form.summary.total')}</span>
-          <span className="font-[family-name:var(--font-display)] text-[20px] font-bold tracking-tight tabular-nums">
+          <span className="text-[14.5px] font-semibold">{t('form.summary.total')}</span>
+          <span className="font-[family-name:var(--font-display)] text-[22px] font-bold tracking-tight tabular-nums">
             {format.currency(pricing.total)}
           </span>
         </div>

@@ -1,5 +1,4 @@
 import type { BillingBasis, RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types'
-import { bookingExtra, type BookingExtraKey } from '../types/booking.types'
 
 const MS_PER_HOUR = 1000 * 60 * 60
 
@@ -13,21 +12,42 @@ const HOURS_PER_UNIT: Record<Exclude<BillingBasis, 'fixed'>, number> = {
 
 const HOURS_PER_DURATION_UNIT = { hours: 1, days: 24, weeks: 24 * 7, months: 24 * 30 } as const
 
-export interface ExtraCharge {
-  key: BookingExtraKey
-  pricePerDay: number
+/** Billable days for the trip — what the per-day driver charge is billed on. Always at least one. */
+export function rentalDays(hours: number): number {
+  return Math.max(1, Math.ceil(hours / 24))
+}
+
+/**
+ * Rate a newly added driver starts on. Only a starting point — each driver carries its own
+ * rate, so the counter can waive or discount one without affecting the others.
+ */
+export const ADDITIONAL_DRIVER_PER_DAY = 12
+
+export interface DriverCharge {
+  count: number
+  /** Sum of every driver's daily rate — drivers can be priced differently. */
+  perDay: number
+  amount: number
+}
+
+export interface FeeCharge {
+  id: string
+  label: string
   amount: number
 }
 
 export interface BookingPricing {
   hours: number
-  /** Whole rental days, rounded up — what the per-day extras are billed on. */
+  /** Whole rental days, rounded up — what the per-day driver charge is billed on. */
   days: number
   /** Billable units of the chosen rate option (3 days, 2 weeks, 1 fixed block, …). */
   units: number
   rentalSubtotal: number
-  extras: ExtraCharge[]
-  extrasSubtotal: number
+  /** Null when the renter is driving alone. */
+  drivers: DriverCharge | null
+  /** Ad-hoc charges added to this booking, each a flat amount. */
+  fees: FeeCharge[]
+  feesTotal: number
   subtotal: number
   taxRatePct: number
   tax: number
@@ -67,23 +87,38 @@ interface PriceBookingArgs {
   option: RateOption
   pickupAt: string
   returnAt: string
-  extras: BookingExtraKey[]
+  /** Drivers beyond the main renter, each with its own daily rate. */
+  additionalDrivers?: { pricePerDay: number }[]
+  /** Ad-hoc one-off charges. Blank labels are dropped so a half-typed row can't bill anyone. */
+  fees?: { id: string; label: string; amount: number }[]
 }
 
-export function priceBooking({ vehicle, option, pickupAt, returnAt, extras }: PriceBookingArgs): BookingPricing {
+export function priceBooking({
+  vehicle,
+  option,
+  pickupAt,
+  returnAt,
+  additionalDrivers = [],
+  fees = [],
+}: PriceBookingArgs): BookingPricing {
   const hours = durationHours(pickupAt, returnAt)
-  const days = Math.max(1, Math.ceil(hours / 24))
+  const days = rentalDays(hours)
   const units = billableUnits(option, hours)
 
   const rentalSubtotal = option.rate * units
 
-  const extraCharges: ExtraCharge[] = extras
-    .map((key) => bookingExtra(key))
-    .filter((e) => e != null)
-    .map((e) => ({ key: e.key, pricePerDay: e.pricePerDay, amount: e.pricePerDay * days }))
-  const extrasSubtotal = extraCharges.reduce((sum, e) => sum + e.amount, 0)
+  const driversPerDay = additionalDrivers.reduce((sum, d) => sum + (Number.isFinite(d.pricePerDay) ? d.pricePerDay : 0), 0)
+  const drivers: DriverCharge | null =
+    additionalDrivers.length > 0
+      ? { count: additionalDrivers.length, perDay: driversPerDay, amount: driversPerDay * days }
+      : null
 
-  const subtotal = rentalSubtotal + extrasSubtotal
+  const feeCharges: FeeCharge[] = fees
+    .filter((f) => f.label.trim().length > 0)
+    .map((f) => ({ id: f.id, label: f.label.trim(), amount: Number.isFinite(f.amount) ? f.amount : 0 }))
+  const feesTotal = feeCharges.reduce((sum, f) => sum + f.amount, 0)
+
+  const subtotal = rentalSubtotal + (drivers?.amount ?? 0) + feesTotal
   const taxRatePct = vehicle.fees.taxRatePct ?? 0
   const tax = Math.round(subtotal * taxRatePct) / 100
 
@@ -92,8 +127,9 @@ export function priceBooking({ vehicle, option, pickupAt, returnAt, extras }: Pr
     days,
     units,
     rentalSubtotal,
-    extras: extraCharges,
-    extrasSubtotal,
+    drivers,
+    fees: feeCharges,
+    feesTotal,
     subtotal,
     taxRatePct,
     tax,

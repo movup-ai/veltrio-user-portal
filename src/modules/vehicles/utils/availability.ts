@@ -8,28 +8,46 @@ export interface AvailabilityDay {
   isToday: boolean
 }
 
+/**
+ * A window the vehicle is spoken for, as ISO timestamps. Structural on purpose — the vehicles
+ * module shouldn't need to know that these come from bookings.
+ */
+export interface BusyInterval {
+  from: string
+  to: string
+}
+
 const DAYS_AHEAD = 14
 
+/** How long a vehicle entering maintenance is assumed to be off the road. */
+const MAINTENANCE_DAYS = 4
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
 /**
- * Mock 14-day availability until a bookings API exists. Derived deterministically from the
- * vehicle's id (stable across renders, differs per vehicle) mixed with its utilization rate.
- * A vehicle that's in Maintenance/Out of service reads as disabled for its near-term days —
- * it can't be booked regardless of what utilization alone would suggest.
+ * Day-by-day availability for the next two weeks, read off the vehicle's actual bookings.
+ * A day counts as booked when any rental covers part of it. Status still wins: a vehicle in
+ * maintenance or out of service can't be booked whatever the calendar says.
  */
-export function availabilityForVehicle(vehicle: Vehicle, from = new Date()): AvailabilityDay[] {
-  const seed = [...vehicle.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
-  const start = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+export function availabilityForVehicle(vehicle: Vehicle, busy: BusyInterval[] = [], from = new Date()): AvailabilityDay[] {
+  const start = startOfDay(from)
+
+  // Parsed once rather than per day — 14 days x every interval adds up quickly on a big fleet.
+  const windows = busy.map((i) => ({ from: Date.parse(i.from), to: Date.parse(i.to) }))
 
   return Array.from({ length: DAYS_AHEAD }, (_, offset) => {
-    const date = new Date(start)
-    date.setDate(start.getDate() + offset)
+    const date = new Date(start.getTime() + offset * MS_PER_DAY)
+    const dayStart = date.getTime()
+    const dayEnd = dayStart + MS_PER_DAY
 
-    // Cheap deterministic hash → 0..99, compared against the vehicle's utilization.
-    const roll = ((seed * 31 + offset * 17) % 100) / 100
     let state: DayState
     if (vehicle.status === 'Out of service') state = 'disabled'
-    else if (vehicle.status === 'Maintenance') state = offset < 4 ? 'disabled' : roll < vehicle.utilization ? 'booked' : 'available'
-    else state = roll < vehicle.utilization ? 'booked' : 'available'
+    else if (vehicle.status === 'Maintenance' && offset < MAINTENANCE_DAYS) state = 'disabled'
+    else state = windows.some((w) => w.from < dayEnd && dayStart < w.to) ? 'booked' : 'available'
 
     return { date, state, isToday: offset === 0 }
   })

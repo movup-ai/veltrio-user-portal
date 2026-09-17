@@ -37,7 +37,12 @@
     "customerEmailInvalid": "Introduzca una dirección de correo válida",
     "customerPhoneRequired": "Introduzca un teléfono de contacto",
     "customerLicenceRequired": "El permiso de conducir es obligatorio",
-    "notesTooLong": "Las notas son demasiado largas"
+    "driverNameRequired": "Introduzca el nombre del conductor",
+    "driverLicenceRequired": "Introduzca un número de permiso",
+    "addressTooLong": "La dirección es demasiado larga",
+    "driverRateInvalid": "Introduzca una tarifa válida",
+    "feeLabelRequired": "Introduzca una descripción",
+    "feeAmountInvalid": "Introduzca un importe válido"
   },
   "rateOption": {
     "labelRequired": "La etiqueta es obligatoria",

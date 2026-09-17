@@ -20,6 +20,8 @@ import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActio
 import { initials } from '@/utils/formatting'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
 import type { BookingTuple } from '@/modules/bookings/types/booking.types'
+import { useBookings } from '@/modules/bookings/hooks/use-bookings'
+import { intervalsForPlate } from '@/modules/bookings/utils/booking.schedule'
 import { downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils/booking.utils'
 import { AvailabilityStrip } from '@/modules/vehicles/components/AvailabilityStrip'
 import { VehiclePerformance } from '@/modules/vehicles/components/VehiclePerformance'
@@ -94,6 +96,8 @@ export function VehicleDetailsPage() {
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
   const { data: fleet } = useVehicles({ page: 1, pageSize: 100 })
+  const { data: bookingLists } = useBookings()
+  const schedule = bookingLists?.schedule ?? []
   const updateVehicle = useUpdateVehicle(vehicleId ?? '')
   const deleteVehicle = useDeleteVehicle()
 
@@ -130,7 +134,8 @@ export function VehicleDetailsPage() {
   const activeBooking = vehicle.status === 'On rent' ? BOOKINGS_UPCOMING.find((b) => b[3] === vehicle.plate) : undefined
   const currentRental = activeBooking ? { customer: activeBooking[0], reference: activeBooking[1], window: activeBooking[4] } : undefined
 
-  const daysOnRent = availabilityForVehicle(vehicle).filter((d) => d.state === 'booked').length
+  const busy = intervalsForPlate(schedule, vehicle.plate)
+  const daysOnRent = availabilityForVehicle(vehicle, busy).filter((d) => d.state === 'booked').length
   const fleetItems = fleet?.items ?? []
   const fleetUtilization = fleetItems.length
     ? fleetItems.reduce((sum, v) => sum + v.utilization, 0) / fleetItems.length
@@ -209,7 +214,7 @@ export function VehicleDetailsPage() {
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex min-w-0 flex-[2_1_560px] flex-col gap-4">
           <VehiclePhotoGallery key={vehicle.id} photos={vehicle.photos} />
-          <AvailabilityStrip vehicle={vehicle} />
+          <AvailabilityStrip vehicle={vehicle} busy={busy} />
           <VehicleSpecs vehicle={vehicle} />
 
           {vehicle.description && (

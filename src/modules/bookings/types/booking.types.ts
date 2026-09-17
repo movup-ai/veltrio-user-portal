@@ -1,3 +1,5 @@
+import type { UploadedFile } from '@/types/common'
+
 /** [customer, reference, vehicle, plate, rentalWindow, note, location, status, total] */
 export type BookingTuple = [
   customer: string,
@@ -74,32 +76,68 @@ export interface BookingFilters {
   valueBands: BookingValueBand[]
 }
 
-/** The two sets the list is built from. Mirrors the shape the bookings API will eventually return. */
+/**
+ * A window during which a vehicle is spoken for. Keyed by plate rather than vehicle id because
+ * the seeded bookings only carry a plate — the one identifier both sides of the mock share.
+ * `from`/`to` are ISO timestamps.
+ */
+export interface BookedInterval {
+  reference: string
+  plate: string
+  from: string
+  to: string
+}
+
+/**
+ * What the bookings endpoint returns: the two display lists the table renders, plus the
+ * machine-readable schedule that availability checks run against.
+ */
 export interface BookingLists {
   upcoming: BookingTuple[]
   recent: BookingTuple[]
+  schedule: BookedInterval[]
 }
 
 /** Renter on the booking — either picked from the customer book or typed in fresh. */
 export interface BookingCustomer {
+  /** Set when picked from the customer book; absent means this booking creates the customer. */
+  id?: string
   name: string
   email: string
   phone: string
-  licence: string
+  dateOfBirth?: string
+  address?: string
+  licenceNumber: string
+  licenceExpiry?: string
+  licenceDocument?: UploadedFile
+  insuranceDocument?: UploadedFile
 }
 
-/** Optional add-ons, billed per rental day. Labels live in `bookings:extras.<key>`. */
-export const BOOKING_EXTRAS = [
-  { key: 'additionalDriver', pricePerDay: 12 },
-  { key: 'childSeat', pricePerDay: 9 },
-  { key: 'gpsUnit', pricePerDay: 7 },
-  { key: 'roadsideAssist', pricePerDay: 6 },
-] as const
-export type BookingExtraKey = (typeof BOOKING_EXTRAS)[number]['key']
-
-export function bookingExtra(key: BookingExtraKey) {
-  return BOOKING_EXTRAS.find((e) => e.key === key)
+/**
+ * Named on the rental agreement alongside the main renter. The rate is per driver rather than
+ * a single org-wide figure, so the counter can waive or discount one without touching the rest.
+ */
+export interface AdditionalDriver {
+  id: string
+  name: string
+  licenceNumber: string
+  /** Charged for every rental day. */
+  pricePerDay: number
 }
+
+/**
+ * A one-off charge added to this booking — cleaning, young-driver surcharge, a negotiated
+ * add-on. Free-form because there is no ancillary catalog yet; a flat amount, not per-day.
+ */
+export interface BookingFee {
+  id: string
+  label: string
+  amount: number
+}
+
+/** Pre-handover checks the branch can require. Labels live in `bookings:verification.<key>`. */
+export const BOOKING_VERIFICATIONS = ['identity', 'background', 'insurance'] as const
+export type BookingVerification = (typeof BOOKING_VERIFICATIONS)[number]
 
 /** Payload for creating a booking — the server assigns reference/status/createdAt. */
 export interface BookingInput {
@@ -118,8 +156,9 @@ export interface BookingInput {
   /** ISO timestamps. */
   pickupAt: string
   returnAt: string
-  extras: BookingExtraKey[]
-  notes?: string
+  additionalDrivers: AdditionalDriver[]
+  fees: BookingFee[]
+  verifications: BookingVerification[]
   /** Snapshot of the charge at booking time — rates can change afterwards. */
   total: number
 }

@@ -1,47 +1,62 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, CalendarClock, UserRoundPlus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleSlash, Paperclip, Save, UserPlus, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Combobox } from '@/components/ui/combobox'
+import { DatePicker } from '@/components/ui/date-picker'
+import { TimePicker } from '@/components/ui/time-picker'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from '@/components/ui/use-toast'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
+import { DocumentUpload } from '@/components/forms/DocumentUpload'
 import { FormField } from '@/components/forms/FormField'
-import { Stepper, type StepDef } from '@/components/forms/Stepper'
+import { StepSidebar } from '@/components/forms/StepSidebar'
+import type { StepDef } from '@/components/forms/Stepper'
+import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
 import { LOCATIONS } from '@/modules/locations/mock/location.mock'
 import { CUSTOMERS } from '@/modules/customers/mock/customer.mock'
 import { ReviewRow, ReviewRowGrid, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
 import { useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
 import type { RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types'
-import { vehicleDisplayName } from '@/modules/vehicles/utils/vehicle.utils'
-import { BookingExtrasPicker } from '@/modules/bookings/components/BookingExtrasPicker'
+import { formatRateOptionPrice, vehicleDisplayName } from '@/modules/vehicles/utils/vehicle.utils'
+import { AdditionalDriversEditor } from '@/modules/bookings/components/AdditionalDriversEditor'
+import { BookingFeesEditor } from '@/modules/bookings/components/BookingFeesEditor'
+import { BookingVerificationPicker } from '@/modules/bookings/components/BookingVerificationPicker'
 import { BookingPriceSummary } from '@/modules/bookings/components/BookingPriceSummary'
 import { BookingRateOptions } from '@/modules/bookings/components/BookingRateOptions'
-import { BookingVehiclePicker } from '@/modules/bookings/components/BookingVehiclePicker'
-import { useCreateBooking } from '@/modules/bookings/hooks/use-bookings'
+import { BookingVehiclePicker, type VehicleOption } from '@/modules/bookings/components/BookingVehiclePicker'
+import { useBookings, useCreateBooking } from '@/modules/bookings/hooks/use-bookings'
+import { conflictsForPlate } from '@/modules/bookings/utils/booking.schedule'
 import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
   combineDateTime,
   type BookingFormValues,
 } from '@/modules/bookings/schema/booking.schema'
-import type { BookingInput } from '@/modules/bookings/types/booking.types'
-import { durationHours, priceBooking } from '@/modules/bookings/utils/booking.pricing'
-import { formatRentalWindow } from '@/modules/bookings/utils/booking.utils'
+import type { BookedInterval, BookingInput } from '@/modules/bookings/types/booking.types'
+import { durationHours, priceBooking, rentalDays } from '@/modules/bookings/utils/booking.pricing'
 
-const STEP_KEYS = ['trip', 'vehicle', 'customer', 'review'] as const
+const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
+type StepKey = (typeof STEP_KEYS)[number]
 
 /** A generous single page — the fleet is small enough to pick from without server-side paging. */
 const FLEET_PAGE_SIZE = 200
+
+const DRAFT_STORAGE_KEY = 'veltrio.bookingDraft'
+
+/** Stable empty default so an unresolved bookings query doesn't churn identity every render. */
+const EMPTY_SCHEDULE: BookedInterval[] = []
 
 function pad(n: number): string {
   return String(n).padStart(2, '0')
@@ -58,24 +73,47 @@ function addDays(date: Date, days: number): Date {
   return next
 }
 
-/** Tomorrow to three days later, 10:00 both ends — the most common counter booking. */
-function defaultValues(): BookingFormValues {
+const TODAY_INPUT = toDateInput(new Date())
+
+/** Wide enough for any adult renter — the DOB picker pages by dropdown, not month by month. */
+const DOB_YEAR_RANGE = { from: new Date().getFullYear() - 100, to: new Date().getFullYear() }
+
+/** Tomorrow to four days later, 09:30 both ends — the most common counter booking. */
+function blankValues(): BookingFormValues {
   const today = new Date()
   return {
     pickupLocation: '',
     returnLocation: '',
     pickupDate: toDateInput(addDays(today, 1)),
-    pickupTime: '10:00',
-    returnDate: toDateInput(addDays(today, 4)),
-    returnTime: '10:00',
+    pickupTime: '09:30',
+    returnDate: toDateInput(addDays(today, 5)),
+    returnTime: '09:30',
     vehicleId: '',
-    rateOptionId: '',
-    extras: [],
+    customerId: '',
     customerName: '',
     customerEmail: '',
     customerPhone: '',
-    customerLicence: '',
-    notes: '',
+    customerDob: '',
+    customerAddress: '',
+    licenceNumber: '',
+    licenceExpiry: '',
+    licenceDocument: null,
+    insuranceDocument: null,
+    verifications: ['identity'],
+    additionalDrivers: [],
+    rateOptionId: '',
+    fees: [],
+  }
+}
+
+/** A saved draft may predate a field being added — merge it over a blank form rather than trusting it wholesale. */
+function loadDraft(): BookingFormValues | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!raw) return null
+    return { ...blankValues(), ...(JSON.parse(raw) as Partial<BookingFormValues>) }
+  } catch {
+    return null
   }
 }
 
@@ -89,8 +127,20 @@ export function BookingFormPage() {
 
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
+  const [restoredDraft] = useState(loadDraft)
 
-  const steps: StepDef[] = STEP_KEYS.map((key) => ({ key, label: t(`form.steps.${key}`) }))
+  /**
+   * The lookup box holds its own text, deliberately *not* bound to `customerName`. Sharing one
+   * value made the two fields mirror each other, so typing a new renter's name below echoed
+   * into the search above. Seeded only when a draft was linked to a real customer.
+   */
+  const [customerQuery, setCustomerQuery] = useState(restoredDraft?.customerId ? restoredDraft.customerName : '')
+
+  const steps: StepDef[] = STEP_KEYS.map((key) => ({
+    key,
+    label: t(`form.steps.${key}.label`),
+    description: t(`form.steps.${key}.description`),
+  }))
 
   // `tValidation` is re-created on language change, so the schema (and its messages) follow.
   const schema = useMemo(() => bookingFormSchema(tValidation), [tValidation])
@@ -102,15 +152,27 @@ export function BookingFormPage() {
     trigger,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<BookingFormValues>({ resolver: zodResolver(schema), defaultValues: defaultValues(), mode: 'onChange' })
+  } = useForm<BookingFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: restoredDraft ?? blankValues(),
+    mode: 'onChange',
+  })
 
   const values = useWatch({ control }) as BookingFormValues
-  const stepKey = STEP_KEYS[stepIndex]
+  const stepKey: StepKey = STEP_KEYS[stepIndex]
+
+  // Ref-guarded: StrictMode runs mount effects twice in dev, which would double the toast.
+  const draftNotified = useRef(false)
+  useEffect(() => {
+    if (!restoredDraft || draftNotified.current) return
+    draftNotified.current = true
+    toast({ title: t('form.draft.restored'), description: t('form.draft.restoredDescription') })
+  }, [restoredDraft, t])
 
   const pickupAt = combineDateTime(values.pickupDate, values.pickupTime).toISOString()
   const returnAt = combineDateTime(values.returnDate, values.returnTime).toISOString()
   const hours = durationHours(pickupAt, returnAt)
-  const days = Math.max(1, Math.ceil(hours / 24))
+  const days = rentalDays(hours)
 
   // Only vehicles that can actually be rented: published, Available, and sitting at the pickup
   // branch. Before a location is chosen the whole available fleet is shown.
@@ -122,18 +184,35 @@ export function BookingFormPage() {
     pageSize: FLEET_PAGE_SIZE,
   })
 
-  const vehicles = useMemo(() => data?.items ?? [], [data])
-  const selectedVehicle = vehicles.find((v) => v.id === values.vehicleId)
+  const { data: bookingLists } = useBookings()
+  const schedule = bookingLists?.schedule ?? EMPTY_SCHEDULE
+
+  /**
+   * Every vehicle at the branch, each tagged with the rental that blocks it (if any). An
+   * unparseable or reversed date range can't be checked against, so nothing is marked blocked
+   * until the window is real.
+   *
+   * Derived straight through rather than memoized: it's a handful of vehicles against a
+   * handful of intervals, and keeping the arrays out of any dependency list is what lets the
+   * reset effect below key off a boolean instead of an array identity.
+   */
+  const options: VehicleOption[] = (data?.items ?? []).map((vehicle) => {
+    const clash = hours > 0 ? conflictsForPlate(schedule, vehicle.plate, pickupAt, returnAt)[0] : undefined
+    return { vehicle, bookedUntil: clash?.to }
+  })
+
+  const freeVehicles = options.filter((o) => !o.bookedUntil).map((o) => o.vehicle)
+  const selectedVehicle = freeVehicles.find((v) => v.id === values.vehicleId)
   const selectedOption = selectedVehicle?.rateOptions.find((o) => o.id === values.rateOptionId)
 
-  // Changing the pickup branch can strand a vehicle that is no longer offered — drop the
-  // selection rather than silently booking a car from the wrong location.
+  // Changing the branch or the dates can strand the chosen vehicle — drop the selection rather
+  // than silently booking a car from the wrong location, or one that's now double-booked.
+  const selectionStranded = Boolean(values.vehicleId) && !isLoading && !selectedVehicle
   useEffect(() => {
-    if (!values.vehicleId) return
-    if (isLoading || vehicles.some((v) => v.id === values.vehicleId)) return
+    if (!selectionStranded) return
     setValue('vehicleId', '', { shouldValidate: false })
     setValue('rateOptionId', '', { shouldValidate: false })
-  }, [vehicles, isLoading, values.vehicleId, setValue])
+  }, [selectionStranded, setValue])
 
   const pricing =
     selectedVehicle && selectedOption
@@ -142,9 +221,16 @@ export function BookingFormPage() {
           option: selectedOption,
           pickupAt,
           returnAt,
-          extras: values.extras,
+          additionalDrivers: values.additionalDrivers,
+          fees: values.fees,
         })
       : null
+
+  /** Labels of the documents actually attached — drives the chips on the Review step. */
+  const attachedDocuments = [
+    values.licenceDocument ? t('form.documents.licence') : null,
+    values.insuranceDocument ? t('form.documents.insurance') : null,
+  ].filter((label) => label != null)
 
   const goNext = async () => {
     const fields = BOOKING_STEP_FIELDS[stepKey]
@@ -157,6 +243,14 @@ export function BookingFormPage() {
 
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
+  const cancel = () => navigate('/app/bookings')
+
+  function handleSaveDraft() {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values))
+    toast({ title: t('form.draft.saved'), description: t('form.draft.savedDescription'), variant: 'success' })
+    navigate('/app/bookings')
+  }
+
   function handleSelectVehicle(vehicle: Vehicle) {
     setValue('vehicleId', vehicle.id, { shouldValidate: true })
     // Default to the daily rate when there is one — the option most bookings use.
@@ -168,15 +262,32 @@ export function BookingFormPage() {
     setValue('rateOptionId', option.id, { shouldValidate: true })
   }
 
-  /** Prefills the contact fields from the customer book — they stay editable afterwards. */
   function handlePickCustomer(name: string) {
     const match = CUSTOMERS.find((c) => c[0] === name)
     const opts = { shouldValidate: true, shouldDirty: true } as const
+    setCustomerQuery(name)
     setValue('customerName', name, opts)
+    setValue('customerId', match ? name : '', opts)
     if (!match) return
     setValue('customerEmail', match[1], opts)
     setValue('customerPhone', match[2], opts)
-    setValue('customerLicence', match[3], opts)
+    setValue('licenceNumber', match[3], opts)
+  }
+
+  /** Clears a prefilled renter so the next one is typed from scratch rather than edited over. */
+  function handleNewCustomer() {
+    setCustomerQuery('')
+    const fields = [
+      'customerId',
+      'customerName',
+      'customerEmail',
+      'customerPhone',
+      'customerDob',
+      'customerAddress',
+      'licenceNumber',
+      'licenceExpiry',
+    ] as const
+    for (const field of fields) setValue(field, '', { shouldValidate: false })
   }
 
   const onSubmit = (submitted: BookingFormValues) => {
@@ -184,10 +295,16 @@ export function BookingFormPage() {
 
     const input: BookingInput = {
       customer: {
+        id: submitted.customerId || undefined,
         name: submitted.customerName,
         email: submitted.customerEmail,
         phone: submitted.customerPhone,
-        licence: submitted.customerLicence,
+        dateOfBirth: submitted.customerDob || undefined,
+        address: submitted.customerAddress || undefined,
+        licenceNumber: submitted.licenceNumber,
+        licenceExpiry: submitted.licenceExpiry || undefined,
+        licenceDocument: submitted.licenceDocument ?? undefined,
+        insuranceDocument: submitted.insuranceDocument ?? undefined,
       },
       vehicleId: selectedVehicle.id,
       rateOptionId: selectedOption.id,
@@ -197,31 +314,45 @@ export function BookingFormPage() {
       returnLocation: submitted.returnLocation,
       pickupAt: combineDateTime(submitted.pickupDate, submitted.pickupTime).toISOString(),
       returnAt: combineDateTime(submitted.returnDate, submitted.returnTime).toISOString(),
-      extras: submitted.extras,
-      notes: submitted.notes || undefined,
+      additionalDrivers: submitted.additionalDrivers,
+      fees: submitted.fees,
+      verifications: submitted.verifications,
       total: pricing.total,
     }
 
-    createBooking.mutate(input, { onSuccess: () => navigate('/app/bookings') })
+    createBooking.mutate(input, {
+      onSuccess: () => {
+        localStorage.removeItem(DRAFT_STORAGE_KEY)
+        navigate('/app/bookings')
+      },
+    })
   }
 
   return (
     <PageContainer>
-      <PageHeader title={t('form.title')} description={t('form.description')} />
+      <PageHeader
+        title={t('form.title')}
+        description={t('form.stepCounter', {
+          current: stepIndex + 1,
+          total: STEP_KEYS.length,
+          label: t(`form.steps.${stepKey}.label`),
+        })}
+        actions={<PageActionButton icon={X} label={tCommon('actions.cancel')} onClick={cancel} />}
+      />
 
-      <Card as="section" className="p-[18px]">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
-          <Stepper
-            steps={steps}
-            currentIndex={stepIndex}
-            furthestIndex={furthestIndex}
-            onStepClick={(i) => setStepIndex(i)}
-            ariaLabel={t('form.stepsLabel')}
-          />
-        </div>
+      {/* 260px keeps each step's description on one line, so the four rows stay even in height. */}
+      <div className="grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <StepSidebar
+          steps={steps}
+          currentIndex={stepIndex}
+          furthestIndex={furthestIndex}
+          onStepClick={setStepIndex}
+          ariaLabel={t('form.stepsLabel')}
+          className="lg:sticky lg:top-4"
+        />
 
         <form
-          className="flex flex-col gap-5"
+          className="flex min-w-0 flex-col gap-4"
           onSubmit={handleSubmit(onSubmit)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && stepKey !== 'review' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
@@ -231,10 +362,11 @@ export function BookingFormPage() {
           noValidate
         >
           {stepKey === 'trip' && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <p className="text-meta text-fg-3 mb-3">{t('form.sections.pickup')}</p>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <>
+              <Card as="section" className="p-[18px]">
+                <PanelHeading title={t('form.sections.trip')} description={t('form.sections.tripHint')} />
+
+                <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
                   <FormField label={t('form.fields.pickupLocation')} error={errors.pickupLocation?.message} required>
                     {({ id }) => (
                       <Controller
@@ -264,18 +396,7 @@ export function BookingFormPage() {
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.pickupDate')} error={errors.pickupDate?.message} required>
-                    {(fieldProps) => <Input type="date" {...register('pickupDate')} {...fieldProps} />}
-                  </FormField>
-                  <FormField label={t('form.fields.pickupTime')} error={errors.pickupTime?.message} required>
-                    {(fieldProps) => <Input type="time" {...register('pickupTime')} {...fieldProps} />}
-                  </FormField>
-                </div>
-              </div>
 
-              <div className="border-border-soft border-t pt-5">
-                <p className="text-meta text-fg-3 mb-3">{t('form.sections.return')}</p>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <FormField label={t('form.fields.returnLocation')} error={errors.returnLocation?.message} required>
                     {({ id }) => (
                       <Controller
@@ -298,122 +419,199 @@ export function BookingFormPage() {
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.returnDate')} error={errors.returnDate?.message} required>
-                    {(fieldProps) => <Input type="date" {...register('returnDate')} {...fieldProps} />}
-                  </FormField>
-                  <FormField label={t('form.fields.returnTime')} error={errors.returnTime?.message} required>
-                    {(fieldProps) => <Input type="time" {...register('returnTime')} {...fieldProps} />}
-                  </FormField>
-                </div>
-              </div>
 
-              {hours > 0 && (
-                <div className="border-border-strong bg-surface-2 flex flex-wrap items-center gap-2 rounded-[9px] border border-dashed p-3.5">
-                  <CalendarClock className="text-fg-4 size-4 shrink-0" aria-hidden />
-                  <span className="text-[13px] font-semibold">{formatRentalWindow(pickupAt, returnAt)}</span>
-                  <span className="text-fg-4 text-[12.5px]">
-                    {t('form.trip.duration', { count: days, hours: Math.round(hours) })}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {stepKey === 'vehicle' && (
-            <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_290px]">
-              <div className="flex min-w-0 flex-col gap-6">
-                <div>
-                  <p className="text-meta text-fg-3 mb-1">{t('form.sections.vehicle')}</p>
-                  <p className="text-fg-4 mb-3.5 text-[12.5px]">
-                    {t('form.vehicle.hint', { location: values.pickupLocation })}
-                  </p>
-                  {isLoading && !data ? (
-                    <LoadingState label={t('form.vehicle.loading')} />
-                  ) : isError ? (
-                    <ErrorState description={t('form.vehicle.loadError')} onRetry={() => refetch()} />
-                  ) : (
-                    <>
-                      <BookingVehiclePicker
-                        vehicles={vehicles}
-                        selectedId={values.vehicleId}
-                        onSelect={handleSelectVehicle}
-                        invalid={Boolean(errors.vehicleId)}
-                      />
-                      {errors.vehicleId && (
-                        <p role="alert" className="text-caption text-error mt-2">
-                          {errors.vehicleId.message}
-                        </p>
+                  {/* Date and time split per side, so each column stays a self-contained pickup/return block. */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label={t('form.fields.pickupDate')} error={errors.pickupDate?.message} required>
+                      {({ id, invalid }) => (
+                        <Controller
+                          control={control}
+                          name="pickupDate"
+                          render={({ field }) => (
+                            <DatePicker
+                              id={id}
+                              aria-label={t('form.fields.pickupDate')}
+                              value={field.value}
+                              onChange={field.onChange}
+                              invalid={invalid}
+                            />
+                          )}
+                        />
                       )}
-                    </>
+                    </FormField>
+                    <FormField label={t('form.fields.pickupTime')} error={errors.pickupTime?.message} required>
+                      {({ id, invalid }) => (
+                        <Controller
+                          control={control}
+                          name="pickupTime"
+                          render={({ field }) => (
+                            <TimePicker
+                              id={id}
+                              aria-label={t('form.fields.pickupTimeLong')}
+                              value={field.value}
+                              onChange={field.onChange}
+                              invalid={invalid}
+                            />
+                          )}
+                        />
+                      )}
+                    </FormField>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label={t('form.fields.returnDate')} error={errors.returnDate?.message} required>
+                      {({ id, invalid }) => (
+                        <Controller
+                          control={control}
+                          name="returnDate"
+                          render={({ field }) => (
+                            <DatePicker
+                              id={id}
+                              aria-label={t('form.fields.returnDate')}
+                              value={field.value}
+                              onChange={field.onChange}
+                              // A return before the pickup isn't a real choice — rule it out in
+                              // the calendar rather than only rejecting it on Continue.
+                              min={values.pickupDate}
+                              invalid={invalid}
+                            />
+                          )}
+                        />
+                      )}
+                    </FormField>
+                    <FormField label={t('form.fields.returnTime')} error={errors.returnTime?.message} required>
+                      {({ id, invalid }) => (
+                        <Controller
+                          control={control}
+                          name="returnTime"
+                          render={({ field }) => (
+                            <TimePicker
+                              id={id}
+                              aria-label={t('form.fields.returnTimeLong')}
+                              value={field.value}
+                              onChange={field.onChange}
+                              invalid={invalid}
+                            />
+                          )}
+                        />
+                      )}
+                    </FormField>
+                  </div>
+                </div>
+              </Card>
+
+              <Card as="section" className="overflow-hidden">
+                <div className="border-border-soft flex flex-wrap items-start justify-between gap-3 border-b px-[18px] py-3.5">
+                  <PanelHeading
+                    title={t('form.vehicle.title')}
+                    description={[
+                      hours > 0 ? `${format.shortDate(pickupAt)} – ${format.shortDate(returnAt)}` : null,
+                      values.pickupLocation || tCommon('filters.all'),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  />
+                  {!isLoading && !isError && (
+                    <span
+                      className={cn(
+                        'flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold',
+                        // Zero is a dead end, not a success — don't dress it in the confirming teal.
+                        freeVehicles.length > 0 ? 'bg-tint text-primary' : 'bg-surface-3 text-fg-3',
+                      )}
+                    >
+                      {freeVehicles.length > 0 ? (
+                        <CheckCircle2 className="size-3.5" aria-hidden />
+                      ) : (
+                        <CircleSlash className="size-3.5" aria-hidden />
+                      )}
+                      {t('form.vehicle.availableCount', { count: freeVehicles.length })}
+                    </span>
                   )}
                 </div>
 
-                {selectedVehicle && (
-                  <div className="border-border-soft border-t pt-5">
-                    <p className="text-meta text-fg-3 mb-1">{t('form.sections.rate')}</p>
-                    <p className="text-fg-4 mb-3.5 text-[12.5px]">{t('form.rate.hint')}</p>
-                    <BookingRateOptions
-                      options={selectedVehicle.rateOptions}
-                      selectedId={values.rateOptionId}
-                      onSelect={handleSelectRate}
+                {isLoading && !data ? (
+                  <div className="p-[18px]">
+                    <LoadingState label={t('form.vehicle.loading')} />
+                  </div>
+                ) : isError ? (
+                  <div className="p-[18px]">
+                    <ErrorState description={t('form.vehicle.loadError')} onRetry={() => refetch()} />
+                  </div>
+                ) : (
+                  <>
+                    <BookingVehiclePicker
+                      options={options}
+                      selectedId={values.vehicleId}
+                      onSelect={handleSelectVehicle}
                       hours={hours}
-                      invalid={Boolean(errors.rateOptionId)}
+                      invalid={Boolean(errors.vehicleId)}
                     />
-                    {errors.rateOptionId && (
-                      <p role="alert" className="text-caption text-error mt-2">
-                        {errors.rateOptionId.message}
+                    {errors.vehicleId && (
+                      <p role="alert" className="text-caption text-error px-[18px] pb-3">
+                        {errors.vehicleId.message}
                       </p>
                     )}
-                  </div>
+                  </>
                 )}
-
-                <div className="border-border-soft border-t pt-5">
-                  <p className="text-meta text-fg-3 mb-1">{t('form.sections.extras')}</p>
-                  <p className="text-fg-4 mb-3.5 text-[12.5px]">{t('form.extras.hint')}</p>
-                  <Controller
-                    control={control}
-                    name="extras"
-                    render={({ field }) => (
-                      <BookingExtrasPicker
-                        selected={field.value}
-                        onChange={field.onChange}
-                        days={days}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-
-              {pricing && selectedOption && (
-                <BookingPriceSummary pricing={pricing} option={selectedOption} className="lg:sticky lg:top-4" />
-              )}
-            </div>
+              </Card>
+            </>
           )}
 
-          {stepKey === 'customer' && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <p className="text-meta text-fg-3 mb-1">{t('form.sections.customer')}</p>
-                <p className="text-fg-4 mb-3.5 text-[12.5px]">{t('form.customer.hint')}</p>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {stepKey === 'renter' && (
+            <>
+              <Card as="section" className="p-[18px]">
+                <PanelHeading title={t('form.sections.renter')} description={t('form.customer.hint')} />
+
+                {/* No existing/new mode to choose: search the book, or just start typing. The
+                    button is a shortcut that clears a prefill, not a separate branch. */}
+                <div className="mt-4">
+                  {/* Hint sits under the whole row, not inside the field — otherwise it stretches
+                      the flex item and drags the button out of line with the input. */}
+                  <div className="flex flex-wrap items-end gap-2.5">
+                    <FormField label={t('form.customer.search')} className="min-w-[220px] flex-1">
+                      {({ id }) => (
+                        <Combobox
+                          id={id}
+                          aria-label={t('form.customer.search')}
+                          value={customerQuery}
+                          onChange={handlePickCustomer}
+                          options={CUSTOMERS.map((c) => c[0])}
+                          placeholder={t('form.fields.customerNamePlaceholder')}
+                        />
+                      )}
+                    </FormField>
+                    <Button type="button" variant="outline" onClick={handleNewCustomer} className="gap-1.5">
+                      <UserPlus className="size-4" aria-hidden />
+                      {t('form.customer.new')}
+                    </Button>
+                  </div>
+                  <p className="text-description mt-1.5">{t('form.customer.searchHint')}</p>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
                   <FormField label={t('form.fields.customerName')} error={errors.customerName?.message} required>
-                    {({ id }) => (
-                      <Controller
-                        control={control}
-                        name="customerName"
-                        render={({ field }) => (
-                          <Combobox
-                            id={id}
-                            aria-label={t('form.fields.customerName')}
-                            value={field.value}
-                            onChange={handlePickCustomer}
-                            options={CUSTOMERS.map((c) => c[0])}
-                            placeholder={t('form.fields.customerNamePlaceholder')}
-                            invalid={Boolean(errors.customerName)}
-                          />
-                        )}
-                      />
-                    )}
+                    {(fieldProps) => {
+                      const nameField = register('customerName')
+                      return (
+                        <Input
+                          // Explicit: the label's required asterisk otherwise bleeds into the
+                          // accessible name, and the driver rows have a "Full name" too.
+                          aria-label={t('form.fields.customerName')}
+                          {...nameField}
+                          {...fieldProps}
+                          onChange={(e) => {
+                            // Editing the name by hand means this is no longer the record we
+                            // prefilled from — drop the link and the stale name in the lookup.
+                            // Free-typed search text is left alone; it was never a link.
+                            if (values.customerId) {
+                              setValue('customerId', '')
+                              setCustomerQuery('')
+                            }
+                            void nameField.onChange(e)
+                          }}
+                        />
+                      )
+                    }}
                   </FormField>
                   <FormField label={t('form.fields.customerEmail')} error={errors.customerEmail?.message} required>
                     {(fieldProps) => <Input type="email" {...register('customerEmail')} {...fieldProps} />}
@@ -421,109 +619,350 @@ export function BookingFormPage() {
                   <FormField label={t('form.fields.customerPhone')} error={errors.customerPhone?.message} required>
                     {(fieldProps) => <Input type="tel" {...register('customerPhone')} {...fieldProps} />}
                   </FormField>
-                  <FormField label={t('form.fields.customerLicence')} error={errors.customerLicence?.message} required>
-                    {(fieldProps) => <Input className="font-mono" {...register('customerLicence')} {...fieldProps} />}
+                  <FormField label={t('form.fields.customerDob')} error={errors.customerDob?.message}>
+                    {({ id, invalid }) => (
+                      <Controller
+                        control={control}
+                        name="customerDob"
+                        render={({ field }) => (
+                          <DatePicker
+                            id={id}
+                            aria-label={t('form.fields.customerDob')}
+                            value={field.value}
+                            onChange={field.onChange}
+                            max={TODAY_INPUT}
+                            yearRange={DOB_YEAR_RANGE}
+                            placeholder={t('form.fields.customerDobPlaceholder')}
+                            invalid={invalid}
+                          />
+                        )}
+                      />
+                    )}
+                  </FormField>
+                  <FormField
+                    label={t('form.fields.customerAddress')}
+                    error={errors.customerAddress?.message}
+                    className="md:col-span-2"
+                  >
+                    {(fieldProps) => (
+                      <Input placeholder={t('form.fields.customerAddressPlaceholder')} {...register('customerAddress')} {...fieldProps} />
+                    )}
                   </FormField>
                 </div>
-                <p className="text-fg-4 mt-3 flex items-center gap-1.5 text-[11.5px]">
-                  <UserRoundPlus className="size-3.5 shrink-0" aria-hidden />
-                  {t('form.customer.newHint')}
-                </p>
+              </Card>
+
+              <Card as="section" className="p-[18px]">
+                <PanelHeading title={t('form.sections.documents')} description={t('form.documents.hint')} />
+
+                <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+                  <FormField label={t('form.fields.licenceNumber')} error={errors.licenceNumber?.message} required>
+                    {(fieldProps) => <Input className="font-mono" {...register('licenceNumber')} {...fieldProps} />}
+                  </FormField>
+                  <FormField label={t('form.fields.licenceExpiry')} error={errors.licenceExpiry?.message}>
+                    {({ id, invalid }) => (
+                      <Controller
+                        control={control}
+                        name="licenceExpiry"
+                        render={({ field }) => (
+                          <DatePicker
+                            id={id}
+                            aria-label={t('form.fields.licenceExpiry')}
+                            value={field.value}
+                            onChange={field.onChange}
+                            min={TODAY_INPUT}
+                            placeholder={t('form.fields.licenceExpiryPlaceholder')}
+                            invalid={invalid}
+                          />
+                        )}
+                      />
+                    )}
+                  </FormField>
+
+                  <FormField label={t('form.documents.licence')} description={t('form.documents.licenceHint')}>
+                    {({ id }) => (
+                      <Controller
+                        control={control}
+                        name="licenceDocument"
+                        render={({ field }) => (
+                          <DocumentUpload
+                            id={id}
+                            label={t('form.documents.licence')}
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
+                      />
+                    )}
+                  </FormField>
+                  <FormField label={t('form.documents.insurance')} description={t('form.documents.insuranceHint')}>
+                    {({ id }) => (
+                      <Controller
+                        control={control}
+                        name="insuranceDocument"
+                        render={({ field }) => (
+                          <DocumentUpload
+                            id={id}
+                            label={t('form.documents.insurance')}
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
+                      />
+                    )}
+                  </FormField>
+                </div>
+              </Card>
+
+              <Card as="section" className="p-[18px]">
+                <PanelHeading title={t('form.sections.verification')} description={t('form.verification.hint')} />
+                <div className="mt-4">
+                  <Controller
+                    control={control}
+                    name="verifications"
+                    render={({ field }) => <BookingVerificationPicker selected={field.value} onChange={field.onChange} />}
+                  />
+                </div>
+              </Card>
+
+            </>
+          )}
+
+          {stepKey === 'pricing' && (
+            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
+              <div className="flex min-w-0 flex-col gap-4">
+                <Card as="section" className="p-[18px]">
+                  <PanelHeading title={t('form.sections.rate')} description={t('form.rate.hint')} />
+                  <div className="mt-4">
+                    {selectedVehicle ? (
+                      <BookingRateOptions
+                        options={selectedVehicle.rateOptions}
+                        selectedId={values.rateOptionId}
+                        onSelect={handleSelectRate}
+                        hours={hours}
+                        invalid={Boolean(errors.rateOptionId)}
+                      />
+                    ) : (
+                      <p className="text-fg-4 text-[14px]">{t('form.review.noVehicle')}</p>
+                    )}
+                    {errors.rateOptionId && (
+                      <p role="alert" className="text-caption text-error mt-2">
+                        {errors.rateOptionId.message}
+                      </p>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Sits beside the quote rather than on the Renter step, so the breakdown moves
+                    the moment a driver is added. */}
+                <Card as="section" className="p-[18px]">
+                  <PanelHeading title={t('form.sections.drivers')} description={t('form.drivers.hint')} />
+                  <div className="mt-4">
+                    <Controller
+                      control={control}
+                      name="additionalDrivers"
+                      render={({ field }) => (
+                        <AdditionalDriversEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          errors={errors.additionalDrivers}
+                          days={days}
+                        />
+                      )}
+                    />
+                  </div>
+                </Card>
+
+                <Card as="section" className="p-[18px]">
+                  <PanelHeading title={t('form.sections.fees')} description={t('form.fees.hint')} />
+                  <div className="mt-4">
+                    <Controller
+                      control={control}
+                      name="fees"
+                      render={({ field }) => (
+                        <BookingFeesEditor value={field.value} onChange={field.onChange} errors={errors.fees} />
+                      )}
+                    />
+                  </div>
+                </Card>
               </div>
 
-              <div className="border-border-soft border-t pt-5">
-                <FormField label={t('form.fields.notes')} error={errors.notes?.message}>
-                  {(fieldProps) => (
-                    <div className="flex flex-col gap-2">
-                      <Textarea rows={3} placeholder={t('form.fields.notesPlaceholder')} {...register('notes')} {...fieldProps} />
-                      {!errors.notes && <p className="text-description">{t('form.fields.notesHint')}</p>}
-                    </div>
-                  )}
-                </FormField>
-              </div>
+              {pricing && selectedOption && (
+                <BookingPriceSummary pricing={pricing} option={selectedOption} className="xl:sticky xl:top-4" />
+              )}
             </div>
           )}
 
           {stepKey === 'review' && (
-            <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-2">
+            // Fixed-width price column, matching the Price step — an equal 1fr/1fr split let the
+            // summary card stretch to match the (much wider) left column on a big screen, and its
+            // justify-between rows ended up with the amount stranded far from its label.
+            // Panel widens only once there's room to spare: at 1280–1535 a 400px column would
+            // starve the detail cards down to two fields per row.
+            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px]">
               <div className="flex flex-col gap-3.5">
                 <ReviewSection title={t('form.review.trip')} onEdit={() => setStepIndex(0)}>
                   <ReviewRowGrid>
                     <ReviewRow label={t('form.fields.pickupLocation')} value={values.pickupLocation || '—'} />
                     <ReviewRow
-                      label={t('form.fields.pickupDate')}
+                      label={t('form.review.pickupAt')}
                       value={format.date(pickupAt, { dateStyle: 'medium', timeStyle: 'short' })}
                     />
                     <ReviewRow label={t('form.fields.returnLocation')} value={values.returnLocation || '—'} />
                     <ReviewRow
-                      label={t('form.fields.returnDate')}
+                      label={t('form.review.returnAt')}
                       value={format.date(returnAt, { dateStyle: 'medium', timeStyle: 'short' })}
                     />
-                    <ReviewRow label={t('form.review.duration')} value={t('form.trip.duration', { count: days, hours: Math.round(hours) })} />
                   </ReviewRowGrid>
                 </ReviewSection>
 
-                <ReviewSection title={t('form.review.vehicle')} onEdit={() => setStepIndex(1)}>
+                <ReviewSection title={t('form.review.vehicle')} onEdit={() => setStepIndex(0)}>
                   {selectedVehicle ? (
                     <ReviewRowGrid>
                       <ReviewRow label={t('form.review.vehicleName')} value={vehicleDisplayName(selectedVehicle)} />
                       <ReviewRow label={t('form.review.plate')} value={selectedVehicle.plate} />
-                      <ReviewRow label={t('form.review.rate')} value={selectedOption?.label ?? '—'} />
+                      {/* The label alone ("Daily") never said what it costs — the rate rides along
+                          with it. The run-out total lives in the breakdown panel, not here. */}
+                      <ReviewRow
+                        label={t('form.review.rate')}
+                        value={
+                          selectedOption
+                            ? t('form.review.rateValue', {
+                                label: selectedOption.label,
+                                rate: formatRateOptionPrice(selectedOption),
+                              })
+                            : '—'
+                        }
+                      />
                     </ReviewRowGrid>
                   ) : (
-                    <p className="text-fg-4 text-[13px]">{t('form.review.noVehicle')}</p>
+                    <p className="text-fg-4 text-[14px]">{t('form.review.noVehicle')}</p>
                   )}
                 </ReviewSection>
 
-                <ReviewSection title={t('form.review.extras')} count={values.extras.length} onEdit={() => setStepIndex(1)}>
-                  {values.extras.length > 0 ? (
+                <ReviewSection title={t('form.review.customer')} onEdit={() => setStepIndex(1)}>
+                  {/* Three across, not four — an email needs the extra width to stay on one line. */}
+                  <ReviewRowGrid maxColumns={3}>
+                    <ReviewRow label={t('form.fields.customerName')} value={values.customerName || '—'} />
+                    <ReviewRow label={t('form.fields.customerEmail')} value={values.customerEmail || '—'} />
+                    <ReviewRow label={t('form.fields.customerPhone')} value={values.customerPhone || '—'} />
+                    <ReviewRow label={t('form.fields.licenceNumber')} value={values.licenceNumber || '—'} />
+                    {values.customerDob && (
+                      <ReviewRow
+                        label={t('form.fields.customerDob')}
+                        value={format.date(values.customerDob, { dateStyle: 'medium' })}
+                      />
+                    )}
+                    {values.customerAddress && (
+                      <ReviewRow label={t('form.fields.customerAddress')} value={values.customerAddress} />
+                    )}
+                  </ReviewRowGrid>
+
+                  {/* Rendered only when something is actually attached — an always-present wrapper
+                      left its `mt-3` behind as dead space under the last row. */}
+                  {attachedDocuments.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {attachedDocuments.map((label) => (
+                        <span
+                          key={label}
+                          className="bg-tint text-primary flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold"
+                        >
+                          <Paperclip className="size-3" aria-hidden />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                </ReviewSection>
+
+                <ReviewSection
+                  title={t('form.review.verification')}
+                  count={values.verifications.length}
+                  onEdit={() => setStepIndex(1)}
+                >
+                  {values.verifications.length > 0 ? (
                     <ul className="flex flex-col gap-1.5">
-                      {values.extras.map((key) => (
-                        <li key={key} className="text-fg-2 text-[13px]">
-                          {t(`extras.${key}.label`)}
+                      {values.verifications.map((key) => (
+                        <li key={key} className="text-fg-2 text-[14px]">
+                          {t(`verification.${key}.label`)}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-fg-4 text-[13px]">{t('form.review.noExtras')}</p>
+                    <p className="text-fg-4 text-[14px]">{t('form.review.noVerification')}</p>
                   )}
                 </ReviewSection>
 
-                <ReviewSection title={t('form.review.customer')} onEdit={() => setStepIndex(2)}>
-                  <ReviewRowGrid>
-                    <ReviewRow label={t('form.fields.customerName')} value={values.customerName || '—'} />
-                    <ReviewRow label={t('form.fields.customerEmail')} value={values.customerEmail || '—'} />
-                    <ReviewRow label={t('form.fields.customerPhone')} value={values.customerPhone || '—'} />
-                    <ReviewRow label={t('form.fields.customerLicence')} value={values.customerLicence || '—'} />
-                  </ReviewRowGrid>
-                  {values.notes && <p className="text-fg-2 mt-3 text-[13px]" style={{ textWrap: 'pretty' }}>{values.notes}</p>}
+                <ReviewSection
+                  title={t('form.review.drivers')}
+                  count={values.additionalDrivers.length}
+                  onEdit={() => setStepIndex(2)}
+                >
+                  {values.additionalDrivers.length > 0 ? (
+                    <ul className="flex flex-col gap-1.5">
+                      {values.additionalDrivers.map((driver) => (
+                        <li key={driver.id} className="text-fg-2 flex flex-wrap items-baseline justify-between gap-x-2 text-[14px]">
+                          <span>
+                            <span className="font-semibold">{driver.name || '—'}</span>{' '}
+                            <span className="text-fg-4 font-mono text-[13px]">{driver.licenceNumber}</span>
+                          </span>
+                          <span className="text-fg-4 shrink-0 text-[13px] tabular-nums">
+                            {format.currency(driver.pricePerDay)}/day
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-fg-4 text-[14px]">{t('form.review.noDrivers')}</p>
+                  )}
                 </ReviewSection>
+
+                {values.fees.length > 0 && (
+                  <ReviewSection title={t('form.review.fees')} count={values.fees.length} onEdit={() => setStepIndex(2)}>
+                    <ul className="flex flex-col gap-1.5">
+                      {values.fees.map((fee) => (
+                        <li key={fee.id} className="text-fg-2 flex items-baseline justify-between gap-2 text-[14px]">
+                          <span>{fee.label || '—'}</span>
+                          <span className="text-fg-4 shrink-0 tabular-nums">{format.currency(fee.amount)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </ReviewSection>
+                )}
               </div>
 
               <div className="flex flex-col gap-3.5">
                 {pricing && selectedOption ? (
-                  <BookingPriceSummary pricing={pricing} option={selectedOption} />
+                  <BookingPriceSummary pricing={pricing} option={selectedOption} className="xl:sticky xl:top-4" />
                 ) : (
-                  <ReviewSection title={t('form.summary.title')} onEdit={() => setStepIndex(1)}>
-                    <p className="text-fg-4 text-[13px]">{t('form.review.noVehicle')}</p>
+                  <ReviewSection title={t('form.summary.title')} onEdit={() => setStepIndex(2)}>
+                    <p className="text-fg-4 text-[14px]">{t('form.review.noVehicle')}</p>
                   </ReviewSection>
                 )}
               </div>
             </div>
           )}
 
-          <div className="border-border-soft flex flex-wrap items-center justify-end gap-2.5 border-t pt-4">
+          <Card as="section" className="flex flex-wrap items-center gap-3 p-3.5">
+            {/* Back only — leaving the wizard is the header's Cancel, so step 1 doesn't offer two. */}
             {stepIndex > 0 && (
-              <Button type="button" variant="outline" onClick={goPrev}>
+              <Button type="button" variant="outline" onClick={goPrev} className="gap-1.5">
+                <ArrowLeft className="size-4" aria-hidden />
                 {t('form.nav.previousStep')}
               </Button>
             )}
-            <Button type="button" variant="outline" onClick={() => navigate('/app/bookings')}>
-              {tCommon('actions.cancel')}
+
+            <div className="flex-1" />
+
+            <Button type="button" variant="outline" onClick={handleSaveDraft} className="gap-1.5">
+              <Save className="size-4" aria-hidden />
+              {t('form.draft.save')}
             </Button>
+
             {stepKey !== 'review' ? (
-              <Button type="button" onClick={goNext}>
-                {t('form.nav.nextStep')}
+              <Button type="button" onClick={goNext} className="gap-1.5">
+                {t('form.nav.continue')}
+                <ArrowRight className="size-4" aria-hidden />
               </Button>
             ) : (
               <Button
@@ -537,9 +976,9 @@ export function BookingFormPage() {
                 <ArrowRight className="size-4" aria-hidden />
               </Button>
             )}
-          </div>
+          </Card>
         </form>
-      </Card>
+      </div>
     </PageContainer>
   )
 }

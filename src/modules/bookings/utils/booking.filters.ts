@@ -8,30 +8,27 @@ import {
   type BookingTab,
   type BookingTuple,
 } from '../types/booking.types'
+import { parseRentalWindow } from './booking.schedule'
 import { parseBookingTotal } from './booking.utils'
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
 /**
- * Mock rental windows carry no year, so a date is reduced to a month·day ordinal — enough to
- * diff two dates and compare against "today". Replace with real date math once the bookings
- * API returns ISO timestamps.
+ * A month·day ordinal — enough to diff two dates and compare against "today" without a year.
+ * Deliberately *not* real dates: the list's Today tab and pickup presets are anchored to the
+ * seed data's own "today" (below) so the tabs stay meaningful whenever the app is run.
+ * Availability checks need genuine timestamps and use booking.schedule.ts instead.
  */
-function ordinal(month: string, day: number): number {
-  const index = MONTHS.indexOf(month)
-  return index === -1 ? Number.NaN : index * 31 + day
+function ordinal(month: number, day: number): number {
+  return month * 31 + day
 }
 
 /** The mock data set is pinned to this day — every "upcoming" booking is relative to it. */
-export const MOCK_TODAY = ordinal('Sep', 14)
-
-const DATE_PATTERN = /([A-Z][a-z]{2})\s+(\d{1,2})/g
+export const MOCK_TODAY = ordinal(8, 14)
 
 /** "Sep 14 · 09:30 → Sep 18" → `[pickup, dropoff]` ordinals. A single date yields the same value twice. */
 function windowOrdinals(rentalWindow: string): [number, number] {
-  const dates = [...rentalWindow.matchAll(DATE_PATTERN)].map((m) => ordinal(m[1], Number(m[2])))
-  if (dates.length === 0) return [Number.NaN, Number.NaN]
-  return [dates[0], dates[dates.length - 1]]
+  const parts = parseRentalWindow(rentalWindow)
+  if (!parts) return [Number.NaN, Number.NaN]
+  return [ordinal(parts.fromMonth, parts.fromDay), ordinal(parts.toMonth, parts.toDay)]
 }
 
 export function bookingPickupOrdinal(b: BookingTuple): number {
@@ -64,7 +61,7 @@ const PICKUP_OFFSETS: Record<Exclude<BookingPickupRange, 'any'>, [from: number, 
   past30: [-30, 0],
 }
 
-export const EMPTY_BOOKING_LISTS: BookingLists = { upcoming: [], recent: [] }
+export const EMPTY_BOOKING_LISTS: BookingLists = { upcoming: [], recent: [], schedule: [] }
 
 export function allBookings(lists: BookingLists): BookingTuple[] {
   return [...lists.upcoming, ...lists.recent]
