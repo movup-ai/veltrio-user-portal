@@ -6,25 +6,58 @@
     "export": "Export",
     "newBooking": "New booking",
     "searchPlaceholder": "Search reference, customer, plate",
-    "pageNote": "Showing 1–{{shown}} of {{total}} bookings",
+    "pageNote": "Showing {{shown}} of {{total}} bookings",
+    "noneFound": "No bookings found",
+    "loading": "Loading bookings…",
+    "loadError": "We couldn't load your bookings.",
+    "emptyTitle": "No bookings match your filters",
+    "emptyDescription": "Try adjusting the search or filters.",
     "tabs": {
       "Upcoming": "Upcoming",
       "Today": "Today",
       "Recent activity": "Recent activity",
       "Overdue": "Overdue"
     },
-    "filters": {
-      "status": "Status",
-      "location": "Location",
-      "pickup": "Pickup"
+    "rowActions": {
+      "viewDetails": "View details",
+      "editBooking": "Edit booking",
+      "exportBooking": "Export booking"
     },
     "stats": {
       "open": "Open bookings",
-      "openNote": "12 start in the next 48h",
+      "openNote_one": "{{count}} starts in the next 48h",
+      "openNote_other": "{{count}} start in the next 48h",
       "bookedValue": "Booked value",
       "bookedValueNote": "Confirmed, not yet invoiced",
       "needsAttention": "Needs attention",
-      "needsAttentionNote": "2 awaiting ID · 1 deposit due"
+      "needsAttentionNote": "{{awaitingId}} awaiting ID · {{depositDue}} deposit due"
+    }
+  },
+  "filters": {
+    "status": "Status",
+    "location": "Location",
+    "pickup": "Pickup",
+    "vehicleMake": "Vehicle make",
+    "duration": "Duration",
+    "bookingValue": "Booking value",
+    "pickupRange": {
+      "any": "Any dates",
+      "next7": "Next 7 days",
+      "next14": "Next 14 days",
+      "next30": "Next 30 days",
+      "past7": "Past 7 days",
+      "past30": "Past 30 days"
+    },
+    "durationBand": {
+      "1-2": "1 – 2 days",
+      "3-6": "3 – 6 days",
+      "7+": "7+ days"
+    },
+    "valueBand": {
+      "0-250": "$0 – $250",
+      "250-500": "$250 – $500",
+      "500-1000": "$500 – $1,000",
+      "1000+": "$1,000+"
     }
   },
   "columns": {
@@ -52,10 +85,191 @@
     "comingSoonTitle": "Booking details coming soon",
     "comingSoonDescription": "This module is being built next."
   },
+  "toast": {
+    "created": "Booking created",
+    "createdDescription": "{{reference}} for {{name}} is on the schedule.",
+    "createFailed": "Could not create booking"
+  },
   "form": {
     "title": "New booking",
     "description": "Create a new rental booking",
-    "comingSoonTitle": "Booking form coming soon",
-    "comingSoonDescription": "This module is being built next."
+    "stepCounter": "Step {{current}} of {{total}} · {{label}}",
+    "stepsLabel": "Booking steps",
+    "steps": {
+      "trip": {
+        "label": "Trip",
+        "description": "Dates, branch, vehicle"
+      },
+      "renter": {
+        "label": "Renter",
+        "description": "Customer, documents, checks"
+      },
+      "pricing": {
+        "label": "Price",
+        "description": "Rate, drivers, fees"
+      },
+      "review": {
+        "label": "Review",
+        "description": "Confirm and reserve"
+      }
+    },
+    "sections": {
+      "trip": "Trip",
+      "tripHint": "When and where the rental starts and ends. Availability is checked as you change dates.",
+      "renter": "Renter",
+      "rate": "Rate option",
+      "documents": "Licence & documents",
+      "verification": "Verification",
+      "drivers": "Additional drivers",
+      "fees": "Additional fees"
+    },
+    "fields": {
+      "pickupLocation": "Pickup location",
+      "returnLocation": "Return location",
+      "pickupDate": "Pickup date",
+      "pickupTime": "Time",
+      "returnDate": "Return date",
+      "returnTime": "Time",
+      "pickupTimeLong": "Pickup time",
+      "returnTimeLong": "Return time",
+      "locationPlaceholder": "Select a branch",
+      "customerName": "Full name",
+      "customerNamePlaceholder": "Search or type a name",
+      "customerEmail": "Email",
+      "customerPhone": "Phone",
+      "customerDob": "Date of birth",
+      "customerDobPlaceholder": "Select a date",
+      "customerAddress": "Address",
+      "customerAddressPlaceholder": "Street, city, postcode",
+      "licenceNumber": "Driving licence number",
+      "licenceExpiry": "Licence expiry",
+      "licenceExpiryPlaceholder": "Select a date"
+    },
+    "vehicle": {
+      "title": "Available vehicles",
+      "pick": "Pick a vehicle",
+      "availableCount_one": "{{count}} available",
+      "availableCount_other": "{{count}} available",
+      "perUnit": "{{price}}/day",
+      "bookedUntil": "Booked until {{date}}",
+      "forDays_one": "{{price}} for {{count}} day",
+      "forDays_other": "{{price}} for {{count}} days",
+      "loading": "Loading available vehicles…",
+      "loadError": "We couldn't load the fleet.",
+      "noneTitle": "No vehicles at this branch",
+      "noneDescription": "Nothing is on the forecourt here. Try another pickup location."
+    },
+    "rate": {
+      "hint": "Priced for the trip length you entered.",
+      "pick": "Pick a rate option",
+      "none": "This vehicle has no rate options yet.",
+      "unitBreakdown_one": "{{count}} × {{price}}",
+      "unitBreakdown_other": "{{count}} × {{price}}"
+    },
+    "customer": {
+      "hint": "Search the customer book, or type a name that is not on file yet.",
+      "search": "Find customer",
+      "searchHint": "Picking someone fills in their details below — you can still edit them.",
+      "new": "New customer"
+    },
+    "summary": {
+      "title": "Price breakdown",
+      "duration_one": "{{count}} day · {{hours}}h rental",
+      "duration_other": "{{count}} days · {{hours}}h rental",
+      "rental": "{{label}} · {{basis}}",
+      "units_one": "{{count}} unit × {{price}}",
+      "units_other": "{{count}} units × {{price}}",
+      "extraDays_one": "{{count}} day",
+      "extraDays_other": "{{count}} days",
+      "subtotal": "Subtotal",
+      "tax": "Tax ({{rate}}%)",
+      "total": "Total due",
+      "deposit": "Deposit (held)",
+      "mileage": "Mileage included",
+      "milesIncluded": "{{count}} mi",
+      "drivers_one": "{{count}} additional driver",
+      "drivers_other": "{{count}} additional drivers"
+    },
+    "review": {
+      "trip": "Trip",
+      "pickupAt": "Pickup date & time",
+      "returnAt": "Return date & time",
+      "vehicle": "Vehicle",
+      "vehicleName": "Vehicle",
+      "plate": "Plate",
+      "rate": "Rate option",
+      "noVehicle": "No vehicle selected yet.",
+      "customer": "Customer",
+      "verification": "Verification",
+      "noVerification": "No checks required.",
+      "drivers": "Additional drivers",
+      "noDrivers": "No additional drivers.",
+      "fees": "Additional fees",
+      "rateValue": "{{label}} · {{rate}}"
+    },
+    "draft": {
+      "save": "Save draft",
+      "saved": "Draft saved",
+      "savedDescription": "Pick this booking back up from New booking.",
+      "restored": "Draft restored",
+      "restoredDescription": "We brought back the booking you were part-way through."
+    },
+    "nav": {
+      "previousStep": "Back",
+      "continue": "Continue",
+      "create": "Reserve booking"
+    },
+    "documents": {
+      "hint": "Attach scans or photos. Both are optional here and can be added at handover.",
+      "licence": "Driving licence",
+      "licenceHint": "Front of the card, or a clear photo",
+      "insurance": "Insurance document",
+      "insuranceHint": "Policy certificate or cover note"
+    },
+    "verification": {
+      "hint": "Checks the branch requires before the keys change hands."
+    },
+    "drivers": {
+      "hint": "Anyone else permitted to drive. Each is billed per rental day.",
+      "empty": "No additional drivers — the renter is the only permitted driver.",
+      "add": "Add driver",
+      "driverN": "Driver {{index}}",
+      "remove": "Remove driver {{index}}",
+      "name": "Full name",
+      "licence": "Licence number",
+      "pricing": "{{perDay}}/day each · {{total}} per driver",
+      "nameFor": "Driver {{index}} full name",
+      "licenceFor": "Driver {{index}} licence number",
+      "rate": "Daily rate",
+      "rateFor": "Driver {{index}} daily rate",
+      "perDaySuffix": "/day",
+      "rowTotal_one": "{{total}} for {{count}} day",
+      "rowTotal_other": "{{total}} for {{count}} days"
+    },
+    "fees": {
+      "hint": "One-off charges added to this booking — cleaning, a negotiated add-on, anything outside the standard rate.",
+      "empty": "No additional fees on this booking.",
+      "label": "Description",
+      "labelFor": "Fee {{index}} description",
+      "labelPlaceholder": "e.g. Cleaning fee",
+      "amount": "Amount",
+      "amountFor": "Fee {{index}} amount",
+      "add": "Add fee",
+      "remove": "Remove fee {{index}}"
+    }
+  },
+  "verification": {
+    "identity": {
+      "label": "ID verification",
+      "description": "Match the licence photo to the person at the counter"
+    },
+    "background": {
+      "label": "Background check",
+      "description": "Screen against the driving and claims history"
+    },
+    "insurance": {
+      "label": "Insurance check",
+      "description": "Confirm cover is valid for the rental window"
+    }
   }
 }

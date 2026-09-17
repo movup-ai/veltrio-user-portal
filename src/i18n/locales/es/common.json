@@ -50,6 +50,10 @@
     "errorDescription": "No pudimos cargar estos datos.",
     "emptyTitle": "Todavía no hay nada aquí"
   },
+  "time": {
+    "select": "Seleccione una hora"
+  },
+  "datePlaceholder": "Elija una fecha",
   "combobox": {
     "empty": "Sin coincidencias — presione Enter para usar este valor"
   },
@@ -62,5 +66,12 @@
     "label": "Idioma",
     "switch": "Cambiar idioma"
   },
-  "placeholder": "—"
+  "placeholder": "—",
+  "upload": {
+    "prompt": "Adjuntar un archivo",
+    "hint": "PDF o imagen, hasta {{size}} MB",
+    "remove": "Eliminar {{label}}",
+    "tooLarge": "Archivo demasiado grande",
+    "tooLargeDescription": "Cada archivo debe pesar menos de {{size}} MB."
+  }
 }

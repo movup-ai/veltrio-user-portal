@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils'
 export interface StepDef {
   key: string
   label: string
+  /** Secondary line — rendered by StepSidebar, ignored by the horizontal Stepper. */
+  description?: string
 }
 
 interface StepperProps {

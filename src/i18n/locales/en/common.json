@@ -53,6 +53,10 @@
   "combobox": {
     "empty": "No matches — press Enter to use this value"
   },
+  "time": {
+    "select": "Select a time"
+  },
+  "datePlaceholder": "Pick a date",
   "notFound": {
     "title": "Page not found",
     "description": "The page you're looking for doesn't exist or has moved.",
@@ -62,5 +66,12 @@
     "label": "Language",
     "switch": "Change language"
   },
-  "placeholder": "—"
+  "placeholder": "—",
+  "upload": {
+    "prompt": "Attach a file",
+    "hint": "PDF or image, up to {{size}}MB",
+    "remove": "Remove {{label}}",
+    "tooLarge": "File too large",
+    "tooLargeDescription": "Each file must be under {{size}}MB."
+  }
 }

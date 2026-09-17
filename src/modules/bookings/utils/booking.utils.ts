@@ -1,7 +1,9 @@
 import type { TFunction } from 'i18next'
-import type { Row } from '@/components/data-display/record-table.types'
+import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
+import { formatCurrencyIn, formatDateIn } from '@/i18n/formatters'
 import { initials } from '@/utils/formatting'
-import type { BookingTuple } from '../types/booking.types'
+import { durationHours } from './booking.pricing'
+import type { Booking, BookingTuple } from '../types/booking.types'
 
 export function bookingColumns(t: TFunction<'bookings'>) {
   return [
@@ -12,6 +14,44 @@ export function bookingColumns(t: TFunction<'bookings'>) {
     { label: t('columns.status'), align: 'left' as const },
     { label: t('columns.total'), align: 'right' as const },
     { label: '', align: 'right' as const },
+  ]
+}
+
+/**
+ * A BookingTuple stores pre-formatted display strings, and the seeded ones are English
+ * ("Sep 14 · 09:30 → Sep 18", "4 days", "$1,240"). New bookings are rendered the same way so
+ * a created row is indistinguishable from a seeded one — and so the ordinal/total parsers in
+ * booking.filters.ts keep working. Both go away once bookings arrive as real objects.
+ */
+const TUPLE_LANGUAGE = 'en'
+
+/** "Sep 14 · 09:30 → Sep 18". The time is shown for the pickup only — the list scans on dates. */
+export function formatRentalWindow(pickupAt: string, returnAt: string): string {
+  const pickup = new Date(pickupAt)
+  const dropoff = new Date(returnAt)
+  const day = { month: 'short', day: 'numeric' } as const
+  const time = formatDateIn(TUPLE_LANGUAGE, pickup, { hour: '2-digit', minute: '2-digit', hour12: false })
+  return `${formatDateIn(TUPLE_LANGUAGE, pickup, day)} · ${time} → ${formatDateIn(TUPLE_LANGUAGE, dropoff, day)}`
+}
+
+/** "4 days" — the secondary line under the rental window. Always at least one day. */
+export function formatRentalDuration(pickupAt: string, returnAt: string): string {
+  const days = Math.max(1, Math.ceil(durationHours(pickupAt, returnAt) / 24))
+  return `${days} ${days === 1 ? 'day' : 'days'}`
+}
+
+/** Flattens a Booking into the tuple the list table renders. */
+export function bookingToTuple(b: Booking): BookingTuple {
+  return [
+    b.customer.name,
+    b.reference,
+    b.vehicleName,
+    b.vehiclePlate,
+    formatRentalWindow(b.pickupAt, b.returnAt),
+    formatRentalDuration(b.pickupAt, b.returnAt),
+    b.pickupLocation,
+    b.status,
+    formatCurrencyIn(TUPLE_LANGUAGE, b.total),
   ]
 }
 
@@ -55,7 +95,8 @@ export function downloadBookingsCsv(bookings: BookingTuple[], filename: string, 
   URL.revokeObjectURL(url)
 }
 
-export function bookingRow(b: BookingTuple): Row {
+/** `actions` is optional — read-only tables (dashboard, vehicle history) render the inert "…" button. */
+export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
   const [customer, reference, vehicle, plate, window, note, location, status, total] = b
 
   return {
@@ -67,7 +108,7 @@ export function bookingRow(b: BookingTuple): Row {
       { kind: 'text', primary: location },
       { kind: 'badge', status },
       { kind: 'amount', primary: total, align: 'right', tone: total.charAt(0) === '−' ? 'var(--color-fg-3)' : 'var(--color-foreground)' },
-      { kind: 'actions', align: 'right' },
+      { kind: 'actions', align: 'right', items: actions },
     ],
   }
 }

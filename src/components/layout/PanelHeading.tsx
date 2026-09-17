@@ -10,7 +10,7 @@ export function PanelHeading({ title, description, className }: PanelHeadingProp
     <div className={className}>
       <h2 className="text-panel-title m-0">{title}</h2>
       {description && (
-        <p className="text-fg-4 m-0 mt-[3px] text-[12.5px]" style={{ textWrap: 'pretty' }}>
+        <p className="text-fg-4 m-0 mt-[3px] text-[13.5px]" style={{ textWrap: 'pretty' }}>
           {description}
         </p>
       )}

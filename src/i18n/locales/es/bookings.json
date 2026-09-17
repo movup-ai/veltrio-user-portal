@@ -6,25 +6,58 @@
     "export": "Exportar",
     "newBooking": "Nueva reserva",
     "searchPlaceholder": "Buscar referencia, cliente, matrícula",
-    "pageNote": "Mostrando 1–{{shown}} de {{total}} reservas",
+    "pageNote": "Mostrando {{shown}} de {{total}} reservas",
+    "noneFound": "No se encontraron reservas",
+    "loading": "Cargando reservas…",
+    "loadError": "No pudimos cargar sus reservas.",
+    "emptyTitle": "Ninguna reserva coincide con sus filtros",
+    "emptyDescription": "Pruebe a ajustar la búsqueda o los filtros.",
     "tabs": {
       "Upcoming": "Próximas",
       "Today": "Hoy",
       "Recent activity": "Actividad reciente",
       "Overdue": "Vencidas"
     },
-    "filters": {
-      "status": "Estado",
-      "location": "Sucursal",
-      "pickup": "Recogida"
+    "rowActions": {
+      "viewDetails": "Ver detalles",
+      "editBooking": "Editar reserva",
+      "exportBooking": "Exportar reserva"
     },
     "stats": {
       "open": "Reservas abiertas",
-      "openNote": "12 comienzan en las próximas 48 h",
+      "openNote_one": "{{count}} comienza en las próximas 48 h",
+      "openNote_other": "{{count}} comienzan en las próximas 48 h",
       "bookedValue": "Valor reservado",
       "bookedValueNote": "Confirmado, aún sin facturar",
       "needsAttention": "Requiere atención",
-      "needsAttentionNote": "2 pendientes de identificación · 1 depósito pendiente"
+      "needsAttentionNote": "{{awaitingId}} pendientes de identificación · {{depositDue}} depósito pendiente"
+    }
+  },
+  "filters": {
+    "status": "Estado",
+    "location": "Sucursal",
+    "pickup": "Recogida",
+    "vehicleMake": "Marca del vehículo",
+    "duration": "Duración",
+    "bookingValue": "Valor de la reserva",
+    "pickupRange": {
+      "any": "Cualquier fecha",
+      "next7": "Próximos 7 días",
+      "next14": "Próximos 14 días",
+      "next30": "Próximos 30 días",
+      "past7": "Últimos 7 días",
+      "past30": "Últimos 30 días"
+    },
+    "durationBand": {
+      "1-2": "1 – 2 días",
+      "3-6": "3 – 6 días",
+      "7+": "7+ días"
+    },
+    "valueBand": {
+      "0-250": "0 $ – 250 $",
+      "250-500": "250 $ – 500 $",
+      "500-1000": "500 $ – 1.000 $",
+      "1000+": "1.000 $+"
     }
   },
   "columns": {
@@ -52,10 +85,191 @@
     "comingSoonTitle": "Detalles de la reserva próximamente",
     "comingSoonDescription": "Este módulo se construirá a continuación."
   },
+  "toast": {
+    "created": "Reserva creada",
+    "createdDescription": "{{reference}} para {{name}} ya está en la agenda.",
+    "createFailed": "No se pudo crear la reserva"
+  },
   "form": {
     "title": "Nueva reserva",
     "description": "Crear una nueva reserva de alquiler",
-    "comingSoonTitle": "Formulario de reserva próximamente",
-    "comingSoonDescription": "Este módulo se construirá a continuación."
+    "stepCounter": "Paso {{current}} de {{total}} · {{label}}",
+    "stepsLabel": "Pasos de la reserva",
+    "steps": {
+      "trip": {
+        "label": "Viaje",
+        "description": "Fechas, sucursal, vehículo"
+      },
+      "renter": {
+        "label": "Arrendatario",
+        "description": "Cliente, documentos, comprobaciones"
+      },
+      "pricing": {
+        "label": "Precio",
+        "description": "Tarifa, conductores, cargos"
+      },
+      "review": {
+        "label": "Revisión",
+        "description": "Confirmar y reservar"
+      }
+    },
+    "sections": {
+      "trip": "Viaje",
+      "tripHint": "Cuándo y dónde empieza y termina el alquiler. La disponibilidad se comprueba al cambiar las fechas.",
+      "renter": "Arrendatario",
+      "rate": "Opción de tarifa",
+      "documents": "Permiso y documentos",
+      "verification": "Verificación",
+      "drivers": "Conductores adicionales",
+      "fees": "Cargos adicionales"
+    },
+    "fields": {
+      "pickupLocation": "Sucursal de recogida",
+      "returnLocation": "Sucursal de devolución",
+      "pickupDate": "Fecha de recogida",
+      "pickupTime": "Hora",
+      "returnDate": "Fecha de devolución",
+      "returnTime": "Hora",
+      "pickupTimeLong": "Hora de recogida",
+      "returnTimeLong": "Hora de devolución",
+      "locationPlaceholder": "Seleccione una sucursal",
+      "customerName": "Nombre completo",
+      "customerNamePlaceholder": "Busque o escriba un nombre",
+      "customerEmail": "Correo electrónico",
+      "customerPhone": "Teléfono",
+      "customerDob": "Fecha de nacimiento",
+      "customerDobPlaceholder": "Elija una fecha",
+      "customerAddress": "Dirección",
+      "customerAddressPlaceholder": "Calle, ciudad, código postal",
+      "licenceNumber": "Número de permiso de conducir",
+      "licenceExpiry": "Caducidad del permiso",
+      "licenceExpiryPlaceholder": "Elija una fecha"
+    },
+    "vehicle": {
+      "title": "Vehículos disponibles",
+      "pick": "Elija un vehículo",
+      "availableCount_one": "{{count}} disponible",
+      "availableCount_other": "{{count}} disponibles",
+      "perUnit": "{{price}}/día",
+      "bookedUntil": "Reservado hasta el {{date}}",
+      "forDays_one": "{{price}} por {{count}} día",
+      "forDays_other": "{{price}} por {{count}} días",
+      "loading": "Cargando vehículos disponibles…",
+      "loadError": "No pudimos cargar la flota.",
+      "noneTitle": "No hay vehículos en esta sucursal",
+      "noneDescription": "Aquí no hay nada en playa. Pruebe con otra sucursal de recogida."
+    },
+    "rate": {
+      "hint": "Calculado para la duración que ha indicado.",
+      "pick": "Elija una opción de tarifa",
+      "none": "Este vehículo todavía no tiene opciones de tarifa.",
+      "unitBreakdown_one": "{{count}} × {{price}}",
+      "unitBreakdown_other": "{{count}} × {{price}}"
+    },
+    "customer": {
+      "hint": "Busque en el fichero de clientes o escriba un nombre que aún no esté registrado.",
+      "search": "Buscar cliente",
+      "searchHint": "Al elegir a alguien se rellenan sus datos abajo — puede editarlos.",
+      "new": "Cliente nuevo"
+    },
+    "summary": {
+      "title": "Desglose del precio",
+      "duration_one": "Alquiler de {{count}} día · {{hours}} h",
+      "duration_other": "Alquiler de {{count}} días · {{hours}} h",
+      "rental": "{{label}} · {{basis}}",
+      "units_one": "{{count}} unidad × {{price}}",
+      "units_other": "{{count}} unidades × {{price}}",
+      "extraDays_one": "{{count}} día",
+      "extraDays_other": "{{count}} días",
+      "subtotal": "Subtotal",
+      "tax": "Impuestos ({{rate}} %)",
+      "total": "Total a pagar",
+      "deposit": "Depósito (retenido)",
+      "mileage": "Kilometraje incluido",
+      "milesIncluded": "{{count}} mi",
+      "drivers_one": "{{count}} conductor adicional",
+      "drivers_other": "{{count}} conductores adicionales"
+    },
+    "review": {
+      "trip": "Viaje",
+      "pickupAt": "Fecha y hora de recogida",
+      "returnAt": "Fecha y hora de devolución",
+      "vehicle": "Vehículo",
+      "vehicleName": "Vehículo",
+      "plate": "Matrícula",
+      "rate": "Opción de tarifa",
+      "noVehicle": "Aún no se ha seleccionado ningún vehículo.",
+      "customer": "Cliente",
+      "verification": "Verificación",
+      "noVerification": "No se requieren comprobaciones.",
+      "drivers": "Conductores adicionales",
+      "noDrivers": "Sin conductores adicionales.",
+      "fees": "Cargos adicionales",
+      "rateValue": "{{label}} · {{rate}}"
+    },
+    "draft": {
+      "save": "Guardar borrador",
+      "saved": "Borrador guardado",
+      "savedDescription": "Retome esta reserva desde Nueva reserva.",
+      "restored": "Borrador recuperado",
+      "restoredDescription": "Hemos recuperado la reserva que dejó a medias."
+    },
+    "nav": {
+      "previousStep": "Atrás",
+      "continue": "Continuar",
+      "create": "Reservar"
+    },
+    "documents": {
+      "hint": "Adjunte escaneos o fotos. Ambos son opcionales y pueden añadirse en la entrega.",
+      "licence": "Permiso de conducir",
+      "licenceHint": "Anverso de la tarjeta o una foto nítida",
+      "insurance": "Documento del seguro",
+      "insuranceHint": "Certificado de póliza o nota de cobertura"
+    },
+    "verification": {
+      "hint": "Comprobaciones que la sucursal exige antes de entregar las llaves."
+    },
+    "drivers": {
+      "hint": "Cualquier otra persona autorizada a conducir. Cada una se factura por día de alquiler.",
+      "empty": "Sin conductores adicionales — el arrendatario es el único autorizado.",
+      "add": "Añadir conductor",
+      "driverN": "Conductor {{index}}",
+      "remove": "Eliminar conductor {{index}}",
+      "name": "Nombre completo",
+      "licence": "Número de permiso",
+      "pricing": "{{perDay}}/día cada uno · {{total}} por conductor",
+      "nameFor": "Nombre completo del conductor {{index}}",
+      "licenceFor": "Número de permiso del conductor {{index}}",
+      "rate": "Tarifa diaria",
+      "rateFor": "Tarifa diaria del conductor {{index}}",
+      "perDaySuffix": "/día",
+      "rowTotal_one": "{{total}} por {{count}} día",
+      "rowTotal_other": "{{total}} por {{count}} días"
+    },
+    "fees": {
+      "hint": "Cargos puntuales añadidos a esta reserva — limpieza, un complemento acordado, cualquier cosa fuera de la tarifa estándar.",
+      "empty": "Sin cargos adicionales en esta reserva.",
+      "label": "Descripción",
+      "labelFor": "Descripción del cargo {{index}}",
+      "labelPlaceholder": "p. ej. Tasa de limpieza",
+      "amount": "Importe",
+      "amountFor": "Importe del cargo {{index}}",
+      "add": "Añadir cargo",
+      "remove": "Eliminar cargo {{index}}"
+    }
+  },
+  "verification": {
+    "identity": {
+      "label": "Verificación de identidad",
+      "description": "Cotejar la foto del permiso con la persona en el mostrador"
+    },
+    "background": {
+      "label": "Comprobación de antecedentes",
+      "description": "Revisar el historial de conducción y siniestros"
+    },
+    "insurance": {
+      "label": "Comprobación del seguro",
+      "description": "Confirmar que la cobertura es válida para el periodo"
+    }
   }
 }

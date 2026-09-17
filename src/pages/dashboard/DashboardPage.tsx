@@ -28,7 +28,7 @@ export function DashboardPage() {
 
   usePageHeaderActions([{ label: t('newBooking'), icon: Plus }], [t])
 
-  const rows = (tab === 'upcoming' ? BOOKINGS_UPCOMING : BOOKINGS_RECENT).map(bookingRow)
+  const rows = (tab === 'upcoming' ? BOOKINGS_UPCOMING : BOOKINGS_RECENT).map((b) => bookingRow(b))
 
   return (
     <PageContainer>

@@ -6,7 +6,7 @@ import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
 import { cn } from '@/lib/utils'
-import { availabilityForVehicle, nextAvailableDay, type DayState } from '../utils/availability'
+import { availabilityForVehicle, nextAvailableDay, type BusyInterval, type DayState } from '../utils/availability'
 import type { Vehicle } from '../types/vehicle.types'
 
 const STATE_STYLES: Record<DayState, string> = {
@@ -17,11 +17,11 @@ const STATE_STYLES: Record<DayState, string> = {
 
 const LEGEND: DayState[] = ['booked', 'available', 'disabled']
 
-export function AvailabilityStrip({ vehicle }: { vehicle: Vehicle }) {
+export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; busy?: BusyInterval[] }) {
   const { t } = useTranslation('vehicles')
   const format = useFormatters()
   const navigate = useNavigate()
-  const days = availabilityForVehicle(vehicle)
+  const days = availabilityForVehicle(vehicle, busy)
   const availableCount = days.filter((d) => d.state === 'available').length
   const nextAvailable = nextAvailableDay(days)
 
