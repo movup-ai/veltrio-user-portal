@@ -6,7 +6,8 @@ import {
   DURATION_UNITS,
   FUEL_TYPES,
   TRANSMISSIONS,
-  VEHICLE_CLASSES,
+  VEHICLE_TYPES,
+  VEHICLE_FEATURES,
   VEHICLE_STATUSES,
 } from '../types/vehicle.types'
 
@@ -75,7 +76,7 @@ export function vehicleFormSchema(t: ValidationT) {
       .int()
       .min(1990, t('vehicle.yearTooEarly'))
       .max(new Date().getFullYear() + 1, t('vehicle.yearTooLate')),
-    class: z.enum(VEHICLE_CLASSES, { message: t('vehicle.classRequired') }),
+    vehicleType: z.enum(VEHICLE_TYPES, { message: t('vehicle.vehicleTypeRequired') }),
     color: z.string().min(1, t('vehicle.colorRequired')).max(30),
     plate: z
       .string()
@@ -90,10 +91,7 @@ export function vehicleFormSchema(t: ValidationT) {
     fuelType: z.enum(FUEL_TYPES, { message: t('vehicle.fuelTypeRequired') }),
     seats: z.number({ message: t('vehicle.seatsRequired') }).int().min(1).max(15),
     doors: z.number({ message: t('vehicle.doorsRequired') }).int().min(1).max(6),
-    topSpeedMph: optionalNumber,
-    horsepower: optionalNumber,
-    zeroToSixtySec: optionalNumber,
-    cylinders: optionalNumber,
+    features: z.array(z.enum(VEHICLE_FEATURES)),
     description: z.string().max(600).optional().or(z.literal('')),
 
     // Step 2 — Photos
@@ -118,7 +116,7 @@ export const STEP_FIELDS = {
     'make',
     'model',
     'year',
-    'class',
+    'vehicleType',
     'color',
     'plate',
     'vin',
@@ -129,10 +127,7 @@ export const STEP_FIELDS = {
     'fuelType',
     'seats',
     'doors',
-    'topSpeedMph',
-    'horsepower',
-    'zeroToSixtySec',
-    'cylinders',
+    'features',
     'description',
   ],
   photos: ['photos'],

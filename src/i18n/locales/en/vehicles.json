@@ -1,4 +1,5 @@
 {
+  "untitledVehicle": "Untitled vehicle",
   "list": {
     "title": "Vehicles",
     "description": "Manage your rental fleet",
@@ -19,7 +20,8 @@
       "All": "All",
       "Available": "Available",
       "On rent": "On rent",
-      "Maintenance": "Maintenance"
+      "Maintenance": "Maintenance",
+      "Drafts": "Drafts"
     },
     "stats": {
       "fleetSize": "Fleet size",
@@ -147,15 +149,11 @@
     "vin": "VIN",
     "status": "Status",
     "location": "Location",
-    "currentMileage": "Current mileage",
+    "currentMileage": "Odometer",
     "transmission": "Transmission",
     "fuelType": "Fuel type",
     "seats": "Seats",
-    "doors": "Doors",
-    "topSpeed": "Top speed",
-    "power": "Power",
-    "zeroToSixty": "0–60 mph",
-    "cylinders": "Cylinders"
+    "doors": "Doors"
   },
   "gallery": {
     "primaryPhoto": "Primary photo · 1600 × 900",
@@ -182,11 +180,6 @@
     },
     "stepsLabel": "Form steps",
     "draft": {
-      "foundTitle": "Unsaved changes found",
-      "foundDescription": "We found a draft you were working on {{when}}. Restore it, or start fresh.",
-      "discard": "Discard draft",
-      "restore": "Restore draft",
-      "saved": "Draft saved {{when}}",
       "saveAndExit": "Save draft & exit"
     },
     "vin": {
@@ -205,20 +198,18 @@
         "vehicleType": "vehicle type",
         "transmission": "transmission",
         "fuelType": "fuel type",
-        "doors": "doors",
-        "cylinders": "cylinders",
-        "horsepower": "power"
+        "doors": "doors"
       }
     },
     "sections": {
       "identity": "Identity",
       "registration": "Registration & status",
       "specs": "Specs",
-      "performance": "Performance (optional)",
       "rateOptions": "Rate options",
       "rateOptionsHint": "Each option is one way a renter can book this vehicle, with its own mileage allowance.",
       "fees": "Deposit, fees & tax",
-      "feesHint": "Applied to every booking, whichever rate option is used."
+      "feesHint": "Applied to every booking, whichever rate option is used.",
+      "features": "Features"
     },
     "fields": {
       "make": "Make",
@@ -238,7 +229,7 @@
       "vin": "VIN",
       "status": "Status",
       "statusPlaceholder": "Select status",
-      "mileage": "Current mileage (mi)",
+      "mileage": "Odometer (mi)",
       "mileagePlaceholder": "e.g. 12000",
       "transmission": "Transmission",
       "transmissionPlaceholder": "Select transmission",
@@ -246,10 +237,6 @@
       "fuelTypePlaceholder": "Select fuel type",
       "seats": "Seats",
       "doors": "Doors",
-      "topSpeed": "Top speed (mph)",
-      "horsepower": "Power (hp)",
-      "zeroToSixty": "0–60 mph (sec)",
-      "cylinders": "Cylinders",
       "description": "Description",
       "descriptionHint": "Customer-facing summary shown on the vehicle listing.",
       "deposit": "Security deposit (USD)",
@@ -281,7 +268,6 @@
       "identity": "Identity",
       "registration": "Registration & status",
       "specs": "Specs",
-      "performance": "Performance",
       "description": "Description",
       "photos": "Photos",
       "noPhotos": "No photos added.",
@@ -290,7 +276,8 @@
       "untitledOption": "Untitled option",
       "fees": "Deposit, fees & tax",
       "seatsDoors": "Seats / Doors",
-      "seatsDoorsValue": "{{seats}} seats · {{doors}} doors"
+      "seatsDoorsValue": "{{seats}} seats · {{doors}} doors",
+      "features": "Features"
     }
   },
   "rateOptions": {
@@ -326,6 +313,8 @@
     "skippedDescription": "Each photo must be under {{size}}MB."
   },
   "toast": {
+    "draftSaved": "Draft saved",
+    "draftSavedDescription": "You can finish this vehicle later from the Drafts tab.",
     "added": "Vehicle added",
     "addedDescription": "{{name}} was added to the fleet.",
     "addFailed": "Could not add vehicle",
@@ -341,12 +330,6 @@
     "description": "{{name}} ({{plate}}) will be archived and removed from the active fleet. This can't be undone.",
     "confirm": "Archive vehicle"
   },
-  "timeAgo": {
-    "justNow": "just now",
-    "seconds": "{{count}}s ago",
-    "minutes": "{{count}}m ago",
-    "hours": "{{count}}h ago"
-  },
   "errors": {
     "notFound": "Vehicle not found",
     "vinTooShort": "Enter a full VIN (at least 11 characters) before decoding.",
@@ -354,5 +337,41 @@
     "vinServiceUnavailable": "VIN decode service is unavailable right now.",
     "vinNoData": "VIN decode service returned no data.",
     "vinUndecodable": "This VIN could not be decoded."
+  },
+  "features": {
+    "title": "Features",
+    "none": "No features selected.",
+    "airConditioning": {
+      "label": "Air Conditioning",
+      "description": "Climate control system"
+    },
+    "gpsNavigation": {
+      "label": "GPS Navigation",
+      "description": "Built-in map and routing"
+    },
+    "bluetoothAudio": {
+      "label": "Bluetooth Audio",
+      "description": "Wireless phone pairing"
+    },
+    "usbCharging": {
+      "label": "USB Charging",
+      "description": "Front and rear ports"
+    },
+    "sunroof": {
+      "label": "Sunroof",
+      "description": "Panoramic glass roof"
+    },
+    "driverAssist": {
+      "label": "Driver Assist",
+      "description": "Lane-keep, adaptive cruise"
+    },
+    "appleCarPlay": {
+      "label": "Apple CarPlay",
+      "description": "Wireless or wired"
+    },
+    "rearViewCamera": {
+      "label": "Rear-View Camera",
+      "description": "Backing assist with guides"
+    }
   }
 }

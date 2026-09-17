@@ -8,6 +8,7 @@
     "Confirmed": "Confirmado",
     "Deposit due": "Depósito pendiente",
     "Dormant": "Inactivo",
+    "Draft": "Borrador",
     "Failed": "Fallido",
     "Flagged": "Marcado",
     "Limited hours": "Horario reducido",
@@ -26,7 +27,7 @@
     "Scheduled": "Programado",
     "Verify docs": "Verificar documentos"
   },
-  "vehicleClass": {
+  "vehicleType": {
     "Convertible": "Convertible",
     "Coupe": "Cupé",
     "Crossover": "Crossover",

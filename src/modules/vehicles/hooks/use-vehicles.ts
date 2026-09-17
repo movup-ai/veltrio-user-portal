@@ -45,8 +45,10 @@ export function useCreateVehicle() {
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
       toast({
-        title: i18n.t('vehicles:toast.added'),
-        description: i18n.t('vehicles:toast.addedDescription', { name: vehicleName(vehicle) }),
+        title: vehicle.isDraft ? i18n.t('vehicles:toast.draftSaved') : i18n.t('vehicles:toast.added'),
+        description: vehicle.isDraft
+          ? i18n.t('vehicles:toast.draftSavedDescription')
+          : i18n.t('vehicles:toast.addedDescription', { name: vehicleName(vehicle) }),
         variant: 'success',
       })
     },
@@ -65,8 +67,10 @@ export function useUpdateVehicle(id: string) {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
       queryClient.setQueryData(vehicleKeys.detail(id), vehicle)
       toast({
-        title: i18n.t('vehicles:toast.updated'),
-        description: i18n.t('vehicles:toast.updatedDescription', { name: vehicleName(vehicle) }),
+        title: vehicle.isDraft ? i18n.t('vehicles:toast.draftSaved') : i18n.t('vehicles:toast.updated'),
+        description: vehicle.isDraft
+          ? i18n.t('vehicles:toast.draftSavedDescription')
+          : i18n.t('vehicles:toast.updatedDescription', { name: vehicleName(vehicle) }),
         variant: 'success',
       })
     },

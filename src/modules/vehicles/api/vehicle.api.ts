@@ -2,6 +2,7 @@ import { apiClient } from '@/services/api/client'
 import i18n from '@/i18n'
 import { mockDelay, useMocks } from '@/lib/mock'
 import { ApiError } from '@/types/api'
+import { toLimitOffset, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { PaginatedResult } from '@/types/common'
 import { VEHICLES_SEED } from '../mock/vehicle.mock'
 import { VEHICLE_PRICE_BANDS, type Vehicle, type VehicleInput, type VehicleListParams } from '../types/vehicle.types'
@@ -25,9 +26,10 @@ function mockList(params: VehicleListParams): PaginatedResult<Vehicle> {
   }
   if (params.status && params.status !== 'Any') items = items.filter((v) => v.status === params.status)
   if (params.location && params.location !== 'All') items = items.filter((v) => v.location === params.location)
-  if (params.class && params.class !== 'All') items = items.filter((v) => v.class === params.class)
+  if (params.vehicleType && params.vehicleType !== 'All') items = items.filter((v) => v.vehicleType === params.vehicleType)
   if (params.transmission && params.transmission !== 'Any') items = items.filter((v) => v.specs.transmission === params.transmission)
   if (params.fuelType && params.fuelType !== 'Any') items = items.filter((v) => v.specs.fuelType === params.fuelType)
+  if (params.isDraft !== undefined) items = items.filter((v) => Boolean(v.isDraft) === params.isDraft)
   if (params.priceBands && params.priceBands.length > 0) {
     const bands = VEHICLE_PRICE_BANDS.filter((b) => params.priceBands!.includes(b.value))
     items = items.filter((v) => {
@@ -42,12 +44,12 @@ function mockList(params: VehicleListParams): PaginatedResult<Vehicle> {
   else if (params.sortBy === 'name') items = [...items].sort((a, b) => `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`))
 
   const total = items.length
-  const totalPages = Math.max(1, Math.ceil(total / params.pageSize))
-  const page = Math.min(params.page, totalPages)
-  const start = (page - 1) * params.pageSize
-  const pageItems = items.slice(start, start + params.pageSize)
+  const pageSize = params.pageSize
 
-  return { items: pageItems, page, pageSize: params.pageSize, total, totalPages }
+  const page = Math.min(params.page, Math.max(1, Math.ceil(total / pageSize)))
+  const { limit, offset } = toLimitOffset({ page, pageSize })
+
+  return toPaginatedResult(items.slice(offset, offset + limit), total, { page, pageSize })
 }
 
 function mockGet(id: string): Vehicle {
@@ -65,9 +67,12 @@ function mockGet(id: string): Vehicle {
 export const vehicleApi = {
   list: (params: VehicleListParams) => {
     if (useMocks) return mockDelay(mockList(params))
+    // The endpoint pages with limit/offset and returns a flat total, so translate both ways here —
+    // callers (and the UI) keep working in page/pageSize.
+    const { page, pageSize, ...filters } = params
     return apiClient
-      .get<PaginatedResult<Vehicle>>('/vehicles', { params })
-      .then((r) => r.data)
+      .get<ListEnvelope<Vehicle>>('/vehicles', { params: { ...filters, ...toLimitOffset({ page, pageSize }) } })
+      .then((r) => toPaginatedResult(r.data.items, r.data.total, { page, pageSize }))
   },
 
   get: (id: string) => {

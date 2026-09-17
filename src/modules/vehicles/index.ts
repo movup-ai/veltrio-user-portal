@@ -14,11 +14,11 @@ export {
   formatRateOptionMileage,
   formatRateOptionPrice,
 } from './utils/vehicle.utils'
-export { VEHICLE_STATUSES, VEHICLE_CLASSES, BILLING_BASES, DURATION_UNITS } from './types/vehicle.types'
+export { VEHICLE_STATUSES, VEHICLE_TYPES, BILLING_BASES, DURATION_UNITS } from './types/vehicle.types'
 export type {
   Vehicle,
   VehicleStatus,
-  VehicleClass,
+  VehicleType,
   VehicleInput,
   VehicleListParams,
   RateOption,

@@ -1,11 +1,26 @@
 import type { TFunction } from 'i18next'
+import i18n from '@/i18n'
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
 import { formatCurrency, formatNumberIn, currentLanguage } from '@/i18n/formatters'
 import { translateDomain, translateDurationUnit } from '@/i18n/domain'
 import type { VehicleFormValues } from '../schema/vehicle.schema'
-import type { RateOption, Vehicle } from '../types/vehicle.types'
+import type { RateOption, Vehicle, VehicleInput } from '../types/vehicle.types'
 
 export { formatCurrency }
+
+/**
+ * Strips the server-assigned keys so an existing vehicle can be sent straight back through
+ * update/create. Preferred over hand-listing fields at the call site — a hand-written payload
+ * silently drops any field later added to Vehicle, wiping it on save.
+ */
+export function vehicleToInput({
+  id: _id,
+  createdAt: _createdAt,
+  utilization: _utilization,
+  ...input
+}: Vehicle): VehicleInput {
+  return input
+}
 
 /** Flattens a Vehicle's nested specs/fees into the form's flat shape — used to prefill Edit and Duplicate. */
 export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
@@ -13,7 +28,7 @@ export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
     make: vehicle.make,
     model: vehicle.model,
     year: vehicle.year,
-    class: vehicle.class,
+    vehicleType: vehicle.vehicleType,
     color: vehicle.color,
     plate: vehicle.plate,
     vin: vehicle.vin,
@@ -24,10 +39,7 @@ export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
     fuelType: vehicle.specs.fuelType,
     seats: vehicle.specs.seats,
     doors: vehicle.specs.doors,
-    topSpeedMph: vehicle.specs.topSpeedMph,
-    horsepower: vehicle.specs.horsepower,
-    zeroToSixtySec: vehicle.specs.zeroToSixtySec,
-    cylinders: vehicle.specs.cylinders,
+    features: vehicle.features ?? [],
     description: vehicle.description ?? '',
     photos: vehicle.photos,
     rateOptions: vehicle.rateOptions,
@@ -51,13 +63,22 @@ export function vehicleColumns(t: TFunction<'vehicles'>) {
   ]
 }
 
+/** Drafts can be saved before make/model are filled in, so fall back rather than render a blank cell. */
 export function vehicleDisplayName(v: Vehicle): string {
-  return `${v.make} ${v.model}`
+  return `${v.make ?? ''} ${v.model ?? ''}`.trim() || i18n.t('vehicles:untitledVehicle')
 }
 
-/** "Sedan · 2024" — the class is translated, the year is not. */
+/** Two-letter avatar initials, blank-safe for the same reason as vehicleDisplayName. */
+export function vehicleInitials(v: Vehicle): string {
+  const letters = `${v.make?.[0] ?? ''}${v.model?.[0] ?? ''}`.trim()
+  return letters ? letters.toUpperCase() : '—'
+}
+
+/** "Sedan · 2024" — the vehicle type is translated, the year is not. Either part may be missing on a draft. */
 export function vehicleSubtitle(v: Vehicle): string {
-  return `${translateDomain('vehicleClass', v.class)} · ${v.year}`
+  return [v.vehicleType ? translateDomain('vehicleType', v.vehicleType) : '', Number.isFinite(v.year) ? String(v.year) : '']
+    .filter(Boolean)
+    .join(' · ')
 }
 
 /** The per-day rate option, used for list/stat comparisons across the fleet. */
@@ -108,7 +129,7 @@ export function vehicleRow(v: Vehicle, tripsCount: number, actions: RowActionIte
         kind: 'avatar',
         primary: vehicleDisplayName(v),
         secondary: vehicleSubtitle(v),
-        initials: `${v.make[0]}${v.model[0]}`.toUpperCase(),
+        initials: vehicleInitials(v),
         avatarBg: 'var(--color-surface-3)',
         avatarFg: 'var(--color-fg-3)',
         avatarRadius: '8px',
@@ -116,7 +137,7 @@ export function vehicleRow(v: Vehicle, tripsCount: number, actions: RowActionIte
       },
       { kind: 'stack', primary: v.plate, secondary: v.vin, weight: 500, subFontMono: true },
       { kind: 'text', primary: v.location },
-      { kind: 'badge', status: v.status },
+      { kind: 'badge', status: v.isDraft ? 'Draft' : v.status },
       { kind: 'meter', primary: `${pct}%`, pct: `${pct}%`, tone: meterTone(v.utilization) },
       { kind: 'text', primary: String(tripsCount), align: 'right' },
       {

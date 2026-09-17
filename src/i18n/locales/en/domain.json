@@ -8,6 +8,7 @@
     "Confirmed": "Confirmed",
     "Deposit due": "Deposit due",
     "Dormant": "Dormant",
+    "Draft": "Draft",
     "Failed": "Failed",
     "Flagged": "Flagged",
     "Limited hours": "Limited hours",
@@ -26,7 +27,7 @@
     "Scheduled": "Scheduled",
     "Verify docs": "Verify docs"
   },
-  "vehicleClass": {
+  "vehicleType": {
     "Convertible": "Convertible",
     "Coupe": "Coupe",
     "Crossover": "Crossover",

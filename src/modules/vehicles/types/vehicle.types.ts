@@ -1,7 +1,7 @@
 export const VEHICLE_STATUSES = ['Available', 'On rent', 'Maintenance', 'Out of service'] as const
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number]
 
-export const VEHICLE_CLASSES = [
+export const VEHICLE_TYPES = [
   'Convertible',
   'Coupe',
   'Crossover',
@@ -14,7 +14,7 @@ export const VEHICLE_CLASSES = [
   'Van',
   'Wagon',
 ] as const
-export type VehicleClass = (typeof VEHICLE_CLASSES)[number]
+export type VehicleType = (typeof VEHICLE_TYPES)[number]
 
 export const TRANSMISSIONS = ['Automatic', 'Manual'] as const
 export type Transmission = (typeof TRANSMISSIONS)[number]
@@ -68,18 +68,27 @@ export interface VehicleSpecs {
   fuelType: FuelType
   seats: number
   doors: number
-  topSpeedMph?: number
-  horsepower?: number
-  zeroToSixtySec?: number
-  cylinders?: number
 }
+
+/** Renter-facing amenities, surfaced on the listing. Canonical keys — labels live in `vehicles:features`. */
+export const VEHICLE_FEATURES = [
+  'airConditioning',
+  'gpsNavigation',
+  'bluetoothAudio',
+  'usbCharging',
+  'sunroof',
+  'driverAssist',
+  'appleCarPlay',
+  'rearViewCamera',
+] as const
+export type VehicleFeature = (typeof VEHICLE_FEATURES)[number]
 
 export interface Vehicle {
   id: string
   make: string
   model: string
   year: number
-  class: VehicleClass
+  vehicleType: VehicleType
   color: string
   plate: string
   vin: string
@@ -93,7 +102,10 @@ export interface Vehicle {
   rateOptions: RateOption[]
   fees: VehicleFees
   specs: VehicleSpecs
+  features: VehicleFeature[]
   createdAt: string
+  /** Saved via "Save & exit" mid-wizard — not yet published to the live fleet. Independent of `status`. */
+  isDraft?: boolean
 }
 
 /** Payload shape for create/update — server assigns id/createdAt/utilization. */
@@ -115,10 +127,12 @@ export interface VehicleListParams {
   search?: string
   status?: VehicleStatus | 'Any'
   location?: string | 'All'
-  class?: VehicleClass | 'All'
+  vehicleType?: VehicleType | 'All'
   transmission?: Transmission | 'Any'
   fuelType?: FuelType | 'Any'
   priceBands?: VehiclePriceBand[]
+  /** true = only drafts, false = only published vehicles, omitted = both. */
+  isDraft?: boolean
   sortBy?: VehicleSort
   page: number
   pageSize: number

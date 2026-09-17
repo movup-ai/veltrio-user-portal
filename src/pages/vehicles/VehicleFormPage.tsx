@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ImageOff, ScanLine, Save, Sparkles } from 'lucide-react'
+import { ArrowRight, ImageOff, ScanLine, Save, Sparkles } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
 import { Card } from '@/components/ui/card'
@@ -19,7 +19,9 @@ import { LoadingState } from '@/components/feedback/LoadingState'
 import { FormField } from '@/components/forms/FormField'
 import { PhotoDropzone } from '@/components/forms/PhotoDropzone'
 import { RateOptionsEditor } from '@/modules/vehicles/components/RateOptionsEditor'
-import { ReviewRow, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
+import { VehicleFeatureChips } from '@/modules/vehicles/components/VehicleFeatureChips'
+import { VehicleFeaturesPicker } from '@/modules/vehicles/components/VehicleFeaturesPicker'
+import { ReviewRow, ReviewRowGrid, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
 import { Stepper, type StepDef } from '@/components/forms/Stepper'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -32,19 +34,11 @@ import { STEP_FIELDS, vehicleFormSchema, type VehicleFormValues } from '@/module
 import {
   FUEL_TYPES,
   TRANSMISSIONS,
-  VEHICLE_CLASSES,
+  VEHICLE_TYPES,
   VEHICLE_STATUSES,
   type VehicleInput,
 } from '@/modules/vehicles/types/vehicle.types'
 import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/modules/vehicles/hooks/use-vehicles'
-import {
-  clearVehicleDraft,
-  readVehicleDraft,
-  useVehicleDraftAutosave,
-  vehicleDraftKey,
-  writeVehicleDraft,
-  type VehicleDraft,
-} from '@/modules/vehicles/hooks/use-vehicle-draft'
 import {
   formatRateOptionBasis,
   formatRateOptionMileage,
@@ -53,6 +47,7 @@ import {
 } from '@/modules/vehicles/utils/vehicle.utils'
 
 const STEP_KEYS = ['details', 'photos', 'pricing', 'review'] as const
+type StepKey = (typeof STEP_KEYS)[number]
 
 /** The form fields a VIN lookup can populate — doubles as the key set under `form.vin.fields`. */
 type VinField =
@@ -63,14 +58,12 @@ type VinField =
   | 'transmission'
   | 'fuelType'
   | 'doors'
-  | 'cylinders'
-  | 'horsepower'
 
 const EMPTY_VALUES: VehicleFormValues = {
   make: '',
   model: '',
   year: undefined as unknown as number,
-  class: '' as VehicleFormValues['class'],
+  vehicleType: '' as VehicleFormValues['vehicleType'],
   color: '',
   plate: '',
   vin: '',
@@ -81,10 +74,7 @@ const EMPTY_VALUES: VehicleFormValues = {
   fuelType: 'Petrol',
   seats: 5,
   doors: 4,
-  topSpeedMph: undefined,
-  horsepower: undefined,
-  zeroToSixtySec: undefined,
-  cylinders: undefined,
+  features: [],
   description: '',
   photos: [],
   rateOptions: [],
@@ -95,15 +85,15 @@ const EMPTY_VALUES: VehicleFormValues = {
 }
 
 /**
- * A restored draft may predate a schema change (renamed enum, new required field), so its
- * required-select values aren't guaranteed to still be valid — fall back to defaults for any
- * that no longer match a known option, same as a brand-new form would use.
+ * A saved draft can be missing required selects (it was persisted mid-wizard), and an older record
+ * may predate a schema change (renamed enum, new required field) — fall back to defaults for any
+ * value that no longer matches a known option, same as a brand-new form would use.
  */
-function sanitizeDraftValues(values: VehicleFormValues): VehicleFormValues {
+function sanitizeFormValues(values: VehicleFormValues): VehicleFormValues {
   return {
     ...EMPTY_VALUES,
     ...values,
-    class: (VEHICLE_CLASSES as readonly string[]).includes(values.class) ? values.class : EMPTY_VALUES.class,
+    vehicleType: (VEHICLE_TYPES as readonly string[]).includes(values.vehicleType) ? values.vehicleType : EMPTY_VALUES.vehicleType,
     status: (VEHICLE_STATUSES as readonly string[]).includes(values.status) ? values.status : EMPTY_VALUES.status,
     transmission: (TRANSMISSIONS as readonly string[]).includes(values.transmission) ? values.transmission : EMPTY_VALUES.transmission,
     fuelType: (FUEL_TYPES as readonly string[]).includes(values.fuelType) ? values.fuelType : EMPTY_VALUES.fuelType,
@@ -116,7 +106,7 @@ function formValuesToVehicleInput(values: VehicleFormValues): VehicleInput {
     make: values.make,
     model: values.model,
     year: values.year,
-    class: values.class,
+    vehicleType: values.vehicleType,
     color: values.color,
     plate: values.plate,
     vin: values.vin,
@@ -125,6 +115,7 @@ function formValuesToVehicleInput(values: VehicleFormValues): VehicleInput {
     mileage: values.mileage,
     description: values.description || undefined,
     photos: values.photos,
+    features: values.features,
     rateOptions: values.rateOptions,
     fees: {
       deposit: values.deposit,
@@ -137,10 +128,6 @@ function formValuesToVehicleInput(values: VehicleFormValues): VehicleInput {
       fuelType: values.fuelType,
       seats: values.seats,
       doors: values.doors,
-      topSpeedMph: values.topSpeedMph,
-      horsepower: values.horsepower,
-      zeroToSixtySec: values.zeroToSixtySec,
-      cylinders: values.cylinders,
     },
   }
 }
@@ -150,29 +137,12 @@ function hasValue(n: number | undefined): n is number {
   return n != null && !Number.isNaN(n)
 }
 
-function useTimeAgo() {
-  const { t } = useTranslation('vehicles')
-
-  return (iso: string): string => {
-    const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
-    if (seconds < 5) return t('timeAgo.justNow')
-    if (seconds < 60) return t('timeAgo.seconds', { count: seconds })
-    const minutes = Math.round(seconds / 60)
-    if (minutes < 60) return t('timeAgo.minutes', { count: minutes })
-    return t('timeAgo.hours', { count: Math.round(minutes / 60) })
-  }
-}
-
 export function VehicleFormPage() {
   const { t } = useTranslation('vehicles')
-  const timeAgo = useTimeAgo()
   const { vehicleId } = useParams()
   const isEdit = Boolean(vehicleId)
-  const draftKey = vehicleDraftKey(vehicleId)
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
-  const [existingDraft] = useState<VehicleDraft | null>(() => readVehicleDraft(draftKey))
-  const [draftChoice, setDraftChoice] = useState<'pending' | 'restore' | 'fresh'>(existingDraft ? 'pending' : 'fresh')
 
   if (isEdit && isLoading) {
     return (
@@ -191,76 +161,41 @@ export function VehicleFormPage() {
     )
   }
 
-  if (draftChoice === 'pending' && existingDraft) {
-    return (
-      <PageContainer>
-        <PageHeader title={isEdit ? t('form.editTitle') : t('form.addTitle')} description={t('form.subtitle')} />
-        <Card className="flex flex-wrap items-center justify-between gap-3 p-[18px]">
-          <div>
-            <p className="text-[13.5px] font-semibold">{t('form.draft.foundTitle')}</p>
-            <p className="text-fg-3 text-[13px]">
-              {t('form.draft.foundDescription', { when: timeAgo(existingDraft.savedAt) })}
-            </p>
-          </div>
-          <div className="flex shrink-0 gap-2.5">
-            <Button
-              variant="outline"
-              onClick={() => {
-                clearVehicleDraft(draftKey)
-                setDraftChoice('fresh')
-              }}
-            >
-              {t('form.draft.discard')}
-            </Button>
-            <Button onClick={() => setDraftChoice('restore')}>{t('form.draft.restore')}</Button>
-          </div>
-        </Card>
-      </PageContainer>
-    )
-  }
-
-  const initialValues =
-    draftChoice === 'restore' && existingDraft
-      ? sanitizeDraftValues(existingDraft.values)
-      : vehicle
-        ? valuesFromVehicle(vehicle)
-        : EMPTY_VALUES
-  const initialStep = draftChoice === 'restore' && existingDraft ? existingDraft.step : 0
+  // Drafts are real records now (see "Save draft & exit"), so an in-progress vehicle is reopened
+  // by editing it from the Drafts tab — no separate localStorage restore prompt needed.
+  const initialValues = vehicle ? sanitizeFormValues(valuesFromVehicle(vehicle)) : EMPTY_VALUES
 
   return (
     <VehicleForm
-      key={`${vehicle?.id ?? 'new'}-${draftChoice}`}
+      key={vehicle?.id ?? 'new'}
       initialValues={initialValues}
-      initialStep={initialStep}
       vehicleId={vehicleId}
       isEdit={isEdit}
-      draftKey={draftKey}
+      existingIsDraft={vehicle?.isDraft}
     />
   )
 }
 
 function VehicleForm({
   initialValues,
-  initialStep,
   vehicleId,
   isEdit,
-  draftKey,
+  existingIsDraft,
 }: {
   initialValues: VehicleFormValues
-  initialStep: number
   vehicleId?: string
   isEdit: boolean
-  draftKey: string
+  /** Whether the vehicle being edited is currently a draft — preserved (not force-published) by "Save & exit". */
+  existingIsDraft?: boolean
 }) {
   const { t } = useTranslation('vehicles')
   const { t: tValidation } = useTranslation('validation')
   const domain = useDomainLabels()
-  const timeAgo = useTimeAgo()
   const navigate = useNavigate()
   const createVehicle = useCreateVehicle()
   const updateVehicle = useUpdateVehicle(vehicleId ?? '')
-  const [stepIndex, setStepIndex] = useState(Math.min(initialStep, STEP_KEYS.length - 1))
-  const [furthestIndex, setFurthestIndex] = useState(Math.min(initialStep, STEP_KEYS.length - 1))
+  const [stepIndex, setStepIndex] = useState(0)
+  const [furthestIndex, setFurthestIndex] = useState(0)
   const [vinToDecode, setVinToDecode] = useState('')
   const [isDecodingVin, setIsDecodingVin] = useState(false)
   const [aiAction, setAiAction] = useState<DescriptionAiAction | null>(null)
@@ -277,11 +212,10 @@ function VehicleForm({
     handleSubmit,
     trigger,
     setValue,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
   } = useForm<VehicleFormValues>({ resolver: zodResolver(schema), defaultValues: initialValues, mode: 'onChange' })
 
   const watchedValues = useWatch({ control }) as VehicleFormValues
-  const lastSavedAt = useVehicleDraftAutosave(draftKey, watchedValues, stepIndex, isDirty)
 
   const stepKey = STEP_KEYS[stepIndex]
 
@@ -298,8 +232,13 @@ function VehicleForm({
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
   const saveDraftAndExit = () => {
-    writeVehicleDraft(draftKey, watchedValues, stepIndex)
-    navigate('/app/vehicles')
+    const input: VehicleInput = { ...formValuesToVehicleInput(watchedValues), isDraft: isEdit ? Boolean(existingIsDraft) : true }
+    const onSaved = () => navigate('/app/vehicles')
+    if (isEdit && vehicleId) {
+      updateVehicle.mutate(input, { onSuccess: onSaved })
+    } else {
+      createVehicle.mutate(input, { onSuccess: onSaved })
+    }
   }
 
   const handleDecodeVin = async () => {
@@ -314,12 +253,10 @@ function VehicleForm({
       if (decoded.make) { setValue('make', decoded.make, opts); filled.push(fieldName('make')) }
       if (decoded.model) { setValue('model', decoded.model, opts); filled.push(fieldName('model')) }
       if (decoded.year) { setValue('year', decoded.year, opts); filled.push(fieldName('year')) }
-      if (decoded.vehicleType) { setValue('class', decoded.vehicleType, opts); filled.push(fieldName('vehicleType')) }
+      if (decoded.vehicleType) { setValue('vehicleType', decoded.vehicleType, opts); filled.push(fieldName('vehicleType')) }
       if (decoded.transmission) { setValue('transmission', decoded.transmission, opts); filled.push(fieldName('transmission')) }
       if (decoded.fuelType) { setValue('fuelType', decoded.fuelType, opts); filled.push(fieldName('fuelType')) }
       if (decoded.doors) { setValue('doors', decoded.doors, opts); filled.push(fieldName('doors')) }
-      if (decoded.cylinders) { setValue('cylinders', decoded.cylinders, opts); filled.push(fieldName('cylinders')) }
-      if (decoded.horsepower) { setValue('horsepower', decoded.horsepower, opts); filled.push(fieldName('horsepower')) }
       setValue('vin', vinToDecode.trim().toUpperCase(), opts)
 
       toast(
@@ -350,7 +287,7 @@ function VehicleForm({
           make: watchedValues.make,
           model: watchedValues.model,
           year: watchedValues.year,
-          vehicleType: watchedValues.class,
+          vehicleType: watchedValues.vehicleType,
           color: watchedValues.color,
           transmission: watchedValues.transmission,
           fuelType: watchedValues.fuelType,
@@ -373,21 +310,13 @@ function VehicleForm({
   }
 
   const onSubmit = (values: VehicleFormValues) => {
-    const input = formValuesToVehicleInput(values)
+    // Reaching the end of the wizard always publishes — graduates a draft (or confirms an
+    // already-published vehicle) to a real, non-draft record.
+    const input: VehicleInput = { ...formValuesToVehicleInput(values), isDraft: false }
     if (isEdit && vehicleId) {
-      updateVehicle.mutate(input, {
-        onSuccess: () => {
-          clearVehicleDraft(draftKey)
-          navigate(`/app/vehicles/${vehicleId}`)
-        },
-      })
+      updateVehicle.mutate(input, { onSuccess: () => navigate(`/app/vehicles/${vehicleId}`) })
     } else {
-      createVehicle.mutate(input, {
-        onSuccess: (created) => {
-          clearVehicleDraft(draftKey)
-          navigate(`/app/vehicles/${created.id}`)
-        },
-      })
+      createVehicle.mutate(input, { onSuccess: (created) => navigate(`/app/vehicles/${created.id}`) })
     }
   }
 
@@ -404,11 +333,6 @@ function VehicleForm({
             onStepClick={(i) => setStepIndex(i)}
             ariaLabel={t('form.stepsLabel')}
           />
-          {lastSavedAt && (
-            <span className="text-fg-4 text-[12px] whitespace-nowrap">
-              {t('form.draft.saved', { when: timeAgo(lastSavedAt) })}
-            </span>
-          )}
         </div>
 
         <form
@@ -510,22 +434,22 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.vehicleType')} error={errors.class?.message} required>
+                  <FormField label={t('form.fields.vehicleType')} error={errors.vehicleType?.message} required>
                     {({ id }) => (
                       <Controller
                         control={control}
-                        name="class"
+                        name="vehicleType"
                         render={({ field }) => (
                           <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger id={id} aria-invalid={Boolean(errors.class)}>
+                            <SelectTrigger id={id} aria-invalid={Boolean(errors.vehicleType)}>
                               <SelectValue placeholder={t('form.fields.vehicleTypePlaceholder')}>
-                                {field.value ? domain.label('vehicleClass', field.value) : undefined}
+                                {field.value ? domain.label('vehicleType', field.value) : undefined}
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {VEHICLE_CLASSES.map((c) => (
+                              {VEHICLE_TYPES.map((c) => (
                                 <SelectItem key={c} value={c}>
-                                  {domain.label('vehicleClass', c)}
+                                  {domain.label('vehicleType', c)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -699,21 +623,17 @@ function VehicleForm({
               </div>
 
               <div className="border-border-soft border-t pt-5">
-                <p className="text-meta text-fg-3 mb-3">{t('form.sections.performance')}</p>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <FormField label={t('form.fields.topSpeed')} error={errors.topSpeedMph?.message}>
-                    {(fieldProps) => <Input type="number" {...register('topSpeedMph', { valueAsNumber: true })} {...fieldProps} />}
-                  </FormField>
-                  <FormField label={t('form.fields.horsepower')} error={errors.horsepower?.message}>
-                    {(fieldProps) => <Input type="number" {...register('horsepower', { valueAsNumber: true })} {...fieldProps} />}
-                  </FormField>
-                  <FormField label={t('form.fields.zeroToSixty')} error={errors.zeroToSixtySec?.message}>
-                    {(fieldProps) => <Input type="number" step="0.1" {...register('zeroToSixtySec', { valueAsNumber: true })} {...fieldProps} />}
-                  </FormField>
-                  <FormField label={t('form.fields.cylinders')} error={errors.cylinders?.message}>
-                    {(fieldProps) => <Input type="number" {...register('cylinders', { valueAsNumber: true })} {...fieldProps} />}
-                  </FormField>
-                </div>
+                <p className="text-meta text-fg-3 mb-3">{t('form.sections.features')}</p>
+                <Controller
+                  control={control}
+                  name="features"
+                  render={({ field }) => (
+                    <VehicleFeaturesPicker
+                      selected={field.value ?? []}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
 
               <div className="border-border-soft border-t pt-5">
@@ -841,7 +761,9 @@ function VehicleForm({
             </div>
           )}
 
-          {stepKey === 'review' && <ReviewStep values={watchedValues} />}
+          {stepKey === 'review' && (
+            <ReviewStep values={watchedValues} onEditStep={(key) => setStepIndex(STEP_KEYS.indexOf(key))} />
+          )}
 
           <div className="border-border-soft flex flex-wrap items-center justify-between gap-2.5 border-t pt-4">
             <Button type="button" variant="ghost" onClick={saveDraftAndExit} className="gap-1.5">
@@ -855,14 +777,7 @@ function VehicleForm({
                   {t('form.nav.previousStep')}
                 </Button>
               )}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  clearVehicleDraft(draftKey)
-                  navigate(-1)
-                }}
-              >
+              <Button type="button" variant="outline" onClick={() => navigate(-1)}>
                 {t('form.nav.cancel')}
               </Button>
               {stepKey !== 'review' ? (
@@ -870,8 +785,9 @@ function VehicleForm({
                   {t('form.nav.nextStep')}
                 </Button>
               ) : (
-                <Button type="button" loading={isSubmitting} onClick={handleSubmit(onSubmit)}>
+                <Button type="button" loading={isSubmitting} onClick={handleSubmit(onSubmit)} className="gap-1.5">
                   {isEdit ? t('form.nav.saveChanges') : t('form.nav.publish')}
+                  <ArrowRight className="size-4" aria-hidden />
                 </Button>
               )}
             </div>
@@ -882,18 +798,17 @@ function VehicleForm({
   )
 }
 
-function ReviewStep({ values }: { values: VehicleFormValues }) {
+function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditStep: (step: StepKey) => void }) {
   const { t } = useTranslation('vehicles')
   const domain = useDomainLabels()
   const format = useFormatters()
-  const hasPerformance =
-    hasValue(values.topSpeedMph) || hasValue(values.horsepower) || hasValue(values.zeroToSixtySec) || hasValue(values.cylinders)
   const cover = values.photos[0]
+  const editDetails = () => onEditStep('details')
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-wrap items-center gap-4 pb-5">
-        <div className="border-border bg-surface-2 flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border">
+        <div className="border-border bg-surface-2 flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border">
           {cover ? (
             <img src={cover.url} alt={cover.name} className="size-full object-cover" />
           ) : (
@@ -906,39 +821,43 @@ function ReviewStep({ values }: { values: VehicleFormValues }) {
               {values.make || t('form.review.makeFallback')} {values.model || t('form.review.modelFallback')}
             </p>
             <p className="text-fg-3 text-[13px]">
-              {values.year} · {values.class ? domain.label('vehicleClass', values.class) : ''}
+              {values.year} · {values.vehicleType ? domain.label('vehicleType', values.vehicleType) : ''}
             </p>
           </div>
           {values.status && <StatusBadge status={values.status} />}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
-        <div className="flex flex-col">
-          <ReviewSection title={t('form.review.identity')}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+      {/* Two columns of stacked cards, filling the available width. Rows inside each card are
+          stacked label/value cells (see ReviewRow), so a wider card reflows cells into more
+          columns rather than stretching any single row. */}
+      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-2">
+        <div className="flex flex-col gap-3.5">
+          <ReviewSection title={t('form.review.identity')} onEdit={editDetails}>
+            <ReviewRowGrid>
               <ReviewRow label={t('specs.make')} value={values.make || '—'} />
               <ReviewRow label={t('specs.model')} value={values.model || '—'} />
               <ReviewRow label={t('specs.year')} value={values.year || '—'} />
               <ReviewRow
                 label={t('specs.vehicleType')}
-                value={values.class ? domain.label('vehicleClass', values.class) : '—'}
+                value={values.vehicleType ? domain.label('vehicleType', values.vehicleType) : '—'}
               />
               <ReviewRow label={t('specs.color')} value={values.color || '—'} />
-            </div>
+              {/* Grouped with Identity to mirror the form, where Location sits in the same block. */}
+              <ReviewRow label={t('specs.location')} value={values.location || '—'} />
+            </ReviewRowGrid>
           </ReviewSection>
 
-          <ReviewSection title={t('form.review.registration')}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+          <ReviewSection title={t('form.review.registration')} onEdit={editDetails}>
+            <ReviewRowGrid>
               <ReviewRow label={t('specs.plate')} value={values.plate || '—'} />
               <ReviewRow label={t('specs.vin')} value={values.vin || '—'} />
               <ReviewRow label={t('specs.status')} value={values.status ? domain.status(values.status) : '—'} />
-            </div>
+            </ReviewRowGrid>
           </ReviewSection>
 
-          <ReviewSection title={t('form.review.specs')}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
-              <ReviewRow label={t('specs.location')} value={values.location || '—'} />
+          <ReviewSection title={t('form.review.specs')} onEdit={editDetails}>
+            <ReviewRowGrid>
               <ReviewRow label={t('specs.currentMileage')} value={`${format.number(values.mileage ?? 0)} mi`} />
               <ReviewRow
                 label={t('specs.transmission')}
@@ -952,33 +871,32 @@ function ReviewStep({ values }: { values: VehicleFormValues }) {
                 label={t('form.review.seatsDoors')}
                 value={t('form.review.seatsDoorsValue', { seats: values.seats, doors: values.doors })}
               />
-            </div>
+            </ReviewRowGrid>
           </ReviewSection>
 
-          {hasPerformance && (
-            <ReviewSection title={t('form.review.performance')}>
-              <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
-                {hasValue(values.topSpeedMph) && <ReviewRow label={t('specs.topSpeed')} value={`${values.topSpeedMph} mph`} />}
-                {hasValue(values.horsepower) && <ReviewRow label={t('specs.power')} value={`${values.horsepower} hp`} />}
-                {hasValue(values.zeroToSixtySec) && <ReviewRow label={t('specs.zeroToSixty')} value={`${values.zeroToSixtySec}s`} />}
-                {hasValue(values.cylinders) && <ReviewRow label={t('specs.cylinders')} value={values.cylinders} />}
-              </div>
+          {values.features.length > 0 && (
+            <ReviewSection title={t('form.review.features')} onEdit={editDetails}>
+              <VehicleFeatureChips features={values.features} />
             </ReviewSection>
           )}
 
           {values.description && (
-            <ReviewSection title={t('form.review.description')}>
-              <p className="text-fg-3 text-[13px]" style={{ textWrap: 'pretty' }}>
+            <ReviewSection title={t('form.review.description')} onEdit={editDetails}>
+              <p className="text-fg-2 text-[13px]" style={{ textWrap: 'pretty' }}>
                 {values.description}
               </p>
             </ReviewSection>
           )}
         </div>
 
-        <div className="flex flex-col">
-          <ReviewSection title={t('form.review.photos')} count={values.photos.length}>
+        <div className="flex flex-col gap-3.5">
+          <ReviewSection
+            title={t('form.review.photos')}
+            count={values.photos.length}
+            onEdit={() => onEditStep('photos')}
+          >
             {values.photos.length > 0 ? (
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-4">
+              <div className="grid grid-cols-5 gap-2">
                 {values.photos.map((p, index) => (
                   <div key={p.id} className="border-border relative aspect-square overflow-hidden rounded-[7px] border">
                     <img src={p.url} alt={p.name} className="size-full object-cover" />
@@ -995,15 +913,19 @@ function ReviewStep({ values }: { values: VehicleFormValues }) {
             )}
           </ReviewSection>
 
-          <ReviewSection title={t('form.review.rateOptions')} count={values.rateOptions.length}>
+          <ReviewSection
+            title={t('form.review.rateOptions')}
+            count={values.rateOptions.length}
+            onEdit={() => onEditStep('pricing')}
+          >
             {values.rateOptions.length > 0 ? (
-              <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+              <div className="divide-y divide-[var(--color-border-soft)]">
                 {values.rateOptions.map((option) => (
-                  <div key={option.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+                  <div key={option.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2">
                     <span className="text-[13px] font-semibold">{option.label || t('form.review.untitledOption')}</span>
-                    <span className="text-fg-3 flex items-center gap-2.5 text-[12.5px]">
+                    <span className="text-fg-3 flex flex-wrap items-center gap-x-2 text-[12.5px]">
                       <span>{formatRateOptionBasis(option, t)}</span>
-                      <span>·</span>
+                      <span aria-hidden>·</span>
                       <span>{formatRateOptionMileage(option, t)}</span>
                       <span className="text-foreground font-semibold">{formatRateOptionPrice(option)}</span>
                     </span>
@@ -1015,8 +937,8 @@ function ReviewStep({ values }: { values: VehicleFormValues }) {
             )}
           </ReviewSection>
 
-          <ReviewSection title={t('form.review.fees')}>
-            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+          <ReviewSection title={t('form.review.fees')} onEdit={() => onEditStep('pricing')}>
+            <ReviewRowGrid>
               {hasValue(values.deposit) && (
                 <ReviewRow label={t('fees.securityDeposit')} value={format.currency(values.deposit)} />
               )}
@@ -1030,7 +952,7 @@ function ReviewStep({ values }: { values: VehicleFormValues }) {
                 />
               )}
               {hasValue(values.taxRatePct) && <ReviewRow label={t('fees.taxRate')} value={`${values.taxRatePct}%`} />}
-            </div>
+            </ReviewRowGrid>
           </ReviewSection>
         </div>
       </div>

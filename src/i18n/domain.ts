@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from './index'
 
 /**
- * Domain values (statuses, vehicle classes, fuel types, …) stay in canonical English
+ * Domain values (statuses, vehicle types, fuel types, …) stay in canonical English
  * everywhere they are stored, filtered or sent to the API — only their *display* is
  * translated, via `domain.json` where the key is the canonical value.
  *
@@ -13,7 +13,7 @@ import i18n from './index'
  */
 type DomainGroup =
   | 'status'
-  | 'vehicleClass'
+  | 'vehicleType'
   | 'transmission'
   | 'fuelType'
   | 'billingBasis'

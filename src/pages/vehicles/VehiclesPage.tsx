@@ -23,7 +23,7 @@ import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/book
 import {
   FUEL_TYPES,
   TRANSMISSIONS,
-  VEHICLE_CLASSES,
+  VEHICLE_TYPES,
   VEHICLE_PRICE_BANDS,
   VEHICLE_SORTS,
   VEHICLE_STATUSES,
@@ -43,8 +43,8 @@ function tripsForVehicle(v: Vehicle): number {
   return ALL_BOOKINGS.filter((b) => b[3] === v.plate).length
 }
 
-/** Canonical values — `All` means "no status filter", the rest map 1:1 to VehicleStatus. */
-const TABS = ['All', 'Available', 'On rent', 'Maintenance'] as const
+/** Canonical values — `All` means "no status filter", `Drafts` filters on isDraft instead of status, the rest map 1:1 to VehicleStatus. */
+const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts'] as const
 type Tab = (typeof TABS)[number]
 
 const PAGE_SIZE = 8
@@ -79,7 +79,7 @@ export function VehiclesPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')
-  const [classFilter, setClassFilter] = useState<string>('All')
+  const [typeFilter, setTypeFilter] = useState<string>('All')
   // Applied values actually feed the query; draft values are what the "More filters" popover
   // edits live — they only become "applied" when Apply filters is clicked.
   const [transmissionFilter, setTransmissionFilter] = useState<Transmission | 'Any'>('Any')
@@ -96,27 +96,61 @@ export function VehiclesPage() {
 
   usePageHeaderActions([{ label: t('list.addVehicle'), icon: Plus, onClick: () => navigate('/app/vehicles/new') }], [t])
 
-  const effectiveStatus: VehicleStatus | 'Any' = tab === 'All' ? statusFilter : (tab as VehicleStatus)
+  const isDraftsTab = tab === 'Drafts'
+  const effectiveStatus: VehicleStatus | 'Any' = isDraftsTab ? 'Any' : tab === 'All' ? statusFilter : (tab as VehicleStatus)
+  // "All" shows both published and draft vehicles; a specific status tab excludes drafts (they aren't really "Available" etc. yet); "Drafts" isolates them.
+  const effectiveIsDraft: boolean | undefined = isDraftsTab ? true : tab === 'All' ? undefined : false
 
   const listParams = useMemo(
     () => ({
       search: search || undefined,
       status: effectiveStatus,
       location: locationFilter,
-      class: classFilter as (typeof VEHICLE_CLASSES)[number] | 'All',
+      vehicleType: typeFilter as (typeof VEHICLE_TYPES)[number] | 'All',
       transmission: transmissionFilter,
       fuelType: fuelTypeFilter,
       priceBands,
+      isDraft: effectiveIsDraft,
       sortBy,
       page: manualOrderMode ? 1 : page,
       pageSize: manualOrderMode ? MANUAL_PAGE_SIZE : PAGE_SIZE,
     }),
-    [search, effectiveStatus, locationFilter, classFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
+    [search, effectiveStatus, effectiveIsDraft, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
+  )
+
+  // Everything matching the current filters *except* the status/draft constraint each tab applies,
+  // so a tab's count reflects what it would actually reveal. One extra fetch against the mock API —
+  // swap for a dedicated counts endpoint once the backend exists.
+  const tabCountParams = useMemo(
+    () => ({
+      search: search || undefined,
+      status: 'Any' as const,
+      location: locationFilter,
+      vehicleType: typeFilter as (typeof VEHICLE_TYPES)[number] | 'All',
+      transmission: transmissionFilter,
+      fuelType: fuelTypeFilter,
+      priceBands,
+      page: 1,
+      pageSize: MANUAL_PAGE_SIZE,
+    }),
+    [search, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands],
   )
 
   const { data, isLoading, isError, refetch } = useVehicles(listParams)
+  const { data: tabCountData } = useVehicles(tabCountParams)
   const { data: fleetData } = useVehicles({ page: 1, pageSize: 1000 })
   const deleteVehicle = useDeleteVehicle()
+
+  // Mirrors the tab→query mapping above: "All" still honours the Status dropdown, the status tabs
+  // exclude drafts, and "Drafts" counts only drafts.
+  const countable = tabCountData?.items ?? []
+  const tabCounts: Record<Tab, number> = {
+    All: countable.filter((v) => statusFilter === 'Any' || v.status === statusFilter).length,
+    Available: countable.filter((v) => !v.isDraft && v.status === 'Available').length,
+    'On rent': countable.filter((v) => !v.isDraft && v.status === 'On rent').length,
+    Maintenance: countable.filter((v) => !v.isDraft && v.status === 'Maintenance').length,
+    Drafts: countable.filter((v) => v.isDraft).length,
+  }
 
   const resetToFirstPage = () => setPage(1)
 
@@ -239,13 +273,13 @@ export function VehiclesPage() {
           },
           {
             label: t('filters.vehicleType'),
-            value: classFilter === 'All' ? tCommon('filters.all') : domain.label('vehicleClass', classFilter),
+            value: typeFilter === 'All' ? tCommon('filters.all') : domain.label('vehicleType', typeFilter),
             options: [
               { value: 'All', label: tCommon('filters.all') },
-              ...VEHICLE_CLASSES.map((c) => ({ value: c, label: domain.label('vehicleClass', c) })),
+              ...VEHICLE_TYPES.map((c) => ({ value: c, label: domain.label('vehicleType', c) })),
             ],
             onChange: (value) => {
-              setClassFilter(value)
+              setTypeFilter(value)
               resetToFirstPage()
             },
           },
@@ -297,13 +331,14 @@ export function VehiclesPage() {
         <LoadingState label={t('list.loading')} />
       ) : isError ? (
         <ErrorState description={t('list.loadError')} onRetry={() => refetch()} />
-      ) : rows.length === 0 ? (
-        <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
       ) : (
+        // Rendered even with no rows so the tabs stay reachable — otherwise selecting an empty
+        // tab (e.g. "Drafts (0)") would unmount the only way back to a non-empty one.
         <RecordTable
           tabs={TABS.map((value) => ({
             key: value,
             label: t(`list.tabs.${value}`),
+            count: tabCounts[value],
             selected: tab === value,
             onClick: () => {
               setTab(value)
@@ -372,6 +407,7 @@ export function VehiclesPage() {
           pagination={!manualOrderMode && data ? { page: data.page, hasNextPage: data.page < data.totalPages, onPageChange: setPage } : undefined}
           reorderable={manualOrderMode}
           onReorder={handleReorder}
+          emptyState={<EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />}
         />
       )}
 
