@@ -2,10 +2,15 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { DashboardLayout } from '@/app/layouts/DashboardLayout'
+import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { ProtectedRoute } from './protected-route'
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
+const SignUpPage = lazy(() => import('@/pages/auth/SignUpPage').then((m) => ({ default: m.SignUpPage })))
+const OnboardingPage = lazy(() =>
+  import('@/pages/auth/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
+)
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })))
 const VehiclesPage = lazy(() => import('@/pages/vehicles/VehiclesPage').then((m) => ({ default: m.VehiclesPage })))
 const VehicleFormPage = lazy(() => import('@/pages/vehicles/VehicleFormPage').then((m) => ({ default: m.VehicleFormPage })))
@@ -32,48 +37,58 @@ function withSuspense(element: React.ReactNode) {
 }
 
 export const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/app/dashboard" replace /> },
-
   {
-    element: <AuthLayout />,
-    children: [{ path: '/login', element: withSuspense(<LoginPage />) }],
-  },
-
-  {
-    path: '/app',
-    element: <ProtectedRoute />,
+    element: <ClerkRouterProvider />,
     children: [
+      { path: '/', element: <Navigate to="/app/dashboard" replace /> },
+
       {
-        element: <DashboardLayout />,
+        element: <AuthLayout />,
         children: [
-          { index: true, element: <Navigate to="dashboard" replace /> },
-          { path: 'dashboard', element: withSuspense(<DashboardPage />) },
-
-          { path: 'vehicles', element: withSuspense(<VehiclesPage />) },
-          { path: 'vehicles/new', element: withSuspense(<VehicleFormPage />) },
-          { path: 'vehicles/:vehicleId', element: withSuspense(<VehicleDetailsPage />) },
-          { path: 'vehicles/:vehicleId/edit', element: withSuspense(<VehicleFormPage />) },
-
-          { path: 'bookings', element: withSuspense(<BookingsPage />) },
-          { path: 'bookings/new', element: withSuspense(<BookingFormPage />) },
-          { path: 'bookings/:bookingId', element: withSuspense(<BookingDetailsPage />) },
-
-          { path: 'customers', element: withSuspense(<CustomersPage />) },
-          { path: 'customers/:customerId', element: withSuspense(<CustomerDetailsPage />) },
-
-          { path: 'payments', element: withSuspense(<PaymentsPage />) },
-          { path: 'locations', element: withSuspense(<LocationsPage />) },
-          { path: 'pricing', element: withSuspense(<PricingPage />) },
-
-          { path: 'settings', element: withSuspense(<SettingsPage />) },
-          { path: 'settings/organization', element: withSuspense(<SettingsPage />) },
-          { path: 'settings/users', element: withSuspense(<SettingsPage />) },
-          { path: 'settings/roles', element: withSuspense(<SettingsPage />) },
-          { path: 'settings/billing', element: withSuspense(<SettingsPage />) },
+          // Splat paths: Clerk's own screens (verification, SSO callback, ...) live under these.
+          { path: '/login/*', element: withSuspense(<LoginPage />) },
+          { path: '/sign-up/*', element: withSuspense(<SignUpPage />) },
+          { path: '/onboarding', element: withSuspense(<OnboardingPage />) },
         ],
       },
+
+      {
+        path: '/app',
+        element: <ProtectedRoute />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: [
+              { index: true, element: <Navigate to="dashboard" replace /> },
+              { path: 'dashboard', element: withSuspense(<DashboardPage />) },
+
+              { path: 'vehicles', element: withSuspense(<VehiclesPage />) },
+              { path: 'vehicles/new', element: withSuspense(<VehicleFormPage />) },
+              { path: 'vehicles/:vehicleId', element: withSuspense(<VehicleDetailsPage />) },
+              { path: 'vehicles/:vehicleId/edit', element: withSuspense(<VehicleFormPage />) },
+
+              { path: 'bookings', element: withSuspense(<BookingsPage />) },
+              { path: 'bookings/new', element: withSuspense(<BookingFormPage />) },
+              { path: 'bookings/:bookingId', element: withSuspense(<BookingDetailsPage />) },
+
+              { path: 'customers', element: withSuspense(<CustomersPage />) },
+              { path: 'customers/:customerId', element: withSuspense(<CustomerDetailsPage />) },
+
+              { path: 'payments', element: withSuspense(<PaymentsPage />) },
+              { path: 'locations', element: withSuspense(<LocationsPage />) },
+              { path: 'pricing', element: withSuspense(<PricingPage />) },
+
+              { path: 'settings', element: withSuspense(<SettingsPage />) },
+              { path: 'settings/organization', element: withSuspense(<SettingsPage />) },
+              { path: 'settings/users', element: withSuspense(<SettingsPage />) },
+              { path: 'settings/roles', element: withSuspense(<SettingsPage />) },
+              { path: 'settings/billing', element: withSuspense(<SettingsPage />) },
+            ],
+          },
+        ],
+      },
+
+      { path: '*', element: withSuspense(<NotFoundPage />) },
     ],
   },
-
-  { path: '*', element: withSuspense(<NotFoundPage />) },
 ])

@@ -25,12 +25,28 @@ export function normalizeApiError(error: unknown): ApiError {
     const { status, data } = error.response
     const kind = STATUS_TO_KIND[status] ?? (status >= 500 ? 'server_error' : 'unknown')
     const fieldErrors = extractFieldErrors(data)
-    const message = extractMessage(data) ?? defaultMessageFor(kind)
+    const backendError = extractBackendError(data)
+    const message = backendError?.message ?? extractMessage(data) ?? defaultMessageFor(kind)
 
-    return new ApiError(kind, message, { status, fieldErrors, cause: error })
+    return new ApiError(kind, message, { status, fieldErrors, code: backendError?.code, cause: error })
   }
 
   return new ApiError('unknown', i18n.t('validation:api.unknown'), { cause: error })
+}
+
+/**
+ * The backend renders every error as `{error: {code, message, details}}`
+ * (app/core/errors.py). The `code` is what callers branch on — HTTP status alone
+ * cannot tell `user_not_onboarded` apart from any other 403.
+ */
+function extractBackendError(data: unknown): { code: string; message?: string } | undefined {
+  if (!data || typeof data !== 'object' || !('error' in data)) return undefined
+  const { error } = data as { error: unknown }
+  if (!error || typeof error !== 'object' || !('code' in error)) return undefined
+
+  const { code, message } = error as { code: unknown; message?: unknown }
+  if (typeof code !== 'string') return undefined
+  return { code, message: typeof message === 'string' ? message : undefined }
 }
 
 function extractMessage(data: unknown): string | undefined {

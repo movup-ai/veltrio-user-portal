@@ -1,79 +1,63 @@
 import { apiClient } from '@/services/api/client'
-import { mockDelay, useMocks } from '@/lib/mock'
-import type { OrganizationMembership, Permission, User } from '@/types/user'
+import { ROLE_PERMISSIONS } from '@/utils/permissions'
+import type { ID } from '@/types/common'
+import type { MembershipRole, OrganizationMembership, User } from '@/types/user'
 
-export interface LoginPayload {
-  email: string
-  password: string
+/** Self-reported band, not a count — mirrors the backend's FleetSize enum. */
+export const FLEET_SIZES = ['1_10', '11_50', '51_200', '200_plus'] as const
+export type FleetSize = (typeof FLEET_SIZES)[number]
+
+/** One row of `GET /auth/me`'s `memberships` — a tenant the user belongs to. */
+export interface TenantMembership {
+  tenantId: ID
+  tenantName: string
+  subdomain: string
+  role: MembershipRole
 }
 
-export interface LoginResponse {
+export interface MeResponse {
   user: User
-  accessToken: string
-  memberships: OrganizationMembership[]
+  memberships: TenantMembership[]
 }
 
-const ALL_PERMISSIONS: Permission[] = [
-  'vehicles.read',
-  'vehicles.create',
-  'vehicles.update',
-  'vehicles.delete',
-  'bookings.read',
-  'bookings.create',
-  'bookings.update',
-  'bookings.cancel',
-  'customers.read',
-  'customers.create',
-  'customers.update',
-  'payments.read',
-  'payments.refund',
-  'locations.read',
-  'locations.manage',
-  'pricing.read',
-  'pricing.manage',
-  'settings.manage',
-  'users.manage',
-]
+export interface RegisterTenantPayload {
+  tenantName: string
+  subdomain: string
+  timezone: string
+  ownerFullName: string
+  country: string
+  fleetSize: FleetSize
+  website?: string
+}
 
-/**
- * Dev-only stand-in for the FastAPI auth endpoints (gated by VITE_USE_MOCKS,
- * see .env.example). Accepts any email/password so the app is explorable
- * before the backend exists — swap this out once /auth/login is live.
- */
-function mockLogin(payload: LoginPayload): LoginResponse {
+export interface RegisterTenantResponse {
+  tenant: { id: ID; name: string; subdomain: string; timezone: string }
+  user: User
+  role: MembershipRole
+}
+
+/** The portal's "organization" is the backend's tenant; permissions come from the role. */
+export function toOrganizationMembership(membership: TenantMembership): OrganizationMembership {
   return {
-    user: { id: 'usr_dev', email: payload.email, fullName: 'Diego Rivas' },
-    accessToken: 'dev-mock-token',
-    memberships: [
-      {
-        organizationId: 'org_sunstate',
-        organizationName: 'Sunstate Car Co.',
-        role: 'owner',
-        permissions: ALL_PERMISSIONS,
-      },
-    ],
+    organizationId: membership.tenantId,
+    organizationName: membership.tenantName,
+    role: membership.role,
+    permissions: ROLE_PERMISSIONS[membership.role],
   }
 }
 
 /**
- * Thin wrapper around the not-yet-finalized FastAPI auth endpoints.
- * Shape is a best guess documented here so it's easy to update once the
- * backend contract lands — nothing outside this file should assume
- * these exact fields.
+ * Identity itself lives in Clerk — there is no login endpoint here. These two
+ * calls map a verified Clerk session onto the platform account: `/auth/me`
+ * resolves it to a user plus tenant memberships, and `/auth/register-tenant`
+ * creates them at the end of onboarding.
+ *
+ * Both always hit the real backend: VITE_USE_MOCKS covers business data, not the
+ * session the rest of the app is gated on.
  */
 export const authApi = {
-  login: (payload: LoginPayload) => {
-    if (useMocks) return mockDelay(mockLogin(payload))
-    return apiClient.post<LoginResponse>('/auth/login', payload).then((r) => r.data)
-  },
+  getMe: () => apiClient.get<MeResponse>('/auth/me').then((r) => r.data),
 
-  logout: () => {
-    if (useMocks) return mockDelay(undefined)
-    return apiClient.post<void>('/auth/logout').then((r) => r.data)
-  },
-
-  getCurrentUser: () => {
-    if (useMocks) return mockDelay(mockLogin({ email: 'diego@sunstatecarco.com', password: '' }))
-    return apiClient.get<LoginResponse>('/auth/me').then((r) => r.data)
-  },
+  registerTenant: (payload: RegisterTenantPayload) =>
+    apiClient.post<RegisterTenantResponse>('/auth/register-tenant', payload).then((r) => r.data),
 }

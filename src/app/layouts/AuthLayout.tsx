@@ -13,9 +13,8 @@ export function AuthLayout() {
         </div>
         <span className="text-section-title">{t('brand')}</span>
       </div>
-      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8 shadow-sm">
-        <Outlet />
-      </div>
+      {/* Each screen brings its own card: Clerk's components are already framed. */}
+      <Outlet />
     </div>
   )
 }

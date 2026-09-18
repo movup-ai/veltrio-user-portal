@@ -3,13 +3,18 @@ import { expect, test } from '@playwright/test'
 test('redirects unauthenticated users from a protected route to login', async ({ page }) => {
   await page.goto('/app/dashboard')
   await expect(page).toHaveURL(/\/login$/)
-  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
+  await expect(page.getByText('Sign in to Veltrio')).toBeVisible()
 })
 
-test('shows validation errors when submitting the login form empty', async ({ page }) => {
+test('offers sign-up from the login screen', async ({ page }) => {
   await page.goto('/login')
-  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.getByRole('link', { name: 'Sign up' }).click()
 
-  await expect(page.getByText('Email is required')).toBeVisible()
-  await expect(page.getByText('Password is required')).toBeVisible()
+  await expect(page).toHaveURL(/\/sign-up$/)
+  await expect(page.getByText('Create your account')).toBeVisible()
+})
+
+test('sends an unauthenticated visitor away from onboarding', async ({ page }) => {
+  await page.goto('/onboarding')
+  await expect(page).toHaveURL(/\/login$/)
 })
