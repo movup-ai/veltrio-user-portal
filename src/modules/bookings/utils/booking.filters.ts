@@ -4,10 +4,11 @@ import {
   BOOKING_VALUE_BANDS,
   type BookingFilters,
   type BookingLists,
-  type BookingPickupRange,
+  type BookingSort,
   type BookingTab,
   type BookingTuple,
 } from '../types/booking.types'
+import type { DateRange } from '@/components/ui/date-range-picker'
 import { parseRentalWindow } from './booking.schedule'
 import { parseBookingTotal } from './booking.utils'
 
@@ -50,15 +51,6 @@ export function bookingMake(b: BookingTuple): string {
 /** Every make present in the given bookings, alphabetical — feeds the Vehicle make filter. */
 export function bookingMakes(bookings: BookingTuple[]): string[] {
   return [...new Set(bookings.map(bookingMake).filter(Boolean))].sort((a, b) => a.localeCompare(b))
-}
-
-/** Offsets in days from `MOCK_TODAY`, inclusive at both ends. */
-const PICKUP_OFFSETS: Record<Exclude<BookingPickupRange, 'any'>, [from: number, to: number]> = {
-  next7: [0, 7],
-  next14: [0, 14],
-  next30: [0, 30],
-  past7: [-7, 0],
-  past30: [-30, 0],
 }
 
 export const EMPTY_BOOKING_LISTS: BookingLists = { upcoming: [], recent: [], schedule: [] }
@@ -105,12 +97,59 @@ function matchesValueBands(b: BookingTuple, values: BookingFilters['valueBands']
   })
 }
 
-function matchesPickup(b: BookingTuple, range: BookingPickupRange): boolean {
-  if (range === 'any') return true
-  const [from, to] = PICKUP_OFFSETS[range]
+/** `YYYY-MM-DD` → the same month·day ordinal the seeded windows produce. */
+function dateOrdinal(value: string): number {
+  const [, month, day] = value.split('-').map(Number)
+  if (!month || !day) return Number.NaN
+  return ordinal(month - 1, day)
+}
+
+/**
+ * Inclusive at both ends, and blank on either side means unbounded there. Compared on month·day
+ * only, so a span crossing new year won't behave — the seeded windows carry no year to compare
+ * against. Revisit once bookings come from an API with real dates.
+ */
+function matchesPickup(b: BookingTuple, range: DateRange): boolean {
+  if (!range.from && !range.to) return true
   const pickup = bookingPickupOrdinal(b)
   if (Number.isNaN(pickup)) return false
-  return pickup >= MOCK_TODAY + from && pickup <= MOCK_TODAY + to
+  if (range.from && pickup < dateOrdinal(range.from)) return false
+  if (range.to && pickup > dateOrdinal(range.to)) return false
+  return true
+}
+
+/**
+ * References are issued in order ("BK-48210" then "BK-48211"), so their number stands in for a
+ * created-at the tuples don't carry. Swap for the real timestamp once bookings come from the API.
+ */
+function bookingSequence(b: BookingTuple): number {
+  const digits = b[1].replace(/\D/g, '')
+  return digits ? Number(digits) : 0
+}
+
+/**
+ * Ordered copy — never in place, since the caller's array is the query cache's own data.
+ * Refunds sort on their signed total, so a credit sits at the bottom of a high-to-low list
+ * rather than masquerading as a large booking.
+ */
+export function sortBookings(bookings: BookingTuple[], sort: BookingSort): BookingTuple[] {
+  const sorted = [...bookings]
+
+  switch (sort) {
+    case 'oldest':
+      return sorted.sort((a, b) => bookingSequence(a) - bookingSequence(b))
+    case 'pickupAsc':
+      return sorted.sort((a, b) => bookingPickupOrdinal(a) - bookingPickupOrdinal(b))
+    case 'pickupDesc':
+      return sorted.sort((a, b) => bookingPickupOrdinal(b) - bookingPickupOrdinal(a))
+    case 'totalDesc':
+      return sorted.sort((a, b) => parseBookingTotal(b[8]) - parseBookingTotal(a[8]))
+    case 'totalAsc':
+      return sorted.sort((a, b) => parseBookingTotal(a[8]) - parseBookingTotal(b[8]))
+    case 'newest':
+    default:
+      return sorted.sort((a, b) => bookingSequence(b) - bookingSequence(a))
+  }
 }
 
 export function filterBookings(bookings: BookingTuple[], f: BookingFilters): BookingTuple[] {

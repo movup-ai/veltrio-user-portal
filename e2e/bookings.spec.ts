@@ -64,6 +64,109 @@ test('filters the bookings list from the More filters popover', async ({ page })
   await expect(page.getByText('Caleb Onyango')).not.toBeVisible()
 })
 
+test('opens a booking from the list and shows its full record', async ({ page }) => {
+  await page.goto('/app/bookings')
+  await page.getByRole('cell').filter({ hasText: 'BK-48210' }).click()
+
+  await expect(page).toHaveURL(/\/app\/bookings\/BK-48210$/)
+  await expect(page.getByRole('heading', { name: 'BK-48210' })).toBeVisible()
+
+  // Progress: BK-48210 is Confirmed, so two of the five stages are behind it.
+  await expect(page.getByText('Stage 2 of 5')).toBeVisible()
+
+  // Payment carries the itemization, billed at the vehicle's list rate and reconciling to the
+  // total the list showed. The breakdown lives here and nowhere else.
+  await expect(page.getByRole('heading', { name: 'Payment' })).toBeVisible()
+  await expect(page.getByText('$189 × 4 days')).toBeVisible()
+  await expect(page.getByText('$1,240').first()).toBeVisible()
+  await expect(page.getByText('Paid', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Invoice' })).toBeVisible()
+  await expect(page.getByText('Security deposit')).toBeVisible()
+
+  // Renter and checklist render against the seeded customer.
+  await expect(page.getByText('marisol.vega@hey.com')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Checklist' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Verify' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Manage booking' })).toBeVisible()
+
+  // The vehicle link is real — it goes to that car's page.
+  await page.getByRole('button', { name: 'Open vehicle' }).click()
+  await expect(page).toHaveURL(/\/app\/vehicles\/veh_1$/)
+})
+
+test('reorders the list from the sort control', async ({ page }) => {
+  await page.goto('/app/bookings')
+
+  const firstCustomer = page.getByRole('row').nth(1).getByRole('cell').first()
+
+  // Newest first by default — Samir's BK-48228 is the last reference issued among the upcoming.
+  await expect(firstCustomer).toContainText('Samir Qureshi')
+
+  await page.getByRole('button', { name: 'Sort bookings' }).click()
+  await page.getByRole('menuitem', { name: 'Total (high → low)' }).click()
+
+  // Hélène's $1,673 is the largest of the upcoming bookings.
+  await expect(firstCustomer).toContainText('Hélène Brassard')
+
+  await page.getByRole('button', { name: 'Sort bookings' }).click()
+  await page.getByRole('menuitem', { name: 'Oldest first' }).click()
+
+  // Marisol's BK-48210 is the earliest reference in the set.
+  await expect(firstCustomer).toContainText('Marisol Vega')
+})
+
+/**
+ * Clicks one day inside an already-open calendar popover, paging until that month is on screen.
+ * Unlike `pickDate` this copes with the two-month range grid, where the wanted month may be
+ * either pane.
+ */
+async function pickDayInOpenCalendar(page: Page, iso: string) {
+  const [year, month, day] = iso.split('-').map(Number)
+  const target = new Date(year, month - 1, 1)
+  const dialog = page.getByRole('dialog')
+  const monthName = target.toLocaleString('en-US', { month: 'long' })
+  const dayButton = dialog.getByRole('button', { name: new RegExp(`${monthName} ${day}(st|nd|rd|th), ${year}`) })
+
+  for (let i = 0; i < 24 && (await dayButton.count()) === 0; i += 1) {
+    const shown = new Date(`1 ${await dialog.getByRole('grid').first().getAttribute('aria-label')}`)
+    const direction = shown < target ? 'Go to the Next Month' : 'Go to the Previous Month'
+    await dialog.getByRole('button', { name: direction }).click()
+  }
+
+  await dayButton.first().click()
+}
+
+test('filters the list to bookings picked up inside a chosen date range', async ({ page }) => {
+  const year = new Date().getFullYear()
+  await page.goto('/app/bookings')
+
+  // Six upcoming bookings start Sep 14; only Hélène and Samir start Sep 15.
+  await expect(page.getByText('Marisol Vega')).toBeVisible()
+
+  // One click is already a one-day range, but nothing is applied until Done.
+  await page.getByRole('button', { name: /^Pickup Any dates$/ }).click()
+  await pickDayInOpenCalendar(page, `${year}-09-15`)
+  await expect(page.getByText('Marisol Vega')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Done' }).click()
+  await expect(page.getByRole('button', { name: /^Pickup Sep 15$/ })).toBeVisible()
+  await expect(page.getByText('Hélène Brassard')).toBeVisible()
+  await expect(page.getByText('Marisol Vega')).not.toBeVisible()
+
+  // Extending the range back over the 14th brings the rest of the week in again.
+  await page.getByRole('button', { name: /^Pickup Sep 15$/ }).click()
+  await pickDayInOpenCalendar(page, `${year}-09-14`)
+  await page.getByRole('button', { name: 'Done' }).click()
+  await expect(page.getByRole('button', { name: /^Pickup Sep 14 – Sep 15$/ })).toBeVisible()
+  await expect(page.getByText('Marisol Vega')).toBeVisible()
+
+  // Clear needs no confirming — it drops the filter and closes.
+  await page.getByRole('button', { name: /^Pickup Sep 14 – Sep 15$/ }).click()
+  await page.getByRole('button', { name: 'Clear' }).click()
+  await expect(page.getByRole('button', { name: /^Pickup Any dates$/ })).toBeVisible()
+  await expect(page.getByText('Caleb Onyango')).toBeVisible()
+})
+
 test('creates a booking and shows it at the top of the list', async ({ page }) => {
   await page.goto('/app/bookings/new')
   await expect(page.getByRole('heading', { name: 'New booking' })).toBeVisible()

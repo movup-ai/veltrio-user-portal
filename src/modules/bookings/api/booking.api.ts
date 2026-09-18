@@ -1,7 +1,8 @@
 import { apiClient } from '@/services/api/client'
 import { mockDelay, useMocks } from '@/lib/mock'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '../mock/booking.mock'
-import type { Booking, BookingInput, BookingLists, BookingTuple } from '../types/booking.types'
+import type { Booking, BookingDetails, BookingInput, BookingLists, BookingTuple } from '../types/booking.types'
+import { buildBookingDetails } from '../utils/booking.details'
 import { scheduleFromBookings, scheduleFromTuples } from '../utils/booking.schedule'
 import { bookingToTuple } from '../utils/booking.utils'
 
@@ -41,6 +42,18 @@ export const bookingApi = {
   list: () => {
     if (useMocks) return mockDelay(mockList())
     return apiClient.get<BookingLists>('/bookings').then((r) => r.data)
+  },
+
+  detail: (reference: string) => {
+    if (useMocks) {
+      const lists = mockList()
+      const tuple = [...lists.upcoming, ...lists.recent].find((b) => b[1] === reference)
+      if (!tuple) return Promise.reject(new Error(`Booking ${reference} not found`))
+      // Session-created bookings pass their own record through, so their drivers and fees are
+      // itemized exactly instead of being inferred from the row's display text.
+      return mockDelay(buildBookingDetails(tuple, created.find((b) => b.reference === reference)))
+    }
+    return apiClient.get<BookingDetails>(`/bookings/${reference}`).then((r) => r.data)
   },
 
   create: (input: BookingInput) => {

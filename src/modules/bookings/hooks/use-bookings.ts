@@ -8,6 +8,7 @@ import type { BookingInput } from '../types/booking.types'
 export const bookingKeys = {
   all: ['bookings'] as const,
   lists: () => [...bookingKeys.all, 'list'] as const,
+  detail: (reference: string) => [...bookingKeys.all, 'detail', reference] as const,
 }
 
 export function useBookings() {
@@ -15,6 +16,14 @@ export function useBookings() {
     queryKey: bookingKeys.lists(),
     queryFn: () => bookingApi.list(),
     placeholderData: (previous) => previous,
+  })
+}
+
+export function useBookingDetails(reference: string | undefined) {
+  return useQuery({
+    queryKey: bookingKeys.detail(reference ?? ''),
+    queryFn: () => bookingApi.detail(reference as string),
+    enabled: Boolean(reference),
   })
 }
 
