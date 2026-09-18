@@ -10,13 +10,13 @@
     "filters": {
       "status": "Status",
       "scope": "Scope",
-      "scopeValue": "All classes"
+      "scopeValue": "All vehicle types"
     },
     "stats": {
       "activeRules": "Active rules",
       "activeRulesNote": "1 scheduled, 1 paused",
       "blendedRate": "Blended rate",
-      "blendedRateNote": "Across all classes",
+      "blendedRateNote": "Across all vehicle types",
       "upliftEarned": "Uplift earned (MTD)",
       "upliftEarnedNote": "6.5% of gross revenue"
     }

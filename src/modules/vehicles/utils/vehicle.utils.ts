@@ -4,9 +4,23 @@ import type { Row, RowActionItem } from '@/components/data-display/record-table.
 import { formatCurrency, formatNumberIn, currentLanguage } from '@/i18n/formatters'
 import { translateDomain, translateDurationUnit } from '@/i18n/domain'
 import type { VehicleFormValues } from '../schema/vehicle.schema'
-import type { RateOption, Vehicle } from '../types/vehicle.types'
+import type { RateOption, Vehicle, VehicleInput } from '../types/vehicle.types'
 
 export { formatCurrency }
+
+/**
+ * Strips the server-assigned keys so an existing vehicle can be sent straight back through
+ * update/create. Preferred over hand-listing fields at the call site — a hand-written payload
+ * silently drops any field later added to Vehicle, wiping it on save.
+ */
+export function vehicleToInput({
+  id: _id,
+  createdAt: _createdAt,
+  utilization: _utilization,
+  ...input
+}: Vehicle): VehicleInput {
+  return input
+}
 
 /** Flattens a Vehicle's nested specs/fees into the form's flat shape — used to prefill Edit and Duplicate. */
 export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
@@ -14,7 +28,7 @@ export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
     make: vehicle.make,
     model: vehicle.model,
     year: vehicle.year,
-    class: vehicle.class,
+    vehicleType: vehicle.vehicleType,
     color: vehicle.color,
     plate: vehicle.plate,
     vin: vehicle.vin,
@@ -60,9 +74,9 @@ export function vehicleInitials(v: Vehicle): string {
   return letters ? letters.toUpperCase() : '—'
 }
 
-/** "Sedan · 2024" — the class is translated, the year is not. Either part may be missing on a draft. */
+/** "Sedan · 2024" — the vehicle type is translated, the year is not. Either part may be missing on a draft. */
 export function vehicleSubtitle(v: Vehicle): string {
-  return [v.class ? translateDomain('vehicleClass', v.class) : '', Number.isFinite(v.year) ? String(v.year) : '']
+  return [v.vehicleType ? translateDomain('vehicleType', v.vehicleType) : '', Number.isFinite(v.year) ? String(v.year) : '']
     .filter(Boolean)
     .join(' · ')
 }

@@ -35,7 +35,7 @@ export function VehicleSpecs({ vehicle }: { vehicle: Vehicle }) {
   const items: SpecItem[] = [
     { label: t('specs.make'), value: vehicle.make, emphasize: true },
     { label: t('specs.model'), value: vehicle.model, emphasize: true },
-    { label: t('specs.vehicleType'), value: domain.label('vehicleClass', vehicle.class) },
+    { label: t('specs.vehicleType'), value: domain.label('vehicleType', vehicle.vehicleType) },
     { label: t('specs.year'), value: vehicle.year },
     { label: t('specs.color'), value: vehicle.color },
     { label: t('specs.plate'), value: vehicle.plate, emphasize: true },

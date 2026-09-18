@@ -5,7 +5,7 @@
     "yearInvalid": "Introduzca un año válido",
     "yearTooEarly": "El año debe ser 1990 o posterior",
     "yearTooLate": "El año está demasiado lejos en el futuro",
-    "classRequired": "Seleccione un tipo de vehículo",
+    "vehicleTypeRequired": "Seleccione un tipo de vehículo",
     "colorRequired": "El color es obligatorio",
     "plateRequired": "La matrícula es obligatoria",
     "plateInvalid": "La matrícula contiene caracteres no válidos",

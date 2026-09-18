@@ -6,7 +6,7 @@ import {
   DURATION_UNITS,
   FUEL_TYPES,
   TRANSMISSIONS,
-  VEHICLE_CLASSES,
+  VEHICLE_TYPES,
   VEHICLE_FEATURES,
   VEHICLE_STATUSES,
 } from '../types/vehicle.types'
@@ -76,7 +76,7 @@ export function vehicleFormSchema(t: ValidationT) {
       .int()
       .min(1990, t('vehicle.yearTooEarly'))
       .max(new Date().getFullYear() + 1, t('vehicle.yearTooLate')),
-    class: z.enum(VEHICLE_CLASSES, { message: t('vehicle.classRequired') }),
+    vehicleType: z.enum(VEHICLE_TYPES, { message: t('vehicle.vehicleTypeRequired') }),
     color: z.string().min(1, t('vehicle.colorRequired')).max(30),
     plate: z
       .string()
@@ -116,7 +116,7 @@ export const STEP_FIELDS = {
     'make',
     'model',
     'year',
-    'class',
+    'vehicleType',
     'color',
     'plate',
     'vin',

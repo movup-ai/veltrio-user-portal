@@ -37,6 +37,7 @@ import {
   formatRateOptionPrice,
   vehicleDisplayName,
   vehicleSubtitle,
+  vehicleToInput,
 } from '@/modules/vehicles/utils/vehicle.utils'
 
 /** Statuses that mean the money never landed — excluded from booked-value totals. */
@@ -149,26 +150,7 @@ export function VehicleDetailsPage() {
   const nextVehicleId = fleetIndex >= 0 && fleetIndex < fleetIds.length - 1 ? fleetIds[fleetIndex + 1] : undefined
 
   const handleStatusChange = (status: VehicleStatus) => {
-    updateVehicle.mutate({
-      make: vehicle.make,
-      model: vehicle.model,
-      year: vehicle.year,
-      class: vehicle.class,
-      color: vehicle.color,
-      plate: vehicle.plate,
-      vin: vehicle.vin,
-      location: vehicle.location,
-      mileage: vehicle.mileage,
-      description: vehicle.description,
-      notes: vehicle.notes,
-      photos: vehicle.photos,
-      rateOptions: vehicle.rateOptions,
-      fees: vehicle.fees,
-      specs: vehicle.specs,
-      // Carried through untouched — omitting it would blank the vehicle's features on a status change.
-      features: vehicle.features,
-      status,
-    })
+    updateVehicle.mutate({ ...vehicleToInput(vehicle), status })
   }
 
   return (

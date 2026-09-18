@@ -1,13 +1,13 @@
 import i18n from '@/i18n'
 import { ApiError } from '@/types/api'
-import { FUEL_TYPES, TRANSMISSIONS, VEHICLE_CLASSES, type FuelType, type Transmission, type VehicleClass } from '../types/vehicle.types'
+import { FUEL_TYPES, TRANSMISSIONS, VEHICLE_TYPES, type FuelType, type Transmission, type VehicleType } from '../types/vehicle.types'
 import { VEHICLE_MAKES, modelsForMake } from '../data/vehicle-catalog'
 
 export interface VinDecodeResult {
   make?: string
   model?: string
   year?: number
-  vehicleType?: VehicleClass
+  vehicleType?: VehicleType
   transmission?: Transmission
   fuelType?: FuelType
   doors?: number
@@ -32,7 +32,7 @@ function reconcile(value: string, knownOptions: string[]): string {
   return match ?? titleCase(value)
 }
 
-function mapBodyClass(bodyClass: string): VehicleClass | undefined {
+function mapBodyClass(bodyClass: string): VehicleType | undefined {
   const v = bodyClass.toLowerCase()
   if (v.includes('convertible') || v.includes('cabriolet')) return 'Convertible'
   if (v.includes('coupe')) return 'Coupe'
@@ -44,7 +44,7 @@ function mapBodyClass(bodyClass: string): VehicleClass | undefined {
   if (v.includes('suv') || v.includes('sport utility')) return 'SUV'
   if (v.includes('van')) return 'Van'
   if (v.includes('wagon')) return 'Wagon'
-  return VEHICLE_CLASSES.find((c) => v.includes(c.toLowerCase()))
+  return VEHICLE_TYPES.find((c) => v.includes(c.toLowerCase()))
 }
 
 function mapFuelType(fuel: string): FuelType | undefined {

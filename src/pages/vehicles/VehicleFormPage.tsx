@@ -34,7 +34,7 @@ import { STEP_FIELDS, vehicleFormSchema, type VehicleFormValues } from '@/module
 import {
   FUEL_TYPES,
   TRANSMISSIONS,
-  VEHICLE_CLASSES,
+  VEHICLE_TYPES,
   VEHICLE_STATUSES,
   type VehicleInput,
 } from '@/modules/vehicles/types/vehicle.types'
@@ -63,7 +63,7 @@ const EMPTY_VALUES: VehicleFormValues = {
   make: '',
   model: '',
   year: undefined as unknown as number,
-  class: '' as VehicleFormValues['class'],
+  vehicleType: '' as VehicleFormValues['vehicleType'],
   color: '',
   plate: '',
   vin: '',
@@ -93,7 +93,7 @@ function sanitizeFormValues(values: VehicleFormValues): VehicleFormValues {
   return {
     ...EMPTY_VALUES,
     ...values,
-    class: (VEHICLE_CLASSES as readonly string[]).includes(values.class) ? values.class : EMPTY_VALUES.class,
+    vehicleType: (VEHICLE_TYPES as readonly string[]).includes(values.vehicleType) ? values.vehicleType : EMPTY_VALUES.vehicleType,
     status: (VEHICLE_STATUSES as readonly string[]).includes(values.status) ? values.status : EMPTY_VALUES.status,
     transmission: (TRANSMISSIONS as readonly string[]).includes(values.transmission) ? values.transmission : EMPTY_VALUES.transmission,
     fuelType: (FUEL_TYPES as readonly string[]).includes(values.fuelType) ? values.fuelType : EMPTY_VALUES.fuelType,
@@ -106,7 +106,7 @@ function formValuesToVehicleInput(values: VehicleFormValues): VehicleInput {
     make: values.make,
     model: values.model,
     year: values.year,
-    class: values.class,
+    vehicleType: values.vehicleType,
     color: values.color,
     plate: values.plate,
     vin: values.vin,
@@ -253,7 +253,7 @@ function VehicleForm({
       if (decoded.make) { setValue('make', decoded.make, opts); filled.push(fieldName('make')) }
       if (decoded.model) { setValue('model', decoded.model, opts); filled.push(fieldName('model')) }
       if (decoded.year) { setValue('year', decoded.year, opts); filled.push(fieldName('year')) }
-      if (decoded.vehicleType) { setValue('class', decoded.vehicleType, opts); filled.push(fieldName('vehicleType')) }
+      if (decoded.vehicleType) { setValue('vehicleType', decoded.vehicleType, opts); filled.push(fieldName('vehicleType')) }
       if (decoded.transmission) { setValue('transmission', decoded.transmission, opts); filled.push(fieldName('transmission')) }
       if (decoded.fuelType) { setValue('fuelType', decoded.fuelType, opts); filled.push(fieldName('fuelType')) }
       if (decoded.doors) { setValue('doors', decoded.doors, opts); filled.push(fieldName('doors')) }
@@ -287,7 +287,7 @@ function VehicleForm({
           make: watchedValues.make,
           model: watchedValues.model,
           year: watchedValues.year,
-          vehicleType: watchedValues.class,
+          vehicleType: watchedValues.vehicleType,
           color: watchedValues.color,
           transmission: watchedValues.transmission,
           fuelType: watchedValues.fuelType,
@@ -434,22 +434,22 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.vehicleType')} error={errors.class?.message} required>
+                  <FormField label={t('form.fields.vehicleType')} error={errors.vehicleType?.message} required>
                     {({ id }) => (
                       <Controller
                         control={control}
-                        name="class"
+                        name="vehicleType"
                         render={({ field }) => (
                           <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger id={id} aria-invalid={Boolean(errors.class)}>
+                            <SelectTrigger id={id} aria-invalid={Boolean(errors.vehicleType)}>
                               <SelectValue placeholder={t('form.fields.vehicleTypePlaceholder')}>
-                                {field.value ? domain.label('vehicleClass', field.value) : undefined}
+                                {field.value ? domain.label('vehicleType', field.value) : undefined}
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {VEHICLE_CLASSES.map((c) => (
+                              {VEHICLE_TYPES.map((c) => (
                                 <SelectItem key={c} value={c}>
-                                  {domain.label('vehicleClass', c)}
+                                  {domain.label('vehicleType', c)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -821,7 +821,7 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
               {values.make || t('form.review.makeFallback')} {values.model || t('form.review.modelFallback')}
             </p>
             <p className="text-fg-3 text-[13px]">
-              {values.year} · {values.class ? domain.label('vehicleClass', values.class) : ''}
+              {values.year} · {values.vehicleType ? domain.label('vehicleType', values.vehicleType) : ''}
             </p>
           </div>
           {values.status && <StatusBadge status={values.status} />}
@@ -840,7 +840,7 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
               <ReviewRow label={t('specs.year')} value={values.year || '—'} />
               <ReviewRow
                 label={t('specs.vehicleType')}
-                value={values.class ? domain.label('vehicleClass', values.class) : '—'}
+                value={values.vehicleType ? domain.label('vehicleType', values.vehicleType) : '—'}
               />
               <ReviewRow label={t('specs.color')} value={values.color || '—'} />
               {/* Grouped with Identity to mirror the form, where Location sits in the same block. */}

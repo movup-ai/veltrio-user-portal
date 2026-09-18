@@ -10,13 +10,13 @@
     "filters": {
       "status": "Estado",
       "scope": "Alcance",
-      "scopeValue": "Todas las categorías"
+      "scopeValue": "Todos los tipos de vehículo"
     },
     "stats": {
       "activeRules": "Reglas activas",
       "activeRulesNote": "1 programada, 1 pausada",
       "blendedRate": "Tarifa combinada",
-      "blendedRateNote": "En todas las categorías",
+      "blendedRateNote": "En todos los tipos de vehículo",
       "upliftEarned": "Recargo generado (mes en curso)",
       "upliftEarnedNote": "6,5 % de los ingresos brutos"
     }

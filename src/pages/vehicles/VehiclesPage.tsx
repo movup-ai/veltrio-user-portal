@@ -23,7 +23,7 @@ import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/book
 import {
   FUEL_TYPES,
   TRANSMISSIONS,
-  VEHICLE_CLASSES,
+  VEHICLE_TYPES,
   VEHICLE_PRICE_BANDS,
   VEHICLE_SORTS,
   VEHICLE_STATUSES,
@@ -79,7 +79,7 @@ export function VehiclesPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')
-  const [classFilter, setClassFilter] = useState<string>('All')
+  const [typeFilter, setTypeFilter] = useState<string>('All')
   // Applied values actually feed the query; draft values are what the "More filters" popover
   // edits live — they only become "applied" when Apply filters is clicked.
   const [transmissionFilter, setTransmissionFilter] = useState<Transmission | 'Any'>('Any')
@@ -106,7 +106,7 @@ export function VehiclesPage() {
       search: search || undefined,
       status: effectiveStatus,
       location: locationFilter,
-      class: classFilter as (typeof VEHICLE_CLASSES)[number] | 'All',
+      vehicleType: typeFilter as (typeof VEHICLE_TYPES)[number] | 'All',
       transmission: transmissionFilter,
       fuelType: fuelTypeFilter,
       priceBands,
@@ -115,7 +115,7 @@ export function VehiclesPage() {
       page: manualOrderMode ? 1 : page,
       pageSize: manualOrderMode ? MANUAL_PAGE_SIZE : PAGE_SIZE,
     }),
-    [search, effectiveStatus, effectiveIsDraft, locationFilter, classFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
+    [search, effectiveStatus, effectiveIsDraft, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
   )
 
   // Everything matching the current filters *except* the status/draft constraint each tab applies,
@@ -126,14 +126,14 @@ export function VehiclesPage() {
       search: search || undefined,
       status: 'Any' as const,
       location: locationFilter,
-      class: classFilter as (typeof VEHICLE_CLASSES)[number] | 'All',
+      vehicleType: typeFilter as (typeof VEHICLE_TYPES)[number] | 'All',
       transmission: transmissionFilter,
       fuelType: fuelTypeFilter,
       priceBands,
       page: 1,
       pageSize: MANUAL_PAGE_SIZE,
     }),
-    [search, locationFilter, classFilter, transmissionFilter, fuelTypeFilter, priceBands],
+    [search, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands],
   )
 
   const { data, isLoading, isError, refetch } = useVehicles(listParams)
@@ -273,13 +273,13 @@ export function VehiclesPage() {
           },
           {
             label: t('filters.vehicleType'),
-            value: classFilter === 'All' ? tCommon('filters.all') : domain.label('vehicleClass', classFilter),
+            value: typeFilter === 'All' ? tCommon('filters.all') : domain.label('vehicleType', typeFilter),
             options: [
               { value: 'All', label: tCommon('filters.all') },
-              ...VEHICLE_CLASSES.map((c) => ({ value: c, label: domain.label('vehicleClass', c) })),
+              ...VEHICLE_TYPES.map((c) => ({ value: c, label: domain.label('vehicleType', c) })),
             ],
             onChange: (value) => {
-              setClassFilter(value)
+              setTypeFilter(value)
               resetToFirstPage()
             },
           },
