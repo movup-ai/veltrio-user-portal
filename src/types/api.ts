@@ -18,17 +18,20 @@ export class ApiError extends Error {
   readonly kind: ApiErrorKind
   readonly status?: number
   readonly fieldErrors?: ApiFieldError[]
+  /** Backend error code, e.g. `user_not_onboarded` — the only stable thing to branch on. */
+  readonly code?: string
 
   constructor(
     kind: ApiErrorKind,
     message: string,
-    options?: { status?: number; fieldErrors?: ApiFieldError[]; cause?: unknown },
+    options?: { status?: number; fieldErrors?: ApiFieldError[]; code?: string; cause?: unknown },
   ) {
     super(message, { cause: options?.cause })
     this.name = 'ApiError'
     this.kind = kind
     this.status = options?.status
     this.fieldErrors = options?.fieldErrors
+    this.code = options?.code
   }
 }
 

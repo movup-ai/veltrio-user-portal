@@ -26,6 +26,9 @@ export type Permission =
   | 'settings.manage'
   | 'users.manage'
 
+/** Mirrors the backend's MembershipRole (app/modules/users/models.py). */
+export type MembershipRole = 'owner' | 'manager' | 'staff'
+
 export interface User {
   id: ID
   email: string
@@ -41,6 +44,6 @@ export interface User {
 export interface OrganizationMembership {
   organizationId: ID
   organizationName: string
-  role: string
+  role: MembershipRole
   permissions: Permission[]
 }
