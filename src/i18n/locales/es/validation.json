@@ -57,6 +57,7 @@
     "unauthorized": "Su sesión ha expirado. Inicie sesión de nuevo.",
     "forbidden": "No tiene permiso para hacer eso.",
     "notFound": "No se encontró el recurso solicitado.",
+    "conflict": "Eso entra en conflicto con algo que ya existe.",
     "validation": "Parte de la información enviada no es válida.",
     "rateLimited": "Demasiadas solicitudes. Reduzca el ritmo e inténtelo de nuevo.",
     "serverError": "El servidor tuvo un problema. Inténtelo de nuevo en unos momentos.",

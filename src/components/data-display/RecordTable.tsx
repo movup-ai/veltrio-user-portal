@@ -299,11 +299,13 @@ export function RecordTable({
           </button>
           <button
             type="button"
-            disabled={pagination ? !pagination.hasNextPage : false}
+            // Without `pagination` there is nothing to advance to, so match Previous and stay
+            // disabled — otherwise the button invites a click that does nothing.
+            disabled={pagination ? !pagination.hasNextPage : true}
             onClick={() => pagination?.onPageChange(pagination.page + 1)}
             className={cn(
               'h-[30px] rounded-lg border px-[11px] text-[12.5px] font-semibold transition-colors',
-              pagination && !pagination.hasNextPage
+              !pagination || !pagination.hasNextPage
                 ? 'bg-surface border-border text-border-strong cursor-not-allowed'
                 : 'bg-surface border-border text-fg-2 hover:bg-surface-3',
             )}

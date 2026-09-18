@@ -333,7 +333,9 @@ export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): Boo
     vehicleName,
     vehiclePlate: plate,
     vehicleImage: vehicle?.photos[0]?.url,
-    vehicleSubtitle: vehicle ? `${vehicle.class} · ${vehicle.year} · ${vehicle.location}` : location,
+    vehicleSubtitle: vehicle
+      ? `${vehicle.vehicleType} · ${vehicle.year} · ${vehicle.location}`
+      : location,
     listDailyRate,
 
     charges: buildCharges(total, days, listDailyRate, taxRatePct, extras),

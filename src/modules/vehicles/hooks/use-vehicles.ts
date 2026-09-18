@@ -11,6 +11,7 @@ export const vehicleKeys = {
   list: (params: VehicleListParams) => [...vehicleKeys.lists(), params] as const,
   details: () => [...vehicleKeys.all, 'detail'] as const,
   detail: (id: string) => [...vehicleKeys.details(), id] as const,
+  stats: (params: VehicleListParams) => [...vehicleKeys.all, 'stats', params] as const,
 }
 
 /**
@@ -29,6 +30,18 @@ export function useVehicles(params: VehicleListParams) {
   })
 }
 
+/**
+ * Fleet totals for the given filters. Takes the same params as useVehicles so the two stay in
+ * step; page/pageSize are ignored by the endpoint.
+ */
+export function useVehicleStats(params: VehicleListParams) {
+  return useQuery({
+    queryKey: vehicleKeys.stats(params),
+    queryFn: () => vehicleApi.stats(params),
+    placeholderData: (previous) => previous,
+  })
+}
+
 export function useVehicle(id: string | undefined) {
   return useQuery({
     queryKey: vehicleKeys.detail(id ?? ''),
@@ -43,12 +56,10 @@ export function useCreateVehicle() {
   return useMutation({
     mutationFn: (input: VehicleInput) => vehicleApi.create(input),
     onSuccess: (vehicle) => {
-      queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
       toast({
-        title: vehicle.isDraft ? i18n.t('vehicles:toast.draftSaved') : i18n.t('vehicles:toast.added'),
-        description: vehicle.isDraft
-          ? i18n.t('vehicles:toast.draftSavedDescription')
-          : i18n.t('vehicles:toast.addedDescription', { name: vehicleName(vehicle) }),
+        title: i18n.t('vehicles:toast.added'),
+        description: i18n.t('vehicles:toast.addedDescription', { name: vehicleName(vehicle) }),
         variant: 'success',
       })
     },
@@ -64,13 +75,11 @@ export function useUpdateVehicle(id: string) {
   return useMutation({
     mutationFn: (input: VehicleInput) => vehicleApi.update(id, input),
     onSuccess: (vehicle) => {
-      queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
       queryClient.setQueryData(vehicleKeys.detail(id), vehicle)
       toast({
-        title: vehicle.isDraft ? i18n.t('vehicles:toast.draftSaved') : i18n.t('vehicles:toast.updated'),
-        description: vehicle.isDraft
-          ? i18n.t('vehicles:toast.draftSavedDescription')
-          : i18n.t('vehicles:toast.updatedDescription', { name: vehicleName(vehicle) }),
+        title: i18n.t('vehicles:toast.updated'),
+        description: i18n.t('vehicles:toast.updatedDescription', { name: vehicleName(vehicle) }),
         variant: 'success',
       })
     },
@@ -86,7 +95,7 @@ export function useDeleteVehicle() {
   return useMutation({
     mutationFn: (vehicle: Vehicle) => vehicleApi.remove(vehicle.id).then(() => vehicle),
     onSuccess: (vehicle) => {
-      queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
       queryClient.removeQueries({ queryKey: vehicleKeys.detail(vehicle.id) })
       toast({
         title: i18n.t('vehicles:toast.archived'),

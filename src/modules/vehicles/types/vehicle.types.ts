@@ -48,11 +48,32 @@ export interface RateOption {
   unlimitedMileage: boolean
 }
 
+/** Sizes the backend renders for every uploaded photo. */
+export const PHOTO_SIZES = ['thumbnail', 'medium', 'large'] as const
+export type PhotoSize = (typeof PHOTO_SIZES)[number]
+
+/** Upload lifecycle. Variants exist only once a photo is 'ready'. */
+export const PHOTO_STATUSES = ['uploading', 'processing', 'ready', 'failed'] as const
+export type PhotoStatus = (typeof PHOTO_STATUSES)[number]
+
+export interface PhotoVariant {
+  size: PhotoSize
+  width: number
+  height: number
+  url: string
+}
+
 export interface VehiclePhoto {
   id: string
-  /** Object URL (mock) or CDN URL (real backend). */
+  /** Data URL (locally picked file) or the medium CDN variant. Empty while a photo is processing. */
   url: string
   name: string
+  /** Server-side only — every rendered size, for a srcSet. Absent for locally picked files. */
+  variants?: PhotoVariant[]
+  /** Dimensions of the original, for reserving layout space. */
+  width?: number
+  height?: number
+  status?: PhotoStatus
 }
 
 /** Per-vehicle charges that apply regardless of which rate option the renter picks. */
@@ -104,8 +125,21 @@ export interface Vehicle {
   specs: VehicleSpecs
   features: VehicleFeature[]
   createdAt: string
-  /** Saved via "Save & exit" mid-wizard — not yet published to the live fleet. Independent of `status`. */
+  /**
+   * Client-side marker only — never sent to or read from the API. A real draft is a separate
+   * resource (see vehicle-draft.api.ts); this flags the row objects the Drafts tab builds from one.
+   */
   isDraft?: boolean
+}
+
+/** Fleet summary for the current filters, from `GET /vehicles/stats`. */
+export interface VehicleStats {
+  total: number
+  byStatus: Record<VehicleStatus, number>
+  /** Mean lowest daily rate in dollars; undefined when no vehicle has a daily option. */
+  avgDailyRate?: number
+  /** 0-1 fraction, matching Vehicle.utilization. */
+  avgUtilization: number
 }
 
 /** Payload shape for create/update — server assigns id/createdAt/utilization. */
@@ -131,8 +165,6 @@ export interface VehicleListParams {
   transmission?: Transmission | 'Any'
   fuelType?: FuelType | 'Any'
   priceBands?: VehiclePriceBand[]
-  /** true = only drafts, false = only published vehicles, omitted = both. */
-  isDraft?: boolean
   sortBy?: VehicleSort
   page: number
   pageSize: number

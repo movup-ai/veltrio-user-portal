@@ -57,6 +57,7 @@
     "unauthorized": "Your session has expired. Please sign in again.",
     "forbidden": "You don't have permission to do that.",
     "notFound": "The requested resource could not be found.",
+    "conflict": "That conflicts with something that already exists.",
     "validation": "Some of the submitted information is invalid.",
     "rateLimited": "Too many requests. Please slow down and try again.",
     "serverError": "The server ran into a problem. Please try again shortly.",

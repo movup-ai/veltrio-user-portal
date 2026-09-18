@@ -4,7 +4,8 @@ import type { Row, RowActionItem } from '@/components/data-display/record-table.
 import { formatCurrency, formatNumberIn, currentLanguage } from '@/i18n/formatters'
 import { translateDomain, translateDurationUnit } from '@/i18n/domain'
 import type { VehicleFormValues } from '../schema/vehicle.schema'
-import type { RateOption, Vehicle, VehicleInput } from '../types/vehicle.types'
+import type { VehicleDraft } from '../types/vehicle-draft.types'
+import type { RateOption, Vehicle, VehicleInput, VehiclePhoto } from '../types/vehicle.types'
 
 export { formatCurrency }
 
@@ -20,6 +21,48 @@ export function vehicleToInput({
   ...input
 }: Vehicle): VehicleInput {
   return input
+}
+
+/**
+ * Presents a draft as a Vehicle so the Drafts tab can reuse the fleet table. Display only — the
+ * `id` is the draft's, not a vehicle's, and most fields may be blank. The blank-safe helpers
+ * below (vehicleDisplayName, vehicleSubtitle, vehicleInitials) exist for exactly this.
+ */
+export function draftAsVehicle(draft: VehicleDraft): Vehicle {
+  const values = draft.payload
+
+  return {
+    id: draft.id,
+    make: values.make ?? '',
+    model: values.model ?? '',
+    year: values.year as number,
+    vehicleType: values.vehicleType as Vehicle['vehicleType'],
+    color: values.color ?? '',
+    plate: values.plate ?? '',
+    vin: values.vin ?? '',
+    location: values.location ?? '',
+    status: values.status ?? 'Available',
+    mileage: values.mileage ?? 0,
+    utilization: 0,
+    description: values.description,
+    photos: values.photos ?? [],
+    rateOptions: values.rateOptions ?? [],
+    fees: {
+      deposit: values.deposit,
+      overageRatePerMile: values.overageRatePerMile,
+      fuelChargeRate: values.fuelChargeRate,
+      taxRatePct: values.taxRatePct,
+    },
+    specs: {
+      transmission: values.transmission ?? 'Automatic',
+      fuelType: values.fuelType ?? 'Petrol',
+      seats: values.seats ?? 0,
+      doors: values.doors ?? 0,
+    },
+    features: values.features ?? [],
+    createdAt: draft.createdAt,
+    isDraft: true,
+  }
 }
 
 /** Flattens a Vehicle's nested specs/fees into the form's flat shape — used to prefill Edit and Duplicate. */
@@ -79,6 +122,19 @@ export function vehicleSubtitle(v: Vehicle): string {
   return [v.vehicleType ? translateDomain('vehicleType', v.vehicleType) : '', Number.isFinite(v.year) ? String(v.year) : '']
     .filter(Boolean)
     .join(' · ')
+}
+
+/**
+ * `srcSet` over every size the backend rendered, so the browser downloads the one it needs.
+ * Undefined for a locally picked file, which has only its data URL.
+ */
+export function photoSrcSet(photo: VehiclePhoto): string | undefined {
+  return photo.variants?.map((v) => `${v.url} ${v.width}w`).join(', ')
+}
+
+/** Smallest rendered size, for thumbnails. Falls back to whatever url the photo has. */
+export function photoThumbnail(photo: VehiclePhoto): string {
+  return photo.variants?.find((v) => v.size === 'thumbnail')?.url ?? photo.url
 }
 
 /** The per-day rate option, used for list/stat comparisons across the fleet. */

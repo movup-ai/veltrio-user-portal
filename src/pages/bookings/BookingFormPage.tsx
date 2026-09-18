@@ -183,7 +183,7 @@ export function BookingFormPage() {
   const { data, isLoading, isError, refetch } = useVehicles({
     status: 'Available',
     location: values.pickupLocation || 'All',
-    isDraft: false,
+    // Drafts are a separate resource now, so the vehicles list never includes them.
     page: 1,
     pageSize: FLEET_PAGE_SIZE,
   })

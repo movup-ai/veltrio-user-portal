@@ -16,6 +16,8 @@
     "dragToReorder_other": "{{count}} vehicles · drag to reorder",
     "pageNote": "Showing {{from}}–{{to}} of {{total}} vehicles",
     "noneFound": "No vehicles found",
+    "draftsNote": "{{count}} unfinished draft",
+    "draftsNote_other": "{{count}} unfinished drafts",
     "tabs": {
       "All": "All",
       "Available": "Available",
@@ -36,7 +38,9 @@
     "rowActions": {
       "viewDetails": "View details",
       "editVehicle": "Edit vehicle",
-      "archiveVehicle": "Archive vehicle"
+      "archiveVehicle": "Archive vehicle",
+      "continueDraft": "Continue editing",
+      "discardDraft": "Discard draft"
     }
   },
   "filters": {
@@ -157,6 +161,7 @@
   },
   "gallery": {
     "primaryPhoto": "Primary photo · 1600 × 900",
+    "processing": "Processing…",
     "cover": "Cover",
     "showPhoto": "Show {{name}}",
     "goToPage": "Go to photo page {{page}}",
@@ -278,7 +283,8 @@
       "seatsDoors": "Seats / Doors",
       "seatsDoorsValue": "{{seats}} seats · {{doors}} doors",
       "features": "Features"
-    }
+    },
+    "publishFailed": "Could not publish vehicle"
   },
   "rateOptions": {
     "emptyTitle": "No rate options yet",
@@ -315,6 +321,9 @@
   "toast": {
     "draftSaved": "Draft saved",
     "draftSavedDescription": "You can finish this vehicle later from the Drafts tab.",
+    "draftSaveFailed": "Could not save draft",
+    "draftDiscarded": "Draft discarded",
+    "draftDiscardFailed": "Could not discard draft",
     "added": "Vehicle added",
     "addedDescription": "{{name}} was added to the fleet.",
     "addFailed": "Could not add vehicle",
@@ -332,11 +341,13 @@
   },
   "errors": {
     "notFound": "Vehicle not found",
+    "draftNotFound": "Draft not found",
     "vinTooShort": "Enter a full VIN (at least 11 characters) before decoding.",
     "vinServiceUnreachable": "Could not reach the VIN decode service.",
     "vinServiceUnavailable": "VIN decode service is unavailable right now.",
     "vinNoData": "VIN decode service returned no data.",
-    "vinUndecodable": "This VIN could not be decoded."
+    "vinUndecodable": "This VIN could not be decoded.",
+    "vinAlreadyExists": "A vehicle with this VIN already exists in your fleet"
   },
   "features": {
     "title": "Features",

@@ -13,6 +13,9 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // FastAPI reads repeated keys (`?priceBand=0-50&priceBand=200+`) for list-valued query params.
+  // Axios would otherwise emit `priceBand[]=…`, which it ignores.
+  paramsSerializer: { indexes: null },
 })
 
 attachInterceptors(apiClient)

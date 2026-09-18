@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel'
 import { cn } from '@/lib/utils'
+import { photoSrcSet, photoThumbnail } from '../utils/vehicle.utils'
 import type { VehiclePhoto } from '../types/vehicle.types'
 
 /** The shots we prompt for when a vehicle has no photos — mirrors what ops actually needs on file. */
@@ -38,12 +39,23 @@ export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
   return (
     <Card className="overflow-hidden">
       <div className="bg-surface-2 flex aspect-[16/9] items-center justify-center">
-        {active ? (
-          <img src={active.url} alt={active.name} className="size-full object-cover" />
+        {active?.url ? (
+          <img
+            src={active.url}
+            srcSet={photoSrcSet(active)}
+            sizes="(max-width: 1024px) 100vw, 640px"
+            width={active.width}
+            height={active.height}
+            alt={active.name}
+            className="size-full object-cover"
+          />
         ) : (
           <div className="flex flex-col items-center gap-2">
             <Car className="text-fg-4 size-8" aria-hidden />
-            <p className="text-fg-3 text-[12.5px] font-semibold">{t('gallery.primaryPhoto')}</p>
+            <p className="text-fg-3 text-[12.5px] font-semibold">
+              {/* A photo the worker hasn't resized yet has no url — it is listed, just not renderable. */}
+              {active ? t('gallery.processing') : t('gallery.primaryPhoto')}
+            </p>
           </div>
         )}
       </div>
@@ -64,15 +76,21 @@ export function VehiclePhotoGallery({ photos }: { photos: VehiclePhoto[] }) {
                       index === activeIndex ? 'ring-primary ring-2' : 'ring-border hover:ring-border-strong ring-1',
                     )}
                   >
-                    <img
-                      src={photo.url}
-                      alt={photo.name}
-                      className={cn(
-                        'pointer-events-none size-full object-cover transition-opacity',
-                        index === activeIndex ? 'opacity-100' : 'opacity-90 group-hover:opacity-100',
-                      )}
-                      draggable={false}
-                    />
+                    {photo.url ? (
+                      <img
+                        src={photoThumbnail(photo)}
+                        alt={photo.name}
+                        className={cn(
+                          'pointer-events-none size-full object-cover transition-opacity',
+                          index === activeIndex ? 'opacity-100' : 'opacity-90 group-hover:opacity-100',
+                        )}
+                        draggable={false}
+                      />
+                    ) : (
+                      <span className="bg-surface-2 text-fg-4 flex size-full items-center justify-center text-[10px]">
+                        {t('gallery.processing')}
+                      </span>
+                    )}
                     {index === 0 && (
                       <span className="bg-foreground text-background absolute top-1 left-1 rounded-full px-1.5 py-[1px] text-[9.5px] font-semibold">
                         {t('gallery.cover')}
