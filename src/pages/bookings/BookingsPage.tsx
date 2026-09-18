@@ -7,12 +7,14 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
+import { SortSelect } from '@/components/data-display/SortSelect'
 import { StatStrip } from '@/components/data-display/StatStrip'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { toast } from '@/components/ui/use-toast'
+import { EMPTY_DATE_RANGE, fromDateValue, type DateRange } from '@/components/ui/date-range-picker'
 import { useFormatters } from '@/i18n'
 import { useDomainLabels } from '@/i18n/domain'
 import { LOCATIONS } from '@/modules/locations/mock/location.mock'
@@ -20,13 +22,13 @@ import { useBookings } from '@/modules/bookings/hooks/use-bookings'
 import {
   BOOKING_ATTENTION_STATUSES,
   BOOKING_DURATION_BANDS,
-  BOOKING_PICKUP_RANGES,
+  BOOKING_SORTS,
   BOOKING_STATUSES,
   BOOKING_TABS,
   BOOKING_VALUE_BANDS,
   type BookingDurationBand,
   type BookingFilters,
-  type BookingPickupRange,
+  type BookingSort,
   type BookingStatus,
   type BookingTab,
   type BookingTuple,
@@ -40,6 +42,7 @@ import {
   bookingPickupOrdinal,
   bookingsForTab,
   filterBookings,
+  sortBookings,
 } from '@/modules/bookings/utils/booking.filters'
 import { bookingColumns, bookingRow, downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils/booking.utils'
 
@@ -57,7 +60,8 @@ export function BookingsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')
-  const [pickupFilter, setPickupFilter] = useState<BookingPickupRange>('any')
+  const [pickupFilter, setPickupFilter] = useState<DateRange>(EMPTY_DATE_RANGE)
+  const [sort, setSort] = useState<BookingSort>('newest')
   // Applied values actually filter the list; draft values are what the "More filters" popover
   // edits live — they only become "applied" when Apply filters is clicked.
   const [makeFilter, setMakeFilter] = useState<string>('All')
@@ -86,7 +90,10 @@ export function BookingsPage() {
   const lists = data ?? EMPTY_BOOKING_LISTS
 
   const tabTotal = bookingsForTab(tab, lists).length
-  const rowsData = useMemo(() => filterBookings(bookingsForTab(tab, lists), filters), [tab, lists, filters])
+  const rowsData = useMemo(
+    () => sortBookings(filterBookings(bookingsForTab(tab, lists), filters), sort),
+    [tab, lists, filters, sort],
+  )
 
   // Each tab's count is what it would actually reveal under the current filters — the tab itself
   // is the only constraint that varies, so every tab is recounted against the same filter set.
@@ -99,6 +106,15 @@ export function BookingsPage() {
   )
 
   const makes = useMemo(() => bookingMakes(allBookings(lists)), [lists])
+
+  /** "Sep 10 – Sep 20", or the single day when both ends match. Falls back to the "any" placeholder. */
+  const pickupLabel = (() => {
+    const from = fromDateValue(pickupFilter.from)
+    const to = fromDateValue(pickupFilter.to)
+    if (!from && !to) return t('filters.pickupAny')
+    const parts = [from, to].filter((d) => d != null).map((d) => format.shortDate(d))
+    return parts[0] === parts[1] ? parts[0] : parts.join(' – ')
+  })()
 
   const moreFiltersActiveCount =
     (makeFilter !== 'All' ? 1 : 0) + (durationFilter !== 'Any' ? 1 : 0) + (valueBands.length > 0 ? 1 : 0)
@@ -156,9 +172,9 @@ export function BookingsPage() {
     },
     {
       icon: Banknote,
-      label: t('list.stats.bookedValue'),
+      label: t('list.stats.expectedRevenue'),
       value: format.currency(bookedValue),
-      note: t('list.stats.bookedValueNote'),
+      note: t('list.stats.expectedRevenueNote'),
     },
     {
       icon: TriangleAlert,
@@ -219,10 +235,11 @@ export function BookingsPage() {
             onChange: setLocationFilter,
           },
           {
+            kind: 'dateRange',
             label: t('filters.pickup'),
-            value: t(`filters.pickupRange.${pickupFilter}`),
-            options: BOOKING_PICKUP_RANGES.map((r) => ({ value: r, label: t(`filters.pickupRange.${r}`) })),
-            onChange: (value) => setPickupFilter(value as BookingPickupRange),
+            value: pickupLabel,
+            range: pickupFilter,
+            onChange: setPickupFilter,
           },
         ]}
         moreFilters={[
@@ -274,6 +291,14 @@ export function BookingsPage() {
           }))}
           columns={bookingColumns(t)}
           rows={rows}
+          actions={
+            <SortSelect
+              label={t('list.sort.label')}
+              value={sort}
+              options={BOOKING_SORTS.map((value) => ({ value, label: t(`list.sort.${value}`) }))}
+              onChange={(value) => setSort(value as BookingSort)}
+            />
+          }
           pageNote={rows.length > 0 ? t('list.pageNote', { shown: rows.length, total: tabTotal }) : t('list.noneFound')}
           minWidth="800px"
           onRowClick={(reference) => navigate(`/app/bookings/${reference}`)}

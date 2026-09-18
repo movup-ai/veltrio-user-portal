@@ -18,6 +18,15 @@
       "Recent activity": "Recent activity",
       "Overdue": "Overdue"
     },
+    "sort": {
+      "label": "Sort bookings",
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "pickupDesc": "Pickup (latest)",
+      "pickupAsc": "Pickup (earliest)",
+      "totalDesc": "Total (high → low)",
+      "totalAsc": "Total (low → high)"
+    },
     "rowActions": {
       "viewDetails": "View details",
       "editBooking": "Edit booking",
@@ -27,8 +36,8 @@
       "open": "Open bookings",
       "openNote_one": "{{count}} starts in the next 48h",
       "openNote_other": "{{count}} start in the next 48h",
-      "bookedValue": "Booked value",
-      "bookedValueNote": "Confirmed, not yet invoiced",
+      "expectedRevenue": "Expected revenue",
+      "expectedRevenueNote": "Confirmed, not yet invoiced",
       "needsAttention": "Needs attention",
       "needsAttentionNote": "{{awaitingId}} awaiting ID · {{depositDue}} deposit due"
     }
@@ -40,14 +49,7 @@
     "vehicleMake": "Vehicle make",
     "duration": "Duration",
     "bookingValue": "Booking value",
-    "pickupRange": {
-      "any": "Any dates",
-      "next7": "Next 7 days",
-      "next14": "Next 14 days",
-      "next30": "Next 30 days",
-      "past7": "Past 7 days",
-      "past30": "Past 30 days"
-    },
+    "pickupAny": "Any dates",
     "durationBand": {
       "1-2": "1 – 2 days",
       "3-6": "3 – 6 days",
@@ -80,10 +82,170 @@
     "total": "Total"
   },
   "details": {
-    "title": "Booking {{id}}",
-    "description": "Booking timeline, payments, and documents",
-    "comingSoonTitle": "Booking details coming soon",
-    "comingSoonDescription": "This module is being built next."
+    "loading": "Loading booking…",
+    "notFoundTitle": "Booking not found",
+    "notFoundDescription": "We couldn't find that booking. It may have been cancelled.",
+    "backToList": "Back to bookings",
+    "stages": {
+      "reserved": "Reserved",
+      "confirmed": "Confirmed",
+      "pickedUp": "Picked up",
+      "returned": "Returned",
+      "closed": "Closed"
+    },
+    "channels": {
+      "web": "web",
+      "auto": "auto",
+      "counter": "counter"
+    },
+    "progress": {
+      "title": "Rental progress",
+      "stageOf": "Stage {{current}} of {{total}}",
+      "scheduled": "Scheduled {{when}}",
+      "due": "Due {{when}}",
+      "waiting": {
+        "reserved": "Not yet reserved",
+        "confirmed": "Awaiting confirmation",
+        "pickedUp": "Not collected yet",
+        "returned": "Not returned yet",
+        "closed": "Pending return"
+      }
+    },
+    "pickup": {
+      "title": "Pickup",
+      "counter": "Counter",
+      "desk": "Desk {{number}} · {{agent}}",
+      "fuelOut": "Fuel out",
+      "fuelPolicy": "Full · same-to-same"
+    },
+    "return": {
+      "title": "Return",
+      "sameBranch": "same branch",
+      "oneWay": "one-way return",
+      "duration": "Duration",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "mileageCap": "Mileage cap",
+      "milesIncluded": "{{count}} mi included"
+    },
+    "vehicle": {
+      "title": "Vehicle",
+      "open": "Open vehicle",
+      "perDay": "{{rate}}/day",
+      "listRate": "current list rate"
+    },
+    "charges": {
+      "title": "Charges",
+      "quotedAt_one": "Quoted at booking · {{count}}-day rental",
+      "quotedAt_other": "Quoted at booking · {{count}}-day rental",
+      "baseRate": "Base rate",
+      "baseRateDetail_one": "{{rate}} × {{count}} day",
+      "baseRateDetail_other": "{{rate}} × {{count}} days",
+      "additionalDriver": "Additional driver",
+      "additionalDriverDetail_one": "{{count}} driver · {{rate}}/day",
+      "additionalDriverDetail_other": "{{count}} drivers · {{rate}}/day",
+      "taxes": "Taxes & fees",
+      "taxesDetail": "Branch surcharge + {{pct}}% sales tax",
+      "total": "Total"
+    },
+    "payment": {
+      "title": "Payment",
+      "dueNote": "{{amount}} still to collect from the renter.",
+      "capturedNote": "Captured {{when}} · {{method}}",
+      "captured": "Captured",
+      "refunded": "Refunded",
+      "balance": "Balance",
+      "sendLink": "Send payment link",
+      "markPaid": "Mark as paid",
+      "downloadInvoice": "Invoice",
+      "sendReceipt": "Receipt",
+      "deposit": "Security deposit",
+      "depositState": {
+        "pending": "not held yet",
+        "held": "on hold",
+        "released": "released",
+        "captured": "drawn on"
+      },
+      "holdDeposit": "Place hold",
+      "releaseDeposit": "Release",
+      "captureDeposit": "Capture"
+    },
+    "manage": {
+      "title": "Manage booking",
+      "subtitle": "Change the rental before handover",
+      "modify": "Modify dates",
+      "extend": "Extend rental",
+      "addDriver": "Add driver",
+      "swapVehicle": "Swap vehicle",
+      "cancel": "Cancel booking"
+    },
+    "renter": {
+      "title": "Renter",
+      "profile": "Profile",
+      "since": "Customer since {{year}}",
+      "rentals_one": "{{count}} rental",
+      "rentals_other": "{{count}} rentals",
+      "email": "Email",
+      "phone": "Phone",
+      "licence": "Licence",
+      "lifetimeValue": "Lifetime value"
+    },
+    "checklist": {
+      "title": "Checklist",
+      "done": "Successful",
+      "pending": "Pending",
+      "verify": "Verify"
+    },
+    "checks": {
+      "background": "Background check",
+      "identity": "ID verification",
+      "insurance": "Insurance verification"
+    },
+    "checkHints": {
+      "background": "Driving record and watchlist screening, run before the branch confirms.",
+      "identity": "Driving licence and a selfie match are required before handover.",
+      "insurance": "Proof of cover, or the branch waiver, must be on file."
+    },
+    "checkActions": {
+      "background": "View report",
+      "identity": "View ID check",
+      "insurance": "View insurance"
+    },
+    "agreement": {
+      "title": "Rental agreement",
+      "signedNote": "Signed {{when}} · {{method}}",
+      "unsignedNote": "Not signed yet",
+      "method": {
+        "eSignature": "e-signature",
+        "counter": "signed at the counter"
+      },
+      "terms": "Terms {{version}}",
+      "blockingHandover": "The keys can't be handed over until this is signed.",
+      "view": "View",
+      "download": "Download",
+      "send": "Send for signature"
+    },
+    "activity": {
+      "title": "Activity"
+    },
+    "events": {
+      "created": "Booking created",
+      "depositHold": "Deposit hold authorized",
+      "licenceUploaded": "Licence uploaded",
+      "confirmationSent": "Confirmation email sent",
+      "vehicleAssigned": "Vehicle assigned"
+    },
+    "actions": {
+      "checkIn": "Check in",
+      "printAgreement": "Print agreement",
+      "messageRenter": "Message renter",
+      "pendingApi": "This needs the bookings API, which isn't live yet."
+    },
+    "cancelDialog": {
+      "title": "Cancel this booking?",
+      "description": "{{reference}} for {{name}} will be released and the vehicle freed for other rentals.",
+      "confirm": "Cancel booking"
+    }
   },
   "toast": {
     "created": "Booking created",
@@ -126,6 +288,7 @@
     "fields": {
       "pickupLocation": "Pickup location",
       "returnLocation": "Return location",
+      "returnElsewhere": "Return to a different location",
       "pickupDate": "Pickup date",
       "pickupTime": "Time",
       "returnDate": "Return date",

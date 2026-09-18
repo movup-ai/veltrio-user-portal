@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { DateRangePicker, type DateRange } from '@/components/ui/date-range-picker'
 
 /**
  * `value` is the canonical (English) value the caller filters on; `label` is what the user
@@ -15,7 +16,8 @@ export interface FilterOption {
   label: string
 }
 
-interface FilterDef {
+interface FilterSelectDef {
+  kind?: 'select'
   label: string
   /** Display text for the current selection. */
   value: string
@@ -23,6 +25,18 @@ interface FilterDef {
   options?: FilterOption[]
   onChange?: (value: string) => void
 }
+
+/** Opens a calendar rather than a list — for filters whose answer is a span of days, not a preset. */
+interface FilterDateRangeDef {
+  kind: 'dateRange'
+  label: string
+  /** Display text for the current span, e.g. "Sep 10 – Sep 20" or the "any" placeholder. */
+  value: string
+  range: DateRange
+  onChange: (range: DateRange) => void
+}
+
+export type FilterDef = FilterSelectDef | FilterDateRangeDef
 
 /** A single-select dropdown row inside the "More filters" popover. */
 interface MoreFilterSelect {
@@ -61,6 +75,32 @@ interface FilterBarProps {
   onOpenMoreFilters?: () => void
 }
 
+interface FilterChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  label: string
+  value: string
+}
+
+/**
+ * The pill every inline filter renders as. Forwards its ref and props so it can be handed
+ * straight to a Radix `asChild` trigger — dropdown or calendar, the chip looks the same.
+ */
+const FilterChip = forwardRef<HTMLButtonElement, FilterChipProps>(({ label, value, className, ...props }, ref) => (
+  <button
+    ref={ref}
+    type="button"
+    className={cn(
+      'bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground flex h-9 shrink-0 items-center gap-2 rounded-[9px] border px-[11px] text-[13px] whitespace-nowrap transition-colors',
+      className,
+    )}
+    {...props}
+  >
+    <span className="text-fg-4">{label}</span>
+    <span className="font-semibold">{value}</span>
+    <ChevronDown className="text-fg-4 size-3.5" />
+  </button>
+))
+FilterChip.displayName = 'FilterChip'
+
 export function FilterBar({
   searchPlaceholder,
   filters,
@@ -94,17 +134,17 @@ export function FilterBar({
       </label>
 
       {filters.map((f) =>
-        f.options && f.onChange ? (
+        f.kind === 'dateRange' ? (
+          <DateRangePicker
+            key={f.label}
+            value={f.range}
+            onChange={f.onChange}
+            trigger={<FilterChip label={f.label} value={f.value} />}
+          />
+        ) : f.options && f.onChange ? (
           <DropdownMenu key={f.label}>
             <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground flex h-9 shrink-0 items-center gap-2 rounded-[9px] border px-[11px] text-[13px] whitespace-nowrap transition-colors"
-              >
-                <span className="text-fg-4">{f.label}</span>
-                <span className="font-semibold">{f.value}</span>
-                <ChevronDown className="text-fg-4 size-3.5" />
-              </button>
+              <FilterChip label={f.label} value={f.value} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {f.options.map((opt) => (
@@ -115,15 +155,7 @@ export function FilterBar({
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <button
-            key={f.label}
-            type="button"
-            className="bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground flex h-9 shrink-0 items-center gap-2 rounded-[9px] border px-[11px] text-[13px] whitespace-nowrap transition-colors"
-          >
-            <span className="text-fg-4">{f.label}</span>
-            <span className="font-semibold">{f.value}</span>
-            <ChevronDown className="text-fg-4 size-3.5" />
-          </button>
+          <FilterChip key={f.label} label={f.label} value={f.value} />
         ),
       )}
 

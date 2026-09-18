@@ -165,6 +165,8 @@ export function VehicleDetailsPage() {
       rateOptions: vehicle.rateOptions,
       fees: vehicle.fees,
       specs: vehicle.specs,
+      // Carried through untouched — omitting it would blank the vehicle's features on a status change.
+      features: vehicle.features,
       status,
     })
   }

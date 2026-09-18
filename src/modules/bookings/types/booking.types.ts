@@ -1,3 +1,4 @@
+import type { DateRange } from '@/components/ui/date-range-picker'
 import type { UploadedFile } from '@/types/common'
 
 /** [customer, reference, vehicle, plate, rentalWindow, note, location, status, total] */
@@ -58,19 +59,17 @@ export const BOOKING_VALUE_BANDS = [
 ] as const
 export type BookingValueBand = (typeof BOOKING_VALUE_BANDS)[number]['value']
 
-/**
- * Pickup-window presets, anchored on "today". A preset rather than a date-range picker because
- * the mock windows carry no year — swap for real dates once bookings come from the API.
- */
-export const BOOKING_PICKUP_RANGES = ['any', 'next7', 'next14', 'next30', 'past7', 'past30'] as const
-export type BookingPickupRange = (typeof BOOKING_PICKUP_RANGES)[number]
+/** Orders the list can be read in. `newest` is the default — the most recently booked first. */
+export const BOOKING_SORTS = ['newest', 'oldest', 'pickupDesc', 'pickupAsc', 'totalDesc', 'totalAsc'] as const
+export type BookingSort = (typeof BOOKING_SORTS)[number]
 
-/** Everything the list filters on. `Any`/`All`/`any` are the "no constraint" values. */
+/** Everything the list filters on. `Any`/`All`/an empty range are the "no constraint" values. */
 export interface BookingFilters {
   search: string
   status: BookingStatus | 'Any'
   location: string | 'All'
-  pickup: BookingPickupRange
+  /** Pickup day must fall inside this span. Either end may be blank, meaning "open on that side". */
+  pickup: DateRange
   make: string | 'All'
   durationBand: BookingDurationBand | 'Any'
   valueBands: BookingValueBand[]
@@ -167,4 +166,133 @@ export interface Booking extends BookingInput {
   reference: string
   status: BookingStatus
   createdAt: string
+}
+
+/** The five stages a rental moves through, in order. Labels live in `bookings:details.stages.<key>`. */
+export const BOOKING_STAGES = ['reserved', 'confirmed', 'pickedUp', 'returned', 'closed'] as const
+export type BookingStage = (typeof BOOKING_STAGES)[number]
+
+export interface BookingStageStep {
+  key: BookingStage
+  /** `done` is behind us, `current` is where the rental sits now, `pending` is still ahead. */
+  state: 'done' | 'current' | 'pending'
+  /** ISO — when it happened, or when it falls due. Absent when there is nothing to date yet. */
+  at?: string
+  /** How it was done. Only meaningful once the stage is behind us. */
+  channel?: 'web' | 'auto' | 'counter'
+}
+
+/**
+ * Pre-handover checks shown on the details page — the same three the booking form asks for
+ * (see BOOKING_VERIFICATIONS). Labels live in `bookings:details.checks.<key>`.
+ */
+export const BOOKING_CHECKS = ['background', 'identity', 'insurance'] as const
+export type BookingCheck = (typeof BOOKING_CHECKS)[number]
+
+export interface BookingCheckStep {
+  key: BookingCheck
+  done: boolean
+}
+
+/** The contract itself, which is a document to chase rather than a check to tick. */
+export interface BookingAgreement {
+  signed: boolean
+  signedAt?: string
+  /** How it was signed — only set once it has been. */
+  method?: 'eSignature' | 'counter'
+  /** Terms revision the renter agreed to, so an old booking can be read against its own terms. */
+  version: string
+}
+
+/**
+ * One line of the charges breakdown. `extraFee` carries the label the counter typed; every other
+ * kind is named by `bookings:details.charges.<key>`. The lines always sum to the booking total.
+ */
+export interface BookingChargeLine {
+  key: 'baseRate' | 'additionalDriver' | 'extraFee' | 'taxes'
+  label?: string
+  /** Interpolation values for the line's sub-caption. */
+  meta?: { rate?: number; days?: number; count?: number; pct?: number }
+  amount: number
+}
+
+/** Events on the booking's audit trail. Labels live in `bookings:details.events.<key>`. */
+export const BOOKING_EVENTS = ['created', 'depositHold', 'licenceUploaded', 'confirmationSent', 'vehicleAssigned'] as const
+export type BookingEvent = (typeof BOOKING_EVENTS)[number]
+
+export interface BookingEventEntry {
+  key: BookingEvent
+  at: string
+  /** Interpolation values for the event's detail line — channel, amount, plate, and so on. */
+  meta?: Record<string, string | number>
+}
+
+/**
+ * Where the deposit stands. `pending` means no hold has been placed yet; `held` is authorized
+ * and reversible; `released` and `captured` are both terminal, one in the renter's favour.
+ */
+export type BookingDepositState = 'pending' | 'held' | 'released' | 'captured'
+
+export interface BookingPaymentState {
+  /** The booking total. The itemization behind it belongs to the charges card, not here. */
+  total: number
+  captured: number
+  refunded: number
+  balance: number
+  depositHold: number
+  depositState: BookingDepositState
+  /** "Visa · 4223" — how the money was taken. Absent until something is captured. */
+  method?: string
+  capturedAt?: string
+  /** Nothing left to collect. Drives the badge and which actions are offered. */
+  settled: boolean
+}
+
+export interface BookingRenter {
+  id?: string
+  name: string
+  email: string
+  phone: string
+  licenceNumber: string
+  rentals: number
+  lifetimeValue: number
+  /** Year they first rented — the "customer since" line. */
+  since: number
+}
+
+/** Everything the booking details page renders. Assembled by `booking.details.ts`. */
+export interface BookingDetails {
+  reference: string
+  status: string
+  stages: BookingStageStep[]
+
+  pickupAt: string
+  returnAt: string
+  pickupLocation: string
+  pickupAddress: string
+  returnLocation: string
+  /** True when the car comes back to the branch it left from — by far the common case. */
+  returnSameBranch: boolean
+  counter: string
+  agent: string
+  days: number
+  includedMiles: number
+
+  vehicleId?: string
+  vehicleName: string
+  vehiclePlate: string
+  /** Cover shot from the vehicle's gallery. Absent when the car has no photos on file. */
+  vehicleImage?: string
+  /** "Full-size SUV · 2024 · Miami Beach". */
+  vehicleSubtitle: string
+  /** What the vehicle lists for today — not necessarily what this booking was charged. */
+  listDailyRate: number
+
+  charges: BookingChargeLine[]
+  total: number
+  payment: BookingPaymentState
+  agreement: BookingAgreement
+  checks: BookingCheckStep[]
+  events: BookingEventEntry[]
+  renter: BookingRenter
 }

@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Combobox } from '@/components/ui/combobox'
 import { DatePicker } from '@/components/ui/date-picker'
 import { TimePicker } from '@/components/ui/time-picker'
@@ -19,7 +20,6 @@ import { DocumentUpload } from '@/components/forms/DocumentUpload'
 import { FormField } from '@/components/forms/FormField'
 import { StepSidebar } from '@/components/forms/StepSidebar'
 import type { StepDef } from '@/components/forms/Stepper'
-import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
@@ -135,6 +135,10 @@ export function BookingFormPage() {
    * into the search above. Seeded only when a draft was linked to a real customer.
    */
   const [customerQuery, setCustomerQuery] = useState(restoredDraft?.customerId ? restoredDraft.customerName : '')
+
+  const [returnElsewhere, setReturnElsewhere] = useState(
+    Boolean(restoredDraft && restoredDraft.returnLocation && restoredDraft.returnLocation !== restoredDraft.pickupLocation),
+  )
 
   const steps: StepDef[] = STEP_KEYS.map((key) => ({
     key,
@@ -337,7 +341,6 @@ export function BookingFormPage() {
           total: STEP_KEYS.length,
           label: t(`form.steps.${stepKey}.label`),
         })}
-        actions={<PageActionButton icon={X} label={tCommon('actions.cancel')} onClick={cancel} />}
       />
 
       {/* 260px keeps each step's description on one line, so the four rows stay even in height. */}
@@ -367,35 +370,50 @@ export function BookingFormPage() {
                 <PanelHeading title={t('form.sections.trip')} description={t('form.sections.tripHint')} />
 
                 <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
-                  <FormField label={t('form.fields.pickupLocation')} error={errors.pickupLocation?.message} required>
-                    {({ id }) => (
-                      <Controller
-                        control={control}
-                        name="pickupLocation"
-                        render={({ field }) => (
-                          <Select
-                            value={field.value}
-                            onValueChange={(next) => {
-                              field.onChange(next)
-                              // Same-branch return is overwhelmingly the norm — seed it, keep it editable.
-                              if (!values.returnLocation) setValue('returnLocation', next, { shouldValidate: true })
-                            }}
-                          >
-                            <SelectTrigger id={id} aria-invalid={Boolean(errors.pickupLocation)}>
-                              <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {LOCATIONS.map((l) => (
-                                <SelectItem key={l.name} value={l.name}>
-                                  {l.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
+                  <div className="flex flex-col gap-2.5">
+                    <FormField label={t('form.fields.pickupLocation')} error={errors.pickupLocation?.message} required>
+                      {({ id }) => (
+                        <Controller
+                          control={control}
+                          name="pickupLocation"
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={(next) => {
+                                field.onChange(next)
+                                // The return branch only diverges on request — otherwise it tracks pickup.
+                                if (!returnElsewhere) setValue('returnLocation', next, { shouldValidate: true })
+                              }}
+                            >
+                              <SelectTrigger id={id} aria-invalid={Boolean(errors.pickupLocation)}>
+                                <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {LOCATIONS.map((l) => (
+                                  <SelectItem key={l.name} value={l.name}>
+                                    {l.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      )}
+                    </FormField>
+
+                    <label className="flex w-fit cursor-pointer items-center gap-2 text-[13.5px] font-semibold select-none">
+                      <Checkbox
+                        checked={returnElsewhere}
+                        onCheckedChange={(checked) => {
+                          const on = checked === true
+                          setReturnElsewhere(on)
+                          // Unticking re-mirrors pickup; ticking clears it so the branch is a deliberate pick.
+                          setValue('returnLocation', on ? '' : values.pickupLocation, { shouldValidate: true })
+                        }}
                       />
-                    )}
-                  </FormField>
+                      {t('form.fields.returnElsewhere')}
+                    </label>
+                  </div>
 
                   <FormField label={t('form.fields.returnLocation')} error={errors.returnLocation?.message} required>
                     {({ id }) => (
@@ -403,7 +421,7 @@ export function BookingFormPage() {
                         control={control}
                         name="returnLocation"
                         render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select value={field.value} onValueChange={field.onChange} disabled={!returnElsewhere}>
                             <SelectTrigger id={id} aria-invalid={Boolean(errors.returnLocation)}>
                               <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
                             </SelectTrigger>
@@ -944,7 +962,13 @@ export function BookingFormPage() {
           )}
 
           <Card as="section" className="flex flex-wrap items-center gap-3 p-3.5">
-            {/* Back only — leaving the wizard is the header's Cancel, so step 1 doesn't offer two. */}
+            {/* Leaving the wizard sits with the other navigation rather than up in the header. */}
+            {/* Compact padding, but the row's full height — a shorter button breaks the baseline. */}
+            <Button type="button" variant="outline" size="sm" onClick={cancel} className="text-fg-3 h-9 gap-1.5">
+              <X className="size-4" aria-hidden />
+              {tCommon('actions.cancel')}
+            </Button>
+
             {stepIndex > 0 && (
               <Button type="button" variant="outline" onClick={goPrev} className="gap-1.5">
                 <ArrowLeft className="size-4" aria-hidden />

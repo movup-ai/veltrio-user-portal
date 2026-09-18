@@ -18,6 +18,15 @@
       "Recent activity": "Actividad reciente",
       "Overdue": "Vencidas"
     },
+    "sort": {
+      "label": "Ordenar reservas",
+      "newest": "Más recientes primero",
+      "oldest": "Más antiguas primero",
+      "pickupDesc": "Recogida (más lejana)",
+      "pickupAsc": "Recogida (más próxima)",
+      "totalDesc": "Total (mayor → menor)",
+      "totalAsc": "Total (menor → mayor)"
+    },
     "rowActions": {
       "viewDetails": "Ver detalles",
       "editBooking": "Editar reserva",
@@ -27,8 +36,8 @@
       "open": "Reservas abiertas",
       "openNote_one": "{{count}} comienza en las próximas 48 h",
       "openNote_other": "{{count}} comienzan en las próximas 48 h",
-      "bookedValue": "Valor reservado",
-      "bookedValueNote": "Confirmado, aún sin facturar",
+      "expectedRevenue": "Ingresos previstos",
+      "expectedRevenueNote": "Confirmado, aún sin facturar",
       "needsAttention": "Requiere atención",
       "needsAttentionNote": "{{awaitingId}} pendientes de identificación · {{depositDue}} depósito pendiente"
     }
@@ -40,14 +49,7 @@
     "vehicleMake": "Marca del vehículo",
     "duration": "Duración",
     "bookingValue": "Valor de la reserva",
-    "pickupRange": {
-      "any": "Cualquier fecha",
-      "next7": "Próximos 7 días",
-      "next14": "Próximos 14 días",
-      "next30": "Próximos 30 días",
-      "past7": "Últimos 7 días",
-      "past30": "Últimos 30 días"
-    },
+    "pickupAny": "Cualquier fecha",
     "durationBand": {
       "1-2": "1 – 2 días",
       "3-6": "3 – 6 días",
@@ -80,10 +82,170 @@
     "total": "Total"
   },
   "details": {
-    "title": "Reserva {{id}}",
-    "description": "Cronología, pagos y documentos de la reserva",
-    "comingSoonTitle": "Detalles de la reserva próximamente",
-    "comingSoonDescription": "Este módulo se construirá a continuación."
+    "loading": "Cargando la reserva…",
+    "notFoundTitle": "Reserva no encontrada",
+    "notFoundDescription": "No encontramos esa reserva. Es posible que se haya cancelado.",
+    "backToList": "Volver a reservas",
+    "stages": {
+      "reserved": "Reservada",
+      "confirmed": "Confirmada",
+      "pickedUp": "Recogida",
+      "returned": "Devuelta",
+      "closed": "Cerrada"
+    },
+    "channels": {
+      "web": "web",
+      "auto": "automático",
+      "counter": "mostrador"
+    },
+    "progress": {
+      "title": "Progreso del alquiler",
+      "stageOf": "Etapa {{current}} de {{total}}",
+      "scheduled": "Programada {{when}}",
+      "due": "Vence {{when}}",
+      "waiting": {
+        "reserved": "Aún sin reservar",
+        "confirmed": "Pendiente de confirmación",
+        "pickedUp": "Aún sin recoger",
+        "returned": "Aún sin devolver",
+        "closed": "Pendiente de devolución"
+      }
+    },
+    "pickup": {
+      "title": "Recogida",
+      "counter": "Mostrador",
+      "desk": "Puesto {{number}} · {{agent}}",
+      "fuelOut": "Combustible de salida",
+      "fuelPolicy": "Lleno · mismo nivel"
+    },
+    "return": {
+      "title": "Devolución",
+      "sameBranch": "misma sucursal",
+      "oneWay": "devolución en otra sucursal",
+      "duration": "Duración",
+      "days_one": "{{count}} día",
+      "days_other": "{{count}} días",
+      "mileageCap": "Límite de millas",
+      "milesIncluded": "{{count}} mi incluidas"
+    },
+    "vehicle": {
+      "title": "Vehículo",
+      "open": "Abrir vehículo",
+      "perDay": "{{rate}}/día",
+      "listRate": "tarifa actual de lista"
+    },
+    "charges": {
+      "title": "Cargos",
+      "quotedAt_one": "Cotizado al reservar · alquiler de {{count}} día",
+      "quotedAt_other": "Cotizado al reservar · alquiler de {{count}} días",
+      "baseRate": "Tarifa base",
+      "baseRateDetail_one": "{{rate}} × {{count}} día",
+      "baseRateDetail_other": "{{rate}} × {{count}} días",
+      "additionalDriver": "Conductor adicional",
+      "additionalDriverDetail_one": "{{count}} conductor · {{rate}}/día",
+      "additionalDriverDetail_other": "{{count}} conductores · {{rate}}/día",
+      "taxes": "Impuestos y tasas",
+      "taxesDetail": "Recargo de sucursal + {{pct}}% de impuesto sobre ventas",
+      "total": "Total"
+    },
+    "payment": {
+      "title": "Pago",
+      "dueNote": "Quedan {{amount}} por cobrar al arrendatario.",
+      "capturedNote": "Cobrado el {{when}} · {{method}}",
+      "captured": "Cobrado",
+      "refunded": "Reembolsado",
+      "balance": "Saldo",
+      "sendLink": "Enviar enlace de pago",
+      "markPaid": "Marcar como pagado",
+      "downloadInvoice": "Factura",
+      "sendReceipt": "Recibo",
+      "deposit": "Depósito de garantía",
+      "depositState": {
+        "pending": "sin retener",
+        "held": "retenido",
+        "released": "liberado",
+        "captured": "ejecutado"
+      },
+      "holdDeposit": "Retener",
+      "releaseDeposit": "Liberar",
+      "captureDeposit": "Cobrar"
+    },
+    "manage": {
+      "title": "Gestionar reserva",
+      "subtitle": "Modifica el alquiler antes de la entrega",
+      "modify": "Modificar fechas",
+      "extend": "Ampliar alquiler",
+      "addDriver": "Añadir conductor",
+      "swapVehicle": "Cambiar vehículo",
+      "cancel": "Cancelar reserva"
+    },
+    "renter": {
+      "title": "Arrendatario",
+      "profile": "Perfil",
+      "since": "Cliente desde {{year}}",
+      "rentals_one": "{{count}} alquiler",
+      "rentals_other": "{{count}} alquileres",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "licence": "Licencia",
+      "lifetimeValue": "Valor de por vida"
+    },
+    "checklist": {
+      "title": "Lista de verificación",
+      "done": "Completado",
+      "pending": "Pendiente",
+      "verify": "Verificar"
+    },
+    "checks": {
+      "background": "Verificación de antecedentes",
+      "identity": "Verificación de identidad",
+      "insurance": "Verificación del seguro"
+    },
+    "checkHints": {
+      "background": "Historial de conducción y listas de control, antes de que la sucursal confirme.",
+      "identity": "Se requieren la licencia de conducir y una selfie antes de la entrega.",
+      "insurance": "Debe constar el comprobante de cobertura o la exención de la sucursal."
+    },
+    "checkActions": {
+      "background": "Ver informe",
+      "identity": "Ver verificación de identidad",
+      "insurance": "Ver seguro"
+    },
+    "agreement": {
+      "title": "Contrato de alquiler",
+      "signedNote": "Firmado el {{when}} · {{method}}",
+      "unsignedNote": "Aún sin firmar",
+      "method": {
+        "eSignature": "firma electrónica",
+        "counter": "firmado en el mostrador"
+      },
+      "terms": "Términos {{version}}",
+      "blockingHandover": "No se pueden entregar las llaves hasta que esté firmado.",
+      "view": "Ver",
+      "download": "Descargar",
+      "send": "Enviar para firmar"
+    },
+    "activity": {
+      "title": "Actividad"
+    },
+    "events": {
+      "created": "Reserva creada",
+      "depositHold": "Retención de depósito autorizada",
+      "licenceUploaded": "Licencia subida",
+      "confirmationSent": "Correo de confirmación enviado",
+      "vehicleAssigned": "Vehículo asignado"
+    },
+    "actions": {
+      "checkIn": "Registrar entrada",
+      "printAgreement": "Imprimir contrato",
+      "messageRenter": "Escribir al arrendatario",
+      "pendingApi": "Esto necesita la API de reservas, que aún no está disponible."
+    },
+    "cancelDialog": {
+      "title": "¿Cancelar esta reserva?",
+      "description": "{{reference}} de {{name}} se liberará y el vehículo quedará disponible para otros alquileres.",
+      "confirm": "Cancelar reserva"
+    }
   },
   "toast": {
     "created": "Reserva creada",
@@ -126,6 +288,7 @@
     "fields": {
       "pickupLocation": "Sucursal de recogida",
       "returnLocation": "Sucursal de devolución",
+      "returnElsewhere": "Devolver en otra sucursal",
       "pickupDate": "Fecha de recogida",
       "pickupTime": "Hora",
       "returnDate": "Fecha de devolución",
