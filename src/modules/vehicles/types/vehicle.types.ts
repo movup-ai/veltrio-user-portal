@@ -68,6 +68,8 @@ export interface VehiclePhoto {
   /** Data URL (locally picked file) or the medium CDN variant. Empty while a photo is processing. */
   url: string
   name: string
+  /** The picked file, held until uploaded. Client-side only — never sent in a payload. */
+  file?: File
   /** Server-side only — every rendered size, for a srcSet. Absent for locally picked files. */
   variants?: PhotoVariant[]
   /** Dimensions of the original, for reserving layout space. */
@@ -145,7 +147,7 @@ export interface VehicleStats {
 /** Payload shape for create/update — server assigns id/createdAt/utilization. */
 export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization'>
 
-export const VEHICLE_SORTS = ['utilization', 'dailyRate', 'name'] as const
+export const VEHICLE_SORTS = ['newest', 'utilization', 'dailyRate', 'name'] as const
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
 
 /** Bounds only — the display label lives in `vehicles:filters.priceBand.<value>`. */

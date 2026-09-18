@@ -58,6 +58,7 @@
     }
   },
   "sort": {
+    "newest": "Más recientes primero",
     "utilization": "Uso",
     "dailyRate": "Tarifa diaria",
     "name": "Nombre del vehículo"
@@ -170,7 +171,10 @@
       "rear": "Trasera 3/4",
       "interior": "Interior",
       "odometer": "Odómetro"
-    }
+    },
+    "title": "Fotos",
+    "previousPhoto": "Foto anterior",
+    "nextPhoto": "Foto siguiente"
   },
   "form": {
     "addTitle": "Añadir vehículo",
@@ -316,7 +320,25 @@
     "limitReachedDescription": "Puede subir hasta {{max}} fotos.",
     "limitPartial": "Solo se añadieron {{added}} más — máximo {{max}} fotos en total.",
     "skipped": "Se omitieron algunas fotos",
-    "skippedDescription": "Cada foto debe pesar menos de {{size}} MB."
+    "skippedDescription": "Cada foto debe pesar menos de {{size}} MB.",
+    "unsupportedType": "{{name}} no es un tipo de imagen admitido",
+    "tooLarge": "{{name}} supera los 15 MB",
+    "overLimit": "{{name}} omitida — un vehículo puede tener como máximo {{max}} fotos",
+    "uploading": "Subiendo",
+    "processing": "Procesando",
+    "failed": "Error al subir",
+    "retry": "Reintentar",
+    "dismiss": "Descartar",
+    "uploadSummary": "{{count}} foto subida",
+    "uploadSummary_other": "{{count}} fotos subidas",
+    "uploadFailed": "Algunas fotos no se pudieron subir",
+    "addPhotos": "Añadir fotos",
+    "deleted": "Foto eliminada",
+    "deleteFailed": "No se pudo eliminar la foto",
+    "reorderFailed": "No se pudo guardar el nuevo orden",
+    "processingHint": "Las fotos aparecerán aquí cuando termine el procesamiento.",
+    "countOf": "{{count}} de {{max}}",
+    "someFailed": "Algunas fotos no se pudieron procesar. Elimínelas y vuelva a subirlas."
   },
   "toast": {
     "draftSaved": "Borrador guardado",

@@ -17,6 +17,8 @@ export const vehiclePhotoSchema = z.object({
   id: z.string(),
   url: z.string(),
   name: z.string(),
+  /** Present only for a photo picked in this session, until it has been uploaded. */
+  file: z.instanceof(File).optional(),
 })
 
 /** Max block duration per unit — keeps "3 months" valid but rejects "400 hours". */
@@ -27,7 +29,8 @@ const MAX_BLOCK_DURATION: Record<(typeof DURATION_UNITS)[number], number> = {
   months: 12,
 }
 
-const MAX_PHOTOS = 10
+/** Matches MAX_PHOTOS_PER_VEHICLE on the API, which rejects anything beyond it. */
+const MAX_PHOTOS = 20
 
 type ValidationT = TFunction<'validation'>
 

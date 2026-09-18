@@ -135,6 +135,7 @@ const FUEL_TO_API = {
 } as const satisfies Record<FuelType, string>
 
 const SORT_TO_API = {
+  newest: 'newest',
   utilization: 'utilization',
   dailyRate: 'daily_rate',
   name: 'name',
@@ -187,7 +188,7 @@ function fromCents(cents: number | null | undefined): number | undefined {
 /** The size used for a single <img src>; the rest go in the srcSet. */
 const PRIMARY_VARIANT: PhotoSize = 'medium'
 
-function toPhoto(wire: VehiclePhotoWire): VehiclePhoto {
+export function toPhoto(wire: VehiclePhotoWire): VehiclePhoto {
   const variants: PhotoVariant[] = wire.variants.map((v) => ({
     size: v.size,
     width: v.width,

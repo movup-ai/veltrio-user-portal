@@ -197,7 +197,7 @@ export function VehicleDetailsPage() {
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex min-w-0 flex-[2_1_560px] flex-col gap-4">
-          <VehiclePhotoGallery key={vehicle.id} photos={vehicle.photos} />
+          <VehiclePhotoGallery key={vehicle.id} vehicleId={vehicle.id} photos={vehicle.photos} />
           <AvailabilityStrip vehicle={vehicle} busy={busy} />
           <VehicleSpecs vehicle={vehicle} />
 

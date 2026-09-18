@@ -6,6 +6,8 @@ export type Cell =
       primary: string
       secondary?: string
       initials: string
+      imageUrl?: string
+      avatarSize?: number
       avatarBg: string
       avatarFg: string
       avatarRadius?: string

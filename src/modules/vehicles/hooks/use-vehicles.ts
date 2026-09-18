@@ -3,6 +3,7 @@ import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { vehicleApi } from '../api/vehicle.api'
+import { isPending } from '../api/vehicle-photo.api'
 import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
 
 export const vehicleKeys = {
@@ -42,11 +43,17 @@ export function useVehicleStats(params: VehicleListParams) {
   })
 }
 
+/** How often to re-check a vehicle whose photos the worker is still rendering. */
+const PHOTO_POLL_MS = 2_000
+
 export function useVehicle(id: string | undefined) {
   return useQuery({
     queryKey: vehicleKeys.detail(id ?? ''),
     queryFn: () => vehicleApi.get(id as string),
     enabled: Boolean(id),
+    // Poll only while the worker still has variants to render, then stop.
+    refetchInterval: (query) =>
+      query.state.data?.photos.some((photo) => isPending(photo.status)) ? PHOTO_POLL_MS : false,
   })
 }
 

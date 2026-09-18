@@ -89,7 +89,7 @@ export function VehiclesPage() {
   const [draftTransmission, setDraftTransmission] = useState<Transmission | 'Any'>('Any')
   const [draftFuelType, setDraftFuelType] = useState<FuelType | 'Any'>('Any')
   const [draftPriceBands, setDraftPriceBands] = useState<VehiclePriceBand[]>([])
-  const [sortBy, setSortBy] = useState<VehicleSort>('utilization')
+  const [sortBy, setSortBy] = useState<VehicleSort>('newest')
   const [manualOrderMode, setManualOrderMode] = useState(false)
   const [manualOrder, setManualOrder] = useState<string[]>(loadManualOrder)
   const [page, setPage] = useState(1)

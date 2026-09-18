@@ -3,6 +3,7 @@ import { GripVertical, ImagePlus, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
+import { MAX_PHOTOS_PER_VEHICLE } from '@/modules/vehicles/api/vehicle-photo.api'
 import type { VehiclePhoto } from '@/modules/vehicles/types/vehicle.types'
 
 const MAX_FILE_SIZE_MB = 15
@@ -14,23 +15,14 @@ interface PhotoDropzoneProps {
   className?: string
 }
 
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(file)
-  })
-}
-
-export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDropzoneProps) {
+export function PhotoDropzone({ value, onChange, max = MAX_PHOTOS_PER_VEHICLE, className }: PhotoDropzoneProps) {
   const { t } = useTranslation('vehicles')
   const [isDragging, setIsDragging] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const addFiles = async (fileList: FileList | null) => {
+  const addFiles = (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return
 
     const remaining = max - value.length
@@ -50,15 +42,16 @@ export function PhotoDropzone({ value, onChange, max = 10, className }: PhotoDro
       toast({ title: t('photos.limitReached'), description: t('photos.limitPartial', { added: remaining, max }), variant: 'error' })
     }
 
-    const uploaded = await Promise.all(
-      accepted.map(async (file) => ({
-        id: crypto.randomUUID(),
-        url: await readAsDataUrl(file),
-        name: file.name,
-      })),
-    )
+    // Object URLs, not data URLs: base64 is ~1.4x the size and would blow the draft's 64 KB cap.
+    // The File is kept so the photo can be uploaded once the vehicle exists.
+    const picked = accepted.map((file) => ({
+      id: crypto.randomUUID(),
+      url: URL.createObjectURL(file),
+      name: file.name,
+      file,
+    }))
 
-    onChange([...value, ...uploaded])
+    onChange([...value, ...picked])
   }
 
   const reorder = (from: number, to: number) => {

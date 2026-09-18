@@ -1,4 +1,5 @@
 import type { VehicleFormValues } from '../schema/vehicle.schema'
+import type { VehiclePhoto } from './vehicle.types'
 
 /**
  * A saved "add vehicle" wizard. The API stores it opaquely and never validates it as a vehicle —
@@ -11,6 +12,8 @@ export type VehicleDraftPayload = Partial<VehicleFormValues>
 export interface VehicleDraft {
   id: string
   payload: VehicleDraftPayload
+  /** Uploaded while the wizard was open; the API moves them to the vehicle on publish. */
+  photos: VehiclePhoto[]
   createdAt: string
   updatedAt: string
 }
