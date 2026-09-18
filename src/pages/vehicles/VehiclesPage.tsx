@@ -34,8 +34,9 @@ import {
   type VehicleSort,
   type VehicleStatus,
 } from '@/modules/vehicles/types/vehicle.types'
-import { useDeleteVehicle, useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
-import { dailyRateOption, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
+import { useDeleteVehicle, useVehicles, useVehicleStats } from '@/modules/vehicles/hooks/use-vehicles'
+import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
+import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
 
 /** No bookings API yet — mock data, matched to a vehicle by plate. See VehicleDetailsPage for the same temporary pattern. */
 const ALL_BOOKINGS = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]
@@ -48,8 +49,8 @@ const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts'] as const
 type Tab = (typeof TABS)[number]
 
 const PAGE_SIZE = 8
-/** A large single "page" so the whole filtered set is draggable at once while manually ordered. */
-const MANUAL_PAGE_SIZE = 500
+/** One big page so the filtered set is draggable at once. 100 is the API's ceiling on `limit`. */
+const MANUAL_PAGE_SIZE = 100
 
 const MANUAL_ORDER_STORAGE_KEY = 'veltrio.vehicleManualOrder'
 
@@ -97,9 +98,7 @@ export function VehiclesPage() {
   usePageHeaderActions([{ label: t('list.addVehicle'), icon: Plus, onClick: () => navigate('/app/vehicles/new') }], [t])
 
   const isDraftsTab = tab === 'Drafts'
-  const effectiveStatus: VehicleStatus | 'Any' = isDraftsTab ? 'Any' : tab === 'All' ? statusFilter : (tab as VehicleStatus)
-  // "All" shows both published and draft vehicles; a specific status tab excludes drafts (they aren't really "Available" etc. yet); "Drafts" isolates them.
-  const effectiveIsDraft: boolean | undefined = isDraftsTab ? true : tab === 'All' ? undefined : false
+  const effectiveStatus: VehicleStatus | 'Any' = tab === 'All' || isDraftsTab ? statusFilter : (tab as VehicleStatus)
 
   const listParams = useMemo(
     () => ({
@@ -110,46 +109,33 @@ export function VehiclesPage() {
       transmission: transmissionFilter,
       fuelType: fuelTypeFilter,
       priceBands,
-      isDraft: effectiveIsDraft,
       sortBy,
       page: manualOrderMode ? 1 : page,
       pageSize: manualOrderMode ? MANUAL_PAGE_SIZE : PAGE_SIZE,
     }),
-    [search, effectiveStatus, effectiveIsDraft, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
+    [search, effectiveStatus, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
   )
 
-  // Everything matching the current filters *except* the status/draft constraint each tab applies,
-  // so a tab's count reflects what it would actually reveal. One extra fetch against the mock API —
-  // swap for a dedicated counts endpoint once the backend exists.
-  const tabCountParams = useMemo(
-    () => ({
-      search: search || undefined,
-      status: 'Any' as const,
-      location: locationFilter,
-      vehicleType: typeFilter as (typeof VEHICLE_TYPES)[number] | 'All',
-      transmission: transmissionFilter,
-      fuelType: fuelTypeFilter,
-      priceBands,
-      page: 1,
-      pageSize: MANUAL_PAGE_SIZE,
-    }),
-    [search, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands],
-  )
+  // Same filters minus the status each tab pins, so a tab's count reflects what it would reveal.
+  const tabCountParams = useMemo(() => ({ ...listParams, status: 'Any' as const }), [listParams])
 
   const { data, isLoading, isError, refetch } = useVehicles(listParams)
-  const { data: tabCountData } = useVehicles(tabCountParams)
-  const { data: fleetData } = useVehicles({ page: 1, pageSize: 1000 })
+  const { data: tabStats } = useVehicleStats(tabCountParams)
+  // Unfiltered: the stat cards describe the whole fleet, not the current view.
+  const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: PAGE_SIZE })
+  const { data: draftsData } = useVehicleDrafts()
   const deleteVehicle = useDeleteVehicle()
+  const deleteDraft = useDeleteVehicleDraft()
 
-  // Mirrors the tab→query mapping above: "All" still honours the Status dropdown, the status tabs
-  // exclude drafts, and "Drafts" counts only drafts.
-  const countable = tabCountData?.items ?? []
+  const drafts = useMemo(() => (draftsData?.items ?? []).map(draftAsVehicle), [draftsData])
+
+  const byStatus = tabStats?.byStatus
   const tabCounts: Record<Tab, number> = {
-    All: countable.filter((v) => statusFilter === 'Any' || v.status === statusFilter).length,
-    Available: countable.filter((v) => !v.isDraft && v.status === 'Available').length,
-    'On rent': countable.filter((v) => !v.isDraft && v.status === 'On rent').length,
-    Maintenance: countable.filter((v) => !v.isDraft && v.status === 'Maintenance').length,
-    Drafts: countable.filter((v) => v.isDraft).length,
+    All: (statusFilter === 'Any' ? tabStats?.total : byStatus?.[statusFilter]) ?? 0,
+    Available: byStatus?.Available ?? 0,
+    'On rent': byStatus?.['On rent'] ?? 0,
+    Maintenance: byStatus?.Maintenance ?? 0,
+    Drafts: draftsData?.total ?? 0,
   }
 
   const resetToFirstPage = () => setPage(1)
@@ -184,48 +170,48 @@ export function VehiclesPage() {
     localStorage.setItem(MANUAL_ORDER_STORAGE_KEY, JSON.stringify(orderedKeys))
   }
 
-  const fleet = fleetData?.items ?? []
-  const dailyRates = fleet.map(dailyRateOption).filter((o) => o != null)
-  const avgDailyRate = dailyRates.length
-    ? Math.round(dailyRates.reduce((sum, o) => sum + o.rate, 0) / dailyRates.length)
-    : null
-
   const stats = [
     {
       icon: Car,
       label: t('list.stats.fleetSize'),
-      value: String(fleet.length),
-      note: t('list.stats.fleetSizeNote', { count: fleet.filter((v) => v.status === 'Available').length }),
+      value: String(fleetStats?.total ?? 0),
+      note: t('list.stats.fleetSizeNote', { count: fleetStats?.byStatus.Available ?? 0 }),
     },
     {
       icon: Gauge,
       label: t('list.stats.utilization'),
-      value: fleet.length ? `${Math.round((fleet.reduce((sum, v) => sum + v.utilization, 0) / fleet.length) * 100)}%` : '0%',
+      value: `${Math.round((fleetStats?.avgUtilization ?? 0) * 100)}%`,
       note: t('list.stats.utilizationNote'),
     },
     {
       icon: Wrench,
       label: t('list.stats.inMaintenance'),
-      value: String(fleet.filter((v) => v.status === 'Maintenance').length),
+      value: String(fleetStats?.byStatus.Maintenance ?? 0),
       note: t('list.stats.inMaintenanceNote'),
     },
     {
       icon: Tag,
       label: t('list.stats.avgDailyRate'),
-      value: avgDailyRate != null ? format.currency(avgDailyRate) : '—',
+      value: fleetStats?.avgDailyRate != null ? format.currency(Math.round(fleetStats.avgDailyRate)) : '—',
       note: t('list.stats.avgDailyRateNote'),
     },
   ]
 
-  const items = data?.items ?? []
-  const orderedItems = manualOrderMode ? applyManualOrder(items, manualOrder) : items
+  const items = isDraftsTab ? drafts : (data?.items ?? [])
+  const orderedItems = manualOrderMode && !isDraftsTab ? applyManualOrder(items, manualOrder) : items
 
+  // A draft has no vehicle to open, so its row leads back into the wizard instead.
   const rows = orderedItems.map((v) =>
-    vehicleRow(v, tripsForVehicle(v), [
-      { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/vehicles/${v.id}`) },
-      { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
-      { label: t('list.rowActions.archiveVehicle'), onClick: () => setDeleteTarget(v), destructive: true },
-    ]),
+    v.isDraft
+      ? vehicleRow(v, 0, [
+          { label: t('list.rowActions.continueDraft'), onClick: () => navigate(`/app/vehicles/new?draft=${v.id}`) },
+          { label: t('list.rowActions.discardDraft'), onClick: () => deleteDraft.mutate(v.id), destructive: true },
+        ])
+      : vehicleRow(v, tripsForVehicle(v), [
+          { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/vehicles/${v.id}`) },
+          { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
+          { label: t('list.rowActions.archiveVehicle'), onClick: () => setDeleteTarget(v), destructive: true },
+        ]),
   )
 
   return (
@@ -392,20 +378,31 @@ export function VehiclesPage() {
             </div>
           }
           pageNote={
-            manualOrderMode
-              ? t('list.dragToReorder', { count: orderedItems.length })
-              : data && data.total > 0
-                ? t('list.pageNote', {
-                    from: (data.page - 1) * PAGE_SIZE + 1,
-                    to: Math.min(data.page * PAGE_SIZE, data.total),
-                    total: data.total,
-                  })
-                : t('list.noneFound')
+            isDraftsTab
+              ? t('list.draftsNote', { count: drafts.length })
+              : manualOrderMode
+                ? t('list.dragToReorder', { count: orderedItems.length })
+                : data && data.total > 0
+                  ? t('list.pageNote', {
+                      from: (data.page - 1) * PAGE_SIZE + 1,
+                      to: Math.min(data.page * PAGE_SIZE, data.total),
+                      total: data.total,
+                    })
+                  : t('list.noneFound')
           }
           minWidth="960px"
-          onRowClick={manualOrderMode ? undefined : (id) => navigate(`/app/vehicles/${id}`)}
-          pagination={!manualOrderMode && data ? { page: data.page, hasNextPage: data.page < data.totalPages, onPageChange: setPage } : undefined}
-          reorderable={manualOrderMode}
+          onRowClick={
+            manualOrderMode
+              ? undefined
+              : (id) => navigate(isDraftsTab ? `/app/vehicles/new?draft=${id}` : `/app/vehicles/${id}`)
+          }
+          pagination={
+            // Drafts are capped well under one page, so they never paginate.
+            !manualOrderMode && !isDraftsTab && data
+              ? { page: data.page, hasNextPage: data.page < data.totalPages, onPageChange: setPage }
+              : undefined
+          }
+          reorderable={manualOrderMode && !isDraftsTab}
           onReorder={handleReorder}
           emptyState={<EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />}
         />

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, ImageOff, ScanLine, Save, Sparkles } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
@@ -40,11 +40,17 @@ import {
 } from '@/modules/vehicles/types/vehicle.types'
 import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/modules/vehicles/hooks/use-vehicles'
 import {
+  usePublishVehicleDraft,
+  useSaveVehicleDraft,
+  useVehicleDrafts,
+} from '@/modules/vehicles/hooks/use-vehicle-drafts'
+import {
   formatRateOptionBasis,
   formatRateOptionMileage,
   formatRateOptionPrice,
   valuesFromVehicle,
 } from '@/modules/vehicles/utils/vehicle.utils'
+import { applyVehicleApiError } from '@/modules/vehicles/utils/vehicle-errors'
 
 const STEP_KEYS = ['details', 'photos', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
@@ -140,9 +146,23 @@ function hasValue(n: number | undefined): n is number {
 export function VehicleFormPage() {
   const { t } = useTranslation('vehicles')
   const { vehicleId } = useParams()
+  const [searchParams] = useSearchParams()
+  // "Continue editing" from the Drafts tab arrives as /vehicles/new?draft=<id>.
+  const draftId = searchParams.get('draft') ?? undefined
   const isEdit = Boolean(vehicleId)
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
+  // Drafts are capped at one page, so the list doubles as the lookup — no per-draft endpoint.
+  const { data: draftsData, isLoading: isLoadingDrafts } = useVehicleDrafts()
+  const draft = draftId ? draftsData?.items.find((d) => d.id === draftId) : undefined
+
+  if (draftId && isLoadingDrafts) {
+    return (
+      <PageContainer>
+        <LoadingState label={t('details.loading')} />
+      </PageContainer>
+    )
+  }
 
   if (isEdit && isLoading) {
     return (
@@ -161,17 +181,21 @@ export function VehicleFormPage() {
     )
   }
 
-  // Drafts are real records now (see "Save draft & exit"), so an in-progress vehicle is reopened
-  // by editing it from the Drafts tab — no separate localStorage restore prompt needed.
-  const initialValues = vehicle ? sanitizeFormValues(valuesFromVehicle(vehicle)) : EMPTY_VALUES
+  // A draft is whatever the wizard last held, so it may be missing anything — sanitize before
+  // handing it to the form, exactly as for a vehicle that predates a schema change.
+  const initialValues = vehicle
+    ? sanitizeFormValues(valuesFromVehicle(vehicle))
+    : draft
+      ? sanitizeFormValues({ ...EMPTY_VALUES, ...draft.payload })
+      : EMPTY_VALUES
 
   return (
     <VehicleForm
-      key={vehicle?.id ?? 'new'}
+      key={vehicle?.id ?? draftId ?? 'new'}
       initialValues={initialValues}
       vehicleId={vehicleId}
+      draftId={draftId}
       isEdit={isEdit}
-      existingIsDraft={vehicle?.isDraft}
     />
   )
 }
@@ -179,14 +203,14 @@ export function VehicleFormPage() {
 function VehicleForm({
   initialValues,
   vehicleId,
+  draftId,
   isEdit,
-  existingIsDraft,
 }: {
   initialValues: VehicleFormValues
   vehicleId?: string
+  /** Set when the wizard was reopened from a saved draft — "Save & exit" updates that draft. */
+  draftId?: string
   isEdit: boolean
-  /** Whether the vehicle being edited is currently a draft — preserved (not force-published) by "Save & exit". */
-  existingIsDraft?: boolean
 }) {
   const { t } = useTranslation('vehicles')
   const { t: tValidation } = useTranslation('validation')
@@ -194,6 +218,9 @@ function VehicleForm({
   const navigate = useNavigate()
   const createVehicle = useCreateVehicle()
   const updateVehicle = useUpdateVehicle(vehicleId ?? '')
+  const saveDraft = useSaveVehicleDraft()
+  // No delete hook here: publishing removes the draft server-side, in the same transaction.
+  const publishDraft = usePublishVehicleDraft()
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
   const [vinToDecode, setVinToDecode] = useState('')
@@ -212,6 +239,7 @@ function VehicleForm({
     handleSubmit,
     trigger,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<VehicleFormValues>({ resolver: zodResolver(schema), defaultValues: initialValues, mode: 'onChange' })
 
@@ -232,12 +260,13 @@ function VehicleForm({
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
   const saveDraftAndExit = () => {
-    const input: VehicleInput = { ...formValuesToVehicleInput(watchedValues), isDraft: isEdit ? Boolean(existingIsDraft) : true }
     const onSaved = () => navigate('/app/vehicles')
     if (isEdit && vehicleId) {
-      updateVehicle.mutate(input, { onSuccess: onSaved })
+      // An already-published vehicle stays published — "Save & exit" just saves what's there.
+      updateVehicle.mutate(formValuesToVehicleInput(watchedValues), { onSuccess: onSaved })
     } else {
-      createVehicle.mutate(input, { onSuccess: onSaved })
+      // Unvalidated on purpose: the whole point of a draft is that it isn't a valid vehicle yet.
+      saveDraft.mutate({ id: draftId, payload: watchedValues }, { onSuccess: onSaved })
     }
   }
 
@@ -309,14 +338,41 @@ function VehicleForm({
     }
   }
 
+  /**
+   * Puts a rejection back on the field that caused it and returns the user to that step.
+   * Otherwise a failed publish is just a toast on the Review step, with every field still
+   * looking valid and nothing indicating what to change.
+   */
+  const handleSubmitError = (error: unknown) => {
+    const applied = applyVehicleApiError(error, setError)
+    if (applied.step !== undefined) setStepIndex(applied.step)
+    if (!applied.handled) {
+      toast({ title: t('form.publishFailed'), description: applied.message, variant: 'error' })
+    }
+  }
+
   const onSubmit = (values: VehicleFormValues) => {
-    // Reaching the end of the wizard always publishes — graduates a draft (or confirms an
-    // already-published vehicle) to a real, non-draft record.
-    const input: VehicleInput = { ...formValuesToVehicleInput(values), isDraft: false }
+    const input: VehicleInput = formValuesToVehicleInput(values)
     if (isEdit && vehicleId) {
-      updateVehicle.mutate(input, { onSuccess: () => navigate(`/app/vehicles/${vehicleId}`) })
+      updateVehicle.mutate(input, {
+        onSuccess: () => navigate(`/app/vehicles/${vehicleId}`),
+        onError: handleSubmitError,
+      })
+    } else if (draftId) {
+      // One transaction: the draft is only discarded once the vehicle is accepted, so a
+      // rejected publish leaves it intact to correct and retry.
+      publishDraft.mutate(
+        { id: draftId, input },
+        {
+          onSuccess: (created) => navigate(`/app/vehicles/${created.id}`),
+          onError: handleSubmitError,
+        },
+      )
     } else {
-      createVehicle.mutate(input, { onSuccess: (created) => navigate(`/app/vehicles/${created.id}`) })
+      createVehicle.mutate(input, {
+        onSuccess: (created) => navigate(`/app/vehicles/${created.id}`),
+        onError: handleSubmitError,
+      })
     }
   }
 

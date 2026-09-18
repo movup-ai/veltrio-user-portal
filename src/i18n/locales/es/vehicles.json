@@ -16,6 +16,8 @@
     "dragToReorder_other": "{{count}} vehículos · arrastre para reordenar",
     "pageNote": "Mostrando {{from}}–{{to}} de {{total}} vehículos",
     "noneFound": "No se encontraron vehículos",
+    "draftsNote": "{{count}} borrador sin terminar",
+    "draftsNote_other": "{{count}} borradores sin terminar",
     "tabs": {
       "All": "Todos",
       "Available": "Disponibles",
@@ -36,7 +38,9 @@
     "rowActions": {
       "viewDetails": "Ver detalles",
       "editVehicle": "Editar vehículo",
-      "archiveVehicle": "Archivar vehículo"
+      "archiveVehicle": "Archivar vehículo",
+      "continueDraft": "Seguir editando",
+      "discardDraft": "Descartar borrador"
     }
   },
   "filters": {
@@ -157,6 +161,7 @@
   },
   "gallery": {
     "primaryPhoto": "Foto principal · 1600 × 900",
+    "processing": "Procesando…",
     "cover": "Portada",
     "showPhoto": "Mostrar {{name}}",
     "goToPage": "Ir a la página de fotos {{page}}",
@@ -278,7 +283,8 @@
       "seatsDoors": "Asientos / Puertas",
       "seatsDoorsValue": "{{seats}} asientos · {{doors}} puertas",
       "features": "Equipamiento"
-    }
+    },
+    "publishFailed": "No se pudo publicar el vehículo"
   },
   "rateOptions": {
     "emptyTitle": "Aún no hay opciones de tarifa",
@@ -315,6 +321,9 @@
   "toast": {
     "draftSaved": "Borrador guardado",
     "draftSavedDescription": "Puede terminar este vehículo más tarde desde la pestaña Borradores.",
+    "draftSaveFailed": "No se pudo guardar el borrador",
+    "draftDiscarded": "Borrador descartado",
+    "draftDiscardFailed": "No se pudo descartar el borrador",
     "added": "Vehículo añadido",
     "addedDescription": "{{name}} se añadió a la flota.",
     "addFailed": "No se pudo añadir el vehículo",
@@ -332,11 +341,13 @@
   },
   "errors": {
     "notFound": "Vehículo no encontrado",
+    "draftNotFound": "Borrador no encontrado",
     "vinTooShort": "Introduzca un VIN completo (al menos 11 caracteres) antes de decodificar.",
     "vinServiceUnreachable": "No se pudo contactar con el servicio de decodificación de VIN.",
     "vinServiceUnavailable": "El servicio de decodificación de VIN no está disponible en este momento.",
     "vinNoData": "El servicio de decodificación de VIN no devolvió datos.",
-    "vinUndecodable": "No se pudo decodificar este VIN."
+    "vinUndecodable": "No se pudo decodificar este VIN.",
+    "vinAlreadyExists": "Ya existe un vehículo con este VIN en su flota"
   },
   "features": {
     "title": "Equipamiento",
