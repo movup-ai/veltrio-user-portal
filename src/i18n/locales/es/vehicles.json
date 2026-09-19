@@ -58,6 +58,7 @@
     }
   },
   "sort": {
+    "manual": "Orden personalizado",
     "newest": "Más recientes primero",
     "utilization": "Uso",
     "dailyRate": "Tarifa diaria",
@@ -344,6 +345,8 @@
     "draftSaved": "Borrador guardado",
     "draftSavedDescription": "Puede terminar este vehículo más tarde desde la pestaña Borradores.",
     "draftSaveFailed": "No se pudo guardar el borrador",
+    "orderSaved": "Orden de la flota guardado",
+    "orderSaveFailed": "No se pudo guardar el orden de la flota",
     "draftDiscarded": "Borrador descartado",
     "draftDiscardFailed": "No se pudo descartar el borrador",
     "added": "Vehículo añadido",

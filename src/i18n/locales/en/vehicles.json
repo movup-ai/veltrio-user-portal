@@ -58,6 +58,7 @@
     }
   },
   "sort": {
+    "manual": "Custom order",
     "newest": "Newest first",
     "utilization": "Utilization",
     "dailyRate": "Daily rate",
@@ -344,6 +345,8 @@
     "draftSaved": "Draft saved",
     "draftSavedDescription": "You can finish this vehicle later from the Drafts tab.",
     "draftSaveFailed": "Could not save draft",
+    "orderSaved": "Fleet order saved",
+    "orderSaveFailed": "Could not save the fleet order",
     "draftDiscarded": "Draft discarded",
     "draftDiscardFailed": "Could not discard draft",
     "added": "Vehicle added",

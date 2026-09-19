@@ -96,6 +96,25 @@ export function useUpdateVehicle(id: string) {
   })
 }
 
+export function useReorderVehicles() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vehicleIds: string[]) => vehicleApi.reorder(vehicleIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
+      toast({ title: i18n.t('vehicles:toast.orderSaved'), variant: 'success' })
+    },
+    onError: (error) => {
+      toast({
+        title: i18n.t('vehicles:toast.orderSaveFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
+    },
+  })
+}
+
 export function useDeleteVehicle() {
   const queryClient = useQueryClient()
 

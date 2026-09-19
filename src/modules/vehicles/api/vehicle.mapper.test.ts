@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { toListQuery, toVehicle, toVehiclePayload, type VehicleWire } from './vehicle.mapper'
+import { VEHICLE_SORTS } from '../types/vehicle.types'
 import type { VehicleInput, VehicleListParams } from '../types/vehicle.types'
 
 const wire: VehicleWire = {
@@ -183,6 +184,14 @@ describe('toListQuery', () => {
   it('encodes active filters as slugs', () => {
     const query = toListQuery({ ...base, status: 'On rent', vehicleType: 'SUV', sortBy: 'dailyRate' })
     expect(query).toMatchObject({ status: 'on_rent', vehicleType: 'suv', sortBy: 'daily_rate' })
+  })
+
+  it('sends every sort the portal offers', () => {
+    // An unmapped sort would reach the API as undefined and silently fall back to name order.
+    for (const sortBy of VEHICLE_SORTS) {
+      expect(toListQuery({ ...base, sortBy }).sortBy).toBeTypeOf('string')
+    }
+    expect(toListQuery({ ...base, sortBy: 'manual' })).toMatchObject({ sortBy: 'manual' })
   })
 
   it('sends price bands under the API’s singular repeated key', () => {

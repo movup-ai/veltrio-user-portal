@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Car, ChevronDown, Download, Gauge, GripVertical, Plus, Tag, Wrench } from 'lucide-react'
@@ -31,10 +32,11 @@ import {
   type Transmission,
   type Vehicle,
   type VehiclePriceBand,
+  type VehicleListParams,
   type VehicleSort,
   type VehicleStatus,
 } from '@/modules/vehicles/types/vehicle.types'
-import { useDeleteVehicle, useVehicles, useVehicleStats } from '@/modules/vehicles/hooks/use-vehicles'
+import { useDeleteVehicle, useReorderVehicles, useVehicles, useVehicleStats, vehicleKeys } from '@/modules/vehicles/hooks/use-vehicles'
 import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
 
@@ -52,22 +54,19 @@ const PAGE_SIZE = 8
 /** One big page so the filtered set is draggable at once. 100 is the API's ceiling on `limit`. */
 const MANUAL_PAGE_SIZE = 100
 
-const MANUAL_ORDER_STORAGE_KEY = 'veltrio.vehicleManualOrder'
-
-function loadManualOrder(): string[] {
-  try {
-    const raw = localStorage.getItem(MANUAL_ORDER_STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-/** Known ids keep the saved order; anything new (or outside the current filters) falls in after, in fetch order. */
-function applyManualOrder(items: Vehicle[], order: string[]): Vehicle[] {
-  const known = items.filter((v) => order.includes(v.id)).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))
-  const unknown = items.filter((v) => !order.includes(v.id))
-  return [...known, ...unknown]
+/**
+ * The fleet order lives on the server and is shared across the tenant, so ordering only makes
+ * sense over the whole fleet: the API rejects a partial list rather than renumber vehicles the
+ * caller never saw. Entering order mode therefore drops the filters and shows everything.
+ */
+const UNFILTERED: Omit<VehicleListParams, 'page' | 'pageSize' | 'sortBy'> = {
+  search: undefined,
+  status: 'Any',
+  location: 'All',
+  vehicleType: 'All',
+  transmission: 'Any',
+  fuelType: 'Any',
+  priceBands: [],
 }
 
 export function VehiclesPage() {
@@ -91,7 +90,6 @@ export function VehiclesPage() {
   const [draftPriceBands, setDraftPriceBands] = useState<VehiclePriceBand[]>([])
   const [sortBy, setSortBy] = useState<VehicleSort>('newest')
   const [manualOrderMode, setManualOrderMode] = useState(false)
-  const [manualOrder, setManualOrder] = useState<string[]>(loadManualOrder)
   const [page, setPage] = useState(1)
   const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null)
 
@@ -101,18 +99,23 @@ export function VehiclesPage() {
   const effectiveStatus: VehicleStatus | 'Any' = tab === 'All' || isDraftsTab ? statusFilter : (tab as VehicleStatus)
 
   const listParams = useMemo(
-    () => ({
-      search: search || undefined,
-      status: effectiveStatus,
-      location: locationFilter,
-      vehicleType: typeFilter as (typeof VEHICLE_TYPES)[number] | 'All',
-      transmission: transmissionFilter,
-      fuelType: fuelTypeFilter,
-      priceBands,
-      sortBy,
-      page: manualOrderMode ? 1 : page,
-      pageSize: manualOrderMode ? MANUAL_PAGE_SIZE : PAGE_SIZE,
-    }),
+    () =>
+      manualOrderMode
+        ? // The reorder endpoint takes the whole fleet, so order mode ignores the filters
+          // rather than saving an arrangement of whatever happened to be on screen.
+          { ...UNFILTERED, sortBy: 'manual' as const, page: 1, pageSize: MANUAL_PAGE_SIZE }
+        : {
+            search: search || undefined,
+            status: effectiveStatus,
+            location: locationFilter,
+            vehicleType: typeFilter as (typeof VEHICLE_TYPES)[number] | 'All',
+            transmission: transmissionFilter,
+            fuelType: fuelTypeFilter,
+            priceBands,
+            sortBy,
+            page,
+            pageSize: PAGE_SIZE,
+          },
     [search, effectiveStatus, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
   )
 
@@ -124,7 +127,9 @@ export function VehiclesPage() {
   // Unfiltered: the stat cards describe the whole fleet, not the current view.
   const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: PAGE_SIZE })
   const { data: draftsData } = useVehicleDrafts()
+  const queryClient = useQueryClient()
   const deleteVehicle = useDeleteVehicle()
+  const reorderVehicles = useReorderVehicles()
   const deleteDraft = useDeleteVehicleDraft()
 
   const drafts = useMemo(() => (draftsData?.items ?? []).map(draftAsVehicle), [draftsData])
@@ -165,9 +170,27 @@ export function VehiclesPage() {
     })
   }
 
+  /**
+   * Leaving order mode pins the sort to the arrangement just made — otherwise the list snaps
+   * back to whatever it was sorted by before, hiding the order the user came here to set.
+   */
+  function toggleOrderMode() {
+    if (manualOrderMode) {
+      setSortBy('manual')
+      resetToFirstPage()
+    }
+    setManualOrderMode(!manualOrderMode)
+  }
+
   function handleReorder(orderedKeys: string[]) {
-    setManualOrder(orderedKeys)
-    localStorage.setItem(MANUAL_ORDER_STORAGE_KEY, JSON.stringify(orderedKeys))
+    // Optimistic: dragging has to feel immediate, and the server returns the same order.
+    // The mutation invalidates the list either way, so a rejected save snaps back.
+    queryClient.setQueryData(vehicleKeys.list(listParams), (current: unknown) => {
+      if (!current || typeof current !== 'object' || !('items' in current)) return current
+      const byId = new Map((current.items as Vehicle[]).map((v) => [v.id, v]))
+      return { ...current, items: orderedKeys.map((id) => byId.get(id)).filter(Boolean) }
+    })
+    reorderVehicles.mutate(orderedKeys)
   }
 
   const stats = [
@@ -197,8 +220,8 @@ export function VehiclesPage() {
     },
   ]
 
-  const items = isDraftsTab ? drafts : (data?.items ?? [])
-  const orderedItems = manualOrderMode && !isDraftsTab ? applyManualOrder(items, manualOrder) : items
+  // The server sorts; order mode requests sortBy=manual, so the fetched order is the order.
+  const orderedItems = isDraftsTab ? drafts : (data?.items ?? [])
 
   // A draft has no vehicle to open, so its row leads back into the wizard instead.
   const rows = orderedItems.map((v) =>
@@ -364,7 +387,7 @@ export function VehiclesPage() {
               )}
               <button
                 type="button"
-                onClick={() => setManualOrderMode((v) => !v)}
+                onClick={toggleOrderMode}
                 className={cn(
                   'flex h-8 shrink-0 items-center gap-2 rounded-[9px] border px-[11px] text-[12.5px] font-semibold whitespace-nowrap transition-colors',
                   manualOrderMode

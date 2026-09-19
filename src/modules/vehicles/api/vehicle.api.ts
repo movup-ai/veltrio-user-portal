@@ -45,4 +45,13 @@ export const vehicleApi = {
       .then((r) => toVehicle(r.data)),
 
   remove: (id: string) => apiClient.delete<void>(`/vehicles/${id}`).then((r) => r.data),
+
+  /**
+   * Sets the tenant's fleet order. Must list every vehicle exactly once — the API rejects a
+   * partial list, since reordering a filtered page would renumber vehicles nobody saw.
+   */
+  reorder: (vehicleIds: string[]) =>
+    apiClient
+      .put<VehicleWire[]>('/vehicles/order', { vehicleIds })
+      .then((r) => r.data.map(toVehicle)),
 }
