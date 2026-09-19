@@ -409,5 +409,25 @@
       "label": "Rear-View Camera",
       "description": "Backing assist with guides"
     }
+  },
+  "import": {
+    "title": "Import vehicles from CSV",
+    "description": "Upload a file to check it. Nothing is added until you confirm.",
+    "dropzone": "Drag & drop a CSV here, or click to browse",
+    "dropzoneHint": "Up to 500 vehicles, 5MB",
+    "checking": "Checking the file…",
+    "rowLabel": "Row {{row}}",
+    "unnamedRow": "Unnamed vehicle",
+    "summary": "{{valid}} ready · {{skipped}} skipped",
+    "confirm": "Import {{count}} vehicle",
+    "confirm_other": "Import {{count}} vehicles",
+    "confirmEmpty": "Import",
+    "chooseAnother": "Choose another file",
+    "downloadTemplate": "Download template",
+    "imported": "Imported {{count}} vehicle",
+    "imported_other": "Imported {{count}} vehicles",
+    "importFailed": "Could not import the vehicles",
+    "previewFailed": "Could not read that file",
+    "tooLarge": "That file is larger than {{size}}MB"
   }
 }

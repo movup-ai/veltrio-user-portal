@@ -409,5 +409,25 @@
       "label": "Cámara de marcha atrás",
       "description": "Asistencia con guías"
     }
+  },
+  "import": {
+    "title": "Importar vehículos desde CSV",
+    "description": "Suba un archivo para revisarlo. No se añade nada hasta que confirme.",
+    "dropzone": "Arrastre un CSV aquí, o haga clic para buscar",
+    "dropzoneHint": "Hasta 500 vehículos, 5MB",
+    "checking": "Comprobando el archivo…",
+    "rowLabel": "Fila {{row}}",
+    "unnamedRow": "Vehículo sin nombre",
+    "summary": "{{valid}} listos · {{skipped}} omitidos",
+    "confirm": "Importar {{count}} vehículo",
+    "confirm_other": "Importar {{count}} vehículos",
+    "confirmEmpty": "Importar",
+    "chooseAnother": "Elegir otro archivo",
+    "downloadTemplate": "Descargar plantilla",
+    "imported": "{{count}} vehículo importado",
+    "imported_other": "{{count}} vehículos importados",
+    "importFailed": "No se pudieron importar los vehículos",
+    "previewFailed": "No se pudo leer ese archivo",
+    "tooLarge": "Ese archivo supera los {{size}}MB"
   }
 }

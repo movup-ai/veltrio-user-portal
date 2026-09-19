@@ -39,6 +39,7 @@ import {
 import { useDeleteVehicle, useReorderVehicles, useVehicles, useVehicleStats, vehicleKeys } from '@/modules/vehicles/hooks/use-vehicles'
 import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
+import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImportDialog'
 
 /** No bookings API yet — mock data, matched to a vehicle by plate. See VehicleDetailsPage for the same temporary pattern. */
 const ALL_BOOKINGS = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]
@@ -92,6 +93,7 @@ export function VehiclesPage() {
   const [manualOrderMode, setManualOrderMode] = useState(false)
   const [page, setPage] = useState(1)
   const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
 
   usePageHeaderActions([{ label: t('list.addVehicle'), icon: Plus, onClick: () => navigate('/app/vehicles/new') }], [t])
 
@@ -242,7 +244,14 @@ export function VehiclesPage() {
       <PageHeader
         title={t('list.title')}
         description={t('list.description')}
-        actions={<PageActionButton icon={Download} label={t('list.importCsv')} className="!text-[13px]" />}
+        actions={
+          <PageActionButton
+            icon={Download}
+            label={t('list.importCsv')}
+            onClick={() => setImportOpen(true)}
+            className="!text-[13px]"
+          />
+        }
       />
 
       <StatStrip stats={stats} />
@@ -430,6 +439,8 @@ export function VehiclesPage() {
           emptyState={<EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />}
         />
       )}
+
+      <VehicleImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
