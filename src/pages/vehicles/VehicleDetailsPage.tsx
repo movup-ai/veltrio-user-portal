@@ -16,7 +16,6 @@ import { PanelHeading } from '@/components/layout/PanelHeading'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import type { Row } from '@/components/data-display/record-table.types'
 import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { initials } from '@/utils/formatting'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
 import type { BookingTuple } from '@/modules/bookings/types/booking.types'
@@ -30,7 +29,7 @@ import { VehicleSpecs } from '@/modules/vehicles/components/VehicleSpecs'
 import { VehicleStatusCard } from '@/modules/vehicles/components/VehicleStatusCard'
 import { availabilityForVehicle } from '@/modules/vehicles/utils/availability'
 import type { VehicleStatus } from '@/modules/vehicles/types/vehicle.types'
-import { useDeleteVehicle, useUpdateVehicle, useVehicle, useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
+import { useArchiveVehicle, useUpdateVehicle, useVehicle, useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
 import {
   formatRateOptionBasis,
   formatRateOptionMileage,
@@ -100,16 +99,9 @@ export function VehicleDetailsPage() {
   const { data: bookingLists } = useBookings()
   const schedule = bookingLists?.schedule ?? []
   const updateVehicle = useUpdateVehicle(vehicleId ?? '')
-  const deleteVehicle = useDeleteVehicle()
+  const archiveVehicle = useArchiveVehicle()
 
   usePageBreadcrumb(vehicle ? vehicleDisplayName(vehicle) : undefined)
-  usePageHeaderActions(
-    vehicle
-      ? [{ label: t('details.editVehicle'), icon: SquarePen, onClick: () => navigate(`/app/vehicles/${vehicle.id}/edit`) }]
-      : [],
-    [vehicle?.id, t],
-  )
-
   if (isLoading) {
     return (
       <PageContainer>
@@ -191,13 +183,19 @@ export function VehicleDetailsPage() {
               </>
             )}
             <PageActionButton icon={Archive} label={t('details.archive')} onClick={() => setConfirmArchive(true)} />
+            <PageActionButton
+              icon={SquarePen}
+              label={t('details.editVehicle')}
+              variant="solid"
+              onClick={() => navigate(`/app/vehicles/${vehicle.id}/edit`)}
+            />
           </>
         }
       />
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex min-w-0 flex-[2_1_560px] flex-col gap-4">
-          <VehiclePhotoGallery key={vehicle.id} photos={vehicle.photos} />
+          <VehiclePhotoGallery key={vehicle.id} vehicleId={vehicle.id} photos={vehicle.photos} />
           <AvailabilityStrip vehicle={vehicle} busy={busy} />
           <VehicleSpecs vehicle={vehicle} />
 
@@ -293,9 +291,9 @@ export function VehicleDetailsPage() {
         title={t('archiveDialog.title')}
         description={t('archiveDialog.description', { name: vehicleDisplayName(vehicle), plate: vehicle.plate })}
         confirmLabel={t('archiveDialog.confirm')}
-        loading={deleteVehicle.isPending}
+        loading={archiveVehicle.isPending}
         onConfirm={() => {
-          deleteVehicle.mutate(vehicle, { onSuccess: () => navigate('/app/vehicles') })
+          archiveVehicle.mutate(vehicle, { onSuccess: () => navigate("/app/vehicles") })
         }}
       />
     </PageContainer>

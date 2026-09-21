@@ -20,10 +20,22 @@ function CellContent({ cell }: { cell: Cell }) {
       return (
         <div className="flex items-center gap-2.5">
           <span
-            className="flex size-[30px] shrink-0 items-center justify-center text-[11px] font-bold"
-            style={{ background: cell.avatarBg, color: cell.avatarFg, borderRadius: cell.avatarRadius ?? '99px' }}
+            className="flex shrink-0 items-center justify-center overflow-hidden font-bold"
+            style={{
+              width: cell.avatarSize ?? 30,
+              height: cell.avatarSize ?? 30,
+              // Initials track the box size.
+              fontSize: cell.avatarSize ? Math.round(cell.avatarSize * 0.37) : 11,
+              background: cell.avatarBg,
+              color: cell.avatarFg,
+              borderRadius: cell.avatarRadius ?? '99px',
+            }}
           >
-            {cell.initials}
+            {cell.imageUrl ? (
+              <img src={cell.imageUrl} alt="" className="size-full object-cover" loading="lazy" />
+            ) : (
+              cell.initials
+            )}
           </span>
           <span className="min-w-0">
             <span className="block truncate text-[13.5px] font-semibold whitespace-nowrap">{cell.primary}</span>

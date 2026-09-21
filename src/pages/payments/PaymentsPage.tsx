@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { useFormatters } from '@/i18n'
 import { PAYMENTS } from '@/modules/payments/mock/payment.mock'
 import { paymentColumns, paymentRow } from '@/modules/payments/utils/payment.utils'
@@ -24,7 +23,6 @@ export function PaymentsPage() {
   const format = useFormatters()
   const [tab, setTab] = useState<Tab>('All')
 
-  usePageHeaderActions([{ label: t('list.recordPayment'), icon: Plus }], [t])
 
   const payments = tab === 'All' ? PAYMENTS : PAYMENTS.filter((p) => p[5] === tab)
   const rows = payments.map(paymentRow)
@@ -34,7 +32,12 @@ export function PaymentsPage() {
       <PageHeader
         title={t('list.title')}
         description={t('list.description')}
-        actions={<PageActionButton icon={Download} label={t('list.payoutReport')} />}
+        actions={
+          <>
+            <PageActionButton icon={Download} label={t('list.payoutReport')} />
+            <PageActionButton icon={Plus} label={t('list.recordPayment')} variant="solid" />
+          </>
+        }
       />
 
       <FilterBar

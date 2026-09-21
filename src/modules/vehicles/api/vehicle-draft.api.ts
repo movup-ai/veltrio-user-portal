@@ -3,7 +3,16 @@ import { toLimitOffset, toPaginatedResult, type ListEnvelope } from '@/lib/pagin
 import type { PaginationParams } from '@/types/common'
 import type { VehicleDraft, VehicleDraftPayload } from '../types/vehicle-draft.types'
 import type { VehicleInput } from '../types/vehicle.types'
-import { toVehicle, toVehiclePayload, type VehicleWire } from './vehicle.mapper'
+import { toPhoto, toVehicle, toVehiclePayload, type VehiclePhotoWire, type VehicleWire } from './vehicle.mapper'
+
+interface VehicleDraftWire extends Omit<VehicleDraft, 'photos'> {
+  photos?: VehiclePhotoWire[]
+}
+
+/** Photos come over the wire in the same shape as a vehicle's, so they map the same way. */
+function toDraft(wire: VehicleDraftWire): VehicleDraft {
+  return { ...wire, photos: (wire.photos ?? []).map(toPhoto) }
+}
 
 /**
  * Part-filled wizards, saved by "Save draft & exit". Kept apart from /vehicles because a draft
@@ -13,14 +22,16 @@ import { toVehicle, toVehiclePayload, type VehicleWire } from './vehicle.mapper'
 export const vehicleDraftApi = {
   list: (params: PaginationParams) =>
     apiClient
-      .get<ListEnvelope<VehicleDraft>>('/vehicles/drafts', { params: toLimitOffset(params) })
-      .then((r) => toPaginatedResult(r.data.items, r.data.total, params)),
+      .get<ListEnvelope<VehicleDraftWire>>('/vehicles/drafts', { params: toLimitOffset(params) })
+      .then((r) => toPaginatedResult(r.data.items.map(toDraft), r.data.total, params)),
 
   create: (payload: VehicleDraftPayload) =>
-    apiClient.post<VehicleDraft>('/vehicles/drafts', { payload }).then((r) => r.data),
+    apiClient.post<VehicleDraftWire>('/vehicles/drafts', { payload }).then((r) => toDraft(r.data)),
 
   update: (id: string, payload: VehicleDraftPayload) =>
-    apiClient.patch<VehicleDraft>(`/vehicles/drafts/${id}`, { payload }).then((r) => r.data),
+    apiClient
+      .patch<VehicleDraftWire>(`/vehicles/drafts/${id}`, { payload })
+      .then((r) => toDraft(r.data)),
 
   remove: (id: string) => apiClient.delete<void>(`/vehicles/drafts/${id}`).then((r) => r.data),
 

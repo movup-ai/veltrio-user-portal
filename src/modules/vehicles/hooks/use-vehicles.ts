@@ -3,6 +3,7 @@ import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { vehicleApi } from '../api/vehicle.api'
+import { isPending } from '../api/vehicle-photo.api'
 import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
 
 export const vehicleKeys = {
@@ -42,11 +43,17 @@ export function useVehicleStats(params: VehicleListParams) {
   })
 }
 
+/** How often to re-check a vehicle whose photos the worker is still rendering. */
+const PHOTO_POLL_MS = 2_000
+
 export function useVehicle(id: string | undefined) {
   return useQuery({
     queryKey: vehicleKeys.detail(id ?? ''),
     queryFn: () => vehicleApi.get(id as string),
     enabled: Boolean(id),
+    // Poll only while the worker still has variants to render, then stop.
+    refetchInterval: (query) =>
+      query.state.data?.photos.some((photo) => isPending(photo.status)) ? PHOTO_POLL_MS : false,
   })
 }
 
@@ -89,14 +96,32 @@ export function useUpdateVehicle(id: string) {
   })
 }
 
-export function useDeleteVehicle() {
+export function useReorderVehicles() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (vehicle: Vehicle) => vehicleApi.remove(vehicle.id).then(() => vehicle),
+    mutationFn: (vehicleIds: string[]) => vehicleApi.reorder(vehicleIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() })
+      toast({ title: i18n.t('vehicles:toast.orderSaved'), variant: 'success' })
+    },
+    onError: (error) => {
+      toast({
+        title: i18n.t('vehicles:toast.orderSaveFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
+    },
+  })
+}
+
+export function useArchiveVehicle() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vehicle: Vehicle) => vehicleApi.archive(vehicle.id).then(() => vehicle),
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
-      queryClient.removeQueries({ queryKey: vehicleKeys.detail(vehicle.id) })
       toast({
         title: i18n.t('vehicles:toast.archived'),
         description: i18n.t('vehicles:toast.archivedDescription', { name: vehicleName(vehicle) }),
@@ -105,6 +130,25 @@ export function useDeleteVehicle() {
     },
     onError: (error) => {
       toast({ title: i18n.t('vehicles:toast.archiveFailed'), description: normalizeApiError(error).message, variant: 'error' })
+    },
+  })
+}
+
+export function useRestoreVehicle() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vehicle: Vehicle) => vehicleApi.restore(vehicle.id).then(() => vehicle),
+    onSuccess: (vehicle) => {
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      toast({
+        title: i18n.t('vehicles:toast.restored'),
+        description: i18n.t('vehicles:toast.restoredDescription', { name: vehicleName(vehicle) }),
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      toast({ title: i18n.t('vehicles:toast.restoreFailed'), description: normalizeApiError(error).message, variant: 'error' })
     },
   })
 }

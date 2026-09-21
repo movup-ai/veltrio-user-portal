@@ -23,7 +23,8 @@
       "Available": "Disponibles",
       "On rent": "Alquilados",
       "Maintenance": "En mantenimiento",
-      "Drafts": "Borradores"
+      "Drafts": "Borradores",
+      "Archived": "Archivados"
     },
     "stats": {
       "fleetSize": "Tamaño de la flota",
@@ -40,7 +41,8 @@
       "editVehicle": "Editar vehículo",
       "archiveVehicle": "Archivar vehículo",
       "continueDraft": "Seguir editando",
-      "discardDraft": "Descartar borrador"
+      "discardDraft": "Descartar borrador",
+      "restoreVehicle": "Restaurar vehículo"
     }
   },
   "filters": {
@@ -58,6 +60,8 @@
     }
   },
   "sort": {
+    "manual": "Orden personalizado",
+    "newest": "Más recientes primero",
     "utilization": "Uso",
     "dailyRate": "Tarifa diaria",
     "name": "Nombre del vehículo"
@@ -170,7 +174,10 @@
       "rear": "Trasera 3/4",
       "interior": "Interior",
       "odometer": "Odómetro"
-    }
+    },
+    "title": "Fotos",
+    "previousPhoto": "Foto anterior",
+    "nextPhoto": "Foto siguiente"
   },
   "form": {
     "addTitle": "Añadir vehículo",
@@ -316,12 +323,32 @@
     "limitReachedDescription": "Puede subir hasta {{max}} fotos.",
     "limitPartial": "Solo se añadieron {{added}} más — máximo {{max}} fotos en total.",
     "skipped": "Se omitieron algunas fotos",
-    "skippedDescription": "Cada foto debe pesar menos de {{size}} MB."
+    "skippedDescription": "Cada foto debe pesar menos de {{size}} MB.",
+    "unsupportedType": "{{name}} no es un tipo de imagen admitido",
+    "tooLarge": "{{name}} supera los 15 MB",
+    "overLimit": "{{name}} omitida — un vehículo puede tener como máximo {{max}} fotos",
+    "uploading": "Subiendo",
+    "processing": "Procesando",
+    "failed": "Error al subir",
+    "retry": "Reintentar",
+    "dismiss": "Descartar",
+    "uploadSummary": "{{count}} foto subida",
+    "uploadSummary_other": "{{count}} fotos subidas",
+    "uploadFailed": "Algunas fotos no se pudieron subir",
+    "addPhotos": "Añadir fotos",
+    "deleted": "Foto eliminada",
+    "deleteFailed": "No se pudo eliminar la foto",
+    "reorderFailed": "No se pudo guardar el nuevo orden",
+    "processingHint": "Las fotos aparecerán aquí cuando termine el procesamiento.",
+    "countOf": "{{count}} de {{max}}",
+    "someFailed": "Algunas fotos no se pudieron procesar. Elimínelas y vuelva a subirlas."
   },
   "toast": {
     "draftSaved": "Borrador guardado",
     "draftSavedDescription": "Puede terminar este vehículo más tarde desde la pestaña Borradores.",
     "draftSaveFailed": "No se pudo guardar el borrador",
+    "orderSaved": "Orden de la flota guardado",
+    "orderSaveFailed": "No se pudo guardar el orden de la flota",
     "draftDiscarded": "Borrador descartado",
     "draftDiscardFailed": "No se pudo descartar el borrador",
     "added": "Vehículo añadido",
@@ -332,11 +359,14 @@
     "updateFailed": "No se pudo actualizar el vehículo",
     "archived": "Vehículo archivado",
     "archivedDescription": "{{name}} se archivó y se retiró de la flota activa.",
-    "archiveFailed": "No se pudo archivar el vehículo"
+    "archiveFailed": "No se pudo archivar el vehículo",
+    "restored": "Vehículo restaurado",
+    "restoredDescription": "{{name}} vuelve a la flota.",
+    "restoreFailed": "No se pudo restaurar el vehículo"
   },
   "archiveDialog": {
     "title": "¿Archivar vehículo?",
-    "description": "{{name}} ({{plate}}) se archivará y se retirará de la flota activa. Esta acción no se puede deshacer.",
+    "description": "{{name}} ({{plate}}) se retirará de la flota activa. Puede restaurarlo desde la pestaña Archivados.",
     "confirm": "Archivar vehículo"
   },
   "errors": {
@@ -384,5 +414,25 @@
       "label": "Cámara de marcha atrás",
       "description": "Asistencia con guías"
     }
+  },
+  "import": {
+    "title": "Importar vehículos desde CSV",
+    "description": "Suba un archivo para revisarlo. No se añade nada hasta que confirme.",
+    "dropzone": "Arrastre un CSV aquí, o haga clic para buscar",
+    "dropzoneHint": "Hasta 500 vehículos, 5MB",
+    "checking": "Comprobando el archivo…",
+    "rowLabel": "Fila {{row}}",
+    "unnamedRow": "Vehículo sin nombre",
+    "summary": "{{valid}} listos · {{skipped}} omitidos",
+    "confirm": "Importar {{count}} vehículo",
+    "confirm_other": "Importar {{count}} vehículos",
+    "confirmEmpty": "Importar",
+    "chooseAnother": "Elegir otro archivo",
+    "downloadTemplate": "Descargar plantilla",
+    "imported": "{{count}} vehículo importado",
+    "imported_other": "{{count}} vehículos importados",
+    "importFailed": "No se pudieron importar los vehículos",
+    "previewFailed": "No se pudo leer ese archivo",
+    "tooLarge": "Ese archivo supera los {{size}}MB"
   }
 }

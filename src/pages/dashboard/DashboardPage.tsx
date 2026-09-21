@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Banknote, CalendarCheck, Download, Gauge, KeyRound, Plus } from 'lucide-react'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { RecordTable } from '@/components/data-display/RecordTable'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { useFormatters } from '@/i18n'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
 import { bookingColumns, bookingRow } from '@/modules/bookings/utils/booking.utils'
@@ -23,10 +23,10 @@ export function DashboardPage() {
   const { t } = useTranslation('dashboard')
   const { t: tBookings } = useTranslation('bookings')
   const format = useFormatters()
+  const navigate = useNavigate()
   const [range, setRange] = useState<(typeof RANGES)[number]>('30d')
   const [tab, setTab] = useState<BookingTab>('upcoming')
 
-  usePageHeaderActions([{ label: t('newBooking'), icon: Plus }], [t])
 
   const rows = (tab === 'upcoming' ? BOOKINGS_UPCOMING : BOOKINGS_RECENT).map((b) => bookingRow(b))
 
@@ -41,13 +41,13 @@ export function DashboardPage() {
         })}
         actions={
           <>
-            <div className="bg-surface border-border flex overflow-hidden rounded-[9px] border">
+            <div className="bg-surface border-border flex h-[34px] overflow-hidden rounded-[9px] border">
               {RANGES.map((r, i) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setRange(r)}
-                  className="hover:bg-surface-3 px-[13px] py-[7px] text-[12.5px] transition-colors"
+                  className="hover:bg-surface-3 flex items-center px-[13px] text-[12.5px] transition-colors"
                   style={{
                     borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)',
                     background: range === r ? 'var(--color-surface-3)' : 'var(--color-surface)',
@@ -60,6 +60,12 @@ export function DashboardPage() {
               ))}
             </div>
             <PageActionButton icon={Download} label={t('export')} />
+            <PageActionButton
+              icon={Plus}
+              label={t('newBooking')}
+              variant="solid"
+              onClick={() => navigate('/app/bookings/new')}
+            />
           </>
         }
       />

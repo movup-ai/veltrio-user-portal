@@ -45,7 +45,9 @@ export function draftAsVehicle(draft: VehicleDraft): Vehicle {
     mileage: values.mileage ?? 0,
     utilization: 0,
     description: values.description,
-    photos: values.photos ?? [],
+    // From the draft record, not its payload: photos are uploaded against the draft and the
+    // payload deliberately carries none (it is JSON with a 64 KB cap).
+    photos: draft.photos,
     rateOptions: values.rateOptions ?? [],
     fees: {
       deposit: values.deposit,
@@ -76,7 +78,9 @@ export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
     plate: vehicle.plate,
     vin: vehicle.vin,
     location: vehicle.location,
-    status: vehicle.status,
+    // Archiving is its own action, so the form has no such option — an archived vehicle opened
+    // for editing shows the status it would return to.
+    status: vehicle.status === 'Archived' ? 'Available' : vehicle.status,
     mileage: vehicle.mileage,
     transmission: vehicle.specs.transmission,
     fuelType: vehicle.specs.fuelType,
@@ -186,6 +190,9 @@ export function vehicleRow(v: Vehicle, tripsCount: number, actions: RowActionIte
         primary: vehicleDisplayName(v),
         secondary: vehicleSubtitle(v),
         initials: vehicleInitials(v),
+        // Cover photo, falling back to initials while it processes or when there is none.
+        imageUrl: v.photos[0] ? photoThumbnail(v.photos[0]) || undefined : undefined,
+        avatarSize: 46,
         avatarBg: 'var(--color-surface-3)',
         avatarFg: 'var(--color-fg-3)',
         avatarRadius: '8px',

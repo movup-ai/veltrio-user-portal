@@ -14,7 +14,6 @@ import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { useFormatters } from '@/i18n'
 import { BookingActivity } from '@/modules/bookings/components/BookingActivity'
 import { BookingAgreementCard } from '@/modules/bookings/components/BookingAgreementCard'
@@ -64,11 +63,6 @@ export function BookingDetailsPage() {
   usePageBreadcrumb(bookingId)
   // Checking in a rental that has already been returned and closed is meaningless.
   const stillOpen = booking != null && booking.stages.at(-1)?.state !== 'done'
-  usePageHeaderActions(
-    stillOpen ? [{ label: t('details.actions.checkIn'), icon: KeyRound, onClick: () => pending(t('details.actions.checkIn')) }] : [],
-    [booking?.reference, stillOpen, t],
-  )
-
   /**
    * Every write on this page needs an endpoint that doesn't exist yet, so the ones that can't be
    * faked honestly say so rather than pretending to have worked. See booking.api.ts.
@@ -119,6 +113,14 @@ export function BookingDetailsPage() {
                 window.location.href = `mailto:${booking.renter.email}?subject=${encodeURIComponent(booking.reference)}`
               }}
             />
+            {stillOpen && (
+              <PageActionButton
+                icon={KeyRound}
+                label={t('details.actions.checkIn')}
+                variant="solid"
+                onClick={() => pending(t('details.actions.checkIn'))}
+              />
+            )}
           </>
         }
       />

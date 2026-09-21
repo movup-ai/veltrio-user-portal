@@ -23,7 +23,8 @@
       "Available": "Available",
       "On rent": "On rent",
       "Maintenance": "Maintenance",
-      "Drafts": "Drafts"
+      "Drafts": "Drafts",
+      "Archived": "Archived"
     },
     "stats": {
       "fleetSize": "Fleet size",
@@ -40,7 +41,8 @@
       "editVehicle": "Edit vehicle",
       "archiveVehicle": "Archive vehicle",
       "continueDraft": "Continue editing",
-      "discardDraft": "Discard draft"
+      "discardDraft": "Discard draft",
+      "restoreVehicle": "Restore vehicle"
     }
   },
   "filters": {
@@ -58,6 +60,8 @@
     }
   },
   "sort": {
+    "manual": "Custom order",
+    "newest": "Newest first",
     "utilization": "Utilization",
     "dailyRate": "Daily rate",
     "name": "Vehicle name"
@@ -170,7 +174,10 @@
       "rear": "Rear 3/4",
       "interior": "Interior",
       "odometer": "Odometer"
-    }
+    },
+    "title": "Photos",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo"
   },
   "form": {
     "addTitle": "Add vehicle",
@@ -316,12 +323,32 @@
     "limitReachedDescription": "You can upload up to {{max}} photos.",
     "limitPartial": "Only added {{added}} more — max {{max}} photos total.",
     "skipped": "Some photos were skipped",
-    "skippedDescription": "Each photo must be under {{size}}MB."
+    "skippedDescription": "Each photo must be under {{size}}MB.",
+    "unsupportedType": "{{name}} is not a supported image type",
+    "tooLarge": "{{name}} is larger than 15 MB",
+    "overLimit": "{{name}} skipped — a vehicle can have at most {{max}} photos",
+    "uploading": "Uploading",
+    "processing": "Processing",
+    "failed": "Upload failed",
+    "retry": "Retry",
+    "dismiss": "Dismiss",
+    "uploadSummary": "{{count}} photo uploaded",
+    "uploadSummary_other": "{{count}} photos uploaded",
+    "uploadFailed": "Some photos could not be uploaded",
+    "addPhotos": "Add photos",
+    "deleted": "Photo removed",
+    "deleteFailed": "Could not remove photo",
+    "reorderFailed": "Could not save the new order",
+    "processingHint": "Photos appear here once processing finishes.",
+    "countOf": "{{count}} of {{max}}",
+    "someFailed": "Some photos could not be processed. Remove and re-upload them."
   },
   "toast": {
     "draftSaved": "Draft saved",
     "draftSavedDescription": "You can finish this vehicle later from the Drafts tab.",
     "draftSaveFailed": "Could not save draft",
+    "orderSaved": "Fleet order saved",
+    "orderSaveFailed": "Could not save the fleet order",
     "draftDiscarded": "Draft discarded",
     "draftDiscardFailed": "Could not discard draft",
     "added": "Vehicle added",
@@ -332,11 +359,14 @@
     "updateFailed": "Could not update vehicle",
     "archived": "Vehicle archived",
     "archivedDescription": "{{name}} was archived and removed from the active fleet.",
-    "archiveFailed": "Could not archive vehicle"
+    "archiveFailed": "Could not archive vehicle",
+    "restored": "Vehicle restored",
+    "restoredDescription": "{{name}} is back in the fleet.",
+    "restoreFailed": "Could not restore the vehicle"
   },
   "archiveDialog": {
     "title": "Archive vehicle?",
-    "description": "{{name}} ({{plate}}) will be archived and removed from the active fleet. This can't be undone.",
+    "description": "{{name}} ({{plate}}) will be removed from the active fleet. You can restore it from the Archived tab.",
     "confirm": "Archive vehicle"
   },
   "errors": {
@@ -384,5 +414,25 @@
       "label": "Rear-View Camera",
       "description": "Backing assist with guides"
     }
+  },
+  "import": {
+    "title": "Import vehicles from CSV",
+    "description": "Upload a file to check it. Nothing is added until you confirm.",
+    "dropzone": "Drag & drop a CSV here, or click to browse",
+    "dropzoneHint": "Up to 500 vehicles, 5MB",
+    "checking": "Checking the file…",
+    "rowLabel": "Row {{row}}",
+    "unnamedRow": "Unnamed vehicle",
+    "summary": "{{valid}} ready · {{skipped}} skipped",
+    "confirm": "Import {{count}} vehicle",
+    "confirm_other": "Import {{count}} vehicles",
+    "confirmEmpty": "Import",
+    "chooseAnother": "Choose another file",
+    "downloadTemplate": "Download template",
+    "imported": "Imported {{count}} vehicle",
+    "imported_other": "Imported {{count}} vehicles",
+    "importFailed": "Could not import the vehicles",
+    "previewFailed": "Could not read that file",
+    "tooLarge": "That file is larger than {{size}}MB"
   }
 }

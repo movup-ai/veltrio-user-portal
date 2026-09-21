@@ -1,5 +1,19 @@
-export const VEHICLE_STATUSES = ['Available', 'On rent', 'Maintenance', 'Out of service'] as const
+export const VEHICLE_STATUSES = [
+  'Available',
+  'On rent',
+  'Maintenance',
+  'Out of service',
+  'Archived',
+] as const
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number]
+
+/**
+ * The statuses a person can pick. Archiving is its own action with its own endpoint, so it is
+ * not offered as a value to set by hand.
+ */
+export const SELECTABLE_VEHICLE_STATUSES = VEHICLE_STATUSES.filter(
+  (status) => status !== 'Archived',
+) as readonly Exclude<VehicleStatus, 'Archived'>[]
 
 export const VEHICLE_TYPES = [
   'Convertible',
@@ -68,6 +82,8 @@ export interface VehiclePhoto {
   /** Data URL (locally picked file) or the medium CDN variant. Empty while a photo is processing. */
   url: string
   name: string
+  /** The picked file, held until uploaded. Client-side only — never sent in a payload. */
+  file?: File
   /** Server-side only — every rendered size, for a srcSet. Absent for locally picked files. */
   variants?: PhotoVariant[]
   /** Dimensions of the original, for reserving layout space. */
@@ -145,7 +161,7 @@ export interface VehicleStats {
 /** Payload shape for create/update — server assigns id/createdAt/utilization. */
 export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization'>
 
-export const VEHICLE_SORTS = ['utilization', 'dailyRate', 'name'] as const
+export const VEHICLE_SORTS = ['manual', 'newest', 'utilization', 'dailyRate', 'name'] as const
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
 
 /** Bounds only — the display label lives in `vehicles:filters.priceBand.<value>`. */

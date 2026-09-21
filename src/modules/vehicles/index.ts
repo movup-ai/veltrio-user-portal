@@ -1,5 +1,5 @@
 export { vehicleApi } from './api/vehicle.api'
-export { vehicleKeys, useVehicles, useVehicle, useCreateVehicle, useUpdateVehicle, useDeleteVehicle } from './hooks/use-vehicles'
+export { vehicleKeys, useVehicles, useVehicle, useCreateVehicle, useUpdateVehicle, useArchiveVehicle } from './hooks/use-vehicles'
 export { vehicleFormSchema, rateOptionSchema, type VehicleFormValues, type RateOptionValues } from './schema/vehicle.schema'
 export { RateOptionsEditor } from './components/RateOptionsEditor'
 export {

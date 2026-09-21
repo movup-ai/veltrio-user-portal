@@ -8,7 +8,7 @@ import {
   TRANSMISSIONS,
   VEHICLE_TYPES,
   VEHICLE_FEATURES,
-  VEHICLE_STATUSES,
+  SELECTABLE_VEHICLE_STATUSES,
 } from '../types/vehicle.types'
 
 const optionalNumber = z.number().nonnegative().optional().or(z.nan().transform(() => undefined))
@@ -17,6 +17,8 @@ export const vehiclePhotoSchema = z.object({
   id: z.string(),
   url: z.string(),
   name: z.string(),
+  /** Present only for a photo picked in this session, until it has been uploaded. */
+  file: z.instanceof(File).optional(),
 })
 
 /** Max block duration per unit — keeps "3 months" valid but rejects "400 hours". */
@@ -27,7 +29,8 @@ const MAX_BLOCK_DURATION: Record<(typeof DURATION_UNITS)[number], number> = {
   months: 12,
 }
 
-const MAX_PHOTOS = 10
+/** Matches MAX_PHOTOS_PER_VEHICLE on the API, which rejects anything beyond it. */
+const MAX_PHOTOS = 20
 
 type ValidationT = TFunction<'validation'>
 
@@ -85,7 +88,7 @@ export function vehicleFormSchema(t: ValidationT) {
       .regex(/^[A-Za-z0-9·\-\s]+$/, t('vehicle.plateInvalid')),
     vin: z.string().min(11, t('vehicle.vinTooShort')).max(20, t('vehicle.vinTooLong')),
     location: z.string().min(1, t('vehicle.locationRequired')),
-    status: z.enum(VEHICLE_STATUSES, { message: t('vehicle.statusRequired') }),
+    status: z.enum(SELECTABLE_VEHICLE_STATUSES, { message: t('vehicle.statusRequired') }),
     mileage: z.number({ message: t('vehicle.mileageRequired') }).int().min(0, t('vehicle.mileageNegative')),
     transmission: z.enum(TRANSMISSIONS, { message: t('vehicle.transmissionRequired') }),
     fuelType: z.enum(FUEL_TYPES, { message: t('vehicle.fuelTypeRequired') }),

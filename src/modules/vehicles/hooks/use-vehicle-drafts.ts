@@ -4,6 +4,7 @@ import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import type { PaginationParams } from '@/types/common'
 import { vehicleDraftApi } from '../api/vehicle-draft.api'
+import { isPending } from '../api/vehicle-photo.api'
 import type { VehicleInput } from '../types/vehicle.types'
 import { vehicleKeys } from './use-vehicles'
 import type { VehicleDraftPayload } from '../types/vehicle-draft.types'
@@ -16,11 +17,19 @@ export const vehicleDraftKeys = {
 /** The API caps drafts per tenant well below this, so one page always holds them all. */
 export const DRAFTS_PAGE: PaginationParams = { page: 1, pageSize: 50 }
 
+/** Matches the vehicle detail poll — a cover photo takes a second or two to render. */
+const PHOTO_POLL_MS = 2_000
+
 export function useVehicleDrafts(params: PaginationParams = DRAFTS_PAGE) {
   return useQuery({
     queryKey: vehicleDraftKeys.list(params),
     queryFn: () => vehicleDraftApi.list(params),
     placeholderData: (previous) => previous,
+    // Poll only while a cover is still processing, or its cell stays blank until a refresh.
+    refetchInterval: (query) =>
+      query.state.data?.items.some((draft) => draft.photos.some((p) => isPending(p.status)))
+        ? PHOTO_POLL_MS
+        : false,
   })
 }
 
@@ -83,6 +92,7 @@ export function useDeleteVehicleDraft() {
   const queryClient = useQueryClient()
 
   return useMutation({
+    // The API deletes the draft's photos and their stored files along with it.
     mutationFn: (id: string) => vehicleDraftApi.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: vehicleDraftKeys.all })

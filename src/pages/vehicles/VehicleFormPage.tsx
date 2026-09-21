@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, ImageOff, ScanLine, Save, Sparkles } from 'lucide-react'
+import { ArrowRight, ImageOff, Loader2, ScanLine, Save, Sparkles } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
 import { Card } from '@/components/ui/card'
@@ -14,10 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Combobox } from '@/components/ui/combobox'
 import { toast } from '@/components/ui/use-toast'
 import { ApiError } from '@/types/api'
+import { normalizeApiError } from '@/services/api/errors'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { FormField } from '@/components/forms/FormField'
 import { PhotoDropzone } from '@/components/forms/PhotoDropzone'
+import { VehiclePhotoEditor } from '@/modules/vehicles/components/VehiclePhotoEditor'
 import { RateOptionsEditor } from '@/modules/vehicles/components/RateOptionsEditor'
 import { VehicleFeatureChips } from '@/modules/vehicles/components/VehicleFeatureChips'
 import { VehicleFeaturesPicker } from '@/modules/vehicles/components/VehicleFeaturesPicker'
@@ -35,8 +37,9 @@ import {
   FUEL_TYPES,
   TRANSMISSIONS,
   VEHICLE_TYPES,
-  VEHICLE_STATUSES,
+  SELECTABLE_VEHICLE_STATUSES,
   type VehicleInput,
+  type VehiclePhoto,
 } from '@/modules/vehicles/types/vehicle.types'
 import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/modules/vehicles/hooks/use-vehicles'
 import {
@@ -48,9 +51,13 @@ import {
   formatRateOptionBasis,
   formatRateOptionMileage,
   formatRateOptionPrice,
+  photoThumbnail,
   valuesFromVehicle,
 } from '@/modules/vehicles/utils/vehicle.utils'
 import { applyVehicleApiError } from '@/modules/vehicles/utils/vehicle-errors'
+import { handOffPhotos } from '@/modules/vehicles/utils/photo-handoff'
+import { uploadPhotos } from '@/modules/vehicles/hooks/use-photo-upload'
+import { draftTarget, vehicleTarget, type PhotoTarget } from '@/modules/vehicles/api/vehicle-photo.api'
 
 const STEP_KEYS = ['details', 'photos', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
@@ -100,7 +107,7 @@ function sanitizeFormValues(values: VehicleFormValues): VehicleFormValues {
     ...EMPTY_VALUES,
     ...values,
     vehicleType: (VEHICLE_TYPES as readonly string[]).includes(values.vehicleType) ? values.vehicleType : EMPTY_VALUES.vehicleType,
-    status: (VEHICLE_STATUSES as readonly string[]).includes(values.status) ? values.status : EMPTY_VALUES.status,
+    status: (SELECTABLE_VEHICLE_STATUSES as readonly string[]).includes(values.status) ? values.status : EMPTY_VALUES.status,
     transmission: (TRANSMISSIONS as readonly string[]).includes(values.transmission) ? values.transmission : EMPTY_VALUES.transmission,
     fuelType: (FUEL_TYPES as readonly string[]).includes(values.fuelType) ? values.fuelType : EMPTY_VALUES.fuelType,
     location: values.location || EMPTY_VALUES.location,
@@ -186,7 +193,8 @@ export function VehicleFormPage() {
   const initialValues = vehicle
     ? sanitizeFormValues(valuesFromVehicle(vehicle))
     : draft
-      ? sanitizeFormValues({ ...EMPTY_VALUES, ...draft.payload })
+      ? // Photos live on the server against the draft, not in its payload.
+        sanitizeFormValues({ ...EMPTY_VALUES, ...draft.payload, photos: draft.photos })
       : EMPTY_VALUES
 
   return (
@@ -196,6 +204,7 @@ export function VehicleFormPage() {
       vehicleId={vehicleId}
       draftId={draftId}
       isEdit={isEdit}
+      existingPhotos={vehicle?.photos ?? draft?.photos ?? []}
     />
   )
 }
@@ -205,12 +214,15 @@ function VehicleForm({
   vehicleId,
   draftId,
   isEdit,
+  existingPhotos,
 }: {
   initialValues: VehicleFormValues
   vehicleId?: string
   /** Set when the wizard was reopened from a saved draft — "Save & exit" updates that draft. */
   draftId?: string
   isEdit: boolean
+  /** The vehicle's saved photos, managed against the API rather than through form state. */
+  existingPhotos: VehiclePhoto[]
 }) {
   const { t } = useTranslation('vehicles')
   const { t: tValidation } = useTranslation('validation')
@@ -259,14 +271,43 @@ function VehicleForm({
 
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
+  /** Whatever the photos can be attached to right now — nothing, until the wizard is saved. */
+  const photoTarget: PhotoTarget | undefined =
+    isEdit && vehicleId ? vehicleTarget(vehicleId) : draftId ? draftTarget(draftId) : undefined
+
+  const uploadToDraft = async (id: string, files: File[]) => {
+    try {
+      const result = await uploadPhotos(draftTarget(id), files)
+      if (result.failed > 0) toast({ title: t('photos.uploadFailed'), variant: 'error' })
+    } catch (error) {
+      toast({ title: t('photos.uploadFailed'), description: normalizeApiError(error).message, variant: 'error' })
+    }
+  }
+
   const saveDraftAndExit = () => {
     const onSaved = () => navigate('/app/vehicles')
     if (isEdit && vehicleId) {
       // An already-published vehicle stays published — "Save & exit" just saves what's there.
       updateVehicle.mutate(formValuesToVehicleInput(watchedValues), { onSuccess: onSaved })
     } else {
-      // Unvalidated on purpose: the whole point of a draft is that it isn't a valid vehicle yet.
-      saveDraft.mutate({ id: draftId, payload: watchedValues }, { onSuccess: onSaved })
+      // Unvalidated on purpose: a draft isn't a valid vehicle yet. Photos are excluded from
+      // the payload — that is JSON capped at 64 KB — and uploaded against the draft instead.
+      const { photos, ...persistable } = watchedValues
+      const pending = photos.filter((p) => p.file).map((p) => p.file as File)
+      saveDraft.mutate(
+        { id: draftId, payload: persistable },
+        {
+          onSuccess: (saved) => {
+            // Files picked before the draft existed: now there is an id to upload against.
+            // Keyed off the response, since a first save has no draftId until the server assigns one.
+            if (pending.length === 0) {
+              onSaved()
+              return
+            }
+            void uploadToDraft(saved.id, pending).then(onSaved, onSaved)
+          },
+        },
+      )
     }
   }
 
@@ -353,9 +394,20 @@ function VehicleForm({
 
   const onSubmit = (values: VehicleFormValues) => {
     const input: VehicleInput = formValuesToVehicleInput(values)
+    // Only a wizard that was never saved still holds files locally: anything uploaded against
+    // a vehicle or a draft is already on the server, and publishing re-parents the draft's.
+    const pickedFiles = values.photos.map((p) => p.file).filter((f): f is File => Boolean(f))
+
+    // Twenty uploads would hold the Publish button, so the details page starts them and shows
+    // the progress.
+    const goToVehicle = (createdId: string) => {
+      handOffPhotos(createdId, pickedFiles)
+      navigate(`/app/vehicles/${createdId}`)
+    }
+
     if (isEdit && vehicleId) {
       updateVehicle.mutate(input, {
-        onSuccess: () => navigate(`/app/vehicles/${vehicleId}`),
+        onSuccess: () => goToVehicle(vehicleId),
         onError: handleSubmitError,
       })
     } else if (draftId) {
@@ -363,14 +415,11 @@ function VehicleForm({
       // rejected publish leaves it intact to correct and retry.
       publishDraft.mutate(
         { id: draftId, input },
-        {
-          onSuccess: (created) => navigate(`/app/vehicles/${created.id}`),
-          onError: handleSubmitError,
-        },
+        { onSuccess: (created) => goToVehicle(created.id), onError: handleSubmitError },
       )
     } else {
       createVehicle.mutate(input, {
-        onSuccess: (created) => navigate(`/app/vehicles/${created.id}`),
+        onSuccess: (created) => goToVehicle(created.id),
         onError: handleSubmitError,
       })
     }
@@ -593,7 +642,7 @@ function VehicleForm({
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {VEHICLE_STATUSES.map((s) => (
+                              {SELECTABLE_VEHICLE_STATUSES.map((s) => (
                                 <SelectItem key={s} value={s}>
                                   {domain.status(s)}
                                 </SelectItem>
@@ -750,13 +799,19 @@ function VehicleForm({
             </div>
           )}
 
-          {stepKey === 'photos' && (
-            <Controller
-              control={control}
-              name="photos"
-              render={({ field }) => <PhotoDropzone value={field.value} onChange={field.onChange} />}
-            />
-          )}
+          {stepKey === 'photos' &&
+            // Anything with an id — a vehicle, or a saved draft — uploads against the API. A
+            // wizard that has never been saved has nothing to attach to, so its files are held
+            // locally until the first "Save & exit" or publish creates a row.
+            (photoTarget ? (
+              <VehiclePhotoEditor target={photoTarget} photos={existingPhotos} />
+            ) : (
+              <Controller
+                control={control}
+                name="photos"
+                render={({ field }) => <PhotoDropzone value={field.value} onChange={field.onChange} />}
+              />
+            ))}
 
           {stepKey === 'pricing' && (
             <div className="flex flex-col gap-6">
@@ -818,7 +873,11 @@ function VehicleForm({
           )}
 
           {stepKey === 'review' && (
-            <ReviewStep values={watchedValues} onEditStep={(key) => setStepIndex(STEP_KEYS.indexOf(key))} />
+            <ReviewStep
+              values={watchedValues}
+              photos={photoTarget ? existingPhotos : watchedValues.photos}
+              onEditStep={(key) => setStepIndex(STEP_KEYS.indexOf(key))}
+            />
           )}
 
           <div className="border-border-soft flex flex-wrap items-center justify-between gap-2.5 border-t pt-4">
@@ -854,19 +913,32 @@ function VehicleForm({
   )
 }
 
-function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditStep: (step: StepKey) => void }) {
+function ReviewStep({
+  values,
+  photos,
+  onEditStep,
+}: {
+  values: VehicleFormValues
+  /**
+   * The photos as the server holds them. Not `values.photos`: once there is a vehicle or a
+   * draft to upload against, the Photos step writes straight to the API and leaves form state
+   * untouched, so reading it here would show a stale set with dead object URLs.
+   */
+  photos: VehiclePhoto[]
+  onEditStep: (step: StepKey) => void
+}) {
   const { t } = useTranslation('vehicles')
   const domain = useDomainLabels()
   const format = useFormatters()
-  const cover = values.photos[0]
+  const cover = photos[0]
   const editDetails = () => onEditStep('details')
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-wrap items-center gap-4 pb-5">
         <div className="border-border bg-surface-2 flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border">
-          {cover ? (
-            <img src={cover.url} alt={cover.name} className="size-full object-cover" />
+          {cover?.url ? (
+            <img src={photoThumbnail(cover)} alt={cover.name} className="size-full object-cover" />
           ) : (
             <ImageOff className="text-fg-4 size-6" aria-hidden />
           )}
@@ -948,14 +1020,25 @@ function ReviewStep({ values, onEditStep }: { values: VehicleFormValues; onEditS
         <div className="flex flex-col gap-3.5">
           <ReviewSection
             title={t('form.review.photos')}
-            count={values.photos.length}
+            count={photos.length}
             onEdit={() => onEditStep('photos')}
           >
-            {values.photos.length > 0 ? (
+            {photos.length > 0 ? (
               <div className="grid grid-cols-5 gap-2">
-                {values.photos.map((p, index) => (
+                {photos.map((p, index) => (
                   <div key={p.id} className="border-border relative aspect-square overflow-hidden rounded-[7px] border">
-                    <img src={p.url} alt={p.name} className="size-full object-cover" />
+                    {p.url ? (
+                      <img src={photoThumbnail(p)} alt={p.name} className="size-full object-cover" />
+                    ) : (
+                      // Still being rendered by the worker — an <img> here shows a broken icon.
+                      <span
+                        role="status"
+                        aria-label={t('gallery.processing')}
+                        className="bg-surface-2 text-fg-4 flex size-full items-center justify-center"
+                      >
+                        <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                      </span>
+                    )}
                     {index === 0 && (
                       <span className="bg-foreground/70 text-background absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold">
                         {t('gallery.cover')}
