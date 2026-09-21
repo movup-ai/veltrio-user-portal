@@ -1,6 +1,13 @@
 import { apiClient } from '@/services/api/client'
-import type { PhotoStatus, VehiclePhoto } from '../types/vehicle.types'
-import { toPhoto, type VehiclePhotoWire } from './vehicle.mapper'
+import type { PhotoStatus } from '../types/vehicle.types'
+import {
+  toPhoto,
+  toUploadSlot,
+  type PhotoUploadSlot,
+  type PhotoUploadSlotWire,
+  type PresignedUpload,
+  type VehiclePhotoWire,
+} from './vehicle.mapper'
 
 /**
  * Vehicle photos. Bytes never pass through the API — the browser uploads straight to storage:
@@ -11,22 +18,6 @@ import { toPhoto, type VehiclePhotoWire } from './vehicle.mapper'
  *
  * The photo is `processing` when step 3 returns, `ready` once the worker finishes.
  */
-
-export interface PresignedUpload {
-  url: string
-  fields: Record<string, string>
-  expiresAt: string
-}
-
-export interface PhotoUploadSlot {
-  photo: VehiclePhoto
-  upload: PresignedUpload
-}
-
-interface PhotoUploadSlotWire {
-  photo: VehiclePhotoWire
-  upload: PresignedUpload
-}
 
 export interface PhotoUploadFile {
   name: string
@@ -66,10 +57,10 @@ function photosUrl(target: PhotoTarget): string {
 }
 
 export const vehiclePhotoApi = {
-  requestUploads: (target: PhotoTarget, files: PhotoUploadFile[]) =>
+  requestUploads: (target: PhotoTarget, files: PhotoUploadFile[]): Promise<PhotoUploadSlot[]> =>
     apiClient
       .post<{ items: PhotoUploadSlotWire[] }>(photosUrl(target), { files })
-      .then((r) => r.data.items.map((item) => ({ photo: toPhoto(item.photo), upload: item.upload }))),
+      .then((r) => r.data.items.map(toUploadSlot)),
 
   /**
    * Sends the file to storage, reporting progress. XHR rather than fetch: only XHR exposes

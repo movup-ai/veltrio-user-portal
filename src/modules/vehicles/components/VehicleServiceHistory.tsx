@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { MoreVertical, Plus, Wrench } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useFormatters } from '@/i18n'
+import { parseDay } from '@/utils/dates'
 import { translateDomain } from '@/i18n/domain'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -20,15 +21,6 @@ import { ServiceRecordDialog } from './ServiceRecordDialog'
 
 interface Props {
   vehicleId: string
-}
-
-/**
- * `2026-03-12` through `new Date()` is parsed as UTC midnight, which renders as the previous
- * day anywhere west of Greenwich. Splitting the parts builds it in local time instead.
- */
-function localDate(isoDay: string): Date {
-  const [year, month, day] = isoDay.split('-').map(Number)
-  return new Date(year, month - 1, day)
 }
 
 const DUE_TONE = {
@@ -120,7 +112,7 @@ export function VehicleServiceHistory({ vehicleId }: Props) {
   }
 
   const day = (iso: string) =>
-    format.date(localDate(iso), { month: 'short', day: 'numeric', year: 'numeric' })
+    format.date(parseDay(iso), { month: 'short', day: 'numeric', year: 'numeric' })
 
   /** "due in 1,200 mi" / "overdue by 11,811 mi" — the state itself is carried by the dot colour. */
   const dueLabel = (due: ServiceDue): string => {

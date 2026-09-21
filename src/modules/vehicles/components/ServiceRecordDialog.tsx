@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FormField } from '@/components/forms/FormField'
+import { today } from '@/utils/dates'
 import { translateDomain } from '@/i18n/domain'
 import { useCreateServiceRecord, useUpdateServiceRecord } from '../hooks/use-service-records'
 import { SERVICE_TYPES, type ServiceRecord } from '../types/service-record.types'
@@ -33,12 +34,6 @@ interface Props {
   record?: ServiceRecord
   open: boolean
   onOpenChange: (open: boolean) => void
-}
-
-/** `YYYY-MM-DD` in the viewer's own timezone — `toISOString` would shift the day near midnight. */
-function today(): string {
-  const now = new Date()
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10)
 }
 
 function serviceSchema(t: TFunction<'vehicles'>) {

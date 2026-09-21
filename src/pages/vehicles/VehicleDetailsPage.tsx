@@ -20,7 +20,6 @@ import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
 import { vehicleUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
 import { initials } from '@/utils/formatting'
-import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
 import type { BookingTuple } from '@/modules/bookings/types/booking.types'
 import { useBookings } from '@/modules/bookings/hooks/use-bookings'
 import { intervalsForPlate } from '@/modules/bookings/utils/booking.schedule'
@@ -134,12 +133,14 @@ export function VehicleDetailsPage() {
     )
   }
 
-  // No bookings API yet — mock data, matched to this vehicle by plate. See vehicle.api.ts for the same temporary pattern.
-  const bookings = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT].filter((b) => b[3] === vehicle.plate)
+  // Bookings come from the same query as the availability strip rather than straight from the
+  // mock arrays, so a booking made this session shows up in both.
+  const upcoming = bookingLists?.upcoming ?? []
+  const bookings = [...upcoming, ...(bookingLists?.recent ?? [])].filter((b) => b[3] === vehicle.plate)
   const revenue = bookings
     .filter((b) => !NON_EARNING_STATUSES.includes(b[7]))
     .reduce((sum, b) => sum + parseBookingTotal(b[8]), 0)
-  const activeBooking = vehicle.status === 'On rent' ? BOOKINGS_UPCOMING.find((b) => b[3] === vehicle.plate) : undefined
+  const activeBooking = vehicle.status === 'On rent' ? upcoming.find((b) => b[3] === vehicle.plate) : undefined
   const currentRental = activeBooking ? { customer: activeBooking[0], reference: activeBooking[1], window: activeBooking[4] } : undefined
 
   const busy = intervalsForPlate(schedule, vehicle.plate)

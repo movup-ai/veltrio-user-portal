@@ -1,18 +1,15 @@
 import { apiClient } from '@/services/api/client'
 import { toLimitOffset, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { PaginationParams } from '@/types/common'
-import type { VehicleDraft, VehicleDraftPayload } from '../types/vehicle-draft.types'
+import type { VehicleDraftPayload } from '../types/vehicle-draft.types'
 import type { VehicleInput } from '../types/vehicle.types'
-import { toPhoto, toVehicle, toVehiclePayload, type VehiclePhotoWire, type VehicleWire } from './vehicle.mapper'
-
-interface VehicleDraftWire extends Omit<VehicleDraft, 'photos'> {
-  photos?: VehiclePhotoWire[]
-}
-
-/** Photos come over the wire in the same shape as a vehicle's, so they map the same way. */
-function toDraft(wire: VehicleDraftWire): VehicleDraft {
-  return { ...wire, photos: (wire.photos ?? []).map(toPhoto) }
-}
+import {
+  toDraft,
+  toVehicle,
+  toVehiclePayload,
+  type VehicleDraftWire,
+  type VehicleWire,
+} from './vehicle.mapper'
 
 /**
  * Part-filled wizards, saved by "Save draft & exit". Kept apart from /vehicles because a draft
