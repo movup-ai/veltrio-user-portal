@@ -18,7 +18,7 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/use-toast'
-import { LOCATIONS } from '@/modules/locations/mock/location.mock'
+import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
 import {
   FUEL_TYPES,
@@ -74,6 +74,7 @@ const UNFILTERED: Omit<VehicleListParams, 'page' | 'pageSize' | 'sortBy'> = {
 
 export function VehiclesPage() {
   const { t } = useTranslation('vehicles')
+  const locationNames = useLocationNames()
   const { t: tCommon } = useTranslation('common')
   const domain = useDomainLabels()
   const format = useFormatters()
@@ -323,10 +324,10 @@ export function VehiclesPage() {
           },
           {
             label: t('filters.location'),
-            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: LOCATIONS.length }) : locationFilter,
+            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: locationNames.length }) : locationFilter,
             options: [
               { value: 'All', label: tCommon('filters.all') },
-              ...LOCATIONS.map((l) => ({ value: l.name, label: l.name })),
+              ...locationNames.map((name) => ({ value: name, label: name })),
             ],
             onChange: (value) => {
               setLocationFilter(value)

@@ -2,19 +2,61 @@
   "list": {
     "title": "Locations",
     "description": "Branches, counter hours and on-site fleet",
-    "addLocation": "Add location"
+    "addLocation": "Add location",
+    "loading": "Loading locations…",
+    "errorTitle": "Something went wrong",
+    "errorDescription": "We couldn't load your locations.",
+    "emptyTitle": "No locations yet",
+    "emptyDescription": "Add a branch so it can be picked when adding vehicles and bookings."
   },
   "card": {
-    "manage": "Manage location",
-    "metrics": {
-      "vehicles": "Vehicles",
-      "utilization": "Utilization",
-      "revenueMtd": "Revenue MTD"
-    },
-    "branchManager": "Branch manager"
+    "actions": "Location actions",
+    "edit": "Edit location",
+    "delete": "Delete location",
+    "noAddress": "No address set",
+    "vehiclesHere_one": "{{count}} vehicle based here",
+    "vehiclesHere_other": "{{count}} vehicles based here"
+  },
+  "status": {
+    "open": "Open",
+    "closed": "Closed"
   },
   "hours": {
     "monSun": "Mon–Sun",
-    "monFri": "Mon–Fri"
+    "monFri": "Mon–Fri",
+    "monSat": "Mon–Sat"
+  },
+  "form": {
+    "addTitle": "Add location",
+    "editTitle": "Edit location",
+    "name": "Branch name",
+    "namePlaceholder": "Miami Beach",
+    "nameRequired": "Give the branch a name",
+    "address": "Address",
+    "addressHint": "Optional. Shown on the branch card.",
+    "status": "Status",
+    "openingDays": "Open on",
+    "opensAt": "Opens at",
+    "closesAt": "Closes at",
+    "hoursRequired": "Set an opening time",
+    "closesBeforeOpens": "Closing time must be after opening time",
+    "cancel": "Cancel",
+    "add": "Add location",
+    "save": "Save changes"
+  },
+  "confirmDelete": {
+    "title": "Delete this location?",
+    "description": "{{name}} will be removed. This cannot be undone.",
+    "inUse_one": "{{count}} vehicle is based here. Move it to another branch before deleting.",
+    "inUse_other": "{{count}} vehicles are based here. Move them to another branch before deleting.",
+    "confirm": "Delete location"
+  },
+  "toast": {
+    "created": "Location added",
+    "createFailed": "Could not add the location",
+    "updated": "Location updated",
+    "updateFailed": "Could not update the location",
+    "deleted": "Location deleted",
+    "deleteFailed": "Could not delete the location"
   }
 }

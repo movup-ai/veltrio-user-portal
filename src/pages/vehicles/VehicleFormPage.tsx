@@ -28,7 +28,7 @@ import { Stepper, type StepDef } from '@/components/forms/Stepper'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
-import { LOCATIONS } from '@/modules/locations/mock/location.mock'
+import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import { VEHICLE_COLORS, VEHICLE_MAKES, modelsForMake } from '@/modules/vehicles/data/vehicle-catalog'
 import { decodeVin } from '@/modules/vehicles/api/vin-decoder.api'
 import { descriptionAiApi, type DescriptionAiAction } from '@/modules/vehicles/api/description-ai.api'
@@ -225,6 +225,7 @@ function VehicleForm({
   existingPhotos: VehiclePhoto[]
 }) {
   const { t } = useTranslation('vehicles')
+  const locationNames = useLocationNames()
   const { t: tValidation } = useTranslation('validation')
   const domain = useDomainLabels()
   const navigate = useNavigate()
@@ -593,9 +594,9 @@ function VehicleForm({
                               <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                              {LOCATIONS.map((l) => (
-                                <SelectItem key={l.name} value={l.name}>
-                                  {l.name}
+                              {locationNames.map((name) => (
+                                <SelectItem key={name} value={name}>
+                                  {name}
                                 </SelectItem>
                               ))}
                             </SelectContent>

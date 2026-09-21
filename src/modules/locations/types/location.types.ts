@@ -1,19 +1,20 @@
-export type LocationMetricKey = 'vehicles' | 'utilization' | 'revenueMtd'
+export const LOCATION_STATUSES = ['Open', 'Closed'] as const
+export type LocationStatus = (typeof LOCATION_STATUSES)[number]
 
-export interface LocationMetric {
-  value: string
-  /** Indexes into `locations:card.metrics` — not display text. */
-  key: LocationMetricKey
-}
+export const OPENING_DAYS = ['monSun', 'monFri', 'monSat'] as const
+export type OpeningDays = (typeof OPENING_DAYS)[number]
 
 export interface Location {
+  id: string
   name: string
   address: string
-  /** Canonical value from the shared `domain:status` vocabulary. */
-  status: string
-  /** Days key from `locations:hours` plus the literal clock range, which needs no translation. */
-  hours: { daysKey: 'monSun' | 'monFri'; range: string }
-  /** Manager's name; the role is appended from `locations:card.branchManager`. */
-  manager: string
-  metrics: LocationMetric[]
+  status: LocationStatus
+  openingDays: OpeningDays
+  /** Minutes from midnight, so the range sorts and formats without a timezone. */
+  opensAt: number
+  closesAt: number
+  /** Vehicles based here, counted by the API. Archived vehicles are excluded. */
+  vehicleCount: number
 }
+
+export type LocationInput = Omit<Location, 'id' | 'vehicleCount'>

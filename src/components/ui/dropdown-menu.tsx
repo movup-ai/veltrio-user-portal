@@ -9,15 +9,58 @@ export const DropdownMenuGroup = DropdownMenuPrimitive.Group
 export const DropdownMenuSub = DropdownMenuPrimitive.Sub
 export const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
 
+/**
+ * Radix restores focus to the trigger when a menu closes, and the browser treats *any*
+ * programmatic `.focus()` as keyboard-initiated — so dismissing with the mouse left a focus
+ * ring behind. Focus still returns, because keyboard users depend on it; the trigger is
+ * marked so CSS can skip the ring for that one restore.
+ */
 export function DropdownMenuContent({
   className,
   sideOffset = 4,
+  onCloseAutoFocus,
+  onPointerDownOutside,
   ...props
 }: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>) {
+  const dismissedByPointer = React.useRef(false)
+  // Captured while the menu is open: Radix clears `aria-controls` before focus is restored.
+  const trigger = React.useRef<HTMLElement | null>(null)
+
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         sideOffset={sideOffset}
+        ref={(node) => {
+          if (node?.id) {
+            trigger.current = document.querySelector<HTMLElement>(`[aria-controls="${node.id}"]`)
+          }
+        }}
+        onPointerDownOutside={(event) => {
+          dismissedByPointer.current = true
+          onPointerDownOutside?.(event)
+        }}
+        // Clicking an item closes the menu the same way an outside click does.
+        onPointerDown={() => {
+          dismissedByPointer.current = true
+        }}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event)
+          const byPointer = dismissedByPointer.current
+          dismissedByPointer.current = false
+          if (event.defaultPrevented || !byPointer) return
+
+          const element = trigger.current
+          if (!element) return
+          element.dataset.silentFocus = ''
+          // Cleared on the next real interaction, so a later keyboard focus still shows a ring.
+          const clear = () => {
+            delete element.dataset.silentFocus
+            element.removeEventListener('blur', clear)
+            element.removeEventListener('keydown', clear)
+          }
+          element.addEventListener('blur', clear)
+          element.addEventListener('keydown', clear)
+        }}
         className={cn(
           'z-50 min-w-[10rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md',
           'data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out',

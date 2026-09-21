@@ -16,7 +16,7 @@ import { toast } from '@/components/ui/use-toast'
 import { EMPTY_DATE_RANGE, fromDateValue, type DateRange } from '@/components/ui/date-range-picker'
 import { useFormatters } from '@/i18n'
 import { useDomainLabels } from '@/i18n/domain'
-import { LOCATIONS } from '@/modules/locations/mock/location.mock'
+import { MOCK_BRANCHES } from '@/modules/locations/mock/location.mock'
 import { useBookings } from '@/modules/bookings/hooks/use-bookings'
 import {
   BOOKING_ATTENTION_STATUSES,
@@ -231,10 +231,10 @@ export function BookingsPage() {
           },
           {
             label: t('filters.location'),
-            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: LOCATIONS.length }) : locationFilter,
+            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: MOCK_BRANCHES.length }) : locationFilter,
             options: [
               { value: 'All', label: tCommon('filters.all') },
-              ...LOCATIONS.map((l) => ({ value: l.name, label: l.name })),
+              ...MOCK_BRANCHES.map((l) => ({ value: l.name, label: l.name })),
             ],
             onChange: setLocationFilter,
           },

@@ -1,20 +1,62 @@
 {
   "list": {
-    "title": "Sucursales",
+    "title": "Ubicaciones",
     "description": "Sucursales, horarios de mostrador y flota en sitio",
-    "addLocation": "Añadir sucursal"
+    "addLocation": "Añadir ubicación",
+    "loading": "Cargando ubicaciones…",
+    "errorTitle": "Algo salió mal",
+    "errorDescription": "No pudimos cargar tus ubicaciones.",
+    "emptyTitle": "Aún no hay ubicaciones",
+    "emptyDescription": "Añade una sucursal para poder elegirla al crear vehículos y reservas."
   },
   "card": {
-    "manage": "Gestionar sucursal",
-    "metrics": {
-      "vehicles": "Vehículos",
-      "utilization": "Uso",
-      "revenueMtd": "Ingresos del mes"
-    },
-    "branchManager": "Gerente de sucursal"
+    "actions": "Acciones de la ubicación",
+    "edit": "Editar ubicación",
+    "delete": "Eliminar ubicación",
+    "noAddress": "Sin dirección",
+    "vehiclesHere_one": "{{count}} vehículo en esta sucursal",
+    "vehiclesHere_other": "{{count}} vehículos en esta sucursal"
+  },
+  "status": {
+    "open": "Abierta",
+    "closed": "Cerrada"
   },
   "hours": {
     "monSun": "Lun–Dom",
-    "monFri": "Lun–Vie"
+    "monFri": "Lun–Vie",
+    "monSat": "Lun–Sáb"
+  },
+  "form": {
+    "addTitle": "Añadir ubicación",
+    "editTitle": "Editar ubicación",
+    "name": "Nombre de la sucursal",
+    "namePlaceholder": "Miami Beach",
+    "nameRequired": "Escribe un nombre para la sucursal",
+    "address": "Dirección",
+    "addressHint": "Opcional. Se muestra en la tarjeta de la sucursal.",
+    "status": "Estado",
+    "openingDays": "Abierta",
+    "opensAt": "Abre a las",
+    "closesAt": "Cierra a las",
+    "hoursRequired": "Indica un horario de apertura",
+    "closesBeforeOpens": "La hora de cierre debe ser posterior a la de apertura",
+    "cancel": "Cancelar",
+    "add": "Añadir ubicación",
+    "save": "Guardar cambios"
+  },
+  "confirmDelete": {
+    "title": "¿Eliminar esta ubicación?",
+    "description": "Se eliminará {{name}}. No se puede deshacer.",
+    "inUse_one": "{{count}} vehículo está en esta sucursal. Muévelo a otra antes de eliminarla.",
+    "inUse_other": "{{count}} vehículos están en esta sucursal. Muévelos a otra antes de eliminarla.",
+    "confirm": "Eliminar ubicación"
+  },
+  "toast": {
+    "created": "Ubicación añadida",
+    "createFailed": "No se pudo añadir la ubicación",
+    "updated": "Ubicación actualizada",
+    "updateFailed": "No se pudo actualizar la ubicación",
+    "deleted": "Ubicación eliminada",
+    "deleteFailed": "No se pudo eliminar la ubicación"
   }
 }

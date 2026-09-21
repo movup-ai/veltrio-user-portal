@@ -240,3 +240,12 @@
     animation: none;
   }
 }
+
+/*
+ * A menu trigger that was re-focused after a mouse dismissal. Focus genuinely returns there
+ * for keyboard and screen-reader users, but the ring would be noise for someone who just
+ * clicked away. The attribute is removed on the next blur or key press.
+ */
+[data-silent-focus]:focus-visible {
+  outline: none;
+}

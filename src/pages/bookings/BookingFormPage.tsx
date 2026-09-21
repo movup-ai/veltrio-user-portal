@@ -24,7 +24,7 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
-import { LOCATIONS } from '@/modules/locations/mock/location.mock'
+import { MOCK_BRANCHES } from '@/modules/locations/mock/location.mock'
 import { CUSTOMERS } from '@/modules/customers/mock/customer.mock'
 import { ReviewRow, ReviewRowGrid, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
 import { useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
@@ -389,7 +389,7 @@ export function BookingFormPage() {
                                 <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
                               </SelectTrigger>
                               <SelectContent>
-                                {LOCATIONS.map((l) => (
+                                {MOCK_BRANCHES.map((l) => (
                                   <SelectItem key={l.name} value={l.name}>
                                     {l.name}
                                   </SelectItem>
@@ -426,7 +426,7 @@ export function BookingFormPage() {
                               <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                              {LOCATIONS.map((l) => (
+                              {MOCK_BRANCHES.map((l) => (
                                 <SelectItem key={l.name} value={l.name}>
                                   {l.name}
                                 </SelectItem>

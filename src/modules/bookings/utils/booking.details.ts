@@ -1,5 +1,5 @@
 import { CUSTOMERS } from '@/modules/customers/mock/customer.mock'
-import { LOCATIONS } from '@/modules/locations/mock/location.mock'
+import { MOCK_BRANCHES } from '@/modules/locations/mock/location.mock'
 import { VEHICLES_SEED } from '@/modules/vehicles/mock/vehicle.mock'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
 import {
@@ -284,7 +284,7 @@ export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): Boo
   const days = Math.max(1, Math.round((dropoff.getTime() - pickup.getTime()) / 86_400_000))
 
   const vehicle = findVehicle(plate)
-  const branch = LOCATIONS.find((l) => l.name === location)
+  const branch = MOCK_BRANCHES.find((b) => b.name === location)
   const total = Math.abs(parseBookingTotal(totalText))
   const taxRatePct = vehicle?.fees.taxRatePct ?? DEFAULT_TAX_PCT
 
