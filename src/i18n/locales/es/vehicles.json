@@ -362,7 +362,13 @@
     "archiveFailed": "No se pudo archivar el vehículo",
     "restored": "Vehículo restaurado",
     "restoredDescription": "{{name}} vuelve a la flota.",
-    "restoreFailed": "No se pudo restaurar el vehículo"
+    "restoreFailed": "No se pudo restaurar el vehículo",
+    "sentToService": "Enviado al taller",
+    "sentToServiceDescription": "{{name}} está en mantenimiento.",
+    "sendToServiceFailed": "No se pudo enviar al taller",
+    "returnedFromService": "De vuelta en servicio",
+    "returnedFromServiceDescription": "{{name}} está disponible de nuevo.",
+    "returnFromServiceFailed": "No se pudo volver del taller"
   },
   "archiveDialog": {
     "title": "¿Archivar vehículo?",
@@ -440,5 +446,84 @@
     "vehicleLink": "Copiar enlace del vehículo",
     "copied": "Copiado",
     "copyFailed": "No se pudo copiar el enlace"
+  },
+  "service": {
+    "title": "Historial de servicio",
+    "description": "Mantenimiento registrado para este vehículo.",
+    "logService": "Registrar servicio",
+    "loading": "Cargando historial de servicio…",
+    "empty": "Aún no hay servicios registrados.",
+    "odometerValue": "{{value}} mi",
+    "summary": {
+      "records": "Registros",
+      "totalCost": "Coste total",
+      "lastService": "Último servicio"
+    },
+    "rowActions": {
+      "label": "Acciones del registro",
+      "edit": "Editar registro",
+      "delete": "Eliminar registro"
+    },
+    "confirmDelete": {
+      "title": "¿Eliminar este registro de servicio?",
+      "description": "Se quitará la entrada del historial del vehículo. No se puede deshacer.",
+      "confirm": "Eliminar registro"
+    },
+    "form": {
+      "addTitle": "Registrar servicio",
+      "editTitle": "Editar registro de servicio",
+      "type": "Tipo de servicio",
+      "date": "Fecha realizada",
+      "odometer": "Odómetro (mi)",
+      "cost": "Coste",
+      "vendor": "Proveedor",
+      "vendorPlaceholder": "Taller o proveedor",
+      "notes": "Notas",
+      "cancel": "Cancelar",
+      "add": "Registrar servicio",
+      "save": "Guardar cambios",
+      "dateRequired": "Elige la fecha en que se realizó el trabajo",
+      "dateInFuture": "La fecha no puede ser futura",
+      "nextDueTitle": "Próximo servicio",
+      "nextDueHint": "Opcional. Se usa lo que ocurra primero para marcar el vehículo.",
+      "nextDueOn": "Próxima fecha",
+      "nextDueOdometer": "Próximo a los (mi)",
+      "nextDuePlaceholder": "Sin fecha",
+      "dueBeforePerformed": "El próximo servicio debe ser posterior a la fecha realizada",
+      "dueOdometerTooLow": "El próximo servicio debe superar el odómetro actual"
+    },
+    "toast": {
+      "created": "Servicio registrado",
+      "createFailed": "No se pudo registrar el servicio",
+      "updated": "Registro de servicio actualizado",
+      "updateFailed": "No se pudo actualizar el registro",
+      "deleted": "Registro de servicio eliminado",
+      "deleteFailed": "No se pudo eliminar el registro",
+      "sentToService": "Enviado al taller",
+      "sentToServiceDescription": "{{name}} está en mantenimiento.",
+      "sendToServiceFailed": "No se pudo enviar al taller",
+      "returnedFromService": "De vuelta en servicio",
+      "returnedFromServiceDescription": "{{name}} está disponible de nuevo.",
+      "returnFromServiceFailed": "No se pudo volver del taller"
+    },
+    "due": {
+      "inMiles": "en {{count}} mi",
+      "overdueByMiles": "vencido por {{count}} mi",
+      "inDays_one": "en {{count}} día",
+      "inDays_other": "en {{count}} días",
+      "overdueByDays_one": "vencido por {{count}} día",
+      "overdueByDays_other": "vencido por {{count}} días",
+      "dueToday": "vence hoy",
+      "dueOn": "Vence {{date}}"
+    },
+    "sendToService": "Enviar a taller",
+    "returnFromService": "Volver del taller",
+    "confirmSendToService": {
+      "title": "¿Enviar este vehículo al taller?",
+      "description": "Se marcará como en mantenimiento y no aparecerá como disponible para alquilar.",
+      "confirm": "Enviar a taller"
+    },
+    "subtitle_one": "{{count}} registro · {{total}} en total",
+    "subtitle_other": "{{count}} registros · {{total}} en total"
   }
 }

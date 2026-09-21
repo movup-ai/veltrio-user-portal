@@ -362,7 +362,13 @@
     "archiveFailed": "Could not archive vehicle",
     "restored": "Vehicle restored",
     "restoredDescription": "{{name}} is back in the fleet.",
-    "restoreFailed": "Could not restore the vehicle"
+    "restoreFailed": "Could not restore the vehicle",
+    "sentToService": "Sent to service",
+    "sentToServiceDescription": "{{name}} is now in maintenance.",
+    "sendToServiceFailed": "Could not send to service",
+    "returnedFromService": "Back in service",
+    "returnedFromServiceDescription": "{{name}} is available again.",
+    "returnFromServiceFailed": "Could not return from service"
   },
   "archiveDialog": {
     "title": "Archive vehicle?",
@@ -440,5 +446,84 @@
     "vehicleLink": "Copy vehicle link",
     "copied": "Copied",
     "copyFailed": "Could not copy the link"
+  },
+  "service": {
+    "title": "Service history",
+    "description": "Maintenance logged against this vehicle.",
+    "logService": "Log service",
+    "loading": "Loading service history…",
+    "empty": "No service logged yet.",
+    "odometerValue": "{{value}} mi",
+    "summary": {
+      "records": "Records",
+      "totalCost": "Total cost",
+      "lastService": "Last service"
+    },
+    "rowActions": {
+      "label": "Service record actions",
+      "edit": "Edit record",
+      "delete": "Delete record"
+    },
+    "confirmDelete": {
+      "title": "Delete this service record?",
+      "description": "This removes the entry from the vehicle history. It cannot be undone.",
+      "confirm": "Delete record"
+    },
+    "form": {
+      "addTitle": "Log service",
+      "editTitle": "Edit service record",
+      "type": "Service type",
+      "date": "Date performed",
+      "odometer": "Odometer (mi)",
+      "cost": "Cost",
+      "vendor": "Vendor",
+      "vendorPlaceholder": "Garage or supplier",
+      "notes": "Notes",
+      "cancel": "Cancel",
+      "add": "Log service",
+      "save": "Save changes",
+      "dateRequired": "Pick the date the work was done",
+      "dateInFuture": "Date cannot be in the future",
+      "nextDueTitle": "Next service",
+      "nextDueHint": "Optional. Whichever comes first is used to flag the vehicle.",
+      "nextDueOn": "Next due date",
+      "nextDueOdometer": "Next due at (mi)",
+      "nextDuePlaceholder": "No date set",
+      "dueBeforePerformed": "Next due must be after the date performed",
+      "dueOdometerTooLow": "Next due must be above the current odometer"
+    },
+    "toast": {
+      "created": "Service logged",
+      "createFailed": "Could not log the service",
+      "updated": "Service record updated",
+      "updateFailed": "Could not update the record",
+      "deleted": "Service record deleted",
+      "deleteFailed": "Could not delete the record",
+      "sentToService": "Sent to service",
+      "sentToServiceDescription": "{{name}} is now in maintenance.",
+      "sendToServiceFailed": "Could not send to service",
+      "returnedFromService": "Back in service",
+      "returnedFromServiceDescription": "{{name}} is available again.",
+      "returnFromServiceFailed": "Could not return from service"
+    },
+    "due": {
+      "inMiles": "due in {{count}} mi",
+      "overdueByMiles": "overdue by {{count}} mi",
+      "inDays_one": "due in {{count}} day",
+      "inDays_other": "due in {{count}} days",
+      "overdueByDays_one": "overdue by {{count}} day",
+      "overdueByDays_other": "overdue by {{count}} days",
+      "dueToday": "due today",
+      "dueOn": "Due {{date}}"
+    },
+    "sendToService": "Send to service",
+    "returnFromService": "Return from service",
+    "confirmSendToService": {
+      "title": "Send this vehicle to service?",
+      "description": "It will be marked as in maintenance and will not show as available to rent.",
+      "confirm": "Send to service"
+    },
+    "subtitle_one": "{{count}} record · {{total}} total",
+    "subtitle_other": "{{count}} records · {{total}} total"
   }
 }

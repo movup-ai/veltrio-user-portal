@@ -28,11 +28,19 @@ import { downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils
 import { AvailabilityStrip } from '@/modules/vehicles/components/AvailabilityStrip'
 import { VehiclePerformance } from '@/modules/vehicles/components/VehiclePerformance'
 import { VehiclePhotoGallery } from '@/modules/vehicles/components/VehiclePhotoGallery'
+import { VehicleServiceHistory } from '@/modules/vehicles/components/VehicleServiceHistory'
 import { VehicleSpecs } from '@/modules/vehicles/components/VehicleSpecs'
 import { VehicleStatusCard } from '@/modules/vehicles/components/VehicleStatusCard'
 import { availabilityForVehicle } from '@/modules/vehicles/utils/availability'
 import type { VehicleStatus } from '@/modules/vehicles/types/vehicle.types'
-import { useArchiveVehicle, useUpdateVehicle, useVehicle, useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
+import {
+  useArchiveVehicle,
+  useReturnFromService,
+  useSendToService,
+  useUpdateVehicle,
+  useVehicle,
+  useVehicles,
+} from '@/modules/vehicles/hooks/use-vehicles'
 import {
   formatRateOptionBasis,
   formatRateOptionMileage,
@@ -97,6 +105,7 @@ export function VehicleDetailsPage() {
   const navigate = useNavigate()
   const subdomain = useOrganizationStore((s) => s.activeMembership?.subdomain)
   const [confirmArchive, setConfirmArchive] = useState(false)
+  const [confirmService, setConfirmService] = useState(false)
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
   const { data: fleet } = useVehicles({ page: 1, pageSize: 100 })
@@ -104,6 +113,8 @@ export function VehicleDetailsPage() {
   const schedule = bookingLists?.schedule ?? []
   const updateVehicle = useUpdateVehicle(vehicleId ?? '')
   const archiveVehicle = useArchiveVehicle()
+  const sendToService = useSendToService()
+  const returnFromService = useReturnFromService()
 
   usePageBreadcrumb(vehicle ? vehicleDisplayName(vehicle) : undefined)
   if (isLoading) {
@@ -153,7 +164,13 @@ export function VehicleDetailsPage() {
     <PageContainer>
       <PageHeader
         leading={
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label={t('details.backToVehicles')}>
+          <Button
+            variant="outline"
+            size="icon"
+            // Always the fleet list: history could be a booking, a search result or another tab.
+            onClick={() => navigate('/app/vehicles')}
+            aria-label={t('details.backToVehicles')}
+          >
             <ArrowLeft className="size-4" />
           </Button>
         }
@@ -240,10 +257,18 @@ export function VehicleDetailsPage() {
               <p className="text-fg-3 text-[13px]">{t('details.noBookings')}</p>
             </Card>
           )}
+
         </div>
 
         <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-4">
-          <VehicleStatusCard vehicle={vehicle} currentRental={currentRental} onStatusChange={handleStatusChange} />
+          <VehicleStatusCard
+            vehicle={vehicle}
+            currentRental={currentRental}
+            onStatusChange={handleStatusChange}
+            onSendToService={() => setConfirmService(true)}
+            onReturnFromService={() => returnFromService.mutate(vehicle)}
+            serviceActionPending={sendToService.isPending || returnFromService.isPending}
+          />
 
           <VehiclePerformance vehicle={vehicle} fleetUtilization={fleetUtilization} revenue={revenue} daysOnRent={daysOnRent} />
 
@@ -292,6 +317,8 @@ export function VehicleDetailsPage() {
               {vehicle.notes || t('details.noNotes')}
             </p>
           </Card>
+
+          <VehicleServiceHistory vehicleId={vehicle.id} />
         </div>
       </div>
 
@@ -304,6 +331,19 @@ export function VehicleDetailsPage() {
         loading={archiveVehicle.isPending}
         onConfirm={() => {
           archiveVehicle.mutate(vehicle, { onSuccess: () => navigate("/app/vehicles") })
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmService}
+        onOpenChange={setConfirmService}
+        title={t('service.confirmSendToService.title')}
+        description={t('service.confirmSendToService.description')}
+        confirmLabel={t('service.confirmSendToService.confirm')}
+        confirmVariant="primary"
+        loading={sendToService.isPending}
+        onConfirm={() => {
+          sendToService.mutate(vehicle, { onSuccess: () => setConfirmService(false) })
         }}
       />
     </PageContainer>

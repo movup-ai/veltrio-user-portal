@@ -152,3 +152,45 @@ export function useRestoreVehicle() {
     },
   })
 }
+
+/**
+ * Maintenance is a status the API guards: a vehicle that is on rent or archived is refused
+ * with a 409 whose message explains why, so it is surfaced as-is.
+ */
+export function useSendToService() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vehicle: Vehicle) => vehicleApi.sendToService(vehicle.id).then(() => vehicle),
+    onSuccess: (vehicle) => {
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      toast({
+        title: i18n.t('vehicles:toast.sentToService'),
+        description: i18n.t('vehicles:toast.sentToServiceDescription', { name: vehicleName(vehicle) }),
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      toast({ title: i18n.t('vehicles:toast.sendToServiceFailed'), description: normalizeApiError(error).message, variant: 'error' })
+    },
+  })
+}
+
+export function useReturnFromService() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vehicle: Vehicle) => vehicleApi.returnFromService(vehicle.id).then(() => vehicle),
+    onSuccess: (vehicle) => {
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      toast({
+        title: i18n.t('vehicles:toast.returnedFromService'),
+        description: i18n.t('vehicles:toast.returnedFromServiceDescription', { name: vehicleName(vehicle) }),
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      toast({ title: i18n.t('vehicles:toast.returnFromServiceFailed'), description: normalizeApiError(error).message, variant: 'error' })
+    },
+  })
+}
