@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CalendarClock, CalendarPlus, CalendarRange, ChevronDown, Gauge, MapPin, User } from 'lucide-react'
+import { CalendarClock, CalendarPlus, CalendarRange, ChevronDown, Gauge, MapPin, User, Wrench } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -27,13 +27,24 @@ interface VehicleStatusCardProps {
   /** [customer, reference, rentalWindow] of the active booking, when the vehicle is out. */
   currentRental?: { customer: string; reference: string; window: string }
   onStatusChange: (status: VehicleStatus) => void
+  onSendToService: () => void
+  onReturnFromService: () => void
+  serviceActionPending?: boolean
 }
 
-export function VehicleStatusCard({ vehicle, currentRental, onStatusChange }: VehicleStatusCardProps) {
+export function VehicleStatusCard({
+  vehicle,
+  currentRental,
+  onStatusChange,
+  onSendToService,
+  onReturnFromService,
+  serviceActionPending,
+}: VehicleStatusCardProps) {
   const { t } = useTranslation('vehicles')
   const domain = useDomainLabels()
   const format = useFormatters()
   const navigate = useNavigate()
+  const inService = vehicle.status === 'Maintenance'
 
   return (
     <Card className="flex flex-col gap-4 border-0 p-[18px] shadow-none">
@@ -71,13 +82,27 @@ export function VehicleStatusCard({ vehicle, currentRental, onStatusChange }: Ve
         <DetailRow icon={CalendarRange} label={t('statusCard.inFleetSince')} value={format.monthYear(vehicle.createdAt)} />
       </div>
 
-      <Button
-        className="w-full gap-2"
-        onClick={() => navigate('/app/bookings/new', { state: { vehicleId: vehicle.id } })}
-      >
-        <CalendarPlus className="size-4" />
-        {t('statusCard.newBooking')}
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          className="flex-1 gap-2"
+          onClick={() => navigate('/app/bookings/new', { state: { vehicleId: vehicle.id } })}
+        >
+          <CalendarPlus className="size-4" />
+          {t('statusCard.newBooking')}
+        </Button>
+        {/* Archived vehicles are out of the fleet entirely, so neither action applies. */}
+        {vehicle.status !== 'Archived' && (
+          <Button
+            variant="outline"
+            className="flex-1 gap-2"
+            loading={serviceActionPending}
+            onClick={inService ? onReturnFromService : onSendToService}
+          >
+            <Wrench className="size-4" />
+            {inService ? t('service.returnFromService') : t('service.sendToService')}
+          </Button>
+        )}
+      </div>
     </Card>
   )
 }

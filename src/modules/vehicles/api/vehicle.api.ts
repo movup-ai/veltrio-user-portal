@@ -51,6 +51,13 @@ export const vehicleApi = {
   restore: (id: string) =>
     apiClient.post<VehicleWire>(`/vehicles/${id}/restore`).then((r) => toVehicle(r.data)),
 
+  /** Moves a vehicle into maintenance. Refused by the API while it is on rent. */
+  sendToService: (id: string) =>
+    apiClient.post<VehicleWire>(`/vehicles/${id}/service`).then((r) => toVehicle(r.data)),
+
+  returnFromService: (id: string) =>
+    apiClient.delete<VehicleWire>(`/vehicles/${id}/service`).then((r) => toVehicle(r.data)),
+
   remove: (id: string) => apiClient.delete<void>(`/vehicles/${id}`).then((r) => r.data),
 
   /**

@@ -106,5 +106,14 @@
     "perMile": "/mi",
     "unlimitedMiles": "Unlimited miles",
     "eighthTank": "/ 1/8 tank"
+  },
+  "serviceType": {
+    "Oil change": "Oil change",
+    "Tire replacement": "Tire replacement",
+    "Brake service": "Brake service",
+    "Inspection": "Inspection",
+    "Repair": "Repair",
+    "Cleaning": "Cleaning",
+    "Other": "Other"
   }
 }

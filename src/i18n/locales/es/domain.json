@@ -106,5 +106,14 @@
     "perMile": "/mi",
     "unlimitedMiles": "Millaje ilimitado",
     "eighthTank": "/ 1/8 de tanque"
+  },
+  "serviceType": {
+    "Oil change": "Cambio de aceite",
+    "Tire replacement": "Cambio de neumáticos",
+    "Brake service": "Servicio de frenos",
+    "Inspection": "Inspección",
+    "Repair": "Reparación",
+    "Cleaning": "Limpieza",
+    "Other": "Otro"
   }
 }

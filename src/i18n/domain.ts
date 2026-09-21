@@ -16,6 +16,7 @@ type DomainGroup =
   | 'vehicleType'
   | 'transmission'
   | 'fuelType'
+  | 'serviceType'
   | 'billingBasis'
   | 'billingBasisHint'
   | 'billingBasisSuffix'
