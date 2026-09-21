@@ -16,7 +16,6 @@ import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/use-toast'
 import { LOCATIONS } from '@/modules/locations/mock/location.mock'
@@ -27,7 +26,7 @@ import {
   VEHICLE_TYPES,
   VEHICLE_PRICE_BANDS,
   VEHICLE_SORTS,
-  VEHICLE_STATUSES,
+  SELECTABLE_VEHICLE_STATUSES,
   type FuelType,
   type Transmission,
   type Vehicle,
@@ -36,7 +35,7 @@ import {
   type VehicleSort,
   type VehicleStatus,
 } from '@/modules/vehicles/types/vehicle.types'
-import { useDeleteVehicle, useReorderVehicles, useVehicles, useVehicleStats, vehicleKeys } from '@/modules/vehicles/hooks/use-vehicles'
+import { useArchiveVehicle, useRestoreVehicle, useReorderVehicles, useVehicles, useVehicleStats, vehicleKeys } from '@/modules/vehicles/hooks/use-vehicles'
 import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
 import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImportDialog'
@@ -48,7 +47,7 @@ function tripsForVehicle(v: Vehicle): number {
 }
 
 /** Canonical values — `All` means "no status filter", `Drafts` filters on isDraft instead of status, the rest map 1:1 to VehicleStatus. */
-const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts'] as const
+const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts', 'Archived'] as const
 type Tab = (typeof TABS)[number]
 
 const PAGE_SIZE = 8
@@ -95,8 +94,6 @@ export function VehiclesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null)
   const [importOpen, setImportOpen] = useState(false)
 
-  usePageHeaderActions([{ label: t('list.addVehicle'), icon: Plus, onClick: () => navigate('/app/vehicles/new') }], [t])
-
   const isDraftsTab = tab === 'Drafts'
   const effectiveStatus: VehicleStatus | 'Any' = tab === 'All' || isDraftsTab ? statusFilter : (tab as VehicleStatus)
 
@@ -129,8 +126,16 @@ export function VehiclesPage() {
   // Unfiltered: the stat cards describe the whole fleet, not the current view.
   const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: PAGE_SIZE })
   const { data: draftsData } = useVehicleDrafts()
+  // Its own query: the stats above exclude archived vehicles, so they cannot supply this count.
+  const { data: archivedStats } = useVehicleStats({
+    ...UNFILTERED,
+    status: 'Archived',
+    page: 1,
+    pageSize: PAGE_SIZE,
+  })
   const queryClient = useQueryClient()
-  const deleteVehicle = useDeleteVehicle()
+  const archiveVehicle = useArchiveVehicle()
+  const restoreVehicle = useRestoreVehicle()
   const reorderVehicles = useReorderVehicles()
   const deleteDraft = useDeleteVehicleDraft()
 
@@ -143,6 +148,7 @@ export function VehiclesPage() {
     'On rent': byStatus?.['On rent'] ?? 0,
     Maintenance: byStatus?.Maintenance ?? 0,
     Drafts: draftsData?.total ?? 0,
+    Archived: archivedStats?.total ?? 0,
   }
 
   const resetToFirstPage = () => setPage(1)
@@ -235,7 +241,9 @@ export function VehiclesPage() {
       : vehicleRow(v, tripsForVehicle(v), [
           { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/vehicles/${v.id}`) },
           { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
-          { label: t('list.rowActions.archiveVehicle'), onClick: () => setDeleteTarget(v), destructive: true },
+          v.status === 'Archived'
+            ? { label: t('list.rowActions.restoreVehicle'), onClick: () => restoreVehicle.mutate(v) }
+            : { label: t('list.rowActions.archiveVehicle'), onClick: () => setDeleteTarget(v), destructive: true },
         ]),
   )
 
@@ -245,12 +253,21 @@ export function VehiclesPage() {
         title={t('list.title')}
         description={t('list.description')}
         actions={
-          <PageActionButton
-            icon={Download}
-            label={t('list.importCsv')}
-            onClick={() => setImportOpen(true)}
-            className="!text-[13px]"
-          />
+          <>
+            <PageActionButton
+              icon={Download}
+              label={t('list.importCsv')}
+              onClick={() => setImportOpen(true)}
+              className="!text-[13px]"
+            />
+            <PageActionButton
+              icon={Plus}
+              label={t('list.addVehicle')}
+              variant="solid"
+              onClick={() => navigate('/app/vehicles/new')}
+              className="!text-[13px]"
+            />
+          </>
         }
       />
 
@@ -269,7 +286,7 @@ export function VehiclesPage() {
             value: statusFilter === 'Any' ? tCommon('filters.any') : domain.status(statusFilter),
             options: [
               { value: 'Any', label: tCommon('filters.any') },
-              ...VEHICLE_STATUSES.map((s) => ({ value: s, label: domain.status(s) })),
+              ...SELECTABLE_VEHICLE_STATUSES.map((s) => ({ value: s, label: domain.status(s) })),
             ],
             onChange: (value) => {
               setStatusFilter(value as VehicleStatus | 'Any')
@@ -455,10 +472,10 @@ export function VehiclesPage() {
             : undefined
         }
         confirmLabel={t('archiveDialog.confirm')}
-        loading={deleteVehicle.isPending}
+        loading={archiveVehicle.isPending}
         onConfirm={() => {
           if (!deleteTarget) return
-          deleteVehicle.mutate(deleteTarget, { onSuccess: () => setDeleteTarget(null) })
+          archiveVehicle.mutate(deleteTarget, { onSuccess: () => setDeleteTarget(null) })
         }}
       />
     </PageContainer>

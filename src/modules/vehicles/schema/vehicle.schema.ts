@@ -8,7 +8,7 @@ import {
   TRANSMISSIONS,
   VEHICLE_TYPES,
   VEHICLE_FEATURES,
-  VEHICLE_STATUSES,
+  SELECTABLE_VEHICLE_STATUSES,
 } from '../types/vehicle.types'
 
 const optionalNumber = z.number().nonnegative().optional().or(z.nan().transform(() => undefined))
@@ -88,7 +88,7 @@ export function vehicleFormSchema(t: ValidationT) {
       .regex(/^[A-Za-z0-9·\-\s]+$/, t('vehicle.plateInvalid')),
     vin: z.string().min(11, t('vehicle.vinTooShort')).max(20, t('vehicle.vinTooLong')),
     location: z.string().min(1, t('vehicle.locationRequired')),
-    status: z.enum(VEHICLE_STATUSES, { message: t('vehicle.statusRequired') }),
+    status: z.enum(SELECTABLE_VEHICLE_STATUSES, { message: t('vehicle.statusRequired') }),
     mileage: z.number({ message: t('vehicle.mileageRequired') }).int().min(0, t('vehicle.mileageNegative')),
     transmission: z.enum(TRANSMISSIONS, { message: t('vehicle.transmissionRequired') }),
     fuelType: z.enum(FUEL_TYPES, { message: t('vehicle.fuelTypeRequired') }),

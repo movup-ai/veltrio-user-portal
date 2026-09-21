@@ -25,7 +25,8 @@
     "Pending": "Pending",
     "Refunded": "Refunded",
     "Scheduled": "Scheduled",
-    "Verify docs": "Verify docs"
+    "Verify docs": "Verify docs",
+    "Archived": "Archived"
   },
   "vehicleType": {
     "Convertible": "Convertible",

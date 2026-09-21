@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
-import { VEHICLE_STATUSES, type Vehicle, type VehicleStatus } from '../types/vehicle.types'
+import { SELECTABLE_VEHICLE_STATUSES, type Vehicle, type VehicleStatus } from '../types/vehicle.types'
 
 function DetailRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: React.ReactNode }) {
   return (
@@ -46,7 +46,7 @@ export function VehicleStatusCard({ vehicle, currentRental, onStatusChange }: Ve
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            {VEHICLE_STATUSES.map((status) => (
+            {SELECTABLE_VEHICLE_STATUSES.map((status) => (
               <DropdownMenuItem key={status} onSelect={() => status !== vehicle.status && onStatusChange(status)}>
                 {domain.status(status)}
               </DropdownMenuItem>

@@ -106,6 +106,7 @@ const STATUS_TO_API = {
   'On rent': 'on_rent',
   Maintenance: 'maintenance',
   'Out of service': 'out_of_service',
+  Archived: 'archived',
 } as const satisfies Record<VehicleStatus, string>
 
 const TYPE_TO_API = {

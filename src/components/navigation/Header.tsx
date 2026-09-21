@@ -12,7 +12,6 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
   const { t } = useTranslation('nav')
   const location = useLocation()
   const title = t(`links.${navKeyForPath(location.pathname)}`)
-  const headerActions = usePageActionsStore((state) => state.headerActions)
   const breadcrumbExtra = usePageActionsStore((state) => state.breadcrumbExtra)
 
   return (
@@ -60,18 +59,6 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
       </button>
 
       <LanguageSwitcher />
-
-      {headerActions.map((a) => (
-        <button
-          key={a.label}
-          type="button"
-          onClick={a.onClick}
-          className="bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover flex h-[34px] shrink-0 items-center gap-[7px] rounded-[9px] px-3 text-[13px] font-semibold whitespace-nowrap transition-colors"
-        >
-          <a.icon className="size-[15px]" strokeWidth={2.5} />
-          <span className="hidden sm:inline">{a.label}</span>
-        </button>
-      ))}
     </header>
   )
 }

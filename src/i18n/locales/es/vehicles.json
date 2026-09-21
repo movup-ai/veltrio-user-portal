@@ -23,7 +23,8 @@
       "Available": "Disponibles",
       "On rent": "Alquilados",
       "Maintenance": "En mantenimiento",
-      "Drafts": "Borradores"
+      "Drafts": "Borradores",
+      "Archived": "Archivados"
     },
     "stats": {
       "fleetSize": "Tamaño de la flota",
@@ -40,7 +41,8 @@
       "editVehicle": "Editar vehículo",
       "archiveVehicle": "Archivar vehículo",
       "continueDraft": "Seguir editando",
-      "discardDraft": "Descartar borrador"
+      "discardDraft": "Descartar borrador",
+      "restoreVehicle": "Restaurar vehículo"
     }
   },
   "filters": {
@@ -357,11 +359,14 @@
     "updateFailed": "No se pudo actualizar el vehículo",
     "archived": "Vehículo archivado",
     "archivedDescription": "{{name}} se archivó y se retiró de la flota activa.",
-    "archiveFailed": "No se pudo archivar el vehículo"
+    "archiveFailed": "No se pudo archivar el vehículo",
+    "restored": "Vehículo restaurado",
+    "restoredDescription": "{{name}} vuelve a la flota.",
+    "restoreFailed": "No se pudo restaurar el vehículo"
   },
   "archiveDialog": {
     "title": "¿Archivar vehículo?",
-    "description": "{{name}} ({{plate}}) se archivará y se retirará de la flota activa. Esta acción no se puede deshacer.",
+    "description": "{{name}} ({{plate}}) se retirará de la flota activa. Puede restaurarlo desde la pestaña Archivados.",
     "confirm": "Archivar vehículo"
   },
   "errors": {

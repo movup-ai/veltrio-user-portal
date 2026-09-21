@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { useFormatters } from '@/i18n'
 import { CUSTOMERS } from '@/modules/customers/mock/customer.mock'
 import { customerColumns, customerRow } from '@/modules/customers/utils/customer.utils'
@@ -25,7 +24,6 @@ export function CustomersPage() {
   const format = useFormatters()
   const [tab, setTab] = useState<Tab>('All')
 
-  usePageHeaderActions([{ label: t('list.addCustomer'), icon: Plus }], [t])
 
   const customers =
     tab === 'All' ? CUSTOMERS : tab === 'Active' ? CUSTOMERS.filter((c) => c[6] === 'Active') : CUSTOMERS.filter((c) => NEEDS_REVIEW.has(c[6]))
@@ -36,7 +34,12 @@ export function CustomersPage() {
       <PageHeader
         title={t('list.title')}
         description={t('list.description')}
-        actions={<PageActionButton icon={Download} label={t('list.export')} />}
+        actions={
+          <>
+            <PageActionButton icon={Download} label={t('list.export')} />
+            <PageActionButton icon={Plus} label={t('list.addCustomer')} variant="solid" />
+          </>
+        }
       />
 
       <FilterBar

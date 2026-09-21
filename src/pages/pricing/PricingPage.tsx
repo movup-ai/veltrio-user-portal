@@ -6,7 +6,6 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { useFormatters } from '@/i18n'
 import { PRICING } from '@/modules/pricing/mock/pricing.mock'
 import { pricingColumns, pricingRow } from '@/modules/pricing/utils/pricing.utils'
@@ -19,7 +18,6 @@ export function PricingPage() {
   const { t: tDomain } = useTranslation('domain')
   const format = useFormatters()
 
-  usePageHeaderActions([{ label: t('list.newRule'), icon: Plus }], [t])
   const rows = PRICING.map(pricingRow)
 
   return (
@@ -27,7 +25,12 @@ export function PricingPage() {
       <PageHeader
         title={t('list.title')}
         description={t('list.description')}
-        actions={<PageActionButton icon={CalendarDays} label={t('list.rateCalendar')} />}
+        actions={
+          <>
+            <PageActionButton icon={CalendarDays} label={t('list.rateCalendar')} />
+            <PageActionButton icon={Plus} label={t('list.newRule')} variant="solid" />
+          </>
+        }
       />
 
       <FilterBar

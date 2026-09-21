@@ -23,7 +23,8 @@
       "Available": "Available",
       "On rent": "On rent",
       "Maintenance": "Maintenance",
-      "Drafts": "Drafts"
+      "Drafts": "Drafts",
+      "Archived": "Archived"
     },
     "stats": {
       "fleetSize": "Fleet size",
@@ -40,7 +41,8 @@
       "editVehicle": "Edit vehicle",
       "archiveVehicle": "Archive vehicle",
       "continueDraft": "Continue editing",
-      "discardDraft": "Discard draft"
+      "discardDraft": "Discard draft",
+      "restoreVehicle": "Restore vehicle"
     }
   },
   "filters": {
@@ -357,11 +359,14 @@
     "updateFailed": "Could not update vehicle",
     "archived": "Vehicle archived",
     "archivedDescription": "{{name}} was archived and removed from the active fleet.",
-    "archiveFailed": "Could not archive vehicle"
+    "archiveFailed": "Could not archive vehicle",
+    "restored": "Vehicle restored",
+    "restoredDescription": "{{name}} is back in the fleet.",
+    "restoreFailed": "Could not restore the vehicle"
   },
   "archiveDialog": {
     "title": "Archive vehicle?",
-    "description": "{{name}} ({{plate}}) will be archived and removed from the active fleet. This can't be undone.",
+    "description": "{{name}} ({{plate}}) will be removed from the active fleet. You can restore it from the Archived tab.",
     "confirm": "Archive vehicle"
   },
   "errors": {

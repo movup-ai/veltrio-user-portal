@@ -51,8 +51,8 @@ export function describeFile(file: File): PhotoUploadFile {
 }
 
 /**
- * What the photos hang off: a published vehicle, or a draft in the wizard. Drafts have the
- * same endpoints under `/vehicles/drafts/{id}`, and publishing moves the rows to the vehicle.
+ * What the photos hang off: a published vehicle, or a draft in the wizard. Both use the same
+ * endpoints, keyed by owner kind in the path; publishing moves the rows to the vehicle.
  */
 export type PhotoTarget =
   | { kind: 'vehicle'; id: string }
@@ -62,9 +62,7 @@ export const vehicleTarget = (id: string): PhotoTarget => ({ kind: 'vehicle', id
 export const draftTarget = (id: string): PhotoTarget => ({ kind: 'draft', id })
 
 function photosUrl(target: PhotoTarget): string {
-  return target.kind === 'draft'
-    ? `/vehicles/drafts/${target.id}/photos`
-    : `/vehicles/${target.id}/photos`
+  return `/vehicles/photos/${target.kind === 'draft' ? 'drafts' : 'vehicles'}/${target.id}`
 }
 
 export const vehiclePhotoApi = {

@@ -1,5 +1,19 @@
-export const VEHICLE_STATUSES = ['Available', 'On rent', 'Maintenance', 'Out of service'] as const
+export const VEHICLE_STATUSES = [
+  'Available',
+  'On rent',
+  'Maintenance',
+  'Out of service',
+  'Archived',
+] as const
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number]
+
+/**
+ * The statuses a person can pick. Archiving is its own action with its own endpoint, so it is
+ * not offered as a value to set by hand.
+ */
+export const SELECTABLE_VEHICLE_STATUSES = VEHICLE_STATUSES.filter(
+  (status) => status !== 'Archived',
+) as readonly Exclude<VehicleStatus, 'Archived'>[]
 
 export const VEHICLE_TYPES = [
   'Convertible',

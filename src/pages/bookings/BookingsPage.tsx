@@ -12,7 +12,6 @@ import { StatStrip } from '@/components/data-display/StatStrip'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
-import { usePageHeaderActions } from '@/components/navigation/usePageHeaderActions'
 import { toast } from '@/components/ui/use-toast'
 import { EMPTY_DATE_RANGE, fromDateValue, type DateRange } from '@/components/ui/date-range-picker'
 import { useFormatters } from '@/i18n'
@@ -71,7 +70,6 @@ export function BookingsPage() {
   const [draftDuration, setDraftDuration] = useState<BookingDurationBand | 'Any'>('Any')
   const [draftValueBands, setDraftValueBands] = useState<BookingValueBand[]>([])
 
-  usePageHeaderActions([{ label: t('list.newBooking'), icon: Plus, onClick: () => navigate('/app/bookings/new') }], [t])
 
   const filters: BookingFilters = useMemo(
     () => ({
@@ -205,6 +203,12 @@ export function BookingsPage() {
           <>
             <PageActionButton icon={CalendarDays} label={t('list.calendarView')} />
             <PageActionButton icon={Download} label={t('list.export')} onClick={() => handleExport(rowsData)} />
+            <PageActionButton
+              icon={Plus}
+              label={t('list.newBooking')}
+              variant="solid"
+              onClick={() => navigate('/app/bookings/new')}
+            />
           </>
         }
       />

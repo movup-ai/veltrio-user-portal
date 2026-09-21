@@ -37,7 +37,7 @@ import {
   FUEL_TYPES,
   TRANSMISSIONS,
   VEHICLE_TYPES,
-  VEHICLE_STATUSES,
+  SELECTABLE_VEHICLE_STATUSES,
   type VehicleInput,
   type VehiclePhoto,
 } from '@/modules/vehicles/types/vehicle.types'
@@ -107,7 +107,7 @@ function sanitizeFormValues(values: VehicleFormValues): VehicleFormValues {
     ...EMPTY_VALUES,
     ...values,
     vehicleType: (VEHICLE_TYPES as readonly string[]).includes(values.vehicleType) ? values.vehicleType : EMPTY_VALUES.vehicleType,
-    status: (VEHICLE_STATUSES as readonly string[]).includes(values.status) ? values.status : EMPTY_VALUES.status,
+    status: (SELECTABLE_VEHICLE_STATUSES as readonly string[]).includes(values.status) ? values.status : EMPTY_VALUES.status,
     transmission: (TRANSMISSIONS as readonly string[]).includes(values.transmission) ? values.transmission : EMPTY_VALUES.transmission,
     fuelType: (FUEL_TYPES as readonly string[]).includes(values.fuelType) ? values.fuelType : EMPTY_VALUES.fuelType,
     location: values.location || EMPTY_VALUES.location,
@@ -642,7 +642,7 @@ function VehicleForm({
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {VEHICLE_STATUSES.map((s) => (
+                              {SELECTABLE_VEHICLE_STATUSES.map((s) => (
                                 <SelectItem key={s} value={s}>
                                   {domain.status(s)}
                                 </SelectItem>

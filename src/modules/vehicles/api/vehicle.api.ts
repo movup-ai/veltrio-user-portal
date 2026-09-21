@@ -44,6 +44,13 @@ export const vehicleApi = {
       .patch<VehicleWire>(`/vehicles/${id}`, toVehiclePayload(input))
       .then((r) => toVehicle(r.data)),
 
+  /** Retires a vehicle without destroying it; photos and history are kept. */
+  archive: (id: string) =>
+    apiClient.post<VehicleWire>(`/vehicles/${id}/archive`).then((r) => toVehicle(r.data)),
+
+  restore: (id: string) =>
+    apiClient.post<VehicleWire>(`/vehicles/${id}/restore`).then((r) => toVehicle(r.data)),
+
   remove: (id: string) => apiClient.delete<void>(`/vehicles/${id}`).then((r) => r.data),
 
   /**

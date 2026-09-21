@@ -78,7 +78,9 @@ export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
     plate: vehicle.plate,
     vin: vehicle.vin,
     location: vehicle.location,
-    status: vehicle.status,
+    // Archiving is its own action, so the form has no such option — an archived vehicle opened
+    // for editing shows the status it would return to.
+    status: vehicle.status === 'Archived' ? 'Available' : vehicle.status,
     mileage: vehicle.mileage,
     transmission: vehicle.specs.transmission,
     fuelType: vehicle.specs.fuelType,
