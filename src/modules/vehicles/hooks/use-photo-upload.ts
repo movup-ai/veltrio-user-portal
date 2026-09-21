@@ -189,7 +189,8 @@ export function useVehiclePhotoUpload(target: PhotoTarget | undefined) {
       return { uploaded, failed }
     },
     // Identity, not the object: a caller building the target inline would otherwise rebuild
-    // `start` on every render.
+    // `start` on every render. The two fields are the whole of what `target` contributes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [target?.kind, target?.id, patch],
   )
 

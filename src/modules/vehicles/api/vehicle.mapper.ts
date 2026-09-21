@@ -14,12 +14,24 @@ import {
   type VehicleListParams,
   type VehiclePhoto,
   type VehicleSort,
+  type VehicleStats,
   type VehicleStatus,
   type VehicleType,
 } from '../types/vehicle.types'
+import type { VehicleDraft } from '../types/vehicle-draft.types'
+import type {
+  ServiceDue,
+  ServiceDueState,
+  ServiceHistory,
+  ServiceRecord,
+  ServiceRecordInput,
+  ServiceType,
+} from '../types/service-record.types'
 
 /**
- * Translation layer between the portal's domain types and the FastAPI wire format.
+ * Translation layer between the portal's domain types and the FastAPI wire format, for every
+ * resource under /vehicles: the vehicle itself, its photos, drafts, service records and CSV
+ * import. The `*.api.ts` files hold URLs and HTTP; the shapes and conversions live here.
  *
  * Four differences would otherwise leak into components:
  *   - enums — the portal uses canonical English ('On rent') as i18n keys, the API uses slugs ('on_rent')
@@ -358,7 +370,7 @@ export interface VehicleStatsWire {
 }
 
 /** Fleet summary in the portal's units — dollars, and utilization as a 0-1 fraction. */
-export function toVehicleStats(wire: VehicleStatsWire) {
+export function toVehicleStats(wire: VehicleStatsWire): VehicleStats {
   return {
     total: wire.total,
     byStatus: Object.fromEntries(
@@ -367,4 +379,172 @@ export function toVehicleStats(wire: VehicleStatsWire) {
     avgDailyRate: fromCents(wire.avgDailyRateCents),
     avgUtilization: wire.avgUtilization / 100,
   }
+}
+
+// --- Photos: upload slots ------------------------------------------------------------------
+
+export interface PresignedUpload {
+  url: string
+  fields: Record<string, string>
+  expiresAt: string
+}
+
+export interface PhotoUploadSlot {
+  photo: VehiclePhoto
+  upload: PresignedUpload
+}
+
+export interface PhotoUploadSlotWire {
+  photo: VehiclePhotoWire
+  upload: PresignedUpload
+}
+
+export function toUploadSlot(wire: PhotoUploadSlotWire): PhotoUploadSlot {
+  return { photo: toPhoto(wire.photo), upload: wire.upload }
+}
+
+// --- Drafts --------------------------------------------------------------------------------
+
+export interface VehicleDraftWire extends Omit<VehicleDraft, 'photos'> {
+  photos?: VehiclePhotoWire[]
+}
+
+/** Photos come over the wire in the same shape as a vehicle's, so they map the same way. */
+export function toDraft(wire: VehicleDraftWire): VehicleDraft {
+  return { ...wire, photos: (wire.photos ?? []).map(toPhoto) }
+}
+
+// --- Service records -----------------------------------------------------------------------
+
+export interface ServiceRecordWire {
+  id: string
+  vehicleId: string
+  serviceType: string
+  performedOn: string
+  odometer: number | null
+  costCents: number | null
+  vendor: string | null
+  notes: string | null
+  nextDueOn: string | null
+  nextDueOdometer: number | null
+}
+
+export interface ServiceDueWire {
+  recordId: string
+  serviceType: string
+  state: ServiceDueState
+  nextDueOn: string | null
+  nextDueOdometer: number | null
+  daysRemaining: number | null
+  milesRemaining: number | null
+}
+
+export interface ServiceHistoryWire {
+  items: ServiceRecordWire[]
+  summary: {
+    recordCount: number
+    totalCostCents: number
+    lastServiceOn: string | null
+  }
+  due: ServiceDueWire | null
+}
+
+const SERVICE_TYPE_TO_API = {
+  'Oil change': 'oil_change',
+  'Tire replacement': 'tire_replacement',
+  'Brake service': 'brake_service',
+  Inspection: 'inspection',
+  Repair: 'repair',
+  Cleaning: 'cleaning',
+  Other: 'other',
+} as const satisfies Record<ServiceType, string>
+
+const SERVICE_TYPE_FROM_API = invert(SERVICE_TYPE_TO_API)
+
+export function toServiceRecord(wire: ServiceRecordWire): ServiceRecord {
+  return {
+    id: wire.id,
+    vehicleId: wire.vehicleId,
+    serviceType: decode(SERVICE_TYPE_FROM_API, wire.serviceType, 'Other'),
+    performedOn: wire.performedOn,
+    odometer: wire.odometer ?? undefined,
+    cost: fromCents(wire.costCents),
+    vendor: wire.vendor ?? undefined,
+    notes: wire.notes ?? undefined,
+    nextDueOn: wire.nextDueOn ?? undefined,
+    nextDueOdometer: wire.nextDueOdometer ?? undefined,
+  }
+}
+
+function toServiceDue(wire: ServiceDueWire): ServiceDue {
+  return {
+    recordId: wire.recordId,
+    serviceType: decode(SERVICE_TYPE_FROM_API, wire.serviceType, 'Other'),
+    state: wire.state,
+    nextDueOn: wire.nextDueOn ?? undefined,
+    nextDueOdometer: wire.nextDueOdometer ?? undefined,
+    daysRemaining: wire.daysRemaining ?? undefined,
+    milesRemaining: wire.milesRemaining ?? undefined,
+  }
+}
+
+export function toServiceHistory(wire: ServiceHistoryWire): ServiceHistory {
+  return {
+    items: wire.items.map(toServiceRecord),
+    summary: {
+      recordCount: wire.summary.recordCount,
+      totalCost: fromCents(wire.summary.totalCostCents) ?? 0,
+      lastServiceOn: wire.summary.lastServiceOn ?? undefined,
+    },
+    due: wire.due ? toServiceDue(wire.due) : undefined,
+  }
+}
+
+export function toServiceRecordPayload(input: ServiceRecordInput) {
+  return {
+    serviceType: SERVICE_TYPE_TO_API[input.serviceType],
+    performedOn: input.performedOn,
+    odometer: input.odometer ?? null,
+    costCents: toCents(input.cost),
+    vendor: input.vendor?.trim() || null,
+    notes: input.notes?.trim() || null,
+    nextDueOn: input.nextDueOn || null,
+    nextDueOdometer: input.nextDueOdometer ?? null,
+  }
+}
+
+// --- CSV import ----------------------------------------------------------------------------
+
+export type ImportRowStatus = 'valid' | 'error' | 'duplicate'
+
+export interface ImportRowError {
+  column: string | null
+  message: string
+}
+
+/** `values` is the parsed row, echoed back on commit so the file is only parsed once. */
+export interface ImportRow {
+  row: number
+  status: ImportRowStatus
+  errors: ImportRowError[]
+  make: string | null
+  model: string | null
+  plate: string | null
+  vin: string | null
+  values: unknown | null
+}
+
+export interface ImportPreview {
+  total: number
+  valid: number
+  rows: ImportRow[]
+}
+
+export interface ImportCommitWire {
+  imported: number
+  vehicles: VehicleWire[]
+}
+
+export function toImportResult(wire: ImportCommitWire): { imported: number; vehicles: Vehicle[] } {
+  return { imported: wire.imported, vehicles: wire.vehicles.map(toVehicle) }
 }

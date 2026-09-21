@@ -14,12 +14,8 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
-import {
-  MAX_IMPORT_BYTES,
-  vehicleImportApi,
-  type ImportPreview,
-  type ImportRow,
-} from '../api/vehicle-import.api'
+import { MAX_IMPORT_BYTES, vehicleImportApi } from '../api/vehicle-import.api'
+import type { ImportPreview, ImportRow } from '../api/vehicle.mapper'
 import { vehicleKeys } from '../hooks/use-vehicles'
 
 interface Props {
