@@ -41,6 +41,7 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
   return {
     organizationId: membership.tenantId,
     organizationName: membership.tenantName,
+    subdomain: membership.subdomain,
     role: membership.role,
     permissions: ROLE_PERMISSIONS[membership.role],
   }

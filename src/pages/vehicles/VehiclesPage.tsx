@@ -39,6 +39,9 @@ import { useArchiveVehicle, useRestoreVehicle, useReorderVehicles, useVehicles, 
 import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
 import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImportDialog'
+import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
+import { copyToClipboard, fleetUrl, vehicleUrl } from '@/modules/vehicles/utils/public-links'
+import { useOrganizationStore } from '@/state/organization.store'
 
 /** No bookings API yet — mock data, matched to a vehicle by plate. See VehicleDetailsPage for the same temporary pattern. */
 const ALL_BOOKINGS = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]
@@ -75,6 +78,7 @@ export function VehiclesPage() {
   const domain = useDomainLabels()
   const format = useFormatters()
   const navigate = useNavigate()
+  const subdomain = useOrganizationStore((s) => s.activeMembership?.subdomain)
   const [tab, setTab] = useState<Tab>('All')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'Any'>('Any')
@@ -178,6 +182,18 @@ export function VehiclesPage() {
     })
   }
 
+  /** The row menu closes on click, so the copy is confirmed by a toast rather than in place. */
+  async function handleCopyVehicleLink(vehicle: Vehicle) {
+    if (!subdomain) return
+    const url = vehicleUrl(subdomain, vehicle)
+    const copied = await copyToClipboard(url)
+    toast({
+      title: copied ? t('publicLink.copied') : t('publicLink.copyFailed'),
+      description: url,
+      variant: copied ? 'success' : 'error',
+    })
+  }
+
   /**
    * Leaving order mode pins the sort to the arrangement just made — otherwise the list snaps
    * back to whatever it was sorted by before, hiding the order the user came here to set.
@@ -241,6 +257,10 @@ export function VehiclesPage() {
       : vehicleRow(v, tripsForVehicle(v), [
           { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/vehicles/${v.id}`) },
           { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
+          // An archived vehicle has no public page to share, so the link is offered only while live.
+          ...(subdomain && v.status !== 'Archived'
+            ? [{ label: t('publicLink.vehicleLink'), onClick: () => void handleCopyVehicleLink(v) }]
+            : []),
           v.status === 'Archived'
             ? { label: t('list.rowActions.restoreVehicle'), onClick: () => restoreVehicle.mutate(v) }
             : { label: t('list.rowActions.archiveVehicle'), onClick: () => setDeleteTarget(v), destructive: true },
@@ -254,6 +274,13 @@ export function VehiclesPage() {
         description={t('list.description')}
         actions={
           <>
+            {subdomain && (
+              <CopyLinkButton
+                url={fleetUrl(subdomain)}
+                label={t('publicLink.fleetLink')}
+                className="!text-[13px]"
+              />
+            )}
             <PageActionButton
               icon={Download}
               label={t('list.importCsv')}

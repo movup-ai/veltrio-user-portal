@@ -77,7 +77,7 @@ export function vehicleFormSchema(t: ValidationT) {
     year: z
       .number({ message: t('vehicle.yearInvalid') })
       .int()
-      .min(1990, t('vehicle.yearTooEarly'))
+      .min(1900, t('vehicle.yearTooEarly'))
       .max(new Date().getFullYear() + 1, t('vehicle.yearTooLate')),
     vehicleType: z.enum(VEHICLE_TYPES, { message: t('vehicle.vehicleTypeRequired') }),
     color: z.string().min(1, t('vehicle.colorRequired')).max(30),

@@ -44,6 +44,8 @@ export interface User {
 export interface OrganizationMembership {
   organizationId: ID
   organizationName: string
+  /** Tenant subdomain, used to build public customer-portal links. */
+  subdomain: string
   role: MembershipRole
   permissions: Permission[]
 }

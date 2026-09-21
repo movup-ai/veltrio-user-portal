@@ -16,6 +16,9 @@ import { PanelHeading } from '@/components/layout/PanelHeading'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import type { Row } from '@/components/data-display/record-table.types'
 import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
+import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
+import { vehicleUrl } from '@/modules/vehicles/utils/public-links'
+import { useOrganizationStore } from '@/state/organization.store'
 import { initials } from '@/utils/formatting'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
 import type { BookingTuple } from '@/modules/bookings/types/booking.types'
@@ -92,6 +95,7 @@ export function VehicleDetailsPage() {
   const format = useFormatters()
   const { vehicleId } = useParams()
   const navigate = useNavigate()
+  const subdomain = useOrganizationStore((s) => s.activeMembership?.subdomain)
   const [confirmArchive, setConfirmArchive] = useState(false)
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
@@ -181,6 +185,12 @@ export function VehicleDetailsPage() {
                   <ChevronRight className="size-4" />
                 </Button>
               </>
+            )}
+            {subdomain && (
+              <CopyLinkButton
+                url={vehicleUrl(subdomain, vehicle)}
+                label={t('publicLink.vehicleLink')}
+              />
             )}
             <PageActionButton icon={Archive} label={t('details.archive')} onClick={() => setConfirmArchive(true)} />
             <PageActionButton

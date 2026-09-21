@@ -434,5 +434,11 @@
     "importFailed": "No se pudieron importar los vehículos",
     "previewFailed": "No se pudo leer ese archivo",
     "tooLarge": "Ese archivo supera los {{size}}MB"
+  },
+  "publicLink": {
+    "fleetLink": "Copiar enlace de la flota",
+    "vehicleLink": "Copiar enlace del vehículo",
+    "copied": "Copiado",
+    "copyFailed": "No se pudo copiar el enlace"
   }
 }
