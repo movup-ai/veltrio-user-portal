@@ -18,7 +18,7 @@ export function vehicleToInput({
   id: _id,
   createdAt: _createdAt,
   utilization: _utilization,
-  slug: _slug,
+  uri: _uri,
   ...input
 }: Vehicle): VehicleInput {
   return input
@@ -42,7 +42,7 @@ export function draftAsVehicle(draft: VehicleDraft): Vehicle {
     plate: values.plate ?? '',
     vin: values.vin ?? '',
     // A draft has no public URL until it is published and the API assigns one.
-    slug: '',
+    uri: '',
     location: values.location ?? '',
     status: values.status ?? 'Available',
     mileage: values.mileage ?? 0,

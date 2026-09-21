@@ -130,7 +130,7 @@ export interface Vehicle {
   plate: string
   vin: string
   /** Public URL segment on the customer portal, e.g. `honda-accord-2023`. */
-  slug: string
+  uri: string
   location: string
   status: VehicleStatus
   mileage: number
@@ -160,8 +160,8 @@ export interface VehicleStats {
   avgUtilization: number
 }
 
-/** Payload shape for create/update — server assigns id/createdAt/utilization/slug. */
-export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization' | 'slug'>
+/** Payload shape for create/update — server assigns id/createdAt/utilization/uri. */
+export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization' | 'uri'>
 
 export const VEHICLE_SORTS = ['manual', 'newest', 'utilization', 'dailyRate', 'name'] as const
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
