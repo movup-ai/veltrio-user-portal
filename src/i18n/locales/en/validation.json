@@ -3,7 +3,7 @@
     "makeRequired": "Make is required",
     "modelRequired": "Model is required",
     "yearInvalid": "Enter a valid year",
-    "yearTooEarly": "Year must be 1990 or later",
+    "yearTooEarly": "Year must be 1900 or later",
     "yearTooLate": "Year is too far in the future",
     "vehicleTypeRequired": "Select a vehicle type",
     "colorRequired": "Color is required",

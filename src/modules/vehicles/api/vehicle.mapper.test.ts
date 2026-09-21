@@ -12,6 +12,7 @@ const wire: VehicleWire = {
   color: 'Silver',
   plate: 'ABC1234',
   vin: '4T1B11HK512345678',
+  slug: 'toyota-camry-2024',
   location: 'Downtown',
   status: 'on_rent',
   mileage: 12000,

@@ -216,3 +216,27 @@
     animation: slide-out-right 200ms ease-in;
   }
 }
+
+/*
+ * Popper panels paint once at a placeholder position before Floating UI measures the trigger,
+ * which reads as a flash from the far edge of the screen. Radix leaves the transform origin
+ * empty for exactly that frame, so hide the panel until it is set.
+ */
+[data-radix-popper-content-wrapper][style*='translate(0px, -200%)'] {
+  visibility: hidden;
+}
+
+/*
+ * The `data-[state=open]:` variants of the animation utilities above are never generated —
+ * those are plain classes in a layer, not `--animate-*` theme entries — so the panels used to
+ * appear with no transition at all. Driving them from the attribute directly restores it.
+ */
+[data-radix-popper-content-wrapper] > [data-state='open'] {
+  animation: scale-in 120ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-radix-popper-content-wrapper] > [data-state='open'] {
+    animation: none;
+  }
+}

@@ -36,16 +36,20 @@ export function SelectContent({
   className,
   children,
   position = 'popper',
+  sideOffset = 4,
   ...props
 }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         position={position}
+        sideOffset={sideOffset}
         className={cn(
           'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md',
+          // Grow from the trigger edge rather than the panel centre.
+          'origin-[var(--radix-select-content-transform-origin)]',
           'data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out',
-          position === 'popper' && 'translate-y-1 w-[var(--radix-select-trigger-width)]',
+          position === 'popper' && 'w-[var(--radix-select-trigger-width)]',
           className,
         )}
         {...props}

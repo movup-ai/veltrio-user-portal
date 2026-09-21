@@ -8,6 +8,7 @@ function setPermissions(permissions: string[]) {
     activeMembership: {
       organizationId: 'org_1',
       organizationName: 'Test Org',
+      subdomain: 'test-org',
       role: 'owner',
       permissions: permissions as never,
     },

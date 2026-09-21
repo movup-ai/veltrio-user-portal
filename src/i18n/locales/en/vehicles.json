@@ -434,5 +434,11 @@
     "importFailed": "Could not import the vehicles",
     "previewFailed": "Could not read that file",
     "tooLarge": "That file is larger than {{size}}MB"
+  },
+  "publicLink": {
+    "fleetLink": "Copy fleet link",
+    "vehicleLink": "Copy vehicle link",
+    "copied": "Copied",
+    "copyFailed": "Could not copy the link"
   }
 }
