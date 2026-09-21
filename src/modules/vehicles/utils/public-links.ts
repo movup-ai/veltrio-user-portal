@@ -10,8 +10,8 @@ export function fleetUrl(subdomain: string): string {
   return `https://${subdomain}.${DOMAIN}/vehicles`
 }
 
-export function vehicleUrl(subdomain: string, vehicle: Pick<Vehicle, 'slug'>): string {
-  return `${fleetUrl(subdomain)}/${vehicle.slug}`
+export function vehicleUrl(subdomain: string, vehicle: Pick<Vehicle, 'uri'>): string {
+  return `${fleetUrl(subdomain)}/${vehicle.uri}`
 }
 
 /** Falls back to a temporary textarea where the clipboard API is unavailable (http, old Safari). */

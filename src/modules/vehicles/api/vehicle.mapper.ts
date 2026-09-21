@@ -72,7 +72,7 @@ export interface VehicleWire {
   color: string
   plate: string
   vin: string
-  slug: string
+  uri: string
   location: string
   status: string
   mileage: number
@@ -235,7 +235,7 @@ export function toVehicle(wire: VehicleWire): Vehicle {
     color: wire.color,
     plate: wire.plate,
     vin: wire.vin,
-    slug: wire.slug,
+    uri: wire.uri,
     location: wire.location,
     status: decode(STATUS_FROM_API, wire.status, 'Available'),
     mileage: wire.mileage,
