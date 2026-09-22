@@ -14,7 +14,7 @@ import type { Location } from '@/modules/locations/types/location.types'
 
 export function LocationsPage() {
   const { t } = useTranslation('locations')
-  const { data: locations, isLoading, isError, refetch } = useLocations()
+  const { data: locations, isLoading, isError, refetch } = useLocations('newest')
   const deleteLocation = useDeleteLocation()
 
   const [dialogOpen, setDialogOpen] = useState(false)

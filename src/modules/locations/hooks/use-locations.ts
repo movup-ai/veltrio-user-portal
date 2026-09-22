@@ -3,21 +3,26 @@ import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { locationApi } from '../api/location.api'
-import type { Location, LocationInput } from '../types/location.types'
+import type { Location, LocationInput, LocationSort } from '../types/location.types'
 
 export const locationKeys = {
   all: ['locations'] as const,
+  // Keyed by sort: the two orders are different lists, and sharing one entry would let
+  // whichever loaded last decide the order for both.
+  list: (sort: LocationSort) => ['locations', sort] as const,
 }
 
-export function useLocations() {
+export function useLocations(sort: LocationSort = 'name') {
   return useQuery({
-    queryKey: locationKeys.all,
-    queryFn: () => locationApi.list(),
+    queryKey: locationKeys.list(sort),
+    queryFn: () => locationApi.list(sort),
   })
 }
 
 export interface LocationNames {
   names: string[]
+  /** The branch a picker should start on, or '' when the tenant has none. */
+  defaultName: string
   isLoading: boolean
   isError: boolean
   refetch: () => void
@@ -35,6 +40,7 @@ export function useLocationNames(): LocationNames {
   const { data, isLoading, isError, refetch } = useLocations()
   return {
     names: (data ?? []).map((location) => location.name),
+    defaultName: data?.find((location) => location.isDefault)?.name ?? '',
     isLoading,
     isError,
     refetch: () => void refetch(),

@@ -17,6 +17,15 @@ export interface LocationWire {
   id: string
   name: string
   address: string
+  street: string | null
+  city: string | null
+  state: string | null
+  postalCode: string | null
+  country: string | null
+  latitude: number | null
+  longitude: number | null
+  isDefault: boolean
+  originalAddress: string | null
   status: string
   openingDays: string
   opensAt: number
@@ -47,11 +56,25 @@ function decode<P extends string>(map: Record<string, P>, slug: string, fallback
   return map[slug] ?? fallback
 }
 
+/** The API sends null for an absent part; the portal's types use optional. */
+function optional<T>(value: T | null): T | undefined {
+  return value ?? undefined
+}
+
 export function toLocation(wire: LocationWire): Location {
   return {
     id: wire.id,
     name: wire.name,
     address: wire.address,
+    street: optional(wire.street),
+    city: optional(wire.city),
+    state: optional(wire.state),
+    postalCode: optional(wire.postalCode),
+    country: optional(wire.country),
+    latitude: optional(wire.latitude),
+    longitude: optional(wire.longitude),
+    isDefault: wire.isDefault,
+    originalAddress: optional(wire.originalAddress),
     status: decode(STATUS_FROM_API, wire.status, 'Open'),
     openingDays: decode(DAYS_FROM_API, wire.openingDays, 'monSun'),
     opensAt: wire.opensAt,
@@ -64,6 +87,17 @@ export function toLocationPayload(input: LocationInput) {
   return {
     name: input.name.trim(),
     address: input.address.trim(),
+    // Omitted rather than sent as null: the API treats a missing part as unset, and a branch
+    // whose address was retyped by hand should lose the pin it no longer matches.
+    street: input.street?.trim() || undefined,
+    city: input.city?.trim() || undefined,
+    state: input.state?.trim() || undefined,
+    postalCode: input.postalCode?.trim() || undefined,
+    country: input.country?.trim() || undefined,
+    latitude: input.latitude,
+    longitude: input.longitude,
+    isDefault: input.isDefault,
+    originalAddress: input.originalAddress?.trim() || undefined,
     status: STATUS_TO_API[input.status],
     openingDays: DAYS_TO_API[input.openingDays],
     opensAt: input.opensAt,

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -258,6 +258,16 @@ function VehicleForm({
   } = useForm<VehicleFormValues>({ resolver: zodResolver(schema), defaultValues: initialValues, mode: 'onChange' })
 
   const watchedValues = useWatch({ control }) as VehicleFormValues
+
+  // Locations arrive after the form is built, so the default branch is filled in when it
+  // lands — once, and never over a choice the user or the saved vehicle already made.
+  const defaultApplied = useRef(false)
+  useEffect(() => {
+    if (defaultApplied.current || isEdit) return
+    if (!locations.defaultName || watchedValues.location) return
+    defaultApplied.current = true
+    setValue('location', locations.defaultName)
+  }, [locations.defaultName, isEdit, watchedValues.location, setValue])
 
   const stepKey = STEP_KEYS[stepIndex]
 

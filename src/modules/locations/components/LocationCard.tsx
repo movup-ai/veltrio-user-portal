@@ -1,4 +1,4 @@
-import { Car, Clock, MapPin, MoreVertical } from 'lucide-react'
+import { Car, Clock, MapPin, MoreVertical, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,18 @@ export function LocationCard({ location, onEdit, onDelete }: Props) {
           <MapPin className="size-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="m-0 text-[15px] font-semibold">{location.name}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="m-0 truncate text-[15px] font-semibold">{location.name}</h3>
+            {location.isDefault && (
+              <span
+                className="bg-tint text-primary inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+                title={t('card.defaultHint')}
+              >
+                <Star className="size-3" />
+                {t('card.default')}
+              </span>
+            )}
+          </div>
           {location.address ? (
             <p className="text-fg-4 m-0 mt-[3px] text-[12.5px]" style={{ textWrap: 'pretty' }}>
               {location.address}

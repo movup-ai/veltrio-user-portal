@@ -9,3 +9,13 @@ Object.assign(window.HTMLElement.prototype, {
   releasePointerCapture: vi.fn(),
   scrollIntoView: vi.fn(),
 })
+
+// Radix measures its thumb with ResizeObserver, which jsdom does not implement. The switch
+// renders from props, so a no-op observer is enough for it to mount.
+if (!('ResizeObserver' in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+}

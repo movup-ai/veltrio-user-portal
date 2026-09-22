@@ -1,10 +1,12 @@
 import { apiClient } from '@/services/api/client'
-import type { Location, LocationInput } from '../types/location.types'
+import type { Location, LocationInput, LocationSort } from '../types/location.types'
 import { toLocation, toLocationPayload, type LocationWire } from './location.mapper'
 
 export const locationApi = {
-  list: (): Promise<Location[]> =>
-    apiClient.get<LocationWire[]>('/locations').then((r) => r.data.map(toLocation)),
+  list: (sort: LocationSort): Promise<Location[]> =>
+    apiClient
+      .get<LocationWire[]>('/locations', { params: { sort } })
+      .then((r) => r.data.map(toLocation)),
 
   create: (input: LocationInput): Promise<Location> =>
     apiClient.post<LocationWire>('/locations', toLocationPayload(input)).then((r) => toLocation(r.data)),
