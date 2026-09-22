@@ -64,7 +64,7 @@ Signing up is two steps, because the backend refuses to create a tenant until Cl
 2. `/onboarding` (`pages/auth/OnboardingPage.tsx`) collects the company: name, portal address, website, operating country, fleet size and time zone, then `POST /auth/register-tenant` creates the tenant and the owner membership. The portal address is slugged from the company name by `utils/slug.ts` (which mirrors the backend's rules) and stays in sync until you edit it by hand.
 3. On success the user lands on `/app/dashboard`.
 
-`ProtectedRoute` requires both a Clerk session and a `GET /auth/me` that resolves to a user with at least one membership; an account that stops after step 1 returns `user_not_onboarded` and is sent back to `/onboarding`. Every request carries a freshly minted Clerk session token (`services/auth/clerk-token.ts`) plus `X-Tenant-Id` for the active organization — tokens are short-lived and never persisted by us.
+`ProtectedRoute` requires both a Clerk session and a `GET /auth/me` that resolves to a user with a company; an account that stops after step 1 returns `user_not_onboarded` and is sent back to `/onboarding`. Every request carries a freshly minted Clerk session token (`services/auth/clerk-token.ts`) — short-lived and never persisted by us. Nothing names the tenant: an account belongs to exactly one company, so the API derives it from the token.
 
 The backend grants a role per tenant — `owner`, `manager` or `staff` — not permission strings. `ROLE_PERMISSIONS` in `utils/permissions.ts` expands a role into the permissions the UI gates on.
 

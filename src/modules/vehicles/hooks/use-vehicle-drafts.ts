@@ -20,10 +20,12 @@ export const DRAFTS_PAGE: PaginationParams = { page: 1, pageSize: 50 }
 /** Matches the vehicle detail poll — a cover photo takes a second or two to render. */
 const PHOTO_POLL_MS = 2_000
 
-export function useVehicleDrafts(params: PaginationParams = DRAFTS_PAGE) {
+/** `enabled` is false for a role that may not add vehicles: the endpoint would 403. */
+export function useVehicleDrafts(params: PaginationParams = DRAFTS_PAGE, enabled = true) {
   return useQuery({
     queryKey: vehicleDraftKeys.list(params),
     queryFn: () => vehicleDraftApi.list(params),
+    enabled,
     placeholderData: (previous) => previous,
     // Poll only while a cover is still processing, or its cell stays blank until a refresh.
     refetchInterval: (query) =>

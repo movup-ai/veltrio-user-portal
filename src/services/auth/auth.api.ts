@@ -7,7 +7,7 @@ import type { MembershipRole, OrganizationMembership, User } from '@/types/user'
 export const FLEET_SIZES = ['1_10', '11_50', '51_200', '200_plus'] as const
 export type FleetSize = (typeof FLEET_SIZES)[number]
 
-/** One row of `GET /auth/me`'s `memberships` — a tenant the user belongs to. */
+/** `GET /auth/me`'s `membership` — the one tenant the user belongs to. */
 export interface TenantMembership {
   tenantId: ID
   tenantName: string
@@ -17,7 +17,8 @@ export interface TenantMembership {
 
 export interface MeResponse {
   user: User
-  memberships: TenantMembership[]
+  /** Null only if the company was deleted out from under the account. */
+  membership: TenantMembership | null
 }
 
 export interface RegisterTenantPayload {
@@ -50,8 +51,9 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
 /**
  * Identity itself lives in Clerk — there is no login endpoint here. These two
  * calls map a verified Clerk session onto the platform account: `/auth/me`
- * resolves it to a user plus tenant memberships, and `/auth/register-tenant`
- * creates them at the end of onboarding.
+ * resolves it to a user and their company, and `/auth/register-tenant` creates
+ * both at the end of onboarding. Signup is the owner's route in and an owner
+ * owns one company; staff arrive by invitation, which is not built yet.
  *
  * Both always hit the real backend: VITE_USE_MOCKS covers business data, not the
  * session the rest of the app is gated on.

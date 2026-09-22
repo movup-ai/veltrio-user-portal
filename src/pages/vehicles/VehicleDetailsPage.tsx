@@ -102,7 +102,7 @@ export function VehicleDetailsPage() {
   const format = useFormatters()
   const { vehicleId } = useParams()
   const navigate = useNavigate()
-  const subdomain = useOrganizationStore((s) => s.activeMembership?.subdomain)
+  const subdomain = useOrganizationStore((s) => s.membership?.subdomain)
   const [confirmArchive, setConfirmArchive] = useState(false)
   const [confirmService, setConfirmService] = useState(false)
 

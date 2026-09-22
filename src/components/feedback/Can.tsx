@@ -8,7 +8,7 @@ import type { Permission } from '@/types/user'
 const NO_PERMISSIONS: Permission[] = []
 
 export function usePermissions() {
-  return useOrganizationStore((state) => state.activeMembership?.permissions ?? NO_PERMISSIONS)
+  return useOrganizationStore((state) => state.membership?.permissions ?? NO_PERMISSIONS)
 }
 
 interface CanProps {
