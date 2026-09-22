@@ -12,8 +12,8 @@ import { ApiError } from '@/types/api'
 /**
  * Centralizes the authenticated-route gate so individual pages never have to
  * check auth state themselves. Being signed in with Clerk is not enough: the
- * session must also resolve to a platform user with at least one tenant, since
- * every request below this point is scoped by the active one.
+ * session must also resolve to a platform user with a company, since every
+ * request below this point is scoped to it.
  */
 export function ProtectedRoute() {
   const { t } = useTranslation('auth')
@@ -21,12 +21,12 @@ export function ProtectedRoute() {
   const location = useLocation()
   const me = useMe()
 
-  const setMemberships = useOrganizationStore((state) => state.setMemberships)
-  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId)
+  const setMembership = useOrganizationStore((state) => state.setMembership)
+  const membership = useOrganizationStore((state) => state.membership)
 
   useEffect(() => {
-    if (me.data) setMemberships(me.data.memberships.map(toOrganizationMembership))
-  }, [me.data, setMemberships])
+    if (me.data) setMembership(me.data.membership && toOrganizationMembership(me.data.membership))
+  }, [me.data, setMembership])
 
   if (!isLoaded) return <LoadingState />
   if (!isSignedIn) return <Navigate to="/login" state={{ from: location }} replace />
@@ -40,13 +40,15 @@ export function ProtectedRoute() {
     return <ErrorState description={me.error.message} onRetry={() => void me.refetch()} />
   }
 
-  if (me.data.memberships.length === 0) {
+  if (!me.data.membership) {
     return <ErrorState title={t('noTenant.title')} description={t('noTenant.description')} />
   }
 
-  // Hold the first render until the effect above has picked an active tenant:
-  // requests made before that would go out without the X-Tenant-Id header.
-  if (!activeOrganizationId) return <LoadingState />
+  // Hold the render until the effect above has copied this company into the store. Pages read
+  // the subdomain and their permissions from there, not from `me`, so a frame rendered before
+  // it lands shows whatever was left over — on a second sign-in, the previous account's. The
+  // check is identity, not presence: a stale value is exactly the case worth catching.
+  if (membership?.organizationId !== me.data.membership.tenantId) return <LoadingState />
 
   return <Outlet />
 }

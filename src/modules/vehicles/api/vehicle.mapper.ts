@@ -151,7 +151,6 @@ const FUEL_TO_API = {
 const SORT_TO_API = {
   manual: 'manual',
   newest: 'newest',
-  utilization: 'utilization',
   dailyRate: 'daily_rate',
   name: 'name',
 } as const satisfies Record<VehicleSort, string>

@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { StatStrip } from '@/components/data-display/StatStrip'
+import { Can, usePermissions } from '@/components/feedback/Can'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
@@ -36,7 +37,8 @@ import {
   type VehicleStatus,
 } from '@/modules/vehicles/types/vehicle.types'
 import { useArchiveVehicle, useRestoreVehicle, useReorderVehicles, useVehicles, useVehicleStats, vehicleKeys } from '@/modules/vehicles/hooks/use-vehicles'
-import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
+import { DRAFTS_PAGE, useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
+import { hasPermission } from '@/utils/permissions'
 import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
 import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImportDialog'
 import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
@@ -78,7 +80,7 @@ export function VehiclesPage() {
   const domain = useDomainLabels()
   const format = useFormatters()
   const navigate = useNavigate()
-  const subdomain = useOrganizationStore((s) => s.activeMembership?.subdomain)
+  const subdomain = useOrganizationStore((s) => s.membership?.subdomain)
   const [tab, setTab] = useState<Tab>('All')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'Any'>('Any')
@@ -129,7 +131,9 @@ export function VehiclesPage() {
   const { data: tabStats } = useVehicleStats(tabCountParams)
   // Unfiltered: the stat cards describe the whole fleet, not the current view.
   const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: PAGE_SIZE })
-  const { data: draftsData } = useVehicleDrafts()
+  // Drafts are the "add vehicle" wizard, so they follow the same permission as creating one.
+  const canAddVehicles = hasPermission(usePermissions(), 'vehicles.create')
+  const { data: draftsData } = useVehicleDrafts(DRAFTS_PAGE, canAddVehicles)
   // Its own query: the stats above exclude archived vehicles, so they cannot supply this count.
   const { data: archivedStats } = useVehicleStats({
     ...UNFILTERED,
@@ -154,6 +158,8 @@ export function VehiclesPage() {
     Drafts: draftsData?.total ?? 0,
     Archived: archivedStats?.total ?? 0,
   }
+
+  const visibleTabs = canAddVehicles ? TABS : TABS.filter((value) => value !== 'Drafts')
 
   const resetToFirstPage = () => setPage(1)
 
@@ -281,19 +287,21 @@ export function VehiclesPage() {
                 className="!text-[13px]"
               />
             )}
-            <PageActionButton
-              icon={Download}
-              label={t('list.importCsv')}
-              onClick={() => setImportOpen(true)}
-              className="!text-[13px]"
-            />
-            <PageActionButton
-              icon={Plus}
-              label={t('list.addVehicle')}
-              variant="solid"
-              onClick={() => navigate('/app/vehicles/new')}
-              className="!text-[13px]"
-            />
+            <Can permission="vehicles.create">
+              <PageActionButton
+                icon={Download}
+                label={t('list.importCsv')}
+                onClick={() => setImportOpen(true)}
+                className="!text-[13px]"
+              />
+              <PageActionButton
+                icon={Plus}
+                label={t('list.addVehicle')}
+                variant="solid"
+                onClick={() => navigate('/app/vehicles/new')}
+                className="!text-[13px]"
+              />
+            </Can>
           </>
         }
       />
@@ -397,7 +405,7 @@ export function VehiclesPage() {
         // Rendered even with no rows so the tabs stay reachable — otherwise selecting an empty
         // tab (e.g. "Drafts (0)") would unmount the only way back to a non-empty one.
         <RecordTable
-          tabs={TABS.map((value) => ({
+          tabs={visibleTabs.map((value) => ({
             key: value,
             label: t(`list.tabs.${value}`),
             count: tabCounts[value],
