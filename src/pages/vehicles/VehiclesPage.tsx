@@ -74,7 +74,7 @@ const UNFILTERED: Omit<VehicleListParams, 'page' | 'pageSize' | 'sortBy'> = {
 
 export function VehiclesPage() {
   const { t } = useTranslation('vehicles')
-  const locationNames = useLocationNames()
+  const locations = useLocationNames()
   const { t: tCommon } = useTranslation('common')
   const domain = useDomainLabels()
   const format = useFormatters()
@@ -324,10 +324,18 @@ export function VehiclesPage() {
           },
           {
             label: t('filters.location'),
-            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: locationNames.length }) : locationFilter,
+            // An empty list means "no branches"; a failed load must not look the same.
+            value:
+              locationFilter !== 'All'
+                ? locationFilter
+                : locations.isLoading
+                  ? tCommon('filters.loading')
+                  : locations.isError
+                    ? tCommon('filters.unavailable')
+                    : tCommon('filters.allCount', { count: locations.names.length }),
             options: [
               { value: 'All', label: tCommon('filters.all') },
-              ...locationNames.map((name) => ({ value: name, label: name })),
+              ...locations.names.map((name) => ({ value: name, label: name })),
             ],
             onChange: (value) => {
               setLocationFilter(value)

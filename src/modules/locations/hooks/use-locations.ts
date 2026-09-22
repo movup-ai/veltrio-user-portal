@@ -16,13 +16,29 @@ export function useLocations() {
   })
 }
 
+export interface LocationNames {
+  names: string[]
+  isLoading: boolean
+  isError: boolean
+  refetch: () => void
+}
+
 /**
- * Just the branch names, for the pickers on vehicle and booking forms. Sorted by the API, so
- * every dropdown shows the same order.
+ * The branch names for the pickers on vehicle and booking forms. Sorted by the API, so every
+ * dropdown shows the same order.
+ *
+ * Loading and failure are reported rather than folded into an empty list: a vehicle must name
+ * a branch, so a caller that cannot tell the difference would present "no branches exist" for
+ * a request that merely failed, leaving no way to retry.
  */
-export function useLocationNames(): string[] {
-  const { data } = useLocations()
-  return (data ?? []).map((location) => location.name)
+export function useLocationNames(): LocationNames {
+  const { data, isLoading, isError, refetch } = useLocations()
+  return {
+    names: (data ?? []).map((location) => location.name),
+    isLoading,
+    isError,
+    refetch: () => void refetch(),
+  }
 }
 
 function useLocationMutation<TArgs>(

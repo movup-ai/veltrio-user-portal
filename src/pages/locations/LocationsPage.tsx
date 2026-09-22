@@ -20,6 +20,9 @@ export function LocationsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Location | undefined>()
   const [deleteTarget, setDeleteTarget] = useState<Location | null>(null)
+  // The API refuses to delete a branch that still has vehicles, so the dialog explains the
+  // blocker and withholds the action rather than sending a request that cannot succeed.
+  const deleteBlocked = Boolean(deleteTarget && deleteTarget.vehicleCount > 0)
 
   const openAdd = () => {
     setEditing(undefined)
@@ -86,8 +89,9 @@ export function LocationsPage() {
         }
         confirmLabel={t('confirmDelete.confirm')}
         loading={deleteLocation.isPending}
+        confirmDisabled={deleteBlocked}
         onConfirm={() => {
-          if (deleteTarget) {
+          if (deleteTarget && !deleteBlocked) {
             deleteLocation.mutate(deleteTarget, { onSuccess: () => setDeleteTarget(null) })
           }
         }}

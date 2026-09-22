@@ -21,8 +21,9 @@ function Menu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger aria-label="Open menu">Menu</DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent data-testid="menu">
           <DropdownMenuItem>Edit</DropdownMenuItem>
+          <DropdownMenuItem disabled>Archived</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <button type="button">Outside</button>
@@ -111,6 +112,54 @@ describe('DropdownMenu focus restore', () => {
  * that rule would bring the bug back without failing any of the tests above.
  */
 describe('the CSS that acts on the mark', () => {
+  it('leaves the trigger unmarked when a press on the menu padding is followed by Escape', async () => {
+    const user = userEvent.setup()
+    render(<Menu />)
+
+    await user.click(trigger())
+    // Pressing the padding does not close the menu, so it must not count as a dismissal.
+    await act(async () => {
+      screen
+        .getByTestId('menu')
+        .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }))
+    })
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(trigger()).toHaveFocus())
+    expect(trigger()).not.toHaveAttribute('data-silent-focus')
+  })
+
+  it('leaves the trigger unmarked when a press on a disabled item is followed by Escape', async () => {
+    const user = userEvent.setup()
+    render(<Menu />)
+
+    await user.click(trigger())
+    await act(async () => {
+      screen
+        .getByRole('menuitem', { name: 'Archived' })
+        .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }))
+    })
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(trigger()).toHaveFocus())
+    expect(trigger()).not.toHaveAttribute('data-silent-focus')
+  })
+
+  it('still marks the trigger when an enabled item is clicked after pressing the padding', async () => {
+    const user = userEvent.setup()
+    render(<Menu />)
+
+    await user.click(trigger())
+    await act(async () => {
+      screen
+        .getByTestId('menu')
+        .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }))
+    })
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
+
+    await waitFor(() => expect(trigger()).toHaveAttribute('data-silent-focus'))
+  })
+
   it('still has a rule for data-silent-focus', async () => {
     const css = await import('@/styles/globals.css?raw')
 

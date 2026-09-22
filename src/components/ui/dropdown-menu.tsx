@@ -43,6 +43,9 @@ export function DropdownMenuContent({
         onPointerDown={() => {
           dismissedByPointer.current = true
         }}
+        onKeyDown={() => {
+          dismissedByPointer.current = false
+        }}
         onCloseAutoFocus={(event) => {
           onCloseAutoFocus?.(event)
           const byPointer = dismissedByPointer.current

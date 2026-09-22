@@ -225,7 +225,8 @@ function VehicleForm({
   existingPhotos: VehiclePhoto[]
 }) {
   const { t } = useTranslation('vehicles')
-  const locationNames = useLocationNames()
+  const { t: tCommon } = useTranslation('common')
+  const locations = useLocationNames()
   const { t: tValidation } = useTranslation('validation')
   const domain = useDomainLabels()
   const navigate = useNavigate()
@@ -583,24 +584,61 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.location')} error={errors.location?.message} required>
+                  <FormField
+                    label={t('form.fields.location')}
+                    error={errors.location?.message}
+                    required
+                  >
                     {({ id }) => (
                       <Controller
                         control={control}
                         name="location"
                         render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger id={id} aria-invalid={Boolean(errors.location)}>
-                              <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {locationNames.map((name) => (
-                                <SelectItem key={name} value={name}>
-                                  {name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col gap-1.5">
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              disabled={locations.isLoading || locations.isError}
+                            >
+                              <SelectTrigger id={id} aria-invalid={Boolean(errors.location)}>
+                                <SelectValue
+                                  placeholder={
+                                    locations.isLoading
+                                      ? t('form.fields.locationLoading')
+                                      : t('form.fields.locationPlaceholder')
+                                  }
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {locations.names.map((name) => (
+                                  <SelectItem key={name} value={name}>
+                                    {name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {/* A vehicle must name a branch, so a failed load has to offer a
+                                way forward instead of an empty, silent dropdown. */}
+                            {locations.isError && (
+                              <p className="text-error m-0 flex items-center gap-1.5 text-caption">
+                                {t('form.fields.locationLoadFailed')}
+                                <button
+                                  type="button"
+                                  onClick={locations.refetch}
+                                  className="font-semibold underline underline-offset-2"
+                                >
+                                  {tCommon('actions.retry')}
+                                </button>
+                              </p>
+                            )}
+                            {!locations.isLoading &&
+                              !locations.isError &&
+                              locations.names.length === 0 && (
+                                <p className="text-fg-3 m-0 text-caption">
+                                  {t('form.fields.locationEmpty')}
+                                </p>
+                              )}
+                          </div>
                         )}
                       />
                     )}
