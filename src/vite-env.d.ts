@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
@@ -6,6 +7,11 @@ interface ImportMetaEnv {
   readonly VITE_CLERK_PUBLISHABLE_KEY: string
   /** Root domain for customer-portal links, e.g. `veltrio.com`. */
   readonly VITE_CUSTOMER_PORTAL_DOMAIN?: string
+  /**
+   * Google Maps key with the Places API enabled, for the location address picker. Absent in
+   * development and in CI: the picker falls back to a plain text field.
+   */
+  readonly VITE_GOOGLE_MAPS_API_KEY?: string
 }
 
 interface ImportMeta {

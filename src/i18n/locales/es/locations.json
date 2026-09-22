@@ -1,20 +1,81 @@
 {
   "list": {
-    "title": "Sucursales",
+    "title": "Ubicaciones",
     "description": "Sucursales, horarios de mostrador y flota en sitio",
-    "addLocation": "Añadir sucursal"
+    "addLocation": "Añadir ubicación",
+    "loading": "Cargando ubicaciones…",
+    "errorTitle": "Algo salió mal",
+    "errorDescription": "No pudimos cargar tus ubicaciones.",
+    "emptyTitle": "Aún no hay ubicaciones",
+    "emptyDescription": "Añade una sucursal para poder elegirla al crear vehículos y reservas."
   },
   "card": {
-    "manage": "Gestionar sucursal",
-    "metrics": {
-      "vehicles": "Vehículos",
-      "utilization": "Uso",
-      "revenueMtd": "Ingresos del mes"
-    },
-    "branchManager": "Gerente de sucursal"
+    "actions": "Acciones de la ubicación",
+    "edit": "Editar ubicación",
+    "delete": "Eliminar ubicación",
+    "noAddress": "Sin dirección",
+    "default": "Predeterminada",
+    "defaultHint": "Se preselecciona al agregar vehículos y reservas",
+    "vehiclesHere_one": "{{count}} vehículo en esta sucursal",
+    "vehiclesHere_other": "{{count}} vehículos en esta sucursal"
+  },
+  "status": {
+    "open": "Abierta",
+    "closed": "Cerrada"
   },
   "hours": {
     "monSun": "Lun–Dom",
-    "monFri": "Lun–Vie"
+    "monFri": "Lun–Vie",
+    "monSat": "Lun–Sáb"
+  },
+  "form": {
+    "addTitle": "Añadir ubicación",
+    "editTitle": "Editar ubicación",
+    "name": "Nombre de la sucursal",
+    "namePlaceholder": "Miami Beach",
+    "nameRequired": "Escribe un nombre para la sucursal",
+    "address": "Ubicación",
+    "addressHint": "Busque la dirección de la sucursal para enviar a los clientes al lugar correcto.",
+    "addressPlaceholder": "1440 Collins Ave, Miami Beach, FL",
+    "addressSearchPlaceholder": "Buscar dirección o lugar",
+    "status": "Estado",
+    "openingDays": "Abierta",
+    "opensAt": "Abre a las",
+    "closesAt": "Cierra a las",
+    "addressDetails": "Agregar detalles de la dirección (opcional)",
+    "street": "Dirección",
+    "streetPlaceholder": "1440 Collins Ave",
+    "city": "Ciudad",
+    "state": "Estado o región",
+    "postalCode": "Código postal",
+    "cityPlaceholder": "Miami Beach",
+    "statePlaceholder": "FL",
+    "postalCodePlaceholder": "33139",
+    "country": "País",
+    "countryLength": "Use el código de país de dos letras",
+    "countryPlaceholder": "US",
+    "makeDefault": "Predeterminada",
+    "makeDefaultHint": "Se preselecciona al agregar vehículos y reservas.",
+    "alreadyDefault": "Esta es la sucursal predeterminada. Elija otra para cambiarla.",
+    "hoursRequired": "Indica un horario de apertura",
+    "closesBeforeOpens": "La hora de cierre debe ser posterior a la de apertura",
+    "cancel": "Cancelar",
+    "add": "Añadir ubicación",
+    "save": "Guardar cambios"
+  },
+  "confirmDelete": {
+    "title": "¿Eliminar esta ubicación?",
+    "description": "Se eliminará {{name}}. No se puede deshacer.",
+    "inUse_one": "{{count}} vehículo está en esta sucursal. Muévelo a otra antes de eliminarla.",
+    "inUse_other": "{{count}} vehículos están en esta sucursal. Muévelos a otra antes de eliminarla.",
+    "confirm": "Eliminar ubicación"
+  },
+  "toast": {
+    "created": "Ubicación añadida",
+    "createFailed": "No se pudo añadir la ubicación",
+    "updated": "Ubicación actualizada",
+    "updateFailed": "No se pudo actualizar la ubicación",
+    "deleted": "Ubicación eliminada",
+    "deleteFailed": "No se pudo eliminar la ubicación"
   }
 }

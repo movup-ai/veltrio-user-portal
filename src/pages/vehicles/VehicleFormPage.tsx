@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -28,7 +28,7 @@ import { Stepper, type StepDef } from '@/components/forms/Stepper'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
-import { LOCATIONS } from '@/modules/locations/mock/location.mock'
+import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import { VEHICLE_COLORS, VEHICLE_MAKES, modelsForMake } from '@/modules/vehicles/data/vehicle-catalog'
 import { decodeVin } from '@/modules/vehicles/api/vin-decoder.api'
 import { descriptionAiApi, type DescriptionAiAction } from '@/modules/vehicles/api/description-ai.api'
@@ -231,6 +231,8 @@ function VehicleForm({
   existingPhotos: VehiclePhoto[]
 }) {
   const { t } = useTranslation('vehicles')
+  const { t: tCommon } = useTranslation('common')
+  const locations = useLocationNames()
   const { t: tValidation } = useTranslation('validation')
   const domain = useDomainLabels()
   const navigate = useNavigate()
@@ -262,6 +264,16 @@ function VehicleForm({
   } = useForm<VehicleFormValues>({ resolver: zodResolver(schema), defaultValues: initialValues, mode: 'onChange' })
 
   const watchedValues = useWatch({ control }) as VehicleFormValues
+
+  // Locations arrive after the form is built, so the default branch is filled in when it
+  // lands — once, and never over a choice the user or the saved vehicle already made.
+  const defaultApplied = useRef(false)
+  useEffect(() => {
+    if (defaultApplied.current || isEdit) return
+    if (!locations.defaultName || watchedValues.location) return
+    defaultApplied.current = true
+    setValue('location', locations.defaultName)
+  }, [locations.defaultName, isEdit, watchedValues.location, setValue])
 
   const stepKey = STEP_KEYS[stepIndex]
 
@@ -588,24 +600,61 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.location')} error={errors.location?.message} required>
+                  <FormField
+                    label={t('form.fields.location')}
+                    error={errors.location?.message}
+                    required
+                  >
                     {({ id }) => (
                       <Controller
                         control={control}
                         name="location"
                         render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger id={id} aria-invalid={Boolean(errors.location)}>
-                              <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {LOCATIONS.map((l) => (
-                                <SelectItem key={l.name} value={l.name}>
-                                  {l.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col gap-1.5">
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              disabled={locations.isLoading || locations.isError}
+                            >
+                              <SelectTrigger id={id} aria-invalid={Boolean(errors.location)}>
+                                <SelectValue
+                                  placeholder={
+                                    locations.isLoading
+                                      ? t('form.fields.locationLoading')
+                                      : t('form.fields.locationPlaceholder')
+                                  }
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {locations.names.map((name) => (
+                                  <SelectItem key={name} value={name}>
+                                    {name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {/* A vehicle must name a branch, so a failed load has to offer a
+                                way forward instead of an empty, silent dropdown. */}
+                            {locations.isError && (
+                              <p className="text-error m-0 flex items-center gap-1.5 text-caption">
+                                {t('form.fields.locationLoadFailed')}
+                                <button
+                                  type="button"
+                                  onClick={locations.refetch}
+                                  className="font-semibold underline underline-offset-2"
+                                >
+                                  {tCommon('actions.retry')}
+                                </button>
+                              </p>
+                            )}
+                            {!locations.isLoading &&
+                              !locations.isError &&
+                              locations.names.length === 0 && (
+                                <p className="text-fg-3 m-0 text-caption">
+                                  {t('form.fields.locationEmpty')}
+                                </p>
+                              )}
+                          </div>
                         )}
                       />
                     )}

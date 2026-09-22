@@ -26,6 +26,8 @@
     "any": "Any",
     "all": "All",
     "allCount": "All {{count}}",
+    "loading": "Loading…",
+    "unavailable": "Unavailable",
     "sortBy": "Sort by",
     "applied": "Filters applied",
     "appliedCount_one": "{{count}} filter applied to the results.",

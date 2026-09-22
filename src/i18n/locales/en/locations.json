@@ -2,19 +2,80 @@
   "list": {
     "title": "Locations",
     "description": "Branches, counter hours and on-site fleet",
-    "addLocation": "Add location"
+    "addLocation": "Add location",
+    "loading": "Loading locations…",
+    "errorTitle": "Something went wrong",
+    "errorDescription": "We couldn't load your locations.",
+    "emptyTitle": "No locations yet",
+    "emptyDescription": "Add a branch so it can be picked when adding vehicles and bookings."
   },
   "card": {
-    "manage": "Manage location",
-    "metrics": {
-      "vehicles": "Vehicles",
-      "utilization": "Utilization",
-      "revenueMtd": "Revenue MTD"
-    },
-    "branchManager": "Branch manager"
+    "actions": "Location actions",
+    "edit": "Edit location",
+    "delete": "Delete location",
+    "noAddress": "No address set",
+    "default": "Default",
+    "defaultHint": "Preselected when adding vehicles and bookings",
+    "vehiclesHere_one": "{{count}} vehicle based here",
+    "vehiclesHere_other": "{{count}} vehicles based here"
+  },
+  "status": {
+    "open": "Open",
+    "closed": "Closed"
   },
   "hours": {
     "monSun": "Mon–Sun",
-    "monFri": "Mon–Fri"
+    "monFri": "Mon–Fri",
+    "monSat": "Mon–Sat"
+  },
+  "form": {
+    "addTitle": "Add location",
+    "editTitle": "Edit location",
+    "name": "Branch name",
+    "namePlaceholder": "Miami Beach",
+    "nameRequired": "Give the branch a name",
+    "address": "Pin location",
+    "addressHint": "Search for the branch address so customers are sent to the right place.",
+    "addressPlaceholder": "1440 Collins Ave, Miami Beach, FL",
+    "addressSearchPlaceholder": "Search address or place",
+    "status": "Status",
+    "openingDays": "Open on",
+    "opensAt": "Opens at",
+    "closesAt": "Closes at",
+    "addressDetails": "Add address details (optional)",
+    "street": "Street address",
+    "streetPlaceholder": "1440 Collins Ave",
+    "city": "City",
+    "state": "State or region",
+    "postalCode": "Postal code",
+    "cityPlaceholder": "Miami Beach",
+    "statePlaceholder": "FL",
+    "postalCodePlaceholder": "33139",
+    "country": "Country",
+    "countryLength": "Use the two-letter country code",
+    "countryPlaceholder": "US",
+    "makeDefault": "Make default",
+    "makeDefaultHint": "Preselected when adding vehicles and bookings.",
+    "alreadyDefault": "This is the default branch. Set another to move it.",
+    "hoursRequired": "Set an opening time",
+    "closesBeforeOpens": "Closing time must be after opening time",
+    "cancel": "Cancel",
+    "add": "Add location",
+    "save": "Save changes"
+  },
+  "confirmDelete": {
+    "title": "Delete this location?",
+    "description": "{{name}} will be removed. This cannot be undone.",
+    "inUse_one": "{{count}} vehicle is based here. Move it to another branch before deleting.",
+    "inUse_other": "{{count}} vehicles are based here. Move them to another branch before deleting.",
+    "confirm": "Delete location"
+  },
+  "toast": {
+    "created": "Location added",
+    "createFailed": "Could not add the location",
+    "updated": "Location updated",
+    "updateFailed": "Could not update the location",
+    "deleted": "Location deleted",
+    "deleteFailed": "Could not delete the location"
   }
 }
