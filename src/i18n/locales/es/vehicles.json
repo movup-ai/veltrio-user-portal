@@ -62,7 +62,6 @@
   "sort": {
     "manual": "Orden personalizado",
     "newest": "Más recientes primero",
-    "utilization": "Uso",
     "dailyRate": "Tarifa diaria",
     "name": "Nombre del vehículo"
   },

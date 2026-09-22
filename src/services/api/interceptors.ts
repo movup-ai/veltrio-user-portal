@@ -1,6 +1,5 @@
 import type { AxiosInstance } from 'axios'
 import { clerkToken } from '@/services/auth/clerk-token'
-import { useOrganizationStore } from '@/state/organization.store'
 import { normalizeApiError } from './errors'
 
 export function attachInterceptors(instance: AxiosInstance): void {
@@ -10,13 +9,9 @@ export function attachInterceptors(instance: AxiosInstance): void {
       config.headers.set('Authorization', `Bearer ${token}`)
     }
 
-    // The backend requires this whenever the user belongs to more than one
-    // tenant, and validates it against their memberships either way.
-    const tenantId = useOrganizationStore.getState().activeOrganizationId
-    if (tenantId) {
-      config.headers.set('X-Tenant-Id', tenantId)
-    }
-
+    // No tenant header: an account belongs to exactly one company, so the API derives it
+    // from the token. Sending one would be ignored, and offering it would imply a choice
+    // the client does not have.
     return config
   })
 

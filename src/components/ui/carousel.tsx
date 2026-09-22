@@ -76,6 +76,10 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return
+    // Embla is the external system this effect subscribes to, and the arrows must reflect its
+    // state before it emits anything — otherwise both render disabled until the first scroll.
+    // The rule cannot tell that seeding read apart from a state update driven by React.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial read from Embla
     onSelect(api)
     api.on('reInit', onSelect)
     api.on('select', onSelect)

@@ -163,7 +163,8 @@ export interface VehicleStats {
 /** Payload shape for create/update — server assigns id/createdAt/utilization/uri. */
 export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization' | 'uri'>
 
-export const VEHICLE_SORTS = ['manual', 'newest', 'utilization', 'dailyRate', 'name'] as const
+// No `utilization`: the API does not compute it, so offering it only sorted by name.
+export const VEHICLE_SORTS = ['manual', 'newest', 'dailyRate', 'name'] as const
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
 
 /** Bounds only — the display label lives in `vehicles:filters.priceBand.<value>`. */

@@ -45,6 +45,7 @@ import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/modules/vehicl
 import {
   usePublishVehicleDraft,
   useSaveVehicleDraft,
+  DRAFTS_PAGE,
   useVehicleDrafts,
 } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import {
@@ -160,7 +161,12 @@ export function VehicleFormPage() {
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
   // Drafts are capped at one page, so the list doubles as the lookup — no per-draft endpoint.
-  const { data: draftsData, isLoading: isLoadingDrafts } = useVehicleDrafts()
+  // Only fetched when a draft is actually being resumed: staff may edit a vehicle but not add
+  // one, and the drafts endpoint answers them with a 403.
+  const { data: draftsData, isLoading: isLoadingDrafts } = useVehicleDrafts(
+    DRAFTS_PAGE,
+    Boolean(draftId),
+  )
   const draft = draftId ? draftsData?.items.find((d) => d.id === draftId) : undefined
 
   if (draftId && isLoadingDrafts) {

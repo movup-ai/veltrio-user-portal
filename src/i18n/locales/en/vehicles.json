@@ -62,7 +62,6 @@
   "sort": {
     "manual": "Custom order",
     "newest": "Newest first",
-    "utilization": "Utilization",
     "dailyRate": "Daily rate",
     "name": "Vehicle name"
   },

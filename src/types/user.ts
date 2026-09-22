@@ -37,9 +37,8 @@ export interface User {
 }
 
 /**
- * A user's membership in one organization. A user may hold memberships in
- * several organizations at once — never assume `user.role` is sufficient;
- * always resolve role/permissions through the *active* membership.
+ * A user's place in their organization. There is exactly one per account, so role and
+ * permissions always resolve through it.
  */
 export interface OrganizationMembership {
   organizationId: ID

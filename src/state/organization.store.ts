@@ -1,38 +1,21 @@
 import { create } from 'zustand'
 import type { OrganizationMembership } from '@/types/user'
 
-const ACTIVE_ORG_KEY = 'veltrio.active_organization_id'
-
+/**
+ * The company the signed-in user belongs to.
+ *
+ * There is exactly one, so there is nothing to select and nothing to remember between
+ * sessions: the API derives the tenant from the token (`uq_tenant_memberships_user_id`) and
+ * a request cannot name a different one. Kept in a store rather than read off the `me` query
+ * because non-React callers need it too.
+ */
 interface OrganizationState {
-  memberships: OrganizationMembership[]
-  activeOrganizationId: string | null
-  activeMembership: OrganizationMembership | null
-  /** Called once after login/session-restore with every org the user belongs to. */
-  setMemberships: (memberships: OrganizationMembership[]) => void
-  switchOrganization: (organizationId: string) => void
+  membership: OrganizationMembership | null
+  /** Called after login/session-restore with whatever `GET /auth/me` returned. */
+  setMembership: (membership: OrganizationMembership | null) => void
 }
 
-export const useOrganizationStore = create<OrganizationState>((set, get) => ({
-  memberships: [],
-  activeOrganizationId: null,
-  activeMembership: null,
-
-  setMemberships: (memberships) => {
-    const remembered = localStorage.getItem(ACTIVE_ORG_KEY)
-    const active = memberships.find((m) => m.organizationId === remembered) ?? memberships[0] ?? null
-
-    set({
-      memberships,
-      activeOrganizationId: active?.organizationId ?? null,
-      activeMembership: active,
-    })
-  },
-
-  switchOrganization: (organizationId) => {
-    const membership = get().memberships.find((m) => m.organizationId === organizationId)
-    if (!membership) return
-
-    localStorage.setItem(ACTIVE_ORG_KEY, organizationId)
-    set({ activeOrganizationId: organizationId, activeMembership: membership })
-  },
+export const useOrganizationStore = create<OrganizationState>((set) => ({
+  membership: null,
+  setMembership: (membership) => set({ membership }),
 }))
