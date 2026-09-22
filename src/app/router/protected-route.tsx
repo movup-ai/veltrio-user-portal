@@ -1,6 +1,5 @@
 import { useAuth } from '@clerk/clerk-react'
-import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { ErrorState } from '@/components/feedback/ErrorState'
@@ -18,32 +17,16 @@ import { ApiError } from '@/types/api'
  */
 export function ProtectedRoute() {
   const { t } = useTranslation('auth')
-  const { isLoaded, isSignedIn, userId } = useAuth()
+  const { isLoaded, isSignedIn } = useAuth()
   const location = useLocation()
   const me = useMe()
 
-  const queryClient = useQueryClient()
-  const previousUserId = useRef<string | null>(null)
-
   const setMembership = useOrganizationStore((state) => state.setMembership)
+  const membership = useOrganizationStore((state) => state.membership)
 
   useEffect(() => {
     if (me.data) setMembership(me.data.membership && toOrganizationMembership(me.data.membership))
   }, [me.data, setMembership])
-
-  // Everything cached here belongs to whoever was signed in when it was fetched. Signing out
-  // and back in inside the same tab never reloads the page, and `me` is cached with
-  // `staleTime: Infinity`, so without this the next person would be shown the last one's
-  // company and fleet until something forced a refetch.
-  useEffect(() => {
-    const current = userId ?? null
-    if (previousUserId.current === current) return
-    if (previousUserId.current !== null) {
-      void queryClient.cancelQueries()
-      queryClient.clear()
-    }
-    previousUserId.current = current
-  }, [userId, queryClient])
 
   if (!isLoaded) return <LoadingState />
   if (!isSignedIn) return <Navigate to="/login" state={{ from: location }} replace />
@@ -60,6 +43,12 @@ export function ProtectedRoute() {
   if (!me.data.membership) {
     return <ErrorState title={t('noTenant.title')} description={t('noTenant.description')} />
   }
+
+  // Hold the render until the effect above has copied this company into the store. Pages read
+  // the subdomain and their permissions from there, not from `me`, so a frame rendered before
+  // it lands shows whatever was left over — on a second sign-in, the previous account's. The
+  // check is identity, not presence: a stale value is exactly the case worth catching.
+  if (membership?.organizationId !== me.data.membership.tenantId) return <LoadingState />
 
   return <Outlet />
 }
