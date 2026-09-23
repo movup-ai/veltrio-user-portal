@@ -1,7 +1,7 @@
 {
   "list": {
     "title": "Bookings",
-    "description": "Every reservation across your three locations",
+    "description": "Reservations, pickups and returns across your branches",
     "calendarView": "Calendar view",
     "export": "Export",
     "newBooking": "New booking",

@@ -121,17 +121,21 @@ export const bookingApi = {
    * the endpoint caps at 100; capped in turn so a huge book cannot hang the browser.
    */
   exportAll: async (params: Omit<BookingListParams, 'page' | 'pageSize'>) => {
+    const limit = MAX_LIST_PAGES * LIST_PAGE_SIZE
     const rows: BookingTuple[] = []
     let total = 0
     for (let page = 1; page <= MAX_LIST_PAGES; page++) {
       const result = await bookingApi.page({ ...params, page, pageSize: LIST_PAGE_SIZE })
-      rows.push(...result.items)
       total = result.total
+      // The first response already says whether this can finish, so an oversized export costs
+      // one request rather than fetching and mapping every page only to refuse at the end.
+      if (total > limit) throw new ExportTooLargeError(total, limit)
+      rows.push(...result.items)
       if (rows.length >= total) break
     }
-    // Refused rather than truncated: a short CSV that claims to be the whole export is worse
-    // than none, because nothing on screen says records are missing.
-    if (rows.length < total) throw new ExportTooLargeError(total, MAX_LIST_PAGES * LIST_PAGE_SIZE)
+    // A total that never arrives — pages short of what was promised — is refused too: a CSV
+    // claiming to be the whole export is worse than none, since nothing says rows are missing.
+    if (rows.length < total) throw new ExportTooLargeError(total, limit)
     return rows
   },
 

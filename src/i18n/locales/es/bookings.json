@@ -1,7 +1,7 @@
 {
   "list": {
     "title": "Reservas",
-    "description": "Todas las reservas de sus tres sucursales",
+    "description": "Reservas, recogidas y devoluciones en todas tus sucursales",
     "calendarView": "Vista de calendario",
     "export": "Exportar",
     "newBooking": "Nueva reserva",

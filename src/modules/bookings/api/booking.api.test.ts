@@ -132,6 +132,15 @@ describe('bookingApi.exportAll', () => {
     await expect(bookingApi.exportAll(params)).rejects.toThrow(ExportTooLargeError)
   })
 
+  it('refuses on the first response rather than fetching every page first', async () => {
+    // The first page already reports the total, so an export that cannot finish should cost
+    // one request — not 50 sequential ones and 5,000 mapped rows before the same refusal.
+    get.mockResolvedValue(page(0, 20_000))
+
+    await expect(bookingApi.exportAll(params)).rejects.toThrow(ExportTooLargeError)
+    expect(get).toHaveBeenCalledOnce()
+  })
+
   it('reports the real total so the message can say how far over it is', async () => {
     get.mockResolvedValue(page(0, 20_000))
 
