@@ -1,16 +1,23 @@
 import { apiClient } from '@/services/api/client'
 import { locationApi } from '@/modules/locations/api/location.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
-import type { ListEnvelope } from '@/lib/pagination'
-import type { BookingInput } from '../types/booking.types'
+import { toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
+import type { BookingFilters, BookingInput, BookingTuple } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
 import {
   toBooking,
+  toBookingFilterQuery,
+  toBookingListQuery,
   toBookingLists,
   toBookingPayload,
+  toBookingStats,
   toInterval,
+  toTabCounts,
   type BookedIntervalWire,
+  type BookingListParams,
+  type BookingStatsWire,
+  type BookingTabCountsWire,
   type BookingWire,
 } from './booking.mapper'
 
@@ -22,6 +29,19 @@ const LIST_PAGE_SIZE = 100
  * bookings — far past where this page should have moved to server-side filtering anyway.
  */
 const MAX_LIST_PAGES = 50
+
+/** Raised instead of returning a partial CSV, so the caller can say what went wrong. */
+export class ExportTooLargeError extends Error {
+  readonly total: number
+  readonly limit: number
+
+  constructor(total: number, limit: number) {
+    super(`Cannot export ${total} bookings; the limit is ${limit}`)
+    this.name = 'ExportTooLargeError'
+    this.total = total
+    this.limit = limit
+  }
+}
 
 /**
  * The FastAPI /bookings endpoints. Wire shapes are translated in booking.mapper.ts — nothing
@@ -81,6 +101,53 @@ export const bookingApi = {
 
   create: (input: BookingInput) =>
     apiClient.post<BookingWire>('/bookings', toBookingPayload(input)).then((r) => toBooking(r.data)),
+
+  /**
+   * One filtered, sorted page — what the bookings table renders. The server does the narrowing,
+   * so the browser never holds more than the rows on screen.
+   */
+  page: (params: BookingListParams) =>
+    apiClient
+      .get<ListEnvelope<BookingWire>>('/bookings', { params: toBookingListQuery(params) })
+      .then((r) =>
+        toPaginatedResult(r.data.items.map(toBooking).map(bookingToTuple), r.data.total, {
+          page: params.page,
+          pageSize: params.pageSize,
+        }),
+      ),
+
+  /**
+   * Every row matching the filters, for the CSV — not just the page on screen. Paged because
+   * the endpoint caps at 100; capped in turn so a huge book cannot hang the browser.
+   */
+  exportAll: async (params: Omit<BookingListParams, 'page' | 'pageSize'>) => {
+    const limit = MAX_LIST_PAGES * LIST_PAGE_SIZE
+    const rows: BookingTuple[] = []
+    let total = 0
+    for (let page = 1; page <= MAX_LIST_PAGES; page++) {
+      const result = await bookingApi.page({ ...params, page, pageSize: LIST_PAGE_SIZE })
+      total = result.total
+      // The first response already says whether this can finish, so an oversized export costs
+      // one request rather than fetching and mapping every page only to refuse at the end.
+      if (total > limit) throw new ExportTooLargeError(total, limit)
+      rows.push(...result.items)
+      if (rows.length >= total) break
+    }
+    // A total that never arrives — pages short of what was promised — is refused too: a CSV
+    // claiming to be the whole export is worse than none, since nothing says rows are missing.
+    if (rows.length < total) throw new ExportTooLargeError(total, limit)
+    return rows
+  },
+
+  /** Headline totals for the whole book — not narrowed by the list's filters. */
+  stats: () =>
+    apiClient.get<BookingStatsWire>('/bookings/stats').then((r) => toBookingStats(r.data)),
+
+  /** What each tab would show under the filters already applied. */
+  tabCounts: (filters: BookingFilters) =>
+    apiClient
+      .get<BookingTabCountsWire>('/bookings/tab-counts', { params: toBookingFilterQuery(filters) })
+      .then((r) => toTabCounts(r.data)),
 
   /** Every live booking touching the window — what the form greys taken vehicles out with. */
   schedule: (from: string, to: string) =>

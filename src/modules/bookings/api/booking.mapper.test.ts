@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { toBooking, toBookingLists, toBookingPayload, toInterval, type BookingWire } from './booking.mapper'
-import type { BookingInput } from '../types/booking.types'
+import {
+  toBooking,
+  toBookingFilterQuery,
+  toBookingListQuery,
+  toBookingLists,
+  toBookingPayload,
+  toInterval,
+  type BookingWire,
+} from './booking.mapper'
+import { isReadyForPickup, type BookingFilters, type BookingInput, type PaymentState } from '../types/booking.types'
 
 const wire: BookingWire = {
   id: 'b1',
   reference: 'BK-10000',
-  status: 'deposit_due',
+  status: 'confirmed',
   customer: {
     id: 'c1',
     name: 'Marisol Vega',
@@ -39,6 +47,16 @@ const wire: BookingWire = {
     totalCents: 31351,
     depositCents: 35000,
   },
+  payment: {
+    state: 'unpaid' as const,
+    paidCents: 0,
+    refundedCents: 0,
+    method: null,
+    paidAt: null,
+  },
+  contract: { signedAt: null, version: null },
+  pickedUpAt: null,
+  returnedAt: null,
   createdAt: '2026-09-22T10:00:00Z',
   updatedAt: '2026-09-22T10:00:00Z',
 }
@@ -47,7 +65,7 @@ describe('toBooking', () => {
   it('translates the status slug, cents and nulls', () => {
     const booking = toBooking(wire)
 
-    expect(booking.status).toBe('Deposit due')
+    expect(booking.status).toBe('Confirmed')
     expect(booking.customer).toEqual({
       id: 'c1',
       name: 'Marisol Vega',
@@ -78,8 +96,8 @@ describe('toBooking', () => {
   })
 
   it('shows a status it does not know as itself rather than inventing one', () => {
-    // Folding it into "Deposit due" would claim the rental is awaiting payment when the API
-    // said something else entirely — a false statement about money.
+    // Folding it into a known status would state something about the rental the API never
+    // said — the badge falls back to neutral colours instead.
     expect(toBooking({ ...wire, status: 'partially_refunded' }).status).toBe('partially_refunded')
   })
 })
@@ -95,13 +113,13 @@ describe('toBookingLists', () => {
       pickupAt: '2026-09-01T00:00:00Z',
       returnAt: '2026-09-04T00:00:00Z',
     })
-    const refunded = toBooking({ ...wire, reference: 'BK-3', status: 'refunded' })
+    const cancelled = toBooking({ ...wire, reference: 'BK-3', status: 'cancelled' })
 
-    const lists = toBookingLists([open, returned, refunded], now)
+    const lists = toBookingLists([open, returned, cancelled], now)
 
     expect(lists.upcoming.map((b) => b[1])).toEqual(['BK-10000'])
     expect(lists.recent.map((b) => b[1])).toEqual(['BK-2', 'BK-3'])
-    // The car is still spoken for by the returned rental's window, but not by the refund.
+    // The car is still spoken for by the returned rental's window, but not by the cancellation.
     expect(lists.schedule.map((i) => i.reference)).toEqual(['BK-10000', 'BK-2'])
   })
 
@@ -113,15 +131,22 @@ describe('toBookingLists', () => {
       'BK-10000',
       'Toyota Camry',
       'ABC1234',
-      expect.stringMatching(/^Oct 1 · \d{2}:\d{2} → Oct 5$/),
+      // Both ends carry a time; the run-time zone decides the clock, so it is not pinned here.
+      expect.stringMatching(/^Oct 1 · \d{2}:\d{2} → Oct 5 · \d{2}:\d{2}$/),
       '4 days',
       'Downtown',
-      'Deposit due',
+      'Confirmed',
       '$313.51',
       // The real instants ride along so the list filters on dates that know their year,
       // rather than re-parsing the year-less window above.
       '2026-10-01T13:30:00Z',
       '2026-10-05T13:30:00Z',
+      // The cover shot is joined in from the fleet at render time, not here.
+      undefined,
+      // Identifies the car for that join — plates are not unique, so they cannot key it.
+      'v1',
+      // Unpaid and unsigned in the fixture, so not ready for the keys.
+      false,
     ])
   })
 })
@@ -178,5 +203,120 @@ describe('toBookingPayload', () => {
     expect(payload.additionalDrivers[0].pricePerDayCents).toBe(1250)
     expect(payload.fees[0].amountCents).toBe(2500)
     expect(toBookingPayload({ ...input, customerId: 'c1' }).customerId).toBe('c1')
+  })
+})
+
+describe('toBookingListQuery', () => {
+  const NO_FILTERS: BookingFilters = {
+    search: '',
+    status: 'Any',
+    location: 'All',
+    pickup: { from: '', to: '' },
+    make: 'All',
+    durationBand: 'Any',
+    valueBands: [],
+  }
+  const base = { tab: 'Upcoming' as const, sort: 'newest' as const, page: 1, pageSize: 25 }
+
+  it('sends nothing but paging when no filter is set', () => {
+    // "Any"/"All"/an empty range are the absence of a constraint, not a value to filter on.
+    // Strict, because toEqual treats a key set to undefined as absent — and `status: undefined`
+    // is exactly what a forgotten guard produces.
+    expect(toBookingListQuery({ ...base, filters: NO_FILTERS })).toStrictEqual({
+      limit: 25,
+      offset: 0,
+      tab: 'upcoming',
+      sort: 'newest',
+    })
+  })
+
+  it('translates each control to its query param', () => {
+    const query = toBookingListQuery({
+      ...base,
+      tab: 'Recent activity',
+      sort: 'totalDesc',
+      page: 3,
+      filters: {
+        search: '  marisol  ',
+        status: 'Confirmed',
+        location: 'Miami Beach',
+        pickup: { from: '2026-10-01', to: '2026-10-31' },
+        make: 'Honda',
+        durationBand: '3-6',
+        valueBands: ['0-250', '1000+'],
+      },
+    })
+
+    expect(query).toStrictEqual({
+      limit: 25,
+      offset: 50,
+      tab: 'recent',
+      sort: 'totalDesc',
+      search: 'marisol',
+      status: 'confirmed',
+      location: 'Miami Beach',
+      pickupFrom: '2026-10-01',
+      pickupTo: '2026-10-31',
+      make: 'Honda',
+      durationBand: '3-6',
+      valueBand: ['0-250', '1000+'],
+    })
+  })
+
+  it('drops a search of only spaces', () => {
+    const query = toBookingListQuery({ ...base, filters: { ...NO_FILTERS, search: '   ' } })
+
+    expect(query).not.toHaveProperty('search')
+  })
+
+  it('sends either end of the pickup range on its own', () => {
+    const from = toBookingListQuery({
+      ...base,
+      filters: { ...NO_FILTERS, pickup: { from: '2026-10-01', to: '' } },
+    })
+
+    expect(from.pickupFrom).toBe('2026-10-01')
+    expect(from).not.toHaveProperty('pickupTo')
+  })
+})
+
+describe('toBookingFilterQuery', () => {
+  it('keeps the filters and drops paging, which the counts endpoints do not take', () => {
+    const query = toBookingFilterQuery({
+      search: 'marisol',
+      status: 'Any',
+      location: 'Miami Beach',
+      pickup: { from: '', to: '' },
+      make: 'All',
+      durationBand: 'Any',
+      valueBands: [],
+    })
+
+    expect(query).toStrictEqual({ search: 'marisol', location: 'Miami Beach' })
+  })
+})
+
+describe('isReadyForPickup', () => {
+  const booking = (state: PaymentState, signedAt: string | null) =>
+    toBooking({
+      ...wire,
+      payment: { ...wire.payment, state },
+      contract: { signedAt, version: null },
+    })
+
+  it('needs the money taken and the contract signed', () => {
+    expect(isReadyForPickup(booking('paid', '2026-09-22T10:00:00Z'))).toBe(true)
+  })
+
+  it('does not treat a held deposit or a refund as settlement', () => {
+    // Matches the API's own predicate — anything looser and the badge would disagree with the
+    // "ready" count on the stat card.
+    for (const state of ['deposit_held', 'refunded', 'unpaid'] as PaymentState[]) {
+      expect(isReadyForPickup(booking(state, '2026-09-22T10:00:00Z'))).toBe(false)
+    }
+  })
+
+  it('is false while the contract is unsigned, however the money stands', () => {
+    expect(isReadyForPickup(booking('paid', null))).toBe(false)
   })
 })

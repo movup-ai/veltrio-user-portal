@@ -31,7 +31,7 @@ export const BOOKINGS_UPCOMING: BookingTuple[] = [
     'Sep 14 · 13:15 → Sep 21',
     '7 days',
     'Orlando Intl.',
-    'Awaiting ID',
+    'Pending',
     '$1,015',
   ],
   [
@@ -53,7 +53,7 @@ export const BOOKINGS_UPCOMING: BookingTuple[] = [
     'Sep 14 · 17:45 → Sep 19',
     '5 days',
     'Tampa Downtown',
-    'Deposit due',
+    'Confirmed',
     '$895',
   ],
   [
@@ -86,7 +86,7 @@ export const BOOKINGS_UPCOMING: BookingTuple[] = [
     'Sep 15 · 10:20 → Sep 18',
     '3 days',
     'Orlando Intl.',
-    'Awaiting ID',
+    'Pending',
     '$702',
   ],
 ]
@@ -122,7 +122,7 @@ export const BOOKINGS_RECENT: BookingTuple[] = [
     'Sep 8 · 14:00 → Sep 13',
     '3h late',
     'Orlando Intl.',
-    'Overdue fee',
+    'Overdue',
     '$1,388',
   ],
   [
@@ -144,7 +144,7 @@ export const BOOKINGS_RECENT: BookingTuple[] = [
     'Sep 7 · 16:00 → Sep 12',
     'returned',
     'Miami Beach',
-    'Refunded',
+    'Cancelled',
     '−$310',
   ],
   [
@@ -177,7 +177,7 @@ export const BOOKINGS_RECENT: BookingTuple[] = [
     'Sep 6 · 18:00 → Sep 13',
     'card declined',
     'Miami Beach',
-    'Payment failed',
+    'Overdue',
     '$1,204',
   ],
 ]

@@ -19,7 +19,6 @@ import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
 import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
 import { vehicleUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
-import { initials } from '@/utils/formatting'
 import type { BookingTuple } from '@/modules/bookings/types/booking.types'
 import { useBookings } from '@/modules/bookings/hooks/use-bookings'
 import { intervalsForPlate } from '@/modules/bookings/utils/booking.schedule'
@@ -63,6 +62,7 @@ function FeeRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 function bookingHistoryColumns(t: TFunction<'vehicles'>) {
   return [
+    { label: t('details.bookingColumns.bookingId'), align: 'left' as const },
     { label: t('details.bookingColumns.customer'), align: 'left' as const },
     { label: t('details.bookingColumns.rentalWindow'), align: 'left' as const },
     { label: t('details.bookingColumns.location'), align: 'left' as const },
@@ -78,16 +78,8 @@ function bookingHistoryRow(b: BookingTuple): Row {
   return {
     key: reference,
     cells: [
-      {
-        kind: 'avatar',
-        primary: customer,
-        secondary: reference,
-        initials: initials(customer),
-        avatarBg: 'var(--color-surface-3)',
-        avatarFg: 'var(--color-fg-2)',
-        avatarRadius: '99px',
-        subFontMono: true,
-      },
+      { kind: 'text', primary: reference, fontMono: true },
+      { kind: 'text', primary: customer },
       { kind: 'stack', primary: window, secondary: note, weight: 500, subFontMono: false },
       { kind: 'text', primary: location },
       { kind: 'badge', status },

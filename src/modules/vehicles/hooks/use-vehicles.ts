@@ -1,14 +1,17 @@
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { vehicleApi } from '../api/vehicle.api'
+import { photoThumbnail } from '../utils/vehicle.utils'
 import { isPending } from '../api/vehicle-photo.api'
 import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
 
 export const vehicleKeys = {
   all: ['vehicles'] as const,
   lists: () => [...vehicleKeys.all, 'list'] as const,
+  allVehicles: () => [...vehicleKeys.all, 'all'] as const,
   list: (params: VehicleListParams) => [...vehicleKeys.lists(), params] as const,
   details: () => [...vehicleKeys.all, 'detail'] as const,
   detail: (id: string) => [...vehicleKeys.details(), id] as const,
@@ -29,6 +32,48 @@ export function useVehicles(params: VehicleListParams) {
     queryFn: () => vehicleApi.list(params),
     placeholderData: (previous) => previous,
   })
+}
+
+/**
+ * The whole fleet, for the lookups below. One query so the two hooks share a single fetch, and
+ * paged through because a fleet past 100 would otherwise be cut off mid-list.
+ */
+function useWholeFleet() {
+  return useQuery({
+    queryKey: vehicleKeys.allVehicles(),
+    queryFn: () => vehicleApi.listAll(),
+    placeholderData: (previous) => previous,
+  })
+}
+
+/**
+ * Vehicle id → cover thumbnail, so a list that carries only the id (the bookings table) can
+ * still show the car. Keyed on id rather than plate because plates are not unique.
+ */
+export function useVehicleThumbnails() {
+  const { data } = useWholeFleet()
+
+  return useMemo(() => {
+    const byVehicleId = new Map<string, string>()
+    for (const vehicle of data ?? []) {
+      const cover = vehicle.photos[0]
+      if (cover) {
+        const url = photoThumbnail(cover)
+        if (url) byVehicleId.set(vehicle.id, url)
+      }
+    }
+    return byVehicleId
+  }, [data])
+}
+
+/** Every make in the fleet, alphabetical — feeds the make filters that page their own list. */
+export function useVehicleMakes(): string[] {
+  const { data } = useWholeFleet()
+
+  return useMemo(() => {
+    const makes = new Set((data ?? []).map((v) => v.make).filter(Boolean))
+    return [...makes].sort((a, b) => a.localeCompare(b))
+  }, [data])
 }
 
 /**

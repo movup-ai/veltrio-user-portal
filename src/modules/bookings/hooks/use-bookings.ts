@@ -4,11 +4,15 @@ import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { customerKeys } from '@/modules/customers/hooks/use-customers'
 import { bookingApi } from '../api/booking.api'
-import type { BookingInput } from '../types/booking.types'
+import type { BookingListParams } from '../api/booking.mapper'
+import type { BookingFilters, BookingInput } from '../types/booking.types'
 
 export const bookingKeys = {
   all: ['bookings'] as const,
   lists: () => [...bookingKeys.all, 'list'] as const,
+  page: (params: BookingListParams) => [...bookingKeys.lists(), params] as const,
+  stats: () => [...bookingKeys.all, 'stats'] as const,
+  tabCounts: (filters: BookingFilters) => [...bookingKeys.all, 'tabCounts', filters] as const,
   detail: (reference: string) => [...bookingKeys.all, 'detail', reference] as const,
   schedule: (from: string, to: string) => [...bookingKeys.all, 'schedule', from, to] as const,
 }
@@ -18,6 +22,38 @@ export function useBookings() {
     queryKey: bookingKeys.lists(),
     queryFn: () => bookingApi.list(),
     placeholderData: (previous) => previous,
+  })
+}
+
+/**
+ * One filtered page of the table. `keepPreviousData` holds the rows on screen while the next
+ * page loads, so changing a filter dims the table rather than blanking it — the difference
+ * between a request feeling instant and feeling broken.
+ */
+export function useBookingPage(params: BookingListParams) {
+  const query = useQuery({
+    queryKey: bookingKeys.page(params),
+    queryFn: () => bookingApi.page(params),
+    placeholderData: keepPreviousData,
+  })
+
+  return { ...query, isStale: query.isPlaceholderData }
+}
+
+/** The stat cards. Its own query because they describe the book, not the filtered view. */
+export function useBookingStats() {
+  return useQuery({
+    queryKey: bookingKeys.stats(),
+    queryFn: () => bookingApi.stats(),
+    placeholderData: (previous) => previous,
+  })
+}
+
+export function useBookingTabCounts(filters: BookingFilters) {
+  return useQuery({
+    queryKey: bookingKeys.tabCounts(filters),
+    queryFn: () => bookingApi.tabCounts(filters),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -50,12 +86,7 @@ export function useBookingSchedule(from: string, to: string, enabled: boolean) {
 
   return {
     ...query,
-    /** True while the data on hand belongs to a window other than the one requested. */
     isStale: query.isPlaceholderData,
-    /**
-     * True once `data` describes the requested window. Not the negation of `isStale`: on the
-     * first load there is no previous result to keep, so nothing is stale and nothing is loaded.
-     */
     isReady: enabled && query.data !== undefined && !query.isPlaceholderData,
   }
 }

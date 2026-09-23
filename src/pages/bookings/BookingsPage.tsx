@@ -11,6 +11,7 @@ import {
   Plus,
   TriangleAlert,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -26,10 +27,13 @@ import { EMPTY_DATE_RANGE, fromDateValue, type DateRange } from '@/components/ui
 import { useFormatters } from '@/i18n'
 import { useDomainLabels } from '@/i18n/domain'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
-import { useBookings } from '@/modules/bookings/hooks/use-bookings'
+import {
+  useBookingPage,
+  useBookingStats,
+  useBookingTabCounts,
+} from '@/modules/bookings/hooks/use-bookings'
 import { useBookingDrafts, useDeleteBookingDraft } from '@/modules/bookings/hooks/use-booking-drafts'
 import {
-  BOOKING_ATTENTION_STATUSES,
   BOOKING_DURATION_BANDS,
   BOOKING_SORTS,
   BOOKING_STATUSES,
@@ -44,29 +48,32 @@ import {
   type BookingValueBand,
 } from '@/modules/bookings/types/booking.types'
 import {
-  EMPTY_BOOKING_LISTS,
-  allBookings,
-  bookingMakes,
-  bookingPickupOrdinal,
-  bookingsForTab,
-  filterBookings,
-  sortBookings,
-  todayOrdinal,
-} from '@/modules/bookings/utils/booking.filters'
-import {
   bookingColumns,
   bookingRow,
   downloadBookingsCsv,
   draftColumns,
   draftRow,
-  parseBookingTotal,
+  withVehicleImage,
 } from '@/modules/bookings/utils/booking.utils'
+import { useVehicleMakes, useVehicleThumbnails } from '@/modules/vehicles/hooks/use-vehicles'
+import { resultSetKey } from '@/modules/bookings/utils/booking.paging'
+import { useDebounced } from '@/lib/use-debounced'
+import { bookingApi, ExportTooLargeError } from '@/modules/bookings/api/booking.api'
+import { normalizeApiError } from '@/services/api/errors'
 
 /** The Drafts tab sits beside the booking tabs but draws from its own resource. */
 const DRAFTS_TAB = 'Drafts'
 
-/** Pickups no further out than this count towards the "starting soon" note on the Open bookings stat. */
-const STARTING_SOON_DAYS = 2
+/** Rows per page until the counter picks another; the picker offers PAGE_SIZE_OPTIONS. */
+const DEFAULT_PAGE_SIZE = 10
+
+/** Shown while the counts load, so the tabs render without flickering through zero. */
+const EMPTY_TAB_COUNTS: Record<BookingTab, number> = {
+  Upcoming: 0,
+  Today: 0,
+  'Recent activity': 0,
+  Overdue: 0,
+}
 
 export function BookingsPage() {
   const { t } = useTranslation('bookings')
@@ -91,9 +98,12 @@ export function BookingsPage() {
   const [draftDuration, setDraftDuration] = useState<BookingDurationBand | 'Any'>('Any')
   const [draftValueBands, setDraftValueBands] = useState<BookingValueBand[]>([])
 
+  // Typing must not fire a request per keystroke; everything else applies immediately.
+  const debouncedSearch = useDebounced(search)
+
   const filters: BookingFilters = useMemo(
     () => ({
-      search,
+      search: debouncedSearch,
       status: statusFilter,
       location: locationFilter,
       pickup: pickupFilter,
@@ -101,35 +111,52 @@ export function BookingsPage() {
       durationBand: durationFilter,
       valueBands,
     }),
-    [search, statusFilter, locationFilter, pickupFilter, makeFilter, durationFilter, valueBands],
+    [
+      debouncedSearch,
+      statusFilter,
+      locationFilter,
+      pickupFilter,
+      makeFilter,
+      durationFilter,
+      valueBands,
+    ],
   )
-
-  const { data, isLoading, isError, refetch } = useBookings()
-  const { data: draftPage } = useBookingDrafts()
-  const deleteDraft = useDeleteBookingDraft()
-  const drafts = draftPage?.items ?? []
-  const lists = data ?? EMPTY_BOOKING_LISTS
 
   const showingDrafts = tab === DRAFTS_TAB
   // The booking tabs still need a value while Drafts is selected; their rows are not rendered.
   const bookingTab: BookingTab = showingDrafts ? 'Upcoming' : tab
-  const tabTotal = bookingsForTab(bookingTab, lists).length
-  const rowsData = useMemo(
-    () => sortBookings(filterBookings(bookingsForTab(bookingTab, lists), filters), sort),
-    [bookingTab, lists, filters, sort],
-  )
 
-  // Each tab's count is what it would actually reveal under the current filters — the tab itself
-  // is the only constraint that varies, so every tab is recounted against the same filter set.
-  const tabCounts = useMemo(
-    () =>
-      Object.fromEntries(
-        BOOKING_TABS.map((value) => [value, filterBookings(bookingsForTab(value, lists), filters).length]),
-      ) as Record<BookingTab, number>,
-    [lists, filters],
-  )
+  // Narrowing the list resets to page 1: page 4 of the old result is rarely page 4 of the new.
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE)
+  const filterKey = resultSetKey(filters, bookingTab, sort, pageSize)
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey)
+  const [page, setPage] = useState(1)
+  if (filterKey !== lastFilterKey) {
+    setLastFilterKey(filterKey)
+    setPage(1)
+  }
 
-  const makes = useMemo(() => bookingMakes(allBookings(lists)), [lists])
+  const {
+    data: pageData,
+    isLoading,
+    isError,
+    refetch,
+    isStale: rowsAreStale,
+  } = useBookingPage({ filters, tab: bookingTab, sort, page, pageSize })
+  const { data: stats } = useBookingStats()
+  const { data: filteredCounts } = useBookingTabCounts(filters)
+  const { data: draftPage } = useBookingDrafts()
+  const thumbnails = useVehicleThumbnails()
+  const deleteDraft = useDeleteBookingDraft()
+  const drafts = draftPage?.items ?? []
+
+  const rowsData = pageData?.items ?? []
+  const tabTotal = pageData?.total ?? 0
+  const tabCounts = filteredCounts ?? EMPTY_TAB_COUNTS
+
+  // Makes come from the fleet, not the loaded page: a filter offering only what this page
+  // happens to show would hide the rest of the book.
+  const makes = useVehicleMakes()
 
   /** "Sep 10 – Sep 20", or the single day when both ends match. Falls back to the "any" placeholder. */
   const pickupLabel = (() => {
@@ -183,37 +210,35 @@ export function BookingsPage() {
     )
   }
 
-  // Stats describe the whole book of business, not the current filters — same contract as the fleet stats on Vehicles.
-  const openBookings = lists.upcoming
-  const today = todayOrdinal()
-  const startingSoon = openBookings.filter(
-    (b) => bookingPickupOrdinal(b) - today <= STARTING_SOON_DAYS,
-  ).length
-  const bookedValue = openBookings
-    .filter((b) => b[7] === 'Confirmed')
-    .reduce((sum, b) => sum + parseBookingTotal(b[8]), 0)
-  const needsAttention = allBookings(lists).filter((b) => BOOKING_ATTENTION_STATUSES.includes(b[7]))
-  const awaitingId = needsAttention.filter((b) => b[7] === 'Awaiting ID').length
-  const depositDue = needsAttention.filter((b) => b[7] === 'Deposit due').length
+  // Counted by the API over the whole book, not the loaded page — the cards describe the
+  // business, not the current view, which is the same contract the fleet stats keep.
+  const {
+    openBookings = 0,
+    startingSoon = 0,
+    expectedRevenue = 0,
+    needsAttention = 0,
+    unpaid = 0,
+    unsigned = 0,
+  } = stats ?? {}
 
-  const stats = [
+  const statCards = [
     {
       icon: CalendarCheck,
       label: t('list.stats.open'),
-      value: String(openBookings.length),
+      value: String(openBookings),
       note: t('list.stats.openNote', { count: startingSoon }),
     },
     {
       icon: Banknote,
       label: t('list.stats.expectedRevenue'),
-      value: format.currency(bookedValue),
+      value: format.currency(expectedRevenue),
       note: t('list.stats.expectedRevenueNote'),
     },
     {
       icon: TriangleAlert,
       label: t('list.stats.needsAttention'),
-      value: String(needsAttention.length),
-      note: t('list.stats.needsAttentionNote', { awaitingId, depositDue }),
+      value: String(needsAttention),
+      note: t('list.stats.needsAttentionNote', { unpaid, unsigned }),
     },
   ]
 
@@ -221,8 +246,28 @@ export function BookingsPage() {
     downloadBookingsCsv(bookings, 'bookings.csv', t)
   }
 
+  /** Exports everything matching the filters, not just the page on screen. */
+  async function handleExportAll() {
+    try {
+      handleExport(await bookingApi.exportAll({ filters, tab: bookingTab, sort }))
+    } catch (error) {
+      // Past the cap the export would be short without saying so, so it is refused and the
+      // counter is told to narrow the filters instead.
+      const tooLarge = error instanceof ExportTooLargeError
+      toast({
+        title: t('list.exportFailed'),
+        description: tooLarge
+          ? t('list.exportTooLarge', { total: error.total, limit: error.limit })
+          : normalizeApiError(error).message,
+        variant: 'error',
+      })
+    }
+  }
+
+  // The tuple carries the plate, not the car, so the cover shot is joined in here rather than
+  // at map time — the bookings list and the fleet load independently.
   const rows = rowsData.map((b) =>
-    bookingRow(b, [
+    bookingRow(withVehicleImage(b, thumbnails), [
       { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/bookings/${b[1]}`) },
       { label: t('list.rowActions.editBooking'), onClick: () => navigate(`/app/bookings/${b[1]}`) },
       { label: t('list.rowActions.exportBooking'), onClick: () => handleExport([b]) },
@@ -257,11 +302,15 @@ export function BookingsPage() {
         description={t('list.description')}
         actions={
           <>
-            <PageActionButton icon={CalendarDays} label={t('list.calendarView')} />
+            <PageActionButton
+              icon={CalendarDays}
+              label={t('list.calendarView')}
+              onClick={() => navigate('/app/calendar')}
+            />
             <PageActionButton
               icon={Download}
               label={t('list.export')}
-              onClick={() => handleExport(rowsData)}
+              onClick={() => void handleExportAll()}
             />
             <PageActionButton
               icon={Plus}
@@ -273,7 +322,7 @@ export function BookingsPage() {
         }
       />
 
-      <StatStrip stats={stats} />
+      <StatStrip stats={statCards} />
 
       <FilterBar
         searchPlaceholder={t('list.searchPlaceholder')}
@@ -351,13 +400,18 @@ export function BookingsPage() {
         onOpenMoreFilters={handleOpenMoreFilters}
       />
 
-      {isLoading && !data ? (
+      {isLoading && !pageData ? (
         <LoadingState label={t('list.loading')} />
       ) : isError ? (
         <ErrorState description={t('list.loadError')} onRetry={() => refetch()} />
       ) : (
         // Rendered even with no rows so the tabs stay reachable — otherwise selecting an empty
-        // tab would unmount the only way back to a non-empty one.
+        // tab would unmount the only way back to a non-empty one. Dimmed while the next page
+        // loads: the rows on screen belong to the previous filters until it arrives.
+        <div
+          className={cn('transition-opacity', rowsAreStale && 'pointer-events-none opacity-60')}
+          aria-busy={rowsAreStale}
+        >
         <RecordTable
           tabs={[
             ...BOOKING_TABS.map((value) => ({
@@ -396,6 +450,18 @@ export function BookingsPage() {
                 ? t('list.pageNote', { shown: rows.length, total: tabTotal })
                 : t('list.noneFound')
           }
+          pagination={
+            // Drafts are capped well under one page, so they never paginate.
+            !showingDrafts && pageData
+              ? {
+                  page: pageData.page,
+                  hasNextPage: pageData.page < pageData.totalPages,
+                  onPageChange: setPage,
+                  pageSize,
+                  onPageSizeChange: setPageSize,
+                }
+              : undefined
+          }
           minWidth="800px"
           onRowClick={(key) =>
             showingDrafts ? navigate(`/app/bookings/new?draft=${key}`) : navigate(`/app/bookings/${key}`)
@@ -416,6 +482,7 @@ export function BookingsPage() {
             )
           }
         />
+        </div>
       )}
     </PageContainer>
   )

@@ -13,45 +13,57 @@ export type BookingTuple = [
   location: string,
   status: string,
   total: string,
-  /**
-   * The real pickup and return instants, ISO. Present on every booking from the API; absent
-   * on the dashboard's seeded rows, which only ever carried display text.
-   *
-   * The formatted window above has no year, so filtering on it alone mistakes a rental this
-   * time next year for one today, and reads a New Year crossing as a single day. These are
-   * what the filters actually sort and compare on.
-   */
   pickupAt?: string,
   returnAt?: string,
+  /** Cover thumbnail, resolved from the fleet. Absent for a car with no photos on file. */
+  vehicleImage?: string,
+  /** Identifies the car for that lookup. Absent once the vehicle is deleted. */
+  vehicleId?: string,
+  /** Paid and signed, so the keys can be handed over. Derived, never stored. */
+  ready?: boolean,
 ]
 
-/** Canonical booking statuses — display labels live in `domain:status.<value>`. */
+/**
+ * Where the rental is, in lifecycle order — money and paperwork are `payment` and `contract`.
+ * Display labels live in `domain:status.<value>`.
+ */
 export const BOOKING_STATUSES = [
+  'Pending',
   'Confirmed',
-  'Awaiting ID',
-  'Deposit due',
+  'On rental',
+  'Returned',
   'Completed',
-  'Overdue fee',
-  'Refunded',
-  'Payment failed',
+  'Cancelled',
+  'Overdue',
 ] as const
 export type BookingStatus = (typeof BOOKING_STATUSES)[number]
+
+/** What has actually been taken, as opposed to the quote in `pricing`. */
+export const PAYMENT_STATES = ['unpaid', 'deposit_held', 'paid', 'refunded'] as const
+export type PaymentState = (typeof PAYMENT_STATES)[number]
+
+export interface BookingPayment {
+  state: PaymentState
+  paid: number
+  refunded: number
+  /** "Visa · 4223". Absent until something is taken. */
+  method?: string
+  paidAt?: string
+}
+
+export interface BookingContract {
+  /** Null means unsigned — the timestamp is the flag. */
+  signedAt?: string
+  version?: string
+}
 
 /**
  * Statuses feeding the "Needs attention" stat and the Overdue tab. Typed as `readonly string[]`
  * so they can be tested against the plain strings a BookingTuple carries.
  */
-export const BOOKING_ATTENTION_STATUSES: readonly string[] = [
-  'Awaiting ID',
-  'Deposit due',
-  'Overdue fee',
-  'Payment failed',
-] satisfies BookingStatus[]
+export const BOOKING_ATTENTION_STATUSES: readonly string[] = ['Overdue'] satisfies BookingStatus[]
 
-export const BOOKING_OVERDUE_STATUSES: readonly string[] = [
-  'Overdue fee',
-  'Payment failed',
-] satisfies BookingStatus[]
+export const BOOKING_OVERDUE_STATUSES: readonly string[] = ['Overdue'] satisfies BookingStatus[]
 
 export const BOOKING_TABS = ['Upcoming', 'Today', 'Recent activity', 'Overdue'] as const
 export type BookingTab = (typeof BOOKING_TABS)[number]
@@ -76,6 +88,24 @@ export type BookingValueBand = (typeof BOOKING_VALUE_BANDS)[number]['value']
 /** Orders the list can be read in. `newest` is the default — the most recently booked first. */
 export const BOOKING_SORTS = ['newest', 'oldest', 'pickupDesc', 'pickupAsc', 'totalDesc', 'totalAsc'] as const
 export type BookingSort = (typeof BOOKING_SORTS)[number]
+
+/**
+ * The stat cards. Deliberately unaffected by the list filters — they describe the whole book,
+ * not the current view — so they come from their own endpoint rather than the loaded page.
+ */
+export interface BookingStats {
+  openBookings: number
+  startingSoon: number
+  expectedRevenue: number
+  needsAttention: number
+  /** The two reasons a booking is not ready for pickup; both can apply to one row. */
+  unpaid: number
+  unsigned: number
+  /** Confirmed, paid and signed — waiting only on the renter to turn up. */
+  ready: number
+  /** Unfiltered count per tab; the filtered counts come from `useBookingTabCounts`. */
+  tabCounts: Record<BookingTab, number>
+}
 
 /** Everything the list filters on. `Any`/`All`/an empty range are the "no constraint" values. */
 export interface BookingFilters {
@@ -202,7 +232,19 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   vehiclePlate: string
   rate: BookingRate
   pricing: BookingQuote
+  payment: BookingPayment
+  contract: BookingContract
+  /** When the car actually changed hands, which is not the same as the window's ends. */
+  pickedUpAt?: string
+  returnedAt?: string
   createdAt: string
+}
+
+/** Everything that must be true before the counter can hand the keys over. */
+export function isReadyForPickup(booking: Booking): boolean {
+  // Paid exactly, matching the API's own predicate: a held deposit is not settlement, and a
+  // refund undoes it. Anything looser would disagree with the "ready" count on the stat card.
+  return booking.payment.state === 'paid' && Boolean(booking.contract.signedAt)
 }
 
 /** The five stages a rental moves through, in order. Labels live in `bookings:details.stages.<key>`. */

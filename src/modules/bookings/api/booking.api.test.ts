@@ -1,7 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiClient } from '@/services/api/client'
-import { bookingApi } from './booking.api'
+import { bookingApi, ExportTooLargeError } from './booking.api'
 import type { BookingWire } from './booking.mapper'
+import type { BookingFilters } from '../types/booking.types'
+
+const NO_FILTERS: BookingFilters = {
+  search: '',
+  status: 'Any',
+  location: 'All',
+  pickup: { from: '', to: '' },
+  make: 'All',
+  durationBand: 'Any',
+  valueBands: [],
+}
 
 vi.mock('@/services/api/client', () => ({
   apiClient: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
@@ -50,6 +61,10 @@ function wire(reference: string): BookingWire {
       totalCents: 5500,
       depositCents: 0,
     },
+    payment: { state: 'unpaid', paidCents: 0, refundedCents: 0, method: null, paidAt: null },
+    contract: { signedAt: null, version: null },
+    pickedUpAt: null,
+    returnedAt: null,
     createdAt: '2026-09-22T10:00:00Z',
     updatedAt: '2026-09-22T10:00:00Z',
   }
@@ -95,5 +110,43 @@ describe('bookingApi.list', () => {
 
     expect(get).toHaveBeenCalledOnce()
     expect(lists.upcoming).toEqual([])
+  })
+})
+
+describe('bookingApi.exportAll', () => {
+  const params = { filters: NO_FILTERS, tab: 'Upcoming' as const, sort: 'newest' as const }
+
+  it('gathers every matching row, not just the first page', async () => {
+    get.mockResolvedValueOnce(page(0, 250))
+    get.mockResolvedValueOnce(page(100, 250))
+    get.mockResolvedValueOnce(page(200, 250))
+
+    expect(await bookingApi.exportAll(params)).toHaveLength(250)
+  })
+
+  it('refuses rather than returning a short CSV past the cap', async () => {
+    // Silently truncating is the failure this guards: nothing on screen would say the export
+    // was missing records.
+    get.mockResolvedValue(page(0, 20_000))
+
+    await expect(bookingApi.exportAll(params)).rejects.toThrow(ExportTooLargeError)
+  })
+
+  it('refuses on the first response rather than fetching every page first', async () => {
+    // The first page already reports the total, so an export that cannot finish should cost
+    // one request — not 50 sequential ones and 5,000 mapped rows before the same refusal.
+    get.mockResolvedValue(page(0, 20_000))
+
+    await expect(bookingApi.exportAll(params)).rejects.toThrow(ExportTooLargeError)
+    expect(get).toHaveBeenCalledOnce()
+  })
+
+  it('reports the real total so the message can say how far over it is', async () => {
+    get.mockResolvedValue(page(0, 20_000))
+
+    await expect(bookingApi.exportAll(params)).rejects.toMatchObject({
+      total: 20_000,
+      limit: 5_000,
+    })
   })
 })

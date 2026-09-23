@@ -78,5 +78,14 @@
     "tooLargeDescription": "Cada archivo debe pesar menos de {{size}} MB.",
     "preview": "Vista previa de {{label}}",
     "download": "Descargar {{label}}"
+  },
+  "calendar": {
+    "title": "Calendario",
+    "description": "Alquileres de tu flota, por fecha",
+    "empty": {
+      "title": "La vista de calendario está en camino",
+      "description": "Por ahora todas las reservas están en la lista; esta página las mostrará organizadas por fecha.",
+      "action": "Ir a reservas"
+    }
   }
 }

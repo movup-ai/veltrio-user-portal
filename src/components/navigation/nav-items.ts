@@ -1,5 +1,6 @@
 import {
   CalendarCheck,
+  CalendarDays,
   Car,
   CreditCard,
   LayoutDashboard,
@@ -12,7 +13,7 @@ import {
 
 /** Canonical English keys — they index into the `nav` namespace, they are not display text. */
 export type NavGroupKey = 'Operations' | 'Revenue' | 'Setup'
-export type NavLinkKey = 'Dashboard' | 'Bookings' | 'Vehicles' | 'Customers' | 'Payments' | 'Pricing' | 'Locations' | 'Settings'
+export type NavLinkKey = 'Dashboard' | 'Bookings' | 'Calendar' | 'Vehicles' | 'Customers' | 'Payments' | 'Pricing' | 'Locations' | 'Settings'
 
 export type NavEntry =
   | { type: 'group'; key: NavGroupKey }
@@ -22,6 +23,7 @@ export const NAV_ITEMS: NavEntry[] = [
   { type: 'group', key: 'Operations' },
   { type: 'link', key: 'Dashboard', to: '/app/dashboard', icon: LayoutDashboard },
   { type: 'link', key: 'Bookings', to: '/app/bookings', icon: CalendarCheck, badge: '12' },
+  { type: 'link', key: 'Calendar', to: '/app/calendar', icon: CalendarDays },
   { type: 'link', key: 'Vehicles', to: '/app/vehicles', icon: Car },
   { type: 'link', key: 'Customers', to: '/app/customers', icon: Users },
   { type: 'group', key: 'Revenue' },

@@ -7,6 +7,7 @@
   "links": {
     "Dashboard": "Dashboard",
     "Bookings": "Bookings",
+    "Calendar": "Calendar",
     "Vehicles": "Vehicles",
     "Customers": "Customers",
     "Payments": "Payments",

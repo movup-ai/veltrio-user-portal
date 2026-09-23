@@ -1,3 +1,8 @@
+import type { LucideIcon } from 'lucide-react'
+
+/** Rows per page a table can offer. Matches DataTablePagination's own options. */
+export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
+
 export type CellAlign = 'left' | 'right'
 
 export type Cell =
@@ -7,6 +12,8 @@ export type Cell =
       secondary?: string
       initials: string
       imageUrl?: string
+      /** Stands in for `initials` when there is no image — initials read oddly on an object. */
+      fallbackIcon?: LucideIcon
       avatarSize?: number
       avatarBg: string
       avatarFg: string
@@ -15,8 +22,10 @@ export type Cell =
       align?: CellAlign
     }
   | { kind: 'stack'; primary: string; secondary?: string; weight?: number; subFontMono?: boolean; align?: CellAlign }
-  | { kind: 'text'; primary: string; align?: CellAlign }
+  | { kind: 'text'; primary: string; fontMono?: boolean; align?: CellAlign }
   | { kind: 'badge'; status: string; align?: CellAlign }
+  /** Several badges on one row, e.g. a lifecycle status plus a derived flag. */
+  | { kind: 'badges'; statuses: string[]; align?: CellAlign }
   | { kind: 'amount'; primary: string; tone?: string; align?: CellAlign }
   | { kind: 'meter'; primary: string; pct: string; tone: string; align?: CellAlign }
   | { kind: 'switch'; on: boolean; align?: CellAlign }

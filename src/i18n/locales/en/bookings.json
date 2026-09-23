@@ -1,7 +1,7 @@
 {
   "list": {
     "title": "Bookings",
-    "description": "Every reservation across your three locations",
+    "description": "Reservations, pickups and returns across your branches",
     "calendarView": "Calendar view",
     "export": "Export",
     "newBooking": "New booking",
@@ -38,9 +38,9 @@
       "openNote_one": "{{count}} starts in the next 48h",
       "openNote_other": "{{count}} start in the next 48h",
       "expectedRevenue": "Expected revenue",
-      "expectedRevenueNote": "Confirmed, not yet invoiced",
+      "expectedRevenueNote": "Across every open rental",
       "needsAttention": "Needs attention",
-      "needsAttentionNote": "{{awaitingId}} awaiting ID · {{depositDue}} deposit due"
+      "needsAttentionNote": "{{unpaid}} unpaid · {{unsigned}} unsigned"
     },
     "drafts": {
       "tab": "Drafts",
@@ -53,7 +53,9 @@
     "draftsNote": "{{count}} saved draft",
     "draftsNote_other": "{{count}} saved drafts",
     "draftsEmptyTitle": "No saved drafts",
-    "draftsEmptyDescription": "Start a booking and choose Save draft to come back to it later."
+    "draftsEmptyDescription": "Start a booking and choose Save draft to come back to it later.",
+    "exportFailed": "Export failed",
+    "exportTooLarge": "{{total}} bookings match, and at most {{limit}} can be exported at once. Narrow the filters and try again."
   },
   "filters": {
     "status": "Status",
@@ -76,8 +78,9 @@
     }
   },
   "columns": {
-    "customer": "Customer",
     "vehicle": "Vehicle",
+    "bookingId": "Booking ID",
+    "customer": "Customer",
     "rentalWindow": "Rental window",
     "location": "Location",
     "status": "Status",

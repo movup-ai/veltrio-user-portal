@@ -97,6 +97,7 @@
     "notes": "Notas",
     "noNotes": "Este vehículo aún no tiene notas.",
     "bookingColumns": {
+      "bookingId": "ID de reserva",
       "customer": "Cliente",
       "rentalWindow": "Periodo de alquiler",
       "location": "Sucursal",
