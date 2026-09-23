@@ -2,8 +2,10 @@
   "_comment": "Canonical English domain values (as stored/sent to the API) mapped to display labels. Keys must never be translated — only their values.",
   "status": {
     "Active": "Active",
+    "Archived": "Archived",
     "Available": "Available",
     "Awaiting ID": "Awaiting ID",
+    "Cancelled": "Cancelled",
     "Completed": "Completed",
     "Confirmed": "Confirmed",
     "Deposit due": "Deposit due",
@@ -15,6 +17,7 @@
     "Maintenance": "Maintenance",
     "New": "New",
     "On rent": "On rent",
+    "On rental": "On rental",
     "Open": "Open",
     "Out of service": "Out of service",
     "Overdue": "Overdue",
@@ -23,10 +26,11 @@
     "Paused": "Paused",
     "Payment failed": "Payment failed",
     "Pending": "Pending",
+    "Ready": "Ready",
     "Refunded": "Refunded",
+    "Returned": "Returned",
     "Scheduled": "Scheduled",
-    "Verify docs": "Verify docs",
-    "Archived": "Archived"
+    "Verify docs": "Verify docs"
   },
   "vehicleType": {
     "Convertible": "Convertible",

@@ -78,5 +78,14 @@
     "tooLargeDescription": "Each file must be under {{size}}MB.",
     "preview": "Preview {{label}}",
     "download": "Download {{label}}"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "description": "Rentals across your fleet, by date",
+    "empty": {
+      "title": "Calendar view is on the way",
+      "description": "Bookings are all in the list for now — this page will show them laid out by date.",
+      "action": "Go to bookings"
+    }
   }
 }

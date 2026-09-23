@@ -6,6 +6,8 @@ import {
   BOOKING_STAGES,
   type Booking,
   type BookingAgreement,
+  type BookingContract,
+  type BookingPayment,
   type BookingChargeLine,
   type BookingCheckStep,
   type BookingDetails,
@@ -35,17 +37,14 @@ const AGREEMENT_VERSION = 'v3.2'
  * won't confirm a car it hasn't been paid a deposit for.
  */
 const STAGE_INDEX: Record<string, number> = {
-  'Deposit due': 1,
-  'Awaiting ID': 1,
-  'Payment failed': 1,
+  Pending: 1,
   Confirmed: 2,
-  'Overdue fee': 4,
+  'On rental': 3,
+  Overdue: 4,
+  Returned: 4,
   Completed: 5,
-  Refunded: 5,
+  Cancelled: 5,
 }
-
-/** Statuses where the money never landed, or came back out again. */
-const UNSETTLED_STATUSES = ['Deposit due', 'Payment failed']
 
 function addDays(date: Date, days: number): Date {
   const next = new Date(date)
@@ -140,14 +139,17 @@ function buildPayment(
   card: string,
   capturedAt: string,
   finished: boolean,
+  actual?: BookingPayment,
 ): BookingPaymentState {
-  const settled = !UNSETTLED_STATUSES.includes(status)
-  const refunded = status === 'Refunded' ? total : 0
-  const captured = settled ? total : 0
+  // The booking's own payment row when there is one; the seeded dashboard rows have none, so
+  // they still fall back to inferring it from the status.
+  const settled = actual ? actual.state === 'paid' : status === 'Completed'
+  const refunded = actual ? actual.refunded : 0
+  const captured = actual ? actual.paid : settled ? total : 0
 
   const depositState: BookingPaymentState['depositState'] = !settled
     ? 'pending'
-    : status === 'Overdue fee'
+    : status === 'Overdue'
       ? 'captured'
       : finished
         ? 'released'
@@ -170,21 +172,27 @@ function buildPayment(
  * Identity is taken at booking and the background check runs before the branch will confirm;
  * insurance is only chased in the run-up to handover.
  */
-function buildChecks(status: string, stageIndex: number): BookingCheckStep[] {
+function buildChecks(stageIndex: number): BookingCheckStep[] {
   return [
     { key: 'background', done: stageIndex >= 2 },
-    { key: 'identity', done: status !== 'Awaiting ID' && stageIndex >= 1 },
+    { key: 'identity', done: stageIndex >= 1 },
     { key: 'insurance', done: stageIndex >= 3 },
   ]
 }
 
 /** The contract goes out for signature when the booking is confirmed. */
-function buildAgreement(stageIndex: number, confirmedAt: string | undefined): BookingAgreement {
-  const signed = stageIndex >= 2
+function buildAgreement(
+  stageIndex: number,
+  confirmedAt: string | undefined,
+  contract?: BookingContract,
+): BookingAgreement {
+  // The booking's own contract row when there is one; seeded rows have none and still infer it.
+  const signedAt = contract ? contract.signedAt : stageIndex >= 2 ? confirmedAt : undefined
+  const signed = Boolean(signedAt)
 
   return {
     signed,
-    signedAt: signed ? confirmedAt : undefined,
+    signedAt,
     method: signed ? 'eSignature' : undefined,
     version: AGREEMENT_VERSION,
   }
@@ -353,6 +361,7 @@ export function buildBookingDetails(
     card,
     stages[1].at ?? pickup.toISOString(),
     stages[4].state === 'done',
+    booking?.payment,
   )
 
   const includedMiles = booking
@@ -386,8 +395,8 @@ export function buildBookingDetails(
     charges: booking ? exactCharges(booking) : buildCharges(total, days, listDailyRate, taxRatePct, []),
     total,
     payment,
-    agreement: buildAgreement(stageIndex, stages[1].at),
-    checks: buildChecks(status, stageIndex),
+    agreement: buildAgreement(stageIndex, stages[1].at, booking?.contract),
+    checks: buildChecks(stageIndex),
     events: buildEvents(reference, stages, renter, plate, agent, deposit, payment.depositState !== 'pending'),
     renter,
   }

@@ -38,9 +38,9 @@
       "openNote_one": "{{count}} starts in the next 48h",
       "openNote_other": "{{count}} start in the next 48h",
       "expectedRevenue": "Expected revenue",
-      "expectedRevenueNote": "Confirmed, not yet invoiced",
+      "expectedRevenueNote": "Across every open rental",
       "needsAttention": "Needs attention",
-      "needsAttentionNote": "{{awaitingId}} awaiting ID · {{depositDue}} deposit due"
+      "needsAttentionNote": "{{unpaid}} unpaid · {{unsigned}} unsigned"
     },
     "drafts": {
       "tab": "Drafts",
@@ -76,8 +76,9 @@
     }
   },
   "columns": {
-    "customer": "Customer",
     "vehicle": "Vehicle",
+    "bookingId": "Booking ID",
+    "customer": "Customer",
     "rentalWindow": "Rental window",
     "location": "Location",
     "status": "Status",

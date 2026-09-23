@@ -1,8 +1,10 @@
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { vehicleApi } from '../api/vehicle.api'
+import { photoThumbnail } from '../utils/vehicle.utils'
 import { isPending } from '../api/vehicle-photo.api'
 import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
 
@@ -35,6 +37,39 @@ export function useVehicles(params: VehicleListParams) {
  * Fleet totals for the given filters. Takes the same params as useVehicles so the two stay in
  * step; page/pageSize are ignored by the endpoint.
  */
+/** The most `GET /vehicles` allows in one page; past this a car falls back to its icon. */
+const THUMBNAIL_FLEET_PAGE_SIZE = 100
+
+/**
+ * Vehicle id → cover thumbnail for the fleet, so a list that carries only the id (the bookings
+ * table) can still show the car. Keyed on id rather than plate because plates are not unique.
+ */
+export function useVehicleThumbnails() {
+  const { data } = useVehicles({ page: 1, pageSize: THUMBNAIL_FLEET_PAGE_SIZE })
+
+  return useMemo(() => {
+    const byVehicleId = new Map<string, string>()
+    for (const vehicle of data?.items ?? []) {
+      const cover = vehicle.photos[0]
+      if (cover) {
+        const url = photoThumbnail(cover)
+        if (url) byVehicleId.set(vehicle.id, url)
+      }
+    }
+    return byVehicleId
+  }, [data])
+}
+
+/** Every make in the fleet, alphabetical — feeds the make filters that page their own list. */
+export function useVehicleMakes(): string[] {
+  const { data } = useVehicles({ page: 1, pageSize: THUMBNAIL_FLEET_PAGE_SIZE })
+
+  return useMemo(() => {
+    const makes = new Set((data?.items ?? []).map((v) => v.make).filter(Boolean))
+    return [...makes].sort((a, b) => a.localeCompare(b))
+  }, [data])
+}
+
 export function useVehicleStats(params: VehicleListParams) {
   return useQuery({
     queryKey: vehicleKeys.stats(params),

@@ -1,14 +1,15 @@
+import { Car } from 'lucide-react'
 import type { TFunction } from 'i18next'
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
 import { formatCurrencyIn, formatDateIn } from '@/i18n/formatters'
-import { initials } from '@/utils/formatting'
 import { durationHours } from './booking.pricing'
-import type { Booking, BookingDraft, BookingTuple } from '../types/booking.types'
+import { isReadyForPickup, type Booking, type BookingDraft, type BookingTuple } from '../types/booking.types'
 
 export function bookingColumns(t: TFunction<'bookings'>) {
   return [
-    { label: t('columns.customer'), align: 'left' as const },
     { label: t('columns.vehicle'), align: 'left' as const },
+    { label: t('columns.bookingId'), align: 'left' as const },
+    { label: t('columns.customer'), align: 'left' as const },
     { label: t('columns.rentalWindow'), align: 'left' as const },
     { label: t('columns.location'), align: 'left' as const },
     { label: t('columns.status'), align: 'left' as const },
@@ -25,19 +26,33 @@ export function bookingColumns(t: TFunction<'bookings'>) {
  */
 const TUPLE_LANGUAGE = 'en'
 
-/** "Sep 14 · 09:30 → Sep 18". The time is shown for the pickup only — the list scans on dates. */
+/**
+ * "Sep 14 · 09:30 → Sep 18 · 14:00". Both ends carry their time: a counter handing over a car
+ * needs the return hour as much as the pickup one, and "→ Sep 18" alone reads as end-of-day.
+ */
 export function formatRentalWindow(pickupAt: string, returnAt: string): string {
-  const pickup = new Date(pickupAt)
-  const dropoff = new Date(returnAt)
   const day = { month: 'short', day: 'numeric' } as const
-  const time = formatDateIn(TUPLE_LANGUAGE, pickup, { hour: '2-digit', minute: '2-digit', hour12: false })
-  return `${formatDateIn(TUPLE_LANGUAGE, pickup, day)} · ${time} → ${formatDateIn(TUPLE_LANGUAGE, dropoff, day)}`
+  const clock = { hour: '2-digit', minute: '2-digit', hour12: false } as const
+  const endpoint = (iso: string) => {
+    const at = new Date(iso)
+    return `${formatDateIn(TUPLE_LANGUAGE, at, day)} · ${formatDateIn(TUPLE_LANGUAGE, at, clock)}`
+  }
+  return `${endpoint(pickupAt)} → ${endpoint(returnAt)}`
 }
 
-/** "4 days" — the secondary line under the rental window. Always at least one day. */
+/**
+ * "3 days 4h" — the real length, not a rounded one. Rounding up turned every 24h rental into
+ * "1 day" and hid the hours a late return is charged for, so the remainder is shown when there
+ * is one. Always at least an hour, so a same-day booking still reads as a duration.
+ */
 export function formatRentalDuration(pickupAt: string, returnAt: string): string {
-  const days = Math.max(1, Math.ceil(durationHours(pickupAt, returnAt) / 24))
-  return `${days} ${days === 1 ? 'day' : 'days'}`
+  const total = Math.max(1, Math.round(durationHours(pickupAt, returnAt)))
+  const days = Math.floor(total / 24)
+  const hours = total % 24
+  const parts = []
+  if (days > 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`)
+  if (hours > 0) parts.push(`${hours}h`)
+  return parts.join(' ')
 }
 
 /** Flattens a Booking into the tuple the list table renders. */
@@ -54,6 +69,9 @@ export function bookingToTuple(b: Booking): BookingTuple {
     formatCurrencyIn(TUPLE_LANGUAGE, b.pricing.total),
     b.pickupAt,
     b.returnAt,
+    undefined, // vehicleImage — joined in from the fleet at render time
+    b.vehicleId,
+    isReadyForPickup(b),
   ]
 }
 
@@ -104,27 +122,59 @@ export function downloadBookingsCsv(
   URL.revokeObjectURL(url)
 }
 
+/**
+ * Attaches the car's cover thumbnail. Keyed on vehicle id, not plate: plates are not unique —
+ * the same one can sit on several rows — so a plate lookup could show the wrong car's photo.
+ * Returns the tuple unchanged when there is no photo, so the row falls back to the icon.
+ */
+export function withVehicleImage(b: BookingTuple, byVehicleId: Map<string, string>): BookingTuple {
+  const vehicleId = b[12]
+  const image = vehicleId ? byVehicleId.get(vehicleId) : undefined
+  if (!image) return b
+  const next = [...b] as BookingTuple
+  next[11] = image
+  return next
+}
+
+/** Only meaningful before the keys change hands; after that the status says enough. */
+const PRE_PICKUP: readonly string[] = ['Pending', 'Confirmed']
+
+/** Canonical label for the derived readiness badge — `domain:status.Ready` carries the text. */
+const READY = 'Ready'
+
 /** `actions` is optional — read-only tables (dashboard, vehicle history) render the inert "…" button. */
 export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
   const [customer, reference, vehicle, plate, window, note, location, status, total] = b
+  const vehicleImage = b[11]
+  const ready = b[13]
 
   return {
     key: reference,
     cells: [
       {
         kind: 'avatar',
-        primary: customer,
-        secondary: reference,
-        initials: initials(customer),
+        primary: vehicle,
+        secondary: plate,
+        // Never shown: the icon stands in when there is no photo, since initials read oddly
+        // on a car.
+        initials: '',
+        imageUrl: vehicleImage,
+        fallbackIcon: Car,
+        avatarSize: 38,
         avatarBg: 'var(--color-surface-3)',
-        avatarFg: 'var(--color-fg-2)',
-        avatarRadius: '99px',
+        avatarFg: 'var(--color-fg-3)',
+        avatarRadius: '8px',
         subFontMono: true,
       },
-      { kind: 'stack', primary: vehicle, secondary: plate, weight: 500, subFontMono: true },
+      // Its own column: the reference is what a counter quotes on the phone, so it is read
+      // across rows rather than hunted for under a name.
+      { kind: 'text', primary: reference, fontMono: true },
+      { kind: 'text', primary: customer },
       { kind: 'stack', primary: window, secondary: note, weight: 500, subFontMono: false },
       { kind: 'text', primary: location },
-      { kind: 'badge', status },
+      // Two badges: where the rental is, and — while it is still ahead of pickup — whether
+      // the paperwork is done. Readiness is derived, so it cannot contradict the row.
+      { kind: 'badges', statuses: ready && PRE_PICKUP.includes(status) ? [status, READY] : [status] },
       {
         kind: 'amount',
         primary: total,
@@ -139,6 +189,7 @@ export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
 /** The Drafts tab's own columns — a draft has no reference, status or total to show. */
 export function draftColumns(t: TFunction<'bookings'>) {
   return [
+    { label: t('columns.bookingId'), align: 'left' as const },
     { label: t('columns.customer'), align: 'left' as const },
     { label: t('columns.rentalWindow'), align: 'left' as const },
     { label: t('columns.location'), align: 'left' as const },
@@ -168,15 +219,9 @@ export function draftRow(
   return {
     key: draft.id,
     cells: [
-      {
-        kind: 'avatar',
-        primary: customer,
-        secondary: draft.reference,
-        initials: initials(customer),
-        avatarBg: 'var(--color-surface-3)',
-        avatarFg: 'var(--color-fg-2)',
-        avatarRadius: '99px',
-      },
+      // Same shape as a booking row: the reference reads across rows, the name beside it.
+      { kind: 'text', primary: draft.reference, fontMono: true },
+      { kind: 'text', primary: customer },
       { kind: 'text', primary: window },
       { kind: 'text', primary: payload.pickupLocation || '—' },
       { kind: 'text', primary: savedLabel },

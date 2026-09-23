@@ -97,6 +97,7 @@
     "notes": "Notes",
     "noNotes": "No notes for this vehicle yet.",
     "bookingColumns": {
+      "bookingId": "Booking ID",
       "customer": "Customer",
       "rentalWindow": "Rental window",
       "location": "Location",

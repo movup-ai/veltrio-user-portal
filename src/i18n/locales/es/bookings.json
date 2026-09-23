@@ -38,9 +38,9 @@
       "openNote_one": "{{count}} comienza en las próximas 48 h",
       "openNote_other": "{{count}} comienzan en las próximas 48 h",
       "expectedRevenue": "Ingresos previstos",
-      "expectedRevenueNote": "Confirmado, aún sin facturar",
+      "expectedRevenueNote": "De todos los alquileres abiertos",
       "needsAttention": "Requiere atención",
-      "needsAttentionNote": "{{awaitingId}} pendientes de identificación · {{depositDue}} depósito pendiente"
+      "needsAttentionNote": "{{unpaid}} sin pagar · {{unsigned}} sin firmar"
     },
     "drafts": {
       "tab": "Borradores",
@@ -76,8 +76,9 @@
     }
   },
   "columns": {
-    "customer": "Cliente",
     "vehicle": "Vehículo",
+    "bookingId": "ID de reserva",
+    "customer": "Cliente",
     "rentalWindow": "Periodo de alquiler",
     "location": "Sucursal",
     "status": "Estado",

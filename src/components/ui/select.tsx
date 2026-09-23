@@ -37,13 +37,53 @@ export function SelectContent({
   children,
   position = 'popper',
   sideOffset = 4,
+  onCloseAutoFocus,
+  onPointerDownOutside,
   ...props
 }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>) {
+  const dismissedByPointer = React.useRef(false)
+  // Captured while open: Radix clears `aria-controls` before focus returns to the trigger.
+  const trigger = React.useRef<HTMLElement | null>(null)
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         position={position}
         sideOffset={sideOffset}
+        ref={(node) => {
+          if (node?.id) {
+            trigger.current = document.querySelector<HTMLElement>(`[aria-controls="${node.id}"]`)
+          }
+        }}
+        onPointerDownOutside={(event) => {
+          dismissedByPointer.current = true
+          onPointerDownOutside?.(event)
+        }}
+        onPointerDown={() => {
+          dismissedByPointer.current = true
+        }}
+        onKeyDown={() => {
+          dismissedByPointer.current = false
+        }}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event)
+          const byPointer = dismissedByPointer.current
+          dismissedByPointer.current = false
+          if (event.defaultPrevented || !byPointer) return
+
+          // Focus must still return to the trigger; only the ring is suppressed, and only for
+          // this one restore — see the [data-silent-focus] rule in globals.css.
+          const element = trigger.current
+          if (!element) return
+          element.dataset.silentFocus = ''
+          const clear = () => {
+            delete element.dataset.silentFocus
+            element.removeEventListener('blur', clear)
+            element.removeEventListener('keydown', clear)
+          }
+          element.addEventListener('blur', clear)
+          element.addEventListener('keydown', clear)
+        }}
         className={cn(
           'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md',
           // Grow from the trigger edge rather than the panel centre.

@@ -50,6 +50,10 @@ function wire(reference: string): BookingWire {
       totalCents: 5500,
       depositCents: 0,
     },
+    payment: { state: 'unpaid', paidCents: 0, refundedCents: 0, method: null, paidAt: null },
+    contract: { signedAt: null, version: null },
+    pickedUpAt: null,
+    returnedAt: null,
     createdAt: '2026-09-22T10:00:00Z',
     updatedAt: '2026-09-22T10:00:00Z',
   }

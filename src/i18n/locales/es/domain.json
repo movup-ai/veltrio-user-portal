@@ -2,8 +2,10 @@
   "_comment": "Las claves son los valores canónicos en inglés que viaja a la API — nunca se traducen. Solo se traducen sus valores.",
   "status": {
     "Active": "Activo",
+    "Archived": "Archivado",
     "Available": "Disponible",
     "Awaiting ID": "Falta identificación",
+    "Cancelled": "Cancelado",
     "Completed": "Completado",
     "Confirmed": "Confirmado",
     "Deposit due": "Depósito pendiente",
@@ -15,6 +17,7 @@
     "Maintenance": "Mantenimiento",
     "New": "Nuevo",
     "On rent": "Alquilado",
+    "On rental": "En alquiler",
     "Open": "Abierto",
     "Out of service": "Fuera de servicio",
     "Overdue": "Vencido",
@@ -23,10 +26,11 @@
     "Paused": "Pausado",
     "Payment failed": "Pago fallido",
     "Pending": "Pendiente",
+    "Ready": "Listo",
     "Refunded": "Reembolsado",
+    "Returned": "Devuelto",
     "Scheduled": "Programado",
-    "Verify docs": "Verificar documentos",
-    "Archived": "Archivado"
+    "Verify docs": "Verificar documentos"
   },
   "vehicleType": {
     "Convertible": "Convertible",

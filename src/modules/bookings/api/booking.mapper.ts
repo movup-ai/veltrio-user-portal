@@ -1,5 +1,7 @@
 import { toCustomer, toCustomerPayload, type CustomerWire } from '@/modules/customers/api/customer.mapper'
 import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
+import { toLimitOffset } from '@/lib/pagination'
+import type { PaginationParams } from '@/types/common'
 import {
   BOOKING_OVERDUE_STATUSES,
   type AdditionalDriver,
@@ -9,7 +11,12 @@ import {
   type BookingFee,
   type BookingInput,
   type BookingLists,
+  type BookingFilters,
+  type BookingSort,
+  type BookingStats,
   type BookingStatus,
+  type PaymentState,
+  type BookingTab,
   type BookingVerification,
 } from '../types/booking.types'
 import { bookingToTuple } from '../utils/booking.utils'
@@ -69,6 +76,16 @@ export interface BookingWire {
     totalCents: number
     depositCents: number
   }
+  payment: {
+    state: PaymentState
+    paidCents: number
+    refundedCents: number
+    method: string | null
+    paidAt: string | null
+  }
+  contract: { signedAt: string | null; version: string | null }
+  pickedUpAt: string | null
+  returnedAt: string | null
   createdAt: string
   updatedAt: string
 }
@@ -84,13 +101,13 @@ export interface BookedIntervalWire {
 // --- Enum translation ----------------------------------------------------------------------
 
 const STATUS_TO_API = {
+  Pending: 'pending',
   Confirmed: 'confirmed',
-  'Awaiting ID': 'awaiting_id',
-  'Deposit due': 'deposit_due',
+  'On rental': 'on_rental',
+  Returned: 'returned',
   Completed: 'completed',
-  'Overdue fee': 'overdue_fee',
-  Refunded: 'refunded',
-  'Payment failed': 'payment_failed',
+  Cancelled: 'cancelled',
+  Overdue: 'overdue',
 } as const satisfies Record<BookingStatus, string>
 
 const STATUS_FROM_API = Object.fromEntries(
@@ -126,8 +143,8 @@ export function toBooking(wire: BookingWire): Booking {
   return {
     id: wire.id,
     reference: wire.reference,
-    // An unknown status shows as itself rather than "Deposit due" — claiming a rental awaits
-    // payment when the API said otherwise would misstate the money. The badge falls back to
+    // An unknown status shows as itself rather than being folded into a known one, which
+    // would state something about the rental the API never said. The badge falls back to
     // neutral colours.
     status: STATUS_FROM_API[wire.status] ?? (wire.status as BookingStatus),
     customer: toCustomer(wire.customer),
@@ -160,6 +177,19 @@ export function toBooking(wire: BookingWire): Booking {
       total: fromCents(wire.pricing.totalCents),
       deposit: fromCents(wire.pricing.depositCents),
     },
+    payment: {
+      state: wire.payment.state,
+      paid: fromCents(wire.payment.paidCents),
+      refunded: fromCents(wire.payment.refundedCents),
+      method: wire.payment.method ?? undefined,
+      paidAt: wire.payment.paidAt ?? undefined,
+    },
+    contract: {
+      signedAt: wire.contract.signedAt ?? undefined,
+      version: wire.contract.version ?? undefined,
+    },
+    pickedUpAt: wire.pickedUpAt ?? undefined,
+    returnedAt: wire.returnedAt ?? undefined,
     createdAt: wire.createdAt,
   }
 }
@@ -174,8 +204,8 @@ export function toInterval(wire: BookedIntervalWire): BookedInterval {
   }
 }
 
-/** Statuses after which the rental is over, one way or the other. */
-const FINISHED_STATUSES: readonly BookingStatus[] = ['Completed', 'Refunded']
+/** The rental is over and the car is free, one way or the other. */
+const FINISHED_STATUSES: readonly BookingStatus[] = ['Returned', 'Completed', 'Cancelled']
 
 export function toBookingLists(bookings: Booking[], now = new Date()): BookingLists {
   const cutoff = now.getTime()
@@ -239,5 +269,95 @@ export function toBookingDraft(wire: BookingDraftWire): BookingDraft {
     payload: wire.payload,
     createdAt: wire.createdAt,
     updatedAt: wire.updatedAt,
+  }
+}
+
+// --- List query ----------------------------------------------------------------------------
+
+/** Tabs, as the API names them. The portal's own labels stay in BOOKING_TABS. */
+const TAB_TO_API: Record<BookingTab, string> = {
+  Upcoming: 'upcoming',
+  Today: 'today',
+  'Recent activity': 'recent',
+  Overdue: 'overdue',
+}
+
+export interface BookingListParams extends PaginationParams {
+  filters: BookingFilters
+  tab: BookingTab
+  sort: BookingSort
+}
+
+/**
+ * Filters go to the API as query params. Every "no constraint" value — `Any`, `All`, an empty
+ * range — is omitted rather than sent, so the server sees only what the counter actually chose.
+ */
+export function toBookingListQuery(params: BookingListParams): Record<string, unknown> {
+  const { filters, tab, sort } = params
+  const query: Record<string, unknown> = {
+    ...toLimitOffset({ page: params.page, pageSize: params.pageSize }),
+    tab: TAB_TO_API[tab],
+    sort,
+  }
+
+  const search = filters.search.trim()
+  if (search) query.search = search
+  if (filters.status !== 'Any') query.status = STATUS_TO_API[filters.status]
+  if (filters.location !== 'All') query.location = filters.location
+  if (filters.make !== 'All') query.make = filters.make
+  if (filters.pickup.from) query.pickupFrom = filters.pickup.from
+  if (filters.pickup.to) query.pickupTo = filters.pickup.to
+  if (filters.durationBand !== 'Any') query.durationBand = filters.durationBand
+  if (filters.valueBands.length > 0) query.valueBand = filters.valueBands
+
+  return query
+}
+
+/** The same filters without paging, for the endpoints that only narrow. */
+export function toBookingFilterQuery(filters: BookingFilters): Record<string, unknown> {
+  const query = toBookingListQuery({ filters, tab: 'Upcoming', sort: 'newest', page: 1, pageSize: 1 })
+  for (const key of ['limit', 'offset', 'tab', 'sort']) delete query[key]
+  return query
+}
+
+// --- Stats ---------------------------------------------------------------------------------
+
+export interface BookingTabCountsWire {
+  upcoming: number
+  today: number
+  recent: number
+  overdue: number
+}
+
+export interface BookingStatsWire {
+  openBookings: number
+  startingSoon: number
+  expectedRevenueCents: number
+  needsAttention: number
+  unpaid: number
+  unsigned: number
+  ready: number
+  tabCounts: BookingTabCountsWire
+}
+
+export function toTabCounts(wire: BookingTabCountsWire): Record<BookingTab, number> {
+  return {
+    Upcoming: wire.upcoming,
+    Today: wire.today,
+    'Recent activity': wire.recent,
+    Overdue: wire.overdue,
+  }
+}
+
+export function toBookingStats(wire: BookingStatsWire): BookingStats {
+  return {
+    openBookings: wire.openBookings,
+    startingSoon: wire.startingSoon,
+    expectedRevenue: fromCents(wire.expectedRevenueCents),
+    needsAttention: wire.needsAttention,
+    unpaid: wire.unpaid,
+    unsigned: wire.unsigned,
+    ready: wire.ready,
+    tabCounts: toTabCounts(wire.tabCounts),
   }
 }

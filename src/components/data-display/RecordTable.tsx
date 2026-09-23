@@ -9,8 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { StatusBadge } from './StatusBadge'
-import type { Cell, Column, Row } from './record-table.types'
+import { PAGE_SIZE_OPTIONS, type Cell, type Column, type Row } from './record-table.types'
 
 function CellContent({ cell }: { cell: Cell }) {
   const { t } = useTranslation('common')
@@ -33,6 +40,12 @@ function CellContent({ cell }: { cell: Cell }) {
           >
             {cell.imageUrl ? (
               <img src={cell.imageUrl} alt="" className="size-full object-cover" loading="lazy" />
+            ) : cell.fallbackIcon ? (
+              <cell.fallbackIcon
+                style={{ width: '45%', height: '45%' }}
+                strokeWidth={1.75}
+                aria-hidden
+              />
             ) : (
               cell.initials
             )}
@@ -63,9 +76,26 @@ function CellContent({ cell }: { cell: Cell }) {
         </div>
       )
     case 'text':
-      return <span className="text-fg-2 text-[13px] whitespace-nowrap tabular-nums">{cell.primary}</span>
+      return (
+        <span
+          className={cn(
+            'text-fg-2 text-[13px] whitespace-nowrap tabular-nums',
+            cell.fontMono && 'font-mono',
+          )}
+        >
+          {cell.primary}
+        </span>
+      )
     case 'badge':
       return <StatusBadge status={cell.status} />
+    case 'badges':
+      return (
+        <span className="flex flex-wrap items-center gap-1.5">
+          {cell.statuses.map((status) => (
+            <StatusBadge key={status} status={status} />
+          ))}
+        </span>
+      )
     case 'amount':
       return (
         <span className="text-[13.5px] font-semibold whitespace-nowrap tabular-nums" style={{ color: cell.tone ?? 'var(--color-foreground)' }}>
@@ -151,7 +181,14 @@ interface RecordTableProps {
   minWidth?: string
   onRowClick?: (key: string) => void
   /** Omit to keep the footer's static/disabled Previous-Next look used elsewhere. */
-  pagination?: { page: number; hasNextPage: boolean; onPageChange: (page: number) => void }
+  pagination?: {
+    page: number
+    hasNextPage: boolean
+    onPageChange: (page: number) => void
+    /** Supplying both adds the rows-per-page picker; omit them for Previous/Next only. */
+    pageSize?: number
+    onPageSizeChange?: (pageSize: number) => void
+  }
   /** Rendered at the end of the header row (e.g. an Export button) — after the row count label. */
   actions?: React.ReactNode
   /** Adds a drag handle column so rows can be manually reordered — pairs with onReorder. */
@@ -255,7 +292,14 @@ export function RecordTable({
           <tbody>
             {rows.length === 0 && emptyState && (
               <tr>
-                <td colSpan={columns.length + (reorderable ? 1 : 0)}>{emptyState}</td>
+                {/* EmptyState draws its own dashed border for standalone use; inside the card
+                    that doubles the table's own, so it is stripped here rather than by callers. */}
+                <td
+                  colSpan={columns.length + (reorderable ? 1 : 0)}
+                  className="p-0 [&>*]:rounded-none [&>*]:border-0"
+                >
+                  {emptyState}
+                </td>
               </tr>
             )}
             {rows.map((row) => (
@@ -294,7 +338,30 @@ export function RecordTable({
       </div>
 
       <div className="border-border-soft bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-t px-4 py-[11px]">
-        <span className="text-fg-3 text-[12.5px]">{pageNote}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-fg-3 text-[12.5px]">{pageNote}</span>
+          {pagination?.pageSize !== undefined && pagination.onPageSizeChange && (
+            <Select
+              value={String(pagination.pageSize)}
+              onValueChange={(value) => pagination.onPageSizeChange?.(Number(value))}
+            >
+              {/* Sized and weighted like the Previous/Next buttons it sits beside. */}
+              <SelectTrigger
+                aria-label={t('table.rowsPerPage')}
+                className="border-border bg-surface text-fg-2 h-[30px] w-[68px] rounded-lg px-[11px] text-[12.5px] font-semibold"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={size} value={String(size)} className="text-[12.5px]">
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
         <div className="flex gap-1.5">
           <button
             type="button"

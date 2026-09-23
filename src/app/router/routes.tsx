@@ -30,6 +30,7 @@ const PaymentsPage = lazy(() => import('@/pages/payments/PaymentsPage').then((m)
 const LocationsPage = lazy(() => import('@/pages/locations/LocationsPage').then((m) => ({ default: m.LocationsPage })))
 const PricingPage = lazy(() => import('@/pages/pricing/PricingPage').then((m) => ({ default: m.PricingPage })))
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage').then((m) => ({ default: m.CalendarPage })))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 
 function withSuspense(element: React.ReactNode) {
@@ -70,6 +71,8 @@ export const router = createBrowserRouter([
               { path: 'bookings', element: withSuspense(<BookingsPage />) },
               { path: 'bookings/new', element: withSuspense(<BookingFormPage />) },
               { path: 'bookings/:bookingId', element: withSuspense(<BookingDetailsPage />) },
+
+              { path: 'calendar', element: withSuspense(<CalendarPage />) },
 
               { path: 'customers', element: withSuspense(<CustomersPage />) },
               { path: 'customers/:customerId', element: withSuspense(<CustomerDetailsPage />) },
