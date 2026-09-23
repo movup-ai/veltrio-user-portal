@@ -53,6 +53,7 @@ import {
   useDeleteBookingDraft,
   useSaveBookingDraft,
 } from '@/modules/bookings/hooks/use-booking-drafts'
+import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import {
   BOOKING_STEP_FIELDS,
@@ -147,10 +148,13 @@ function fromDraftPayload(payload: Record<string, unknown>): BookingFormValues {
  */
 export function BookingFormPage() {
   const { t } = useTranslation('bookings')
+  const navigate = useNavigate()
   const [resumedDraftId] = useState(() => new URLSearchParams(window.location.search).get('draft'))
-  const { data: draftPage, isLoading } = useBookingDrafts()
+  const { data: draftPage, isLoading, isError, refetch } = useBookingDrafts()
 
-  if (resumedDraftId && isLoading) {
+  const resume = resolveDraftResume(resumedDraftId, draftPage?.items, { isLoading, isError })
+
+  if (resume.kind === 'loading') {
     return (
       <PageContainer>
         <LoadingState label={t('form.draft.loading')} />
@@ -158,7 +162,30 @@ export function BookingFormPage() {
     )
   }
 
-  const draft = draftPage?.items.find((d) => d.id === resumedDraftId)
+  // Opening the wizard here would hand it a blank form, and saving that creates a second
+  // draft rather than updating the one the counter meant to resume.
+  if (resume.kind === 'failed') {
+    return (
+      <PageContainer>
+        <ErrorState description={t('form.draft.loadError')} onRetry={() => refetch()} />
+      </PageContainer>
+    )
+  }
+
+  if (resume.kind === 'missing') {
+    return (
+      <PageContainer>
+        <ErrorState
+          title={t('form.draft.missingTitle')}
+          description={t('form.draft.missing')}
+          actionLabel={t('form.draft.startFresh')}
+          onRetry={() => navigate('/app/bookings/new', { replace: true })}
+        />
+      </PageContainer>
+    )
+  }
+
+  const draft = resume.kind === 'resume' ? resume.draft : undefined
 
   return (
     // Remounts if the draft changes, so the form rebuilds its defaults rather than keeping
@@ -185,15 +212,13 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
   const saveDraft = useSaveBookingDraft()
-  const deleteDraft = useDeleteBookingDraft()
+  const deleteDraft = useDeleteBookingDraft({ silent: true })
   const queryClient = useQueryClient()
   const locations = useLocationNames()
 
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
-  // Per step: has the user pressed Continue on it yet? Until they have, the repeatable editors
-  // keep a row's errors to themselves until the field is blurred, so adding a blank driver or
-  // fee doesn't immediately mark it invalid.
+
   const [stepValidationAttempted, setStepValidationAttempted] = useState<Record<number, boolean>>({})
   const resumedDraftId = draftId
   const restoredDraft = initialValues
@@ -265,10 +290,13 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   })
 
   // Only the bookings touching this window — the API does the overlap filtering.
-  const { data: scheduleData, isStale: scheduleIsStale } = useBookingSchedule(pickupAt, returnAt, hours > 0)
-  // Availability is only meaningful once the schedule describes the dates on screen. While a
-  // new window loads we hold the last one for smoothness, but must not judge cars against it.
-  const scheduleReady = hours > 0 && !scheduleIsStale
+  const { data: scheduleData, isReady: scheduleReady } = useBookingSchedule(
+    pickupAt,
+    returnAt,
+    hours > 0,
+  )
+  // Availability is only meaningful once the schedule describes the dates on screen: until it
+  // has loaded, an empty list would mark every car free and let a booked one be picked.
   const schedule = scheduleData ?? EMPTY_SCHEDULE
 
   // The lookup box searches the customer book as the counter types.
@@ -287,15 +315,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const documentOnFile = (kind: DocumentKind) =>
     replacing[kind] ? undefined : existingDocuments.find((d) => d.kind === kind)
 
-  /**
-   * Every vehicle at the branch, each tagged with the rental that blocks it (if any). An
-   * unparseable or reversed date range can't be checked against, so nothing is marked blocked
-   * until the window is real.
-   *
-   * Derived straight through rather than memoized: it's a handful of vehicles against a
-   * handful of intervals, and keeping the arrays out of any dependency list is what lets the
-   * reset effect below key off a boolean instead of an array identity.
-   */
   const options: VehicleOption[] = (data?.items ?? []).map((vehicle) => {
     const clash = scheduleReady ? conflictsForVehicle(schedule, vehicle.id, pickupAt, returnAt)[0] : undefined
     return { vehicle, bookedUntil: clash?.to }
@@ -497,8 +516,19 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
       // isSubmitting true until onSubmit settles, and the scans are part of "creating".
       createBooking.mutate(input, {
         onSuccess: async (booking) => {
-          // The draft became a booking, so it should not linger in the list.
-          if (resumedDraftId) deleteDraft.mutate(resumedDraftId)
+          // Awaited, and before navigating: a draft left behind can be resumed and submitted
+          // again, which books the car twice. If it fails the counter is told to discard it.
+          if (resumedDraftId) {
+            try {
+              await deleteDraft.mutateAsync(resumedDraftId)
+            } catch {
+              toast({
+                title: t('form.draft.notDiscardedTitle'),
+                description: t('form.draft.notDiscarded', { reference: booking.reference }),
+                variant: 'error',
+              })
+            }
+          }
           // Documents hang off the customer, who only exists once the booking has been taken,
           // so the scans go up now against the id the API just resolved. A failed scan must not
           // discard a booking that was made: it is reported on its own and the booking stands.

@@ -44,16 +44,21 @@ export function useSaveBookingDraft() {
   })
 }
 
-export function useDeleteBookingDraft() {
+/**
+ * `silent` suppresses the toasts for callers that remove a draft as part of a larger action —
+ * submitting one as a booking is not "discarding" it, and reports its own failure.
+ */
+export function useDeleteBookingDraft({ silent = false }: { silent?: boolean } = {}) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => bookingDraftApi.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: bookingDraftKeys.all })
-      toast({ title: i18n.t('bookings:form.draft.discarded'), variant: 'success' })
+      if (!silent) toast({ title: i18n.t('bookings:form.draft.discarded'), variant: 'success' })
     },
     onError: (error) => {
+      if (silent) return
       toast({
         title: i18n.t('bookings:form.draft.discardFailed'),
         description: normalizeApiError(error).message,

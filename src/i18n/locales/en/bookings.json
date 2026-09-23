@@ -395,7 +395,13 @@
       "saveFailed": "Could not save the draft",
       "discarded": "Draft discarded",
       "discardFailed": "Could not discard the draft",
-      "loading": "Loading draft…"
+      "loading": "Loading draft…",
+      "loadError": "Could not load the draft. It was not opened, so nothing has been changed.",
+      "missingTitle": "Draft not found",
+      "missing": "It may have been discarded or already turned into a booking.",
+      "startFresh": "Start a new booking",
+      "notDiscardedTitle": "Draft still in the list",
+      "notDiscarded": "Booking {{reference}} was created, but its draft could not be removed. Discard it from the Drafts tab so it is not booked twice."
     },
     "nav": {
       "previousStep": "Back",

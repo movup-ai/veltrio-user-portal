@@ -52,6 +52,11 @@ export function useBookingSchedule(from: string, to: string, enabled: boolean) {
     ...query,
     /** True while the data on hand belongs to a window other than the one requested. */
     isStale: query.isPlaceholderData,
+    /**
+     * True once `data` describes the requested window. Not the negation of `isStale`: on the
+     * first load there is no previous result to keep, so nothing is stale and nothing is loaded.
+     */
+    isReady: enabled && query.data !== undefined && !query.isPlaceholderData,
   }
 }
 

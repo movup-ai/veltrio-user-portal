@@ -395,7 +395,13 @@
       "saveFailed": "No se pudo guardar el borrador",
       "discarded": "Borrador descartado",
       "discardFailed": "No se pudo descartar el borrador",
-      "loading": "Cargando borrador…"
+      "loading": "Cargando borrador…",
+      "loadError": "No se pudo cargar el borrador. No se abrió, así que no se ha cambiado nada.",
+      "missingTitle": "Borrador no encontrado",
+      "missing": "Es posible que se haya descartado o que ya se haya convertido en una reserva.",
+      "startFresh": "Crear una reserva nueva",
+      "notDiscardedTitle": "El borrador sigue en la lista",
+      "notDiscarded": "Se creó la reserva {{reference}}, pero no se pudo eliminar su borrador. Descártalo en la pestaña Borradores para no reservar dos veces."
     },
     "nav": {
       "previousStep": "Atrás",
