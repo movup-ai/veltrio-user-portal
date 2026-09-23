@@ -1,5 +1,6 @@
 import type { DateRange } from '@/components/ui/date-range-picker'
-import type { UploadedFile } from '@/types/common'
+import type { Customer, CustomerInput } from '@/modules/customers/types/customer.types'
+import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
 
 /** [customer, reference, vehicle, plate, rentalWindow, note, location, status, total] */
 export type BookingTuple = [
@@ -76,20 +77,20 @@ export interface BookingFilters {
 }
 
 /**
- * A window during which a vehicle is spoken for. Keyed by plate rather than vehicle id because
- * the seeded bookings only carry a plate — the one identifier both sides of the mock share.
- * `from`/`to` are ISO timestamps.
+ * A window during which a vehicle is spoken for. Carries the plate as well as the id because
+ * the availability strip on the vehicle page matches on plate. `from`/`to` are ISO timestamps.
  */
 export interface BookedInterval {
   reference: string
+  vehicleId: string
   plate: string
   from: string
   to: string
 }
 
 /**
- * What the bookings endpoint returns: the two display lists the table renders, plus the
- * machine-readable schedule that availability checks run against.
+ * The bookings list as the table renders it: the two display lists, plus the machine-readable
+ * schedule that availability checks run against. Derived from the API's bookings in the mapper.
  */
 export interface BookingLists {
   upcoming: BookingTuple[]
@@ -97,20 +98,8 @@ export interface BookingLists {
   schedule: BookedInterval[]
 }
 
-/** Renter on the booking — either picked from the customer book or typed in fresh. */
-export interface BookingCustomer {
-  /** Set when picked from the customer book; absent means this booking creates the customer. */
-  id?: string
-  name: string
-  email: string
-  phone: string
-  dateOfBirth?: string
-  address?: string
-  licenceNumber: string
-  licenceExpiry?: string
-  licenceDocument?: UploadedFile
-  insuranceDocument?: UploadedFile
-}
+/** Renter on the booking, as typed into the form. */
+export type BookingCustomer = CustomerInput
 
 /**
  * Named on the rental agreement alongside the main renter. The rate is per driver rather than
@@ -138,18 +127,20 @@ export interface BookingFee {
 export const BOOKING_VERIFICATIONS = ['identity', 'background', 'insurance'] as const
 export type BookingVerification = (typeof BOOKING_VERIFICATIONS)[number]
 
-/** Payload for creating a booking — the server assigns reference/status/createdAt. */
+/**
+ * Payload for creating a booking. The server assigns the reference and status, prices the
+ * rental from the vehicle's current rate card, and snapshots the vehicle's name and plate.
+ */
 export interface BookingInput {
+  /**
+   * Set when the renter was picked from the customer book: the booking links to that customer
+   * and refreshes their details from `customer`. Absent, the email decides — a known email
+   * links to its customer, a new one creates them.
+   */
+  customerId?: string
   customer: BookingCustomer
   vehicleId: string
   rateOptionId: string
-  /**
-   * Vehicle name and plate are denormalized onto the booking so the list can render a row
-   * without joining against the fleet — and so the row still reads correctly after the
-   * vehicle is renamed or archived.
-   */
-  vehicleName: string
-  vehiclePlate: string
   pickupLocation: string
   returnLocation: string
   /** ISO timestamps. */
@@ -158,13 +149,46 @@ export interface BookingInput {
   additionalDrivers: AdditionalDriver[]
   fees: BookingFee[]
   verifications: BookingVerification[]
-  /** Snapshot of the charge at booking time — rates can change afterwards. */
-  total: number
 }
 
-export interface Booking extends BookingInput {
+/** The rate option as it was when booked — vehicle rate cards change afterwards. */
+export interface BookingRate {
+  optionId: string
+  label: string
+  basis: BillingBasis
+  rate: number
+  /** Billable units of the rate (3 days, 2 weeks, 1 fixed block). */
+  units: number
+  /** Across the whole rental; `null` means unlimited. */
+  includedMiles: number | null
+}
+
+/** The quote as stored with the booking. The lines sum to `total`; the deposit is held, not charged. */
+export interface BookingQuote {
+  rentalSubtotal: number
+  drivers: number
+  fees: number
+  subtotal: number
+  taxRatePct: number
+  tax: number
+  total: number
+  deposit: number
+}
+
+export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 'vehicleId'> {
+  id: string
   reference: string
   status: BookingStatus
+  customer: Customer
+  /**
+   * The vehicle's name and plate are copied onto the booking so the row still reads correctly
+   * after the vehicle is renamed or archived. `vehicleId` is absent once the vehicle is deleted.
+   */
+  vehicleId?: string
+  vehicleName: string
+  vehiclePlate: string
+  rate: BookingRate
+  pricing: BookingQuote
   createdAt: string
 }
 
@@ -276,7 +300,8 @@ export interface BookingDetails {
   counter: string
   agent: string
   days: number
-  includedMiles: number
+  /** Across the whole rental; `null` means unlimited. */
+  includedMiles: number | null
 
   vehicleId?: string
   vehicleName: string

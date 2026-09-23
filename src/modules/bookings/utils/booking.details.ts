@@ -235,13 +235,25 @@ function buildEvents(
 }
 
 /**
- * Renters in the customer book bring their history with them. Anyone else is known only through
- * this one booking, so their contact details are whatever the booking captured — blank for a
- * seeded row — and their lifetime value is this rental alone.
+ * An API booking carries its renter. Their history (rental count, lifetime value) has no
+ * endpoint yet, so it reads as this one booking. Seeded rows fall back to the customer seed,
+ * or to a renter known only through this booking.
  */
 function buildRenter(name: string, bookingTotal: number, booking?: Booking): BookingRenter {
-  const seeded = CUSTOMERS.find((c) => c[0] === name)
+  if (booking) {
+    return {
+      id: booking.customer.id,
+      name: booking.customer.name,
+      email: booking.customer.email,
+      phone: booking.customer.phone,
+      licenceNumber: booking.customer.licenceNumber,
+      rentals: 1,
+      lifetimeValue: booking.pricing.total,
+      since: new Date(booking.createdAt).getFullYear(),
+    }
+  }
 
+  const seeded = CUSTOMERS.find((c) => c[0] === name)
   if (seeded) {
     return {
       name,
@@ -256,61 +268,72 @@ function buildRenter(name: string, bookingTotal: number, booking?: Booking): Boo
   }
 
   return {
-    id: booking?.customer.id,
     name,
-    email: booking?.customer.email ?? '',
-    phone: booking?.customer.phone ?? '',
-    licenceNumber: booking?.customer.licenceNumber ?? '',
+    email: '',
+    phone: '',
+    licenceNumber: '',
     rentals: 1,
-    lifetimeValue: booking?.total ?? bookingTotal,
+    lifetimeValue: bookingTotal,
     since: new Date().getFullYear(),
   }
 }
 
+/** The stored quote, line by line — it already sums to the total, so nothing is reconciled. */
+function exactCharges(booking: Booking): BookingChargeLine[] {
+  const { pricing, rate, additionalDrivers, fees } = booking
+  return [
+    { key: 'baseRate', meta: { rate: rate.rate, days: rate.units }, amount: pricing.rentalSubtotal },
+    ...(additionalDrivers.length > 0
+      ? [
+          {
+            key: 'additionalDriver' as const,
+            meta: { count: additionalDrivers.length, rate: additionalDrivers[0].pricePerDay },
+            amount: pricing.drivers,
+          },
+        ]
+      : []),
+    ...fees.map((fee) => ({ key: 'extraFee' as const, label: fee.label, amount: fee.amount })),
+    { key: 'taxes', meta: { pct: pricing.taxRatePct }, amount: pricing.tax },
+  ]
+}
+
 /**
- * Assembles everything the details page shows from a list row, enriched with the fleet, customer
- * and branch seeds. `booking` is passed for rentals created this session, whose drivers and fees
- * are known exactly rather than inferred.
+ * Assembles everything the details page shows. With `booking` (an API booking), the window,
+ * charges, deposit and renter are exact; without one — a seeded tuple — they're inferred from
+ * the row's display text and the fleet, customer and branch seeds.
  *
- * Mock scaffolding: the seeded tuples carry display text only, so the timeline, counter and audit
- * trail are derived from the rental window. Replace wholesale once /bookings/{ref} exists.
+ * Mock scaffolding either way: the timeline, payment state, agreement and audit trail have no
+ * endpoints yet, so they're derived from the status and the rental window.
  */
 export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): BookingDetails {
   const [customerName, reference, vehicleName, plate, window, , location, status, totalText] = tuple
 
-  const dates = rentalWindowDates(window)
+  const dates = booking
+    ? { from: new Date(booking.pickupAt), to: new Date(booking.returnAt) }
+    : rentalWindowDates(window)
   const pickup = dates ? dates.from : new Date()
   const dropoff = dates ? dates.to : addDays(pickup, 1)
   const days = Math.max(1, Math.round((dropoff.getTime() - pickup.getTime()) / 86_400_000))
 
   const vehicle = findVehicle(plate)
   const branch = MOCK_BRANCHES.find((b) => b.name === location)
-  const total = Math.abs(parseBookingTotal(totalText))
-  const taxRatePct = vehicle?.fees.taxRatePct ?? DEFAULT_TAX_PCT
-
-  const drivers = booking?.additionalDrivers ?? []
-  const extras: BookingChargeLine[] = [
-    ...(drivers.length > 0
-      ? [
-          {
-            key: 'additionalDriver' as const,
-            meta: { count: drivers.length, rate: drivers[0].pricePerDay },
-            amount: drivers.reduce((sum, d) => sum + d.pricePerDay * days, 0),
-          },
-        ]
-      : []),
-    ...(booking?.fees ?? []).map((fee) => ({ key: 'extraFee' as const, label: fee.label, amount: fee.amount })),
-  ]
+  const total = booking ? booking.pricing.total : Math.abs(parseBookingTotal(totalText))
+  const taxRatePct = booking?.pricing.taxRatePct ?? vehicle?.fees.taxRatePct ?? DEFAULT_TAX_PCT
 
   const stages = buildStages(status, pickup, dropoff)
   const stageIndex = STAGE_INDEX[status] ?? 1
   const renter = buildRenter(customerName, total, booking)
   const agent = branch?.manager ?? ''
-  const deposit = vehicle?.fees.deposit ?? 350
+  const deposit = booking?.pricing.deposit ?? vehicle?.fees.deposit ?? 350
   const rateOption = vehicle?.rateOptions.find((o) => o.basis === 'day')
-  const listDailyRate = rateOption?.rate ?? Math.round(total / days)
+  const listDailyRate =
+    booking && booking.rate.basis === 'day' ? booking.rate.rate : (rateOption?.rate ?? Math.round(total / days))
   const card = `Visa · ${4000 + (sequence(reference) % 1000)}`
   const payment = buildPayment(status, total, deposit, card, stages[1].at ?? pickup.toISOString(), stages[4].state === 'done')
+
+  const includedMiles = booking
+    ? booking.rate.includedMiles
+    : (rateOption?.includedMiles ?? DEFAULT_MILES_PER_DAY) * days
 
   return {
     reference,
@@ -327,9 +350,9 @@ export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): Boo
     counter: `${(sequence(reference) % 3) + 1}`,
     agent,
     days,
-    includedMiles: (rateOption?.includedMiles ?? DEFAULT_MILES_PER_DAY) * days,
+    includedMiles,
 
-    vehicleId: vehicle?.id,
+    vehicleId: booking?.vehicleId ?? vehicle?.id,
     vehicleName,
     vehiclePlate: plate,
     vehicleImage: vehicle?.photos[0]?.url,
@@ -338,7 +361,7 @@ export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): Boo
       : location,
     listDailyRate,
 
-    charges: buildCharges(total, days, listDailyRate, taxRatePct, extras),
+    charges: booking ? exactCharges(booking) : buildCharges(total, days, listDailyRate, taxRatePct, []),
     total,
     payment,
     agreement: buildAgreement(stageIndex, stages[1].at),

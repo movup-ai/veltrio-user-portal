@@ -53,6 +53,7 @@ function VehicleCover({ src }: { src?: string }) {
 export function BookingDetailsPage() {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
+  const { t: tVehicles } = useTranslation('vehicles')
   const format = useFormatters()
   const navigate = useNavigate()
   const { bookingId } = useParams()
@@ -151,7 +152,13 @@ export function BookingDetailsPage() {
               }
               rows={[
                 { label: t('details.return.duration'), value: t('details.return.days', { count: booking.days }) },
-                { label: t('details.return.mileageCap'), value: t('details.return.milesIncluded', { count: booking.includedMiles }) },
+                {
+                  label: t('details.return.mileageCap'),
+                  value:
+                    booking.includedMiles == null
+                      ? tVehicles('rateOptions.unlimitedMiles')
+                      : t('details.return.milesIncluded', { count: booking.includedMiles }),
+                },
               ]}
             />
           </div>

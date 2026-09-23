@@ -75,6 +75,8 @@
     "hint": "PDF o imagen, hasta {{size}} MB",
     "remove": "Eliminar {{label}}",
     "tooLarge": "Archivo demasiado grande",
-    "tooLargeDescription": "Cada archivo debe pesar menos de {{size}} MB."
+    "tooLargeDescription": "Cada archivo debe pesar menos de {{size}} MB.",
+    "preview": "Vista previa de {{label}}",
+    "download": "Descargar {{label}}"
   }
 }

@@ -296,6 +296,9 @@
       "pickupTimeLong": "Pickup time",
       "returnTimeLong": "Return time",
       "locationPlaceholder": "Select a branch",
+      "locationLoading": "Loading branches…",
+      "locationLoadFailed": "Couldn't load branches.",
+      "locationEmpty": "No branches yet. Add one under Settings before taking a booking.",
       "customerName": "Full name",
       "customerNamePlaceholder": "Search or type a name",
       "customerEmail": "Email",
@@ -313,14 +316,13 @@
       "pick": "Pick a vehicle",
       "availableCount_one": "{{count}} available",
       "availableCount_other": "{{count}} available",
-      "perUnit": "{{price}}/day",
       "bookedUntil": "Booked until {{date}}",
-      "forDays_one": "{{price}} for {{count}} day",
-      "forDays_other": "{{price}} for {{count}} days",
       "loading": "Loading available vehicles…",
       "loadError": "We couldn't load the fleet.",
       "noneTitle": "No vehicles at this branch",
-      "noneDescription": "Nothing is on the forecourt here. Try another pickup location."
+      "noneDescription": "Nothing is on the forecourt here. Try another pickup location.",
+      "forUnits_one": "{{price}} for {{count}} {{unit}}",
+      "forUnits_other": "{{price}} for {{count}} {{unit}}s"
     },
     "rate": {
       "hint": "Priced for the trip length you entered.",
@@ -375,7 +377,8 @@
       "saved": "Draft saved",
       "savedDescription": "Pick this booking back up from New booking.",
       "restored": "Draft restored",
-      "restoredDescription": "We brought back the booking you were part-way through."
+      "restoredDescription": "We brought back the booking you were part-way through.",
+      "savedWithoutDocuments": "Saved. The licence and insurance scans were not kept — please attach them again when you resume."
     },
     "nav": {
       "previousStep": "Back",
@@ -387,7 +390,15 @@
       "licence": "Driving licence",
       "licenceHint": "Front of the card, or a clear photo",
       "insurance": "Insurance document",
-      "insuranceHint": "Policy certificate or cover note"
+      "insuranceHint": "Policy certificate or cover note",
+      "uploadFailed": "Booking created, but a document did not upload",
+      "uploadFailedDescription": "{{documents}} could not be attached. You can upload it again from the renter's record.",
+      "onFile": "Already on file · {{size}}",
+      "view": "View {{name}}",
+      "replace": "Replace {{name}}",
+      "openFailed": "Could not open the document",
+      "replacedHint": "Attaching a new file replaces the one on file.",
+      "download": "Download {{name}}"
     },
     "verification": {
       "hint": "Checks the branch requires before the keys change hands."
@@ -400,14 +411,11 @@
       "remove": "Remove driver {{index}}",
       "name": "Full name",
       "licence": "Licence number",
-      "pricing": "{{perDay}}/day each · {{total}} per driver",
       "nameFor": "Driver {{index}} full name",
       "licenceFor": "Driver {{index}} licence number",
       "rate": "Daily rate",
       "rateFor": "Driver {{index}} daily rate",
-      "perDaySuffix": "/day",
-      "rowTotal_one": "{{total}} for {{count}} day",
-      "rowTotal_other": "{{total}} for {{count}} days"
+      "perDaySuffix": "/day"
     },
     "fees": {
       "hint": "One-off charges added to this booking — cleaning, a negotiated add-on, anything outside the standard rate.",

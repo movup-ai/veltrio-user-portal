@@ -16,7 +16,7 @@ import { toast } from '@/components/ui/use-toast'
 import { EMPTY_DATE_RANGE, fromDateValue, type DateRange } from '@/components/ui/date-range-picker'
 import { useFormatters } from '@/i18n'
 import { useDomainLabels } from '@/i18n/domain'
-import { MOCK_BRANCHES } from '@/modules/locations/mock/location.mock'
+import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import { useBookings } from '@/modules/bookings/hooks/use-bookings'
 import {
   BOOKING_ATTENTION_STATUSES,
@@ -35,13 +35,13 @@ import {
 } from '@/modules/bookings/types/booking.types'
 import {
   EMPTY_BOOKING_LISTS,
-  MOCK_TODAY,
   allBookings,
   bookingMakes,
   bookingPickupOrdinal,
   bookingsForTab,
   filterBookings,
   sortBookings,
+  todayOrdinal,
 } from '@/modules/bookings/utils/booking.filters'
 import { bookingColumns, bookingRow, downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils/booking.utils'
 
@@ -52,6 +52,7 @@ export function BookingsPage() {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const domain = useDomainLabels()
+  const { names: locationNames } = useLocationNames()
   const format = useFormatters()
   const navigate = useNavigate()
 
@@ -153,7 +154,8 @@ export function BookingsPage() {
 
   // Stats describe the whole book of business, not the current filters — same contract as the fleet stats on Vehicles.
   const openBookings = lists.upcoming
-  const startingSoon = openBookings.filter((b) => bookingPickupOrdinal(b) - MOCK_TODAY <= STARTING_SOON_DAYS).length
+  const today = todayOrdinal()
+  const startingSoon = openBookings.filter((b) => bookingPickupOrdinal(b) - today <= STARTING_SOON_DAYS).length
   const bookedValue = openBookings
     .filter((b) => b[7] === 'Confirmed')
     .reduce((sum, b) => sum + parseBookingTotal(b[8]), 0)
@@ -231,10 +233,10 @@ export function BookingsPage() {
           },
           {
             label: t('filters.location'),
-            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: MOCK_BRANCHES.length }) : locationFilter,
+            value: locationFilter === 'All' ? tCommon('filters.allCount', { count: locationNames.length }) : locationFilter,
             options: [
               { value: 'All', label: tCommon('filters.all') },
-              ...MOCK_BRANCHES.map((l) => ({ value: l.name, label: l.name })),
+              ...locationNames.map((name) => ({ value: name, label: name })),
             ],
             onChange: setLocationFilter,
           },

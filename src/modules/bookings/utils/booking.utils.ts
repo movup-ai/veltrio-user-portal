@@ -18,10 +18,10 @@ export function bookingColumns(t: TFunction<'bookings'>) {
 }
 
 /**
- * A BookingTuple stores pre-formatted display strings, and the seeded ones are English
- * ("Sep 14 · 09:30 → Sep 18", "4 days", "$1,240"). New bookings are rendered the same way so
- * a created row is indistinguishable from a seeded one — and so the ordinal/total parsers in
- * booking.filters.ts keep working. Both go away once bookings arrive as real objects.
+ * A BookingTuple stores pre-formatted display strings, and the dashboard's seeded ones are
+ * English ("Sep 14 · 09:30 → Sep 18", "4 days", "$1,240"). API bookings are rendered the same
+ * way so the ordinal/total parsers in booking.filters.ts keep working. The tuple goes away once
+ * the list page reads Booking objects directly.
  */
 const TUPLE_LANGUAGE = 'en'
 
@@ -51,7 +51,7 @@ export function bookingToTuple(b: Booking): BookingTuple {
     formatRentalDuration(b.pickupAt, b.returnAt),
     b.pickupLocation,
     b.status,
-    formatCurrencyIn(TUPLE_LANGUAGE, b.total),
+    formatCurrencyIn(TUPLE_LANGUAGE, b.pricing.total),
   ]
 }
 

@@ -13,17 +13,18 @@ import { parseRentalWindow } from './booking.schedule'
 import { parseBookingTotal } from './booking.utils'
 
 /**
- * A month·day ordinal — enough to diff two dates and compare against "today" without a year.
- * Deliberately *not* real dates: the list's Today tab and pickup presets are anchored to the
- * seed data's own "today" (below) so the tabs stay meaningful whenever the app is run.
- * Availability checks need genuine timestamps and use booking.schedule.ts instead.
+ * A month·day ordinal — enough to diff two dates and compare against "today" without a year,
+ * which is all a tuple's "Sep 14 · 09:30 → Sep 18" window carries. A rental this time next
+ * year reads as today; that goes away with the tuple. Availability checks need genuine
+ * timestamps and use booking.schedule.ts instead.
  */
 function ordinal(month: number, day: number): number {
   return month * 31 + day
 }
 
-/** The mock data set is pinned to this day — every "upcoming" booking is relative to it. */
-export const MOCK_TODAY = ordinal(8, 14)
+export function todayOrdinal(now = new Date()): number {
+  return ordinal(now.getMonth(), now.getDate())
+}
 
 /** "Sep 14 · 09:30 → Sep 18" → `[pickup, dropoff]` ordinals. A single date yields the same value twice. */
 function windowOrdinals(rentalWindow: string): [number, number] {
@@ -63,7 +64,7 @@ export function allBookings(lists: BookingLists): BookingTuple[] {
 export function bookingsForTab(tab: BookingTab, lists: BookingLists): BookingTuple[] {
   switch (tab) {
     case 'Today':
-      return lists.upcoming.filter((b) => bookingPickupOrdinal(b) === MOCK_TODAY)
+      return lists.upcoming.filter((b) => bookingPickupOrdinal(b) === todayOrdinal())
     case 'Recent activity':
       return lists.recent
     case 'Overdue':
