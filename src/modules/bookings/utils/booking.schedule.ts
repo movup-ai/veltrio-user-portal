@@ -1,4 +1,4 @@
-import type { BookedInterval, Booking, BookingTuple } from '../types/booking.types'
+import type { BookedInterval } from '../types/booking.types'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -47,7 +47,10 @@ export function parseRentalWindow(rentalWindow: string): RentalWindowParts | nul
  * time (rentals come back at the hour they went out), and a window that wraps new year rolls
  * its end date forward.
  */
-export function rentalWindowDates(rentalWindow: string, year = new Date().getFullYear()): { from: Date; to: Date } | null {
+export function rentalWindowDates(
+  rentalWindow: string,
+  year = new Date().getFullYear(),
+): { from: Date; to: Date } | null {
   const parts = parseRentalWindow(rentalWindow)
   if (!parts) return null
 
@@ -58,20 +61,6 @@ export function rentalWindowDates(rentalWindow: string, year = new Date().getFul
   return { from, to }
 }
 
-/** Seeded bookings → intervals. Rows whose window can't be parsed are dropped rather than guessed at. */
-export function scheduleFromTuples(tuples: BookingTuple[]): BookedInterval[] {
-  return tuples.flatMap((b) => {
-    const dates = rentalWindowDates(b[4])
-    if (!dates) return []
-    return [{ reference: b[1], plate: b[3], from: dates.from.toISOString(), to: dates.to.toISOString() }]
-  })
-}
-
-/** Bookings created this session already carry real timestamps — no parsing needed. */
-export function scheduleFromBookings(bookings: Booking[]): BookedInterval[] {
-  return bookings.map((b) => ({ reference: b.reference, plate: b.vehiclePlate, from: b.pickupAt, to: b.returnAt }))
-}
-
 /**
  * Half-open comparison: a rental ending exactly when the next begins is not a clash. No
  * turnaround buffer is applied — add one here if the business wants cleaning time enforced.
@@ -80,20 +69,16 @@ export function intervalsOverlap(aFrom: string, aTo: string, bFrom: string, bTo:
   return Date.parse(aFrom) < Date.parse(bTo) && Date.parse(bFrom) < Date.parse(aTo)
 }
 
-/** Every booking on this plate that clashes with the requested window, earliest first. */
-export function conflictsForPlate(
+/** Every booking on this vehicle that clashes with the requested window, earliest first. */
+export function conflictsForVehicle(
   schedule: BookedInterval[],
-  plate: string,
+  vehicleId: string,
   from: string,
   to: string,
 ): BookedInterval[] {
   return schedule
-    .filter((i) => i.plate === plate && intervalsOverlap(from, to, i.from, i.to))
+    .filter((i) => i.vehicleId === vehicleId && intervalsOverlap(from, to, i.from, i.to))
     .sort((a, b) => Date.parse(a.from) - Date.parse(b.from))
-}
-
-export function plateIsFree(schedule: BookedInterval[], plate: string, from: string, to: string): boolean {
-  return conflictsForPlate(schedule, plate, from, to).length === 0
 }
 
 /** Just this plate's intervals — what the availability strip needs to shade its days. */

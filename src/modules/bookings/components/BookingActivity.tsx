@@ -28,7 +28,13 @@ export function BookingActivity({ events }: BookingActivityProps) {
   const format = useFormatters()
 
   function detailFor(event: BookingEventEntry): string {
-    const when = format.date(event.at, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+    const when = format.date(event.at, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
     const meta = event.meta ?? {}
 
     // Blank parts are dropped, not just missing ones — a renter with no licence on file would

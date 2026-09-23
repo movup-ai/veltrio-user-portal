@@ -7,10 +7,18 @@ interface ErrorStateProps {
   title?: string
   description?: string
   onRetry?: () => void
+  /** Overrides "Retry" where the action moves on rather than trying again. */
+  actionLabel?: string
   className?: string
 }
 
-export function ErrorState({ title, description, onRetry, className }: ErrorStateProps) {
+export function ErrorState({
+  title,
+  description,
+  onRetry,
+  actionLabel,
+  className,
+}: ErrorStateProps) {
   const { t } = useTranslation('common')
 
   return (
@@ -30,7 +38,7 @@ export function ErrorState({ title, description, onRetry, className }: ErrorStat
       </div>
       {onRetry && (
         <Button variant="outline" onClick={onRetry}>
-          {t('actions.retry')}
+          {actionLabel ?? t('actions.retry')}
         </Button>
       )}
     </div>

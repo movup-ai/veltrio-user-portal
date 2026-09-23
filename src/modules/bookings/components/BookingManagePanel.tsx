@@ -31,7 +31,13 @@ export function BookingManagePanel({ onAction }: BookingManagePanelProps) {
       <div className="mb-3.5 flex flex-wrap items-start justify-between gap-3">
         <PanelHeading title={t('details.manage.title')} description={t('details.manage.subtitle')} />
         {/* Out of the grid entirely — cancelling isn't one of four equivalent edits. */}
-        <Button type="button" variant="destructive" size="sm" onClick={() => onAction('cancel')} className="shrink-0 gap-1.5">
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          onClick={() => onAction('cancel')}
+          className="shrink-0 gap-1.5"
+        >
           <CircleX className="size-3.5" aria-hidden />
           {t('details.manage.cancel')}
         </Button>
@@ -48,7 +54,10 @@ export function BookingManagePanel({ onAction }: BookingManagePanelProps) {
             <span className="bg-surface-3 text-fg-2 group-hover:bg-primary group-hover:text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-[9px] transition-colors">
               <Icon className="size-4" aria-hidden />
             </span>
-            <span className="min-w-0 text-[12.5px] leading-snug font-semibold" style={{ textWrap: 'balance' }}>
+            <span
+              className="min-w-0 text-[12.5px] leading-snug font-semibold"
+              style={{ textWrap: 'balance' }}
+            >
               {t(`details.manage.${key}`)}
             </span>
           </button>

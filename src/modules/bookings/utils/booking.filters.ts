@@ -13,32 +13,45 @@ import { parseRentalWindow } from './booking.schedule'
 import { parseBookingTotal } from './booking.utils'
 
 /**
- * A month·day ordinal — enough to diff two dates and compare against "today" without a year.
- * Deliberately *not* real dates: the list's Today tab and pickup presets are anchored to the
- * seed data's own "today" (below) so the tabs stay meaningful whenever the app is run.
- * Availability checks need genuine timestamps and use booking.schedule.ts instead.
+ * A day number that can be compared and differenced. Built from a real date where the booking
+ * has one, so a rental this time next year is a different day from today and a New Year
+ * crossing is still counted correctly.
  */
-function ordinal(month: number, day: number): number {
-  return month * 31 + day
+const MS_PER_DAY = 86_400_000
+
+function dayNumber(iso: string): number {
+  const at = Date.parse(iso)
+  return Number.isNaN(at) ? Number.NaN : Math.floor(at / MS_PER_DAY)
 }
 
-/** The mock data set is pinned to this day — every "upcoming" booking is relative to it. */
-export const MOCK_TODAY = ordinal(8, 14)
+export function todayOrdinal(now = new Date()): number {
+  return dayNumber(now.toISOString())
+}
 
-/** "Sep 14 · 09:30 → Sep 18" → `[pickup, dropoff]` ordinals. A single date yields the same value twice. */
-function windowOrdinals(rentalWindow: string): [number, number] {
-  const parts = parseRentalWindow(rentalWindow)
+/** `[pickup, dropoff]` as comparable day numbers, from real timestamps where available. */
+function windowDays(b: BookingTuple): [number, number] {
+  const [pickupAt, returnAt] = [b[9], b[10]]
+  if (pickupAt && returnAt) return [dayNumber(pickupAt), dayNumber(returnAt)]
+
+  // Seeded row: fall back to the year-less text, pinned to the current year so the two ends
+  // stay comparable with each other and with today.
+  const parts = parseRentalWindow(b[4])
   if (!parts) return [Number.NaN, Number.NaN]
-  return [ordinal(parts.fromMonth, parts.fromDay), ordinal(parts.toMonth, parts.toDay)]
+  const year = new Date().getFullYear()
+  const from = Date.UTC(year, parts.fromMonth, parts.fromDay)
+  let to = Date.UTC(year, parts.toMonth, parts.toDay)
+  // A window that wraps new year ends in the next one.
+  if (to < from) to = Date.UTC(year + 1, parts.toMonth, parts.toDay)
+  return [Math.floor(from / MS_PER_DAY), Math.floor(to / MS_PER_DAY)]
 }
 
 export function bookingPickupOrdinal(b: BookingTuple): number {
-  return windowOrdinals(b[4])[0]
+  return windowDays(b)[0]
 }
 
 /** Rental length in whole days — always at least 1, so same-day rentals still land in a band. */
 export function bookingDurationDays(b: BookingTuple): number {
-  const [pickup, dropoff] = windowOrdinals(b[4])
+  const [pickup, dropoff] = windowDays(b)
   if (Number.isNaN(pickup) || Number.isNaN(dropoff)) return 1
   return Math.max(1, dropoff - pickup)
 }
@@ -63,7 +76,7 @@ export function allBookings(lists: BookingLists): BookingTuple[] {
 export function bookingsForTab(tab: BookingTab, lists: BookingLists): BookingTuple[] {
   switch (tab) {
     case 'Today':
-      return lists.upcoming.filter((b) => bookingPickupOrdinal(b) === MOCK_TODAY)
+      return lists.upcoming.filter((b) => bookingPickupOrdinal(b) === todayOrdinal())
     case 'Recent activity':
       return lists.recent
     case 'Overdue':
@@ -97,17 +110,17 @@ function matchesValueBands(b: BookingTuple, values: BookingFilters['valueBands']
   })
 }
 
-/** `YYYY-MM-DD` → the same month·day ordinal the seeded windows produce. */
+/** `YYYY-MM-DD` → the same day number `windowDays` produces, so the two compare directly. */
 function dateOrdinal(value: string): number {
-  const [, month, day] = value.split('-').map(Number)
-  if (!month || !day) return Number.NaN
-  return ordinal(month - 1, day)
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return Number.NaN
+  return Math.floor(Date.UTC(year, month - 1, day) / MS_PER_DAY)
 }
 
 /**
- * Inclusive at both ends, and blank on either side means unbounded there. Compared on month·day
- * only, so a span crossing new year won't behave — the seeded windows carry no year to compare
- * against. Revisit once bookings come from an API with real dates.
+ * Inclusive at both ends, and blank on either side means unbounded there. Compared on whole
+ * days, so a span crossing new year behaves for any booking carrying real timestamps; the
+ * dashboard's seeded rows are still pinned to the current year by `windowDays`.
  */
 function matchesPickup(b: BookingTuple, range: DateRange): boolean {
   if (!range.from && !range.to) return true

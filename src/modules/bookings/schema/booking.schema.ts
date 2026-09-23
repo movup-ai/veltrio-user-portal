@@ -12,11 +12,16 @@ export function combineDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time || '00:00'}:00`)
 }
 
+/**
+ * A file the counter has picked but not yet sent. It carries the real `File`, which is what
+ * gets uploaded once the booking exists and the renter has a customer id to attach it to.
+ */
 const uploadedFileSchema = z.object({
   id: z.string(),
   name: z.string(),
   url: z.string(),
   size: z.number(),
+  file: z.instanceof(File),
 })
 
 /** RHF's valueAsNumber yields NaN for a cleared numeric input — treat that as "not entered". */
@@ -98,7 +103,15 @@ export type AdditionalDriverValues = z.infer<ReturnType<typeof additionalDriverS
 export type BookingFeeValues = z.infer<ReturnType<typeof bookingFeeSchema>>
 
 export const BOOKING_STEP_FIELDS = {
-  trip: ['pickupLocation', 'returnLocation', 'pickupDate', 'pickupTime', 'returnDate', 'returnTime', 'vehicleId'],
+  trip: [
+    'pickupLocation',
+    'returnLocation',
+    'pickupDate',
+    'pickupTime',
+    'returnDate',
+    'returnTime',
+    'vehicleId',
+  ],
   renter: [
     'customerName',
     'customerEmail',

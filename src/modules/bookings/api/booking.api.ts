@@ -1,73 +1,90 @@
 import { apiClient } from '@/services/api/client'
-import { mockDelay, useMocks } from '@/lib/mock'
-import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '../mock/booking.mock'
-import type { Booking, BookingDetails, BookingInput, BookingLists, BookingTuple } from '../types/booking.types'
+import { locationApi } from '@/modules/locations/api/location.api'
+import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
+import type { ListEnvelope } from '@/lib/pagination'
+import type { BookingInput } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
-import { scheduleFromBookings, scheduleFromTuples } from '../utils/booking.schedule'
 import { bookingToTuple } from '../utils/booking.utils'
+import {
+  toBooking,
+  toBookingLists,
+  toBookingPayload,
+  toInterval,
+  type BookedIntervalWire,
+  type BookingWire,
+} from './booking.mapper'
+
+/** The most `GET /bookings` will return in one call; asking for more is a 422. */
+const LIST_PAGE_SIZE = 100
 
 /**
- * Bookings created this session, newest first. The seed sets stay immutable — a new booking is
- * prepended to "upcoming" as a tuple so the list renders it exactly like a seeded one.
+ * Stops a runaway loop from hammering the API if `total` were ever wrong. 50 pages is 5,000
+ * bookings — far past where this page should have moved to server-side filtering anyway.
  */
-let created: Booking[] = []
-
-/** Seed references run to BK-48228; start clear of them so a new booking never collides. */
-let nextReferenceNumber = 48230
-
-function nextReference(): string {
-  return `BK-${nextReferenceNumber++}`
-}
-
-function mockList(): BookingLists {
-  const createdTuples: BookingTuple[] = created.map(bookingToTuple)
-  return {
-    upcoming: [...createdTuples, ...BOOKINGS_UPCOMING],
-    recent: BOOKINGS_RECENT,
-    // Built from the bookings themselves (not the tuples) where possible, so session-created
-    // rentals keep their exact timestamps instead of being round-tripped through display text.
-    schedule: [
-      ...scheduleFromBookings(created),
-      ...scheduleFromTuples([...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]),
-    ],
-  }
-}
+const MAX_LIST_PAGES = 50
 
 /**
- * Thin wrapper around the not-yet-built FastAPI bookings endpoints. Mock-backed writes live in
- * memory (gated by VITE_USE_MOCKS, see .env.example) so the module is explorable before the
- * backend exists — swap this out once /bookings is live.
+ * The FastAPI /bookings endpoints. Wire shapes are translated in booking.mapper.ts — nothing
+ * above this file sees the API's format.
  */
 export const bookingApi = {
-  list: () => {
-    if (useMocks) return mockDelay(mockList())
-    return apiClient.get<BookingLists>('/bookings').then((r) => r.data)
+  /**
+   * Every booking, not just the first page: the list filters, sorts and exports client-side,
+   * so a partial set would silently drop rows from the table, stats and CSV. Sequential
+   * because the first response is what says how many pages there are — the reason to move
+   * filtering server-side once a tenant's book grows.
+   */
+  list: async () => {
+    const first = await apiClient.get<ListEnvelope<BookingWire>>('/bookings', {
+      params: { limit: LIST_PAGE_SIZE, offset: 0 },
+    })
+    const wires = [...first.data.items]
+
+    const pages = Math.min(Math.ceil(first.data.total / LIST_PAGE_SIZE), MAX_LIST_PAGES)
+    for (let page = 1; page < pages; page++) {
+      const next = await apiClient.get<ListEnvelope<BookingWire>>('/bookings', {
+        params: { limit: LIST_PAGE_SIZE, offset: page * LIST_PAGE_SIZE },
+      })
+      wires.push(...next.data.items)
+    }
+
+    return toBookingLists(wires.map(toBooking))
   },
 
-  detail: (reference: string) => {
-    if (useMocks) {
-      const lists = mockList()
-      const tuple = [...lists.upcoming, ...lists.recent].find((b) => b[1] === reference)
-      if (!tuple) return Promise.reject(new Error(`Booking ${reference} not found`))
-      // Session-created bookings pass their own record through, so their drivers and fees are
-      // itemized exactly instead of being inferred from the row's display text.
-      return mockDelay(buildBookingDetails(tuple, created.find((b) => b.reference === reference)))
-    }
-    return apiClient.get<BookingDetails>(`/bookings/${reference}`).then((r) => r.data)
+  /**
+   * The details page still reads the mock-era shape: the API's booking is passed through
+   * `buildBookingDetails`, which keeps the drivers, fees and renter exact and derives the
+   * timeline, payment and audit trail — those have no endpoints yet.
+   *
+   * The vehicle and the branch are fetched alongside it. Without them the page fell back to
+   * the mock seeds, so a real car showed no photo and a real branch no address or agent — the
+   * live data was there to be asked for, just never asked for.
+   */
+  detail: async (reference: string) => {
+    const response = await apiClient.get<BookingWire>(`/bookings/${reference}`)
+    const booking = toBooking(response.data)
+
+    // Neither is worth failing the page over: the details still render without them, so a
+    // missing vehicle (deleted) or a failed branch lookup degrades rather than throws.
+    const [vehicle, branches] = await Promise.all([
+      booking.vehicleId
+        ? vehicleApi.get(booking.vehicleId).catch(() => undefined)
+        : Promise.resolve(undefined),
+      locationApi.list('name').catch(() => []),
+    ])
+
+    return buildBookingDetails(bookingToTuple(booking), booking, {
+      vehicle,
+      branch: branches.find((b) => b.name === booking.pickupLocation),
+    })
   },
 
-  create: (input: BookingInput) => {
-    if (useMocks) {
-      // Every new booking starts unconfirmed: the deposit hasn't been taken yet.
-      const booking: Booking = {
-        ...input,
-        reference: nextReference(),
-        status: 'Deposit due',
-        createdAt: new Date().toISOString(),
-      }
-      created = [booking, ...created]
-      return mockDelay(booking)
-    }
-    return apiClient.post<Booking>('/bookings', input).then((r) => r.data)
-  },
+  create: (input: BookingInput) =>
+    apiClient.post<BookingWire>('/bookings', toBookingPayload(input)).then((r) => toBooking(r.data)),
+
+  /** Every live booking touching the window — what the form greys taken vehicles out with. */
+  schedule: (from: string, to: string) =>
+    apiClient
+      .get<BookedIntervalWire[]>('/bookings/schedule', { params: { from, to } })
+      .then((r) => r.data.map(toInterval)),
 }

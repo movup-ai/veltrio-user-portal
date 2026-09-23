@@ -16,7 +16,9 @@ function Line({ label, value, mono }: { label: string; value: string; mono?: boo
     <div className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-fg-3 shrink-0 text-[13px]">{label}</span>
       {value ? (
-        <span className={`min-w-0 truncate text-[13px] font-semibold ${mono ? 'font-mono text-[12px]' : ''}`}>{value}</span>
+        <span className={`min-w-0 truncate text-[13px] font-semibold ${mono ? 'font-mono text-[12px]' : ''}`}>
+          {value}
+        </span>
       ) : (
         <span className="text-fg-4 text-[13px]">—</span>
       )}
@@ -45,7 +47,8 @@ export function BookingRenterCard({ renter, onOpenProfile }: BookingRenterCardPr
         <span className="min-w-0">
           <span className="block truncate text-[14px] font-semibold">{renter.name}</span>
           <span className="text-fg-4 block text-[11.5px]">
-            {t('details.renter.since', { year: renter.since })} · {t('details.renter.rentals', { count: renter.rentals })}
+            {t('details.renter.since', { year: renter.since })} ·{' '}
+            {t('details.renter.rentals', { count: renter.rentals })}
           </span>
         </span>
       </div>

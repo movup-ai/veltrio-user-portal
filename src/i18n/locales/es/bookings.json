@@ -16,7 +16,8 @@
       "Upcoming": "Próximas",
       "Today": "Hoy",
       "Recent activity": "Actividad reciente",
-      "Overdue": "Vencidas"
+      "Overdue": "Vencidas",
+      "Drafts": "Borradores"
     },
     "sort": {
       "label": "Ordenar reservas",
@@ -40,7 +41,19 @@
       "expectedRevenueNote": "Confirmado, aún sin facturar",
       "needsAttention": "Requiere atención",
       "needsAttentionNote": "{{awaitingId}} pendientes de identificación · {{depositDue}} depósito pendiente"
-    }
+    },
+    "drafts": {
+      "tab": "Borradores",
+      "savedColumn": "Guardado",
+      "noCustomer": "Sin cliente aún",
+      "noDates": "Sin fechas aún",
+      "resume": "Retomar borrador",
+      "discard": "Descartar borrador"
+    },
+    "draftsNote": "{{count}} borrador guardado",
+    "draftsNote_other": "{{count}} borradores guardados",
+    "draftsEmptyTitle": "Sin borradores guardados",
+    "draftsEmptyDescription": "Comience una reserva y elija Guardar borrador para retomarla después."
   },
   "filters": {
     "status": "Estado",
@@ -296,6 +309,9 @@
       "pickupTimeLong": "Hora de recogida",
       "returnTimeLong": "Hora de devolución",
       "locationPlaceholder": "Seleccione una sucursal",
+      "locationLoading": "Cargando sucursales…",
+      "locationLoadFailed": "No se pudieron cargar las sucursales.",
+      "locationEmpty": "Aún no hay sucursales. Agregue una en Configuración antes de tomar una reserva.",
       "customerName": "Nombre completo",
       "customerNamePlaceholder": "Busque o escriba un nombre",
       "customerEmail": "Correo electrónico",
@@ -313,14 +329,13 @@
       "pick": "Elija un vehículo",
       "availableCount_one": "{{count}} disponible",
       "availableCount_other": "{{count}} disponibles",
-      "perUnit": "{{price}}/día",
       "bookedUntil": "Reservado hasta el {{date}}",
-      "forDays_one": "{{price}} por {{count}} día",
-      "forDays_other": "{{price}} por {{count}} días",
       "loading": "Cargando vehículos disponibles…",
       "loadError": "No pudimos cargar la flota.",
       "noneTitle": "No hay vehículos en esta sucursal",
-      "noneDescription": "Aquí no hay nada en playa. Pruebe con otra sucursal de recogida."
+      "noneDescription": "Aquí no hay nada en playa. Pruebe con otra sucursal de recogida.",
+      "forUnits_one": "{{price}} por {{count}} {{unit}}",
+      "forUnits_other": "{{price}} por {{count}} {{unit}}s"
     },
     "rate": {
       "hint": "Calculado para la duración que ha indicado.",
@@ -375,7 +390,18 @@
       "saved": "Borrador guardado",
       "savedDescription": "Retome esta reserva desde Nueva reserva.",
       "restored": "Borrador recuperado",
-      "restoredDescription": "Hemos recuperado la reserva que dejó a medias."
+      "restoredDescription": "Hemos recuperado la reserva que dejó a medias.",
+      "savedWithoutDocuments": "Guardado. Los escaneos de licencia y seguro no se conservaron; adjúntelos de nuevo al continuar.",
+      "saveFailed": "No se pudo guardar el borrador",
+      "discarded": "Borrador descartado",
+      "discardFailed": "No se pudo descartar el borrador",
+      "loading": "Cargando borrador…",
+      "loadError": "No se pudo cargar el borrador. No se abrió, así que no se ha cambiado nada.",
+      "missingTitle": "Borrador no encontrado",
+      "missing": "Es posible que se haya descartado o que ya se haya convertido en una reserva.",
+      "startFresh": "Crear una reserva nueva",
+      "notDiscardedTitle": "El borrador sigue en la lista",
+      "notDiscarded": "Se creó la reserva {{reference}}, pero no se pudo eliminar su borrador. Descártalo en la pestaña Borradores para no reservar dos veces."
     },
     "nav": {
       "previousStep": "Atrás",
@@ -387,7 +413,15 @@
       "licence": "Permiso de conducir",
       "licenceHint": "Anverso de la tarjeta o una foto nítida",
       "insurance": "Documento del seguro",
-      "insuranceHint": "Certificado de póliza o nota de cobertura"
+      "insuranceHint": "Certificado de póliza o nota de cobertura",
+      "uploadFailed": "Reserva creada, pero un documento no se subió",
+      "uploadFailedDescription": "No se pudo adjuntar: {{documents}}. Puede subirlo de nuevo desde la ficha del cliente.",
+      "onFile": "Ya archivado · {{size}}",
+      "view": "Ver {{name}}",
+      "replace": "Reemplazar {{name}}",
+      "openFailed": "No se pudo abrir el documento",
+      "replacedHint": "Adjuntar un archivo nuevo reemplaza el archivado.",
+      "download": "Descargar {{name}}"
     },
     "verification": {
       "hint": "Comprobaciones que la sucursal exige antes de entregar las llaves."
@@ -400,14 +434,11 @@
       "remove": "Eliminar conductor {{index}}",
       "name": "Nombre completo",
       "licence": "Número de permiso",
-      "pricing": "{{perDay}}/día cada uno · {{total}} por conductor",
       "nameFor": "Nombre completo del conductor {{index}}",
       "licenceFor": "Número de permiso del conductor {{index}}",
       "rate": "Tarifa diaria",
       "rateFor": "Tarifa diaria del conductor {{index}}",
-      "perDaySuffix": "/día",
-      "rowTotal_one": "{{total}} por {{count}} día",
-      "rowTotal_other": "{{total}} por {{count}} días"
+      "perDaySuffix": "/día"
     },
     "fees": {
       "hint": "Cargos puntuales añadidos a esta reserva — limpieza, un complemento acordado, cualquier cosa fuera de la tarifa estándar.",

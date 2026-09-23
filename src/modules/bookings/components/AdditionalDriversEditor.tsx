@@ -1,22 +1,25 @@
+import { useState } from 'react'
 import type { FieldError, Merge } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useFormatters } from '@/i18n'
 import type { AdditionalDriverValues } from '../schema/booking.schema'
 import { ADDITIONAL_DRIVER_PER_DAY } from '../utils/booking.pricing'
 
 /** What RHF hands back for an array field: per-row errors, itself possibly undefined. */
-type DriverRowErrors = Merge<FieldError, (Merge<FieldError, Record<keyof AdditionalDriverValues, FieldError | undefined>> | undefined)[]>
+type DriverRowErrors = Merge<
+  FieldError,
+  (Merge<FieldError, Record<keyof AdditionalDriverValues, FieldError | undefined>> | undefined)[]
+>
 
 interface AdditionalDriversEditorProps {
   value: AdditionalDriverValues[]
   onChange: (drivers: AdditionalDriverValues[]) => void
   errors?: DriverRowErrors
-  /** Rental days, so each row can show what it actually adds to the total. */
-  days: number
+  /** Once the user has tried to leave this step, show every remaining error — not just touched fields. */
+  showAllErrors?: boolean
 }
 
 /**
@@ -25,16 +28,36 @@ interface AdditionalDriversEditorProps {
  * or discount one driver without an org-wide rate change. Controlled by value/onChange rather
  * than useFieldArray, matching RateOptionsEditor on the vehicle form.
  */
-export function AdditionalDriversEditor({ value, onChange, errors, days }: AdditionalDriversEditorProps) {
+export function AdditionalDriversEditor({
+  value,
+  onChange,
+  errors,
+  showAllErrors,
+}: AdditionalDriversEditorProps) {
   const { t } = useTranslation('bookings')
-  const format = useFormatters()
+  // The form validates on change, so a freshly-added row would flash "required" before it
+  // has been touched. Matches RateOptionsEditor on the vehicle form.
+  const [touched, setTouched] = useState<Set<string>>(new Set())
+
+  const markTouched = (id: string, field: string) => {
+    setTouched((prev) => {
+      const key = `${id}:${field}`
+      if (prev.has(key)) return prev
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+  }
 
   function update(index: number, patch: Partial<AdditionalDriverValues>) {
     onChange(value.map((driver, i) => (i === index ? { ...driver, ...patch } : driver)))
   }
 
   function add() {
-    onChange([...value, { id: crypto.randomUUID(), name: '', licenceNumber: '', pricePerDay: ADDITIONAL_DRIVER_PER_DAY }])
+    onChange([
+      ...value,
+      { id: crypto.randomUUID(), name: '', licenceNumber: '', pricePerDay: ADDITIONAL_DRIVER_PER_DAY },
+    ])
   }
 
   return (
@@ -47,10 +70,20 @@ export function AdditionalDriversEditor({ value, onChange, errors, days }: Addit
       ) : (
         value.map((driver, index) => {
           const rowErrors = errors?.[index]
+          /** A row's error, withheld until that field is blurred or the step is submitted. */
+          const errorFor = (field: keyof AdditionalDriverValues) =>
+            showAllErrors || touched.has(`${driver.id}:${field}`)
+              ? (rowErrors as Record<string, { message?: string }> | undefined)?.[field]?.message
+              : undefined
           return (
-            <div key={driver.id} className="border-border bg-surface-2 flex flex-col gap-3 rounded-[9px] border p-3">
+            <div
+              key={driver.id}
+              className="border-border bg-surface-2 flex flex-col gap-3 rounded-[9px] border p-3"
+            >
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[13.5px] font-semibold">{t('form.drivers.driverN', { index: index + 1 })}</span>
+                <span className="text-[13.5px] font-semibold">
+                  {t('form.drivers.driverN', { index: index + 1 })}
+                </span>
                 <button
                   type="button"
                   aria-label={t('form.drivers.remove', { index: index + 1 })}
@@ -70,12 +103,13 @@ export function AdditionalDriversEditor({ value, onChange, errors, days }: Addit
                     // since the renter above has a "Full name" field too.
                     aria-label={t('form.drivers.nameFor', { index: index + 1 })}
                     value={driver.name}
-                    invalid={Boolean(rowErrors?.name)}
+                    invalid={Boolean(errorFor('name'))}
+                    onBlur={() => markTouched(driver.id, 'name')}
                     onChange={(e) => update(index, { name: e.target.value })}
                   />
-                  {rowErrors?.name && (
+                  {errorFor('name') && (
                     <p role="alert" className="text-caption text-error">
-                      {rowErrors.name.message}
+                      {errorFor('name')}
                     </p>
                   )}
                 </div>
@@ -87,12 +121,13 @@ export function AdditionalDriversEditor({ value, onChange, errors, days }: Addit
                     className="font-mono"
                     aria-label={t('form.drivers.licenceFor', { index: index + 1 })}
                     value={driver.licenceNumber}
-                    invalid={Boolean(rowErrors?.licenceNumber)}
+                    invalid={Boolean(errorFor('licenceNumber'))}
+                    onBlur={() => markTouched(driver.id, 'licenceNumber')}
                     onChange={(e) => update(index, { licenceNumber: e.target.value })}
                   />
-                  {rowErrors?.licenceNumber && (
+                  {errorFor('licenceNumber') && (
                     <p role="alert" className="text-caption text-error">
-                      {rowErrors.licenceNumber.message}
+                      {errorFor('licenceNumber')}
                     </p>
                   )}
                 </div>
@@ -108,26 +143,21 @@ export function AdditionalDriversEditor({ value, onChange, errors, days }: Addit
                       className="pr-14"
                       aria-label={t('form.drivers.rateFor', { index: index + 1 })}
                       value={driver.pricePerDay}
-                      invalid={Boolean(rowErrors?.pricePerDay)}
+                      invalid={Boolean(errorFor('pricePerDay'))}
+                      onBlur={() => markTouched(driver.id, 'pricePerDay')}
                       onChange={(e) => update(index, { pricePerDay: e.target.valueAsNumber })}
                     />
                     <span className="text-fg-4 pointer-events-none absolute inset-y-0 right-3 flex items-center text-[13px]">
                       {t('form.drivers.perDaySuffix')}
                     </span>
                   </div>
-                  {rowErrors?.pricePerDay && (
+                  {errorFor('pricePerDay') && (
                     <p role="alert" className="text-caption text-error">
-                      {rowErrors.pricePerDay.message}
+                      {errorFor('pricePerDay')}
                     </p>
                   )}
                 </div>
               </div>
-
-              {Number.isFinite(driver.pricePerDay) && (
-                <p className="text-fg-4 text-[12.5px] tabular-nums">
-                  {t('form.drivers.rowTotal', { total: format.currency(driver.pricePerDay * days), count: days })}
-                </p>
-              )}
             </div>
           )
         })

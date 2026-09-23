@@ -23,8 +23,11 @@ export interface SortParam {
 export type AsyncStatus = 'idle' | 'loading' | 'success' | 'error'
 
 /**
- * A file attached to a record. `url` is a data URL while uploads are mock-backed; it becomes a
- * CDN URL once a real upload endpoint exists, so nothing downstream has to change.
+ * A file picked in a form, before it has been sent anywhere.
+ *
+ * `file` is the real thing — it is what gets uploaded, so the bytes are never copied into
+ * form state as base64. `url` is an object URL for previewing it locally and is only valid
+ * for this page: revoke it when the file is dropped, and never persist or send it.
  */
 export interface UploadedFile {
   id: string
@@ -32,4 +35,5 @@ export interface UploadedFile {
   url: string
   /** Bytes, for display only. */
   size: number
+  file: File
 }

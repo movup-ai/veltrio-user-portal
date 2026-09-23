@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
@@ -24,8 +25,18 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
-import { MOCK_BRANCHES } from '@/modules/locations/mock/location.mock'
-import { CUSTOMERS } from '@/modules/customers/mock/customer.mock'
+import { useLocationNames } from '@/modules/locations/hooks/use-locations'
+import {
+  customerKeys,
+  useCustomerDocuments,
+  useCustomerSearch,
+} from '@/modules/customers/hooks/use-customers'
+import { DocumentOnFile } from '@/modules/customers/components/DocumentOnFile'
+import type { Customer, DocumentKind } from '@/modules/customers/types/customer.types'
+import {
+  ACCEPTED_DOCUMENT_TYPES,
+  uploadCustomerDocument,
+} from '@/modules/customers/api/customer-document.api'
 import { ReviewRow, ReviewRowGrid, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
 import { useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
 import type { RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types'
@@ -36,8 +47,14 @@ import { BookingVerificationPicker } from '@/modules/bookings/components/Booking
 import { BookingPriceSummary } from '@/modules/bookings/components/BookingPriceSummary'
 import { BookingRateOptions } from '@/modules/bookings/components/BookingRateOptions'
 import { BookingVehiclePicker, type VehicleOption } from '@/modules/bookings/components/BookingVehiclePicker'
-import { useBookings, useCreateBooking } from '@/modules/bookings/hooks/use-bookings'
-import { conflictsForPlate } from '@/modules/bookings/utils/booking.schedule'
+import { useBookingSchedule, useCreateBooking } from '@/modules/bookings/hooks/use-bookings'
+import {
+  useBookingDrafts,
+  useDeleteBookingDraft,
+  useSaveBookingDraft,
+} from '@/modules/bookings/hooks/use-booking-drafts'
+import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
+import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
@@ -45,15 +62,17 @@ import {
   type BookingFormValues,
 } from '@/modules/bookings/schema/booking.schema'
 import type { BookedInterval, BookingInput } from '@/modules/bookings/types/booking.types'
-import { durationHours, priceBooking, rentalDays } from '@/modules/bookings/utils/booking.pricing'
+import { durationHours, priceBooking } from '@/modules/bookings/utils/booking.pricing'
 
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
 
-/** A generous single page — the fleet is small enough to pick from without server-side paging. */
-const FLEET_PAGE_SIZE = 200
-
-const DRAFT_STORAGE_KEY = 'veltrio.bookingDraft'
+/**
+ * One page of the fleet to pick from. 100 is the most `GET /vehicles` allows — asking for more
+ * is a 422, not a larger page — so a tenant past that many available cars at one branch will
+ * need the picker to page or search rather than listing everything.
+ */
+const FLEET_PAGE_SIZE = 100
 
 /** Stable empty default so an unresolved bookings query doesn't churn identity every render. */
 const EMPTY_SCHEDULE: BookedInterval[] = []
@@ -78,7 +97,7 @@ const TODAY_INPUT = toDateInput(new Date())
 /** Wide enough for any adult renter — the DOB picker pages by dropdown, not month by month. */
 const DOB_YEAR_RANGE = { from: new Date().getFullYear() - 100, to: new Date().getFullYear() }
 
-/** Tomorrow to four days later, 09:30 both ends — the most common counter booking. */
+/** Tomorrow to the day after, 09:30 both ends — a one-day rental, the most common booking. */
 function blankValues(): BookingFormValues {
   const today = new Date()
   return {
@@ -86,7 +105,7 @@ function blankValues(): BookingFormValues {
     returnLocation: '',
     pickupDate: toDateInput(addDays(today, 1)),
     pickupTime: '09:30',
-    returnDate: toDateInput(addDays(today, 5)),
+    returnDate: toDateInput(addDays(today, 2)),
     returnTime: '09:30',
     vehicleId: '',
     customerId: '',
@@ -99,45 +118,128 @@ function blankValues(): BookingFormValues {
     licenceExpiry: '',
     licenceDocument: null,
     insuranceDocument: null,
-    verifications: ['identity'],
+    verifications: [],
     additionalDrivers: [],
     rateOptionId: '',
     fees: [],
   }
 }
 
-/** A saved draft may predate a field being added — merge it over a blank form rather than trusting it wholesale. */
-function loadDraft(): BookingFormValues | null {
-  try {
-    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
-    if (!raw) return null
-    return { ...blankValues(), ...(JSON.parse(raw) as Partial<BookingFormValues>) }
-  } catch {
-    return null
+/**
+ * A saved draft may predate a field being added, so it is merged over a blank form rather
+ * than trusted wholesale. Attachments never survive a draft — a File cannot be serialized —
+ * so they are always reset.
+ */
+function fromDraftPayload(payload: Record<string, unknown>): BookingFormValues {
+  return {
+    ...blankValues(),
+    ...(payload as Partial<BookingFormValues>),
+    licenceDocument: null,
+    insuranceDocument: null,
   }
 }
 
+/**
+ * Resolves `?draft=<id>` before the wizard mounts.
+ *
+ * react-hook-form reads `defaultValues` once, so the form cannot be built until the draft it
+ * is resuming has arrived — mounting first and filling in afterwards would leave the counter
+ * looking at a blank form that silently rewrites itself.
+ */
 export function BookingFormPage() {
+  const { t } = useTranslation('bookings')
+  const navigate = useNavigate()
+  const [resumedDraftId] = useState(() => new URLSearchParams(window.location.search).get('draft'))
+  const { data: draftPage, isLoading, isError, refetch } = useBookingDrafts()
+
+  const resume = resolveDraftResume(resumedDraftId, draftPage?.items, { isLoading, isError })
+
+  if (resume.kind === 'loading') {
+    return (
+      <PageContainer>
+        <LoadingState label={t('form.draft.loading')} />
+      </PageContainer>
+    )
+  }
+
+  // Opening the wizard here would hand it a blank form, and saving that creates a second
+  // draft rather than updating the one the counter meant to resume.
+  if (resume.kind === 'failed') {
+    return (
+      <PageContainer>
+        <ErrorState description={t('form.draft.loadError')} onRetry={() => refetch()} />
+      </PageContainer>
+    )
+  }
+
+  if (resume.kind === 'missing') {
+    return (
+      <PageContainer>
+        <ErrorState
+          title={t('form.draft.missingTitle')}
+          description={t('form.draft.missing')}
+          actionLabel={t('form.draft.startFresh')}
+          onRetry={() => navigate('/app/bookings/new', { replace: true })}
+        />
+      </PageContainer>
+    )
+  }
+
+  const draft = resume.kind === 'resume' ? resume.draft : undefined
+
+  return (
+    // Remounts if the draft changes, so the form rebuilds its defaults rather than keeping
+    // the values of whichever draft it opened with.
+    <BookingWizard
+      key={draft?.id ?? 'new'}
+      draftId={draft?.id}
+      initialValues={draft ? fromDraftPayload(draft.payload) : null}
+    />
+  )
+}
+
+interface BookingWizardProps {
+  draftId?: string
+  /** Null for a fresh booking; the resumed draft's values otherwise. */
+  initialValues: BookingFormValues | null
+}
+
+function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const { t: tValidation } = useTranslation('validation')
   const format = useFormatters()
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
+  const saveDraft = useSaveBookingDraft()
+  const deleteDraft = useDeleteBookingDraft({ silent: true })
+  const queryClient = useQueryClient()
+  const locations = useLocationNames()
 
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
-  const [restoredDraft] = useState(loadDraft)
+
+  const [stepValidationAttempted, setStepValidationAttempted] = useState<Record<number, boolean>>({})
+  const resumedDraftId = draftId
+  const restoredDraft = initialValues
 
   /**
    * The lookup box holds its own text, deliberately *not* bound to `customerName`. Sharing one
    * value made the two fields mirror each other, so typing a new renter's name below echoed
    * into the search above. Seeded only when a draft was linked to a real customer.
    */
-  const [customerQuery, setCustomerQuery] = useState(restoredDraft?.customerId ? restoredDraft.customerName : '')
+  // Seeded from the draft's own name: the matching customer has not loaded yet, so the label
+  // cannot be rebuilt here. Picking anyone replaces it with the disambiguated form.
+  const [customerQuery, setCustomerQuery] = useState(
+    restoredDraft?.customerId ? restoredDraft.customerName : '',
+  )
 
   const [returnElsewhere, setReturnElsewhere] = useState(
-    Boolean(restoredDraft && restoredDraft.returnLocation && restoredDraft.returnLocation !== restoredDraft.pickupLocation),
+    Boolean(
+      restoredDraft &&
+      restoredDraft.returnLocation &&
+      restoredDraft.returnLocation !== restoredDraft.pickupLocation,
+    ),
   )
 
   const steps: StepDef[] = STEP_KEYS.map((key) => ({
@@ -176,7 +278,6 @@ export function BookingFormPage() {
   const pickupAt = combineDateTime(values.pickupDate, values.pickupTime).toISOString()
   const returnAt = combineDateTime(values.returnDate, values.returnTime).toISOString()
   const hours = durationHours(pickupAt, returnAt)
-  const days = rentalDays(hours)
 
   // Only vehicles that can actually be rented: published, Available, and sitting at the pickup
   // branch. Before a location is chosen the whole available fleet is shown.
@@ -188,20 +289,34 @@ export function BookingFormPage() {
     pageSize: FLEET_PAGE_SIZE,
   })
 
-  const { data: bookingLists } = useBookings()
-  const schedule = bookingLists?.schedule ?? EMPTY_SCHEDULE
+  // Only the bookings touching this window — the API does the overlap filtering.
+  const { data: scheduleData, isReady: scheduleReady } = useBookingSchedule(
+    pickupAt,
+    returnAt,
+    hours > 0,
+  )
+  // Availability is only meaningful once the schedule describes the dates on screen: until it
+  // has loaded, an empty list would mark every car free and let a booked one be picked.
+  const schedule = scheduleData ?? EMPTY_SCHEDULE
+
+  // The lookup box searches the customer book as the counter types.
+  const { data: customerMatches = [] } = useCustomerSearch(customerQuery)
 
   /**
-   * Every vehicle at the branch, each tagged with the rental that blocks it (if any). An
-   * unparseable or reversed date range can't be checked against, so nothing is marked blocked
-   * until the window is real.
-   *
-   * Derived straight through rather than memoized: it's a handful of vehicles against a
-   * handful of intervals, and keeping the arrays out of any dependency list is what lets the
-   * reset effect below key off a boolean instead of an array identity.
+   * Scans a returning renter already has. Documents belong to the customer, not to one rental,
+   * so a licence uploaded on an earlier booking is still on file for this one — showing the
+   * empty picker instead would invite a second copy of the same document.
    */
+  const { data: existingDocuments = [] } = useCustomerDocuments(values.customerId || undefined)
+
+  /** Slots the counter has chosen to replace, so the picker takes over from what is on file. */
+  const [replacing, setReplacing] = useState<{ licence?: boolean; insurance?: boolean }>({})
+
+  const documentOnFile = (kind: DocumentKind) =>
+    replacing[kind] ? undefined : existingDocuments.find((d) => d.kind === kind)
+
   const options: VehicleOption[] = (data?.items ?? []).map((vehicle) => {
-    const clash = hours > 0 ? conflictsForPlate(schedule, vehicle.plate, pickupAt, returnAt)[0] : undefined
+    const clash = scheduleReady ? conflictsForVehicle(schedule, vehicle.id, pickupAt, returnAt)[0] : undefined
     return { vehicle, bookedUntil: clash?.to }
   })
 
@@ -230,13 +345,20 @@ export function BookingFormPage() {
         })
       : null
 
-  /** Labels of the documents actually attached — drives the chips on the Review step. */
-  const attachedDocuments = [
-    values.licenceDocument ? t('form.documents.licence') : null,
-    values.insuranceDocument ? t('form.documents.insurance') : null,
-  ].filter((label) => label != null)
+  /**
+   * Documents this booking will have, for the chips on the Review step: the ones just picked,
+   * plus whatever the renter already has on file. A returning renter whose licence is on file
+   * has a licence — showing nothing there would read as though it were missing.
+   */
+  const attachedDocuments = (['licence', 'insurance'] as const)
+    .filter((kind) => {
+      const picked = kind === 'licence' ? values.licenceDocument : values.insuranceDocument
+      return Boolean(picked) || Boolean(documentOnFile(kind))
+    })
+    .map((kind) => t(`form.documents.${kind}`))
 
   const goNext = async () => {
+    setStepValidationAttempted((attempted) => ({ ...attempted, [stepIndex]: true }))
     const fields = BOOKING_STEP_FIELDS[stepKey]
     const valid = fields.length === 0 ? true : await trigger(fields as (keyof BookingFormValues)[])
     if (!valid) return
@@ -250,9 +372,29 @@ export function BookingFormPage() {
   const cancel = () => navigate('/app/bookings')
 
   function handleSaveDraft() {
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values))
-    toast({ title: t('form.draft.saved'), description: t('form.draft.savedDescription'), variant: 'success' })
-    navigate('/app/bookings')
+    // Attachments are left out: a File cannot be serialized, so the API would store `{}` and
+    // the draft would come back holding a broken one. The counter re-picks the scans when
+    // they resume, which is why the toast says so.
+    const { licenceDocument, insuranceDocument, ...payload } = values
+    const hadDocuments = Boolean(licenceDocument || insuranceDocument)
+
+    // Updating when resuming, creating otherwise — so returning to a draft does not leave a
+    // second copy of it behind every time it is saved.
+    saveDraft.mutate(
+      { id: resumedDraftId ?? undefined, payload: payload as Record<string, unknown> },
+      {
+        onSuccess: () => {
+          toast({
+            title: t('form.draft.saved'),
+            description: hadDocuments
+              ? t('form.draft.savedWithoutDocuments')
+              : t('form.draft.savedDescription'),
+            variant: 'success',
+          })
+          navigate('/app/bookings')
+        },
+      },
+    )
   }
 
   function handleSelectVehicle(vehicle: Vehicle) {
@@ -266,16 +408,31 @@ export function BookingFormPage() {
     setValue('rateOptionId', option.id, { shouldValidate: true })
   }
 
-  function handlePickCustomer(name: string) {
-    const match = CUSTOMERS.find((c) => c[0] === name)
+  /**
+   * What the lookup box shows for a renter. Two people genuinely share a name, so the label
+   * carries the email that distinguishes them — resolving on the name alone would silently
+   * pick whichever matched first and attach the booking (and its scans) to the wrong person.
+   */
+  function customerLabel(customer: Customer): string {
+    return `${customer.name} · ${customer.email}`
+  }
+
+  function handlePickCustomer(label: string) {
+    const match = customerMatches.find((c) => customerLabel(c) === label)
     const opts = { shouldValidate: true, shouldDirty: true } as const
-    setCustomerQuery(name)
-    setValue('customerName', name, opts)
-    setValue('customerId', match ? name : '', opts)
+    // Free text stays as typed; a picked renter shows the label so the choice stays visible.
+    setCustomerQuery(label)
+    setValue('customerName', match?.name ?? label, opts)
+    setValue('customerId', match?.id ?? '', opts)
     if (!match) return
-    setValue('customerEmail', match[1], opts)
-    setValue('customerPhone', match[2], opts)
-    setValue('licenceNumber', match[3], opts)
+    setValue('customerEmail', match.email, opts)
+    setValue('customerPhone', match.phone, opts)
+    setValue('customerDob', match.dateOfBirth ?? '', opts)
+    setValue('customerAddress', match.address ?? '', opts)
+    setValue('licenceNumber', match.licenceNumber, opts)
+    setValue('licenceExpiry', match.licenceExpiry ?? '', opts)
+    // A different renter has a different set of scans on file.
+    setReplacing({})
   }
 
   /** Clears a prefilled renter so the next one is typed from scratch rather than edited over. */
@@ -292,45 +449,96 @@ export function BookingFormPage() {
       'licenceExpiry',
     ] as const
     for (const field of fields) setValue(field, '', { shouldValidate: false })
+    setReplacing({})
   }
 
-  const onSubmit = (submitted: BookingFormValues) => {
-    if (!selectedVehicle || !selectedOption || !pricing) return
+  /**
+   * Sends whichever scans were attached. Failures are surfaced but never rethrown: the booking
+   * is already made, and losing it because a scan did not upload would be the worse outcome.
+   * The counter can re-attach from the renter's record.
+   */
+  async function uploadDocuments(customerId: string, submitted: BookingFormValues) {
+    const attachments = [
+      { kind: 'licence' as const, picked: submitted.licenceDocument },
+      { kind: 'insurance' as const, picked: submitted.insuranceDocument },
+    ].filter((a) => a.picked != null)
+    if (attachments.length === 0) return
 
-    const input: BookingInput = {
-      customer: {
-        id: submitted.customerId || undefined,
-        name: submitted.customerName,
-        email: submitted.customerEmail,
-        phone: submitted.customerPhone,
-        dateOfBirth: submitted.customerDob || undefined,
-        address: submitted.customerAddress || undefined,
-        licenceNumber: submitted.licenceNumber,
-        licenceExpiry: submitted.licenceExpiry || undefined,
-        licenceDocument: submitted.licenceDocument ?? undefined,
-        insuranceDocument: submitted.insuranceDocument ?? undefined,
-      },
-      vehicleId: selectedVehicle.id,
-      rateOptionId: selectedOption.id,
-      vehicleName: vehicleDisplayName(selectedVehicle),
-      vehiclePlate: selectedVehicle.plate,
-      pickupLocation: submitted.pickupLocation,
-      returnLocation: submitted.returnLocation,
-      pickupAt: combineDateTime(submitted.pickupDate, submitted.pickupTime).toISOString(),
-      returnAt: combineDateTime(submitted.returnDate, submitted.returnTime).toISOString(),
-      additionalDrivers: submitted.additionalDrivers,
-      fees: submitted.fees,
-      verifications: submitted.verifications,
-      total: pricing.total,
+    const failed: string[] = []
+    for (const { kind, picked } of attachments) {
+      try {
+        await uploadCustomerDocument(customerId, kind, picked!.file)
+      } catch {
+        failed.push(t(`form.documents.${kind}`))
+      }
     }
+    // The booking mutation invalidated this customer before these uploads ran, so their
+    // documents are cached as they were a moment ago — a replaced scan would keep showing the
+    // old row (and a 404 thumbnail) until the entry went stale. Refresh once they have landed.
+    await queryClient.invalidateQueries({ queryKey: customerKeys.documents(customerId) })
 
-    createBooking.mutate(input, {
-      onSuccess: () => {
-        localStorage.removeItem(DRAFT_STORAGE_KEY)
-        navigate('/app/bookings')
-      },
-    })
+    if (failed.length > 0) {
+      toast({
+        title: t('form.documents.uploadFailed'),
+        description: t('form.documents.uploadFailedDescription', { documents: failed.join(', ') }),
+        variant: 'error',
+      })
+    }
   }
+
+  const onSubmit = (submitted: BookingFormValues) =>
+    new Promise<void>((settle) => {
+      if (!selectedVehicle || !selectedOption || !pricing) return settle()
+
+      const input: BookingInput = {
+        customerId: submitted.customerId || undefined,
+        customer: {
+          name: submitted.customerName,
+          email: submitted.customerEmail,
+          phone: submitted.customerPhone,
+          dateOfBirth: submitted.customerDob || undefined,
+          address: submitted.customerAddress || undefined,
+          licenceNumber: submitted.licenceNumber,
+          licenceExpiry: submitted.licenceExpiry || undefined,
+        },
+        vehicleId: selectedVehicle.id,
+        rateOptionId: selectedOption.id,
+        pickupLocation: submitted.pickupLocation,
+        returnLocation: submitted.returnLocation,
+        pickupAt: combineDateTime(submitted.pickupDate, submitted.pickupTime).toISOString(),
+        returnAt: combineDateTime(submitted.returnDate, submitted.returnTime).toISOString(),
+        additionalDrivers: submitted.additionalDrivers,
+        fees: submitted.fees,
+        verifications: submitted.verifications,
+      }
+
+      // Wrapped in a promise so the button stays busy through the uploads too — RHF keeps
+      // isSubmitting true until onSubmit settles, and the scans are part of "creating".
+      createBooking.mutate(input, {
+        onSuccess: async (booking) => {
+          // Awaited, and before navigating: a draft left behind can be resumed and submitted
+          // again, which books the car twice. If it fails the counter is told to discard it.
+          if (resumedDraftId) {
+            try {
+              await deleteDraft.mutateAsync(resumedDraftId)
+            } catch {
+              toast({
+                title: t('form.draft.notDiscardedTitle'),
+                description: t('form.draft.notDiscarded', { reference: booking.reference }),
+                variant: 'error',
+              })
+            }
+          }
+          // Documents hang off the customer, who only exists once the booking has been taken,
+          // so the scans go up now against the id the API just resolved. A failed scan must not
+          // discard a booking that was made: it is reported on its own and the booking stands.
+          await uploadDocuments(booking.customer.id, submitted)
+          settle()
+          navigate('/app/bookings')
+        },
+        onError: () => settle(),
+      })
+    })
 
   return (
     <PageContainer>
@@ -358,7 +566,11 @@ export function BookingFormPage() {
           className="flex min-w-0 flex-col gap-4"
           onSubmit={handleSubmit(onSubmit)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && stepKey !== 'review' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+            if (
+              e.key === 'Enter' &&
+              stepKey !== 'review' &&
+              (e.target as HTMLElement).tagName !== 'TEXTAREA'
+            ) {
               e.preventDefault()
             }
           }}
@@ -371,31 +583,62 @@ export function BookingFormPage() {
 
                 <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
                   <div className="flex flex-col gap-2.5">
-                    <FormField label={t('form.fields.pickupLocation')} error={errors.pickupLocation?.message} required>
+                    <FormField
+                      label={t('form.fields.pickupLocation')}
+                      error={errors.pickupLocation?.message}
+                      required
+                    >
                       {({ id }) => (
                         <Controller
                           control={control}
                           name="pickupLocation"
                           render={({ field }) => (
-                            <Select
-                              value={field.value}
-                              onValueChange={(next) => {
-                                field.onChange(next)
-                                // The return branch only diverges on request — otherwise it tracks pickup.
-                                if (!returnElsewhere) setValue('returnLocation', next, { shouldValidate: true })
-                              }}
-                            >
-                              <SelectTrigger id={id} aria-invalid={Boolean(errors.pickupLocation)}>
-                                <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {MOCK_BRANCHES.map((l) => (
-                                  <SelectItem key={l.name} value={l.name}>
-                                    {l.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex flex-col gap-1.5">
+                              <Select
+                                value={field.value}
+                                onValueChange={(next) => {
+                                  field.onChange(next)
+                                  // The return branch only diverges on request — otherwise it tracks pickup.
+                                  if (!returnElsewhere)
+                                    setValue('returnLocation', next, { shouldValidate: true })
+                                }}
+                                disabled={locations.isLoading || locations.isError}
+                              >
+                                <SelectTrigger id={id} aria-invalid={Boolean(errors.pickupLocation)}>
+                                  <SelectValue
+                                    placeholder={
+                                      locations.isLoading
+                                        ? t('form.fields.locationLoading')
+                                        : t('form.fields.locationPlaceholder')
+                                    }
+                                  />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {locations.names.map((name) => (
+                                    <SelectItem key={name} value={name}>
+                                      {name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {/* A booking must name a branch, so a failed load has to offer a way
+                                  forward instead of an empty, silent dropdown. */}
+                              {locations.isError && (
+                                <p className="text-error text-caption m-0 flex items-center gap-1.5">
+                                  {t('form.fields.locationLoadFailed')}
+                                  <button
+                                    type="button"
+                                    onClick={locations.refetch}
+                                    className="font-semibold underline underline-offset-2"
+                                  >
+                                    {tCommon('actions.retry')}
+                                  </button>
+                                </p>
+                              )}
+                              {!locations.isLoading && !locations.isError && locations.names.length === 0 && (
+                                <p className="text-fg-3 text-caption m-0">{t('form.fields.locationEmpty')}</p>
+                              )}
+                            </div>
                           )}
                         />
                       )}
@@ -408,27 +651,37 @@ export function BookingFormPage() {
                           const on = checked === true
                           setReturnElsewhere(on)
                           // Unticking re-mirrors pickup; ticking clears it so the branch is a deliberate pick.
-                          setValue('returnLocation', on ? '' : values.pickupLocation, { shouldValidate: true })
+                          setValue('returnLocation', on ? '' : values.pickupLocation, {
+                            shouldValidate: true,
+                          })
                         }}
                       />
                       {t('form.fields.returnElsewhere')}
                     </label>
                   </div>
 
-                  <FormField label={t('form.fields.returnLocation')} error={errors.returnLocation?.message} required>
+                  <FormField
+                    label={t('form.fields.returnLocation')}
+                    error={errors.returnLocation?.message}
+                    required
+                  >
                     {({ id }) => (
                       <Controller
                         control={control}
                         name="returnLocation"
                         render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange} disabled={!returnElsewhere}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={!returnElsewhere || locations.isLoading || locations.isError}
+                          >
                             <SelectTrigger id={id} aria-invalid={Boolean(errors.returnLocation)}>
                               <SelectValue placeholder={t('form.fields.locationPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                              {MOCK_BRANCHES.map((l) => (
-                                <SelectItem key={l.name} value={l.name}>
-                                  {l.name}
+                              {locations.names.map((name) => (
+                                <SelectItem key={name} value={name}>
+                                  {name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -440,7 +693,11 @@ export function BookingFormPage() {
 
                   {/* Date and time split per side, so each column stays a self-contained pickup/return block. */}
                   <div className="grid grid-cols-2 gap-3">
-                    <FormField label={t('form.fields.pickupDate')} error={errors.pickupDate?.message} required>
+                    <FormField
+                      label={t('form.fields.pickupDate')}
+                      error={errors.pickupDate?.message}
+                      required
+                    >
                       {({ id, invalid }) => (
                         <Controller
                           control={control}
@@ -457,7 +714,11 @@ export function BookingFormPage() {
                         />
                       )}
                     </FormField>
-                    <FormField label={t('form.fields.pickupTime')} error={errors.pickupTime?.message} required>
+                    <FormField
+                      label={t('form.fields.pickupTime')}
+                      error={errors.pickupTime?.message}
+                      required
+                    >
                       {({ id, invalid }) => (
                         <Controller
                           control={control}
@@ -477,7 +738,11 @@ export function BookingFormPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <FormField label={t('form.fields.returnDate')} error={errors.returnDate?.message} required>
+                    <FormField
+                      label={t('form.fields.returnDate')}
+                      error={errors.returnDate?.message}
+                      required
+                    >
                       {({ id, invalid }) => (
                         <Controller
                           control={control}
@@ -497,7 +762,11 @@ export function BookingFormPage() {
                         />
                       )}
                     </FormField>
-                    <FormField label={t('form.fields.returnTime')} error={errors.returnTime?.message} required>
+                    <FormField
+                      label={t('form.fields.returnTime')}
+                      error={errors.returnTime?.message}
+                      required
+                    >
                       {({ id, invalid }) => (
                         <Controller
                           control={control}
@@ -593,7 +862,7 @@ export function BookingFormPage() {
                           aria-label={t('form.customer.search')}
                           value={customerQuery}
                           onChange={handlePickCustomer}
-                          options={CUSTOMERS.map((c) => c[0])}
+                          options={customerMatches.map(customerLabel)}
                           placeholder={t('form.fields.customerNamePlaceholder')}
                         />
                       )}
@@ -607,7 +876,11 @@ export function BookingFormPage() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
-                  <FormField label={t('form.fields.customerName')} error={errors.customerName?.message} required>
+                  <FormField
+                    label={t('form.fields.customerName')}
+                    error={errors.customerName?.message}
+                    required
+                  >
                     {(fieldProps) => {
                       const nameField = register('customerName')
                       return (
@@ -631,10 +904,18 @@ export function BookingFormPage() {
                       )
                     }}
                   </FormField>
-                  <FormField label={t('form.fields.customerEmail')} error={errors.customerEmail?.message} required>
+                  <FormField
+                    label={t('form.fields.customerEmail')}
+                    error={errors.customerEmail?.message}
+                    required
+                  >
                     {(fieldProps) => <Input type="email" {...register('customerEmail')} {...fieldProps} />}
                   </FormField>
-                  <FormField label={t('form.fields.customerPhone')} error={errors.customerPhone?.message} required>
+                  <FormField
+                    label={t('form.fields.customerPhone')}
+                    error={errors.customerPhone?.message}
+                    required
+                  >
                     {(fieldProps) => <Input type="tel" {...register('customerPhone')} {...fieldProps} />}
                   </FormField>
                   <FormField label={t('form.fields.customerDob')} error={errors.customerDob?.message}>
@@ -663,7 +944,11 @@ export function BookingFormPage() {
                     className="md:col-span-2"
                   >
                     {(fieldProps) => (
-                      <Input placeholder={t('form.fields.customerAddressPlaceholder')} {...register('customerAddress')} {...fieldProps} />
+                      <Input
+                        placeholder={t('form.fields.customerAddressPlaceholder')}
+                        {...register('customerAddress')}
+                        {...fieldProps}
+                      />
                     )}
                   </FormField>
                 </div>
@@ -673,8 +958,14 @@ export function BookingFormPage() {
                 <PanelHeading title={t('form.sections.documents')} description={t('form.documents.hint')} />
 
                 <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
-                  <FormField label={t('form.fields.licenceNumber')} error={errors.licenceNumber?.message} required>
-                    {(fieldProps) => <Input className="font-mono" {...register('licenceNumber')} {...fieldProps} />}
+                  <FormField
+                    label={t('form.fields.licenceNumber')}
+                    error={errors.licenceNumber?.message}
+                    required
+                  >
+                    {(fieldProps) => (
+                      <Input className="font-mono" {...register('licenceNumber')} {...fieldProps} />
+                    )}
                   </FormField>
                   <FormField label={t('form.fields.licenceExpiry')} error={errors.licenceExpiry?.message}>
                     {({ id, invalid }) => (
@@ -696,35 +987,63 @@ export function BookingFormPage() {
                     )}
                   </FormField>
 
-                  <FormField label={t('form.documents.licence')} description={t('form.documents.licenceHint')}>
+                  <FormField
+                    label={t('form.documents.licence')}
+                    description={t('form.documents.licenceHint')}
+                  >
                     {({ id }) => (
                       <Controller
                         control={control}
                         name="licenceDocument"
-                        render={({ field }) => (
-                          <DocumentUpload
-                            id={id}
-                            label={t('form.documents.licence')}
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        )}
+                        render={({ field }) =>
+                          // What the renter already has on file, unless a replacement has been
+                          // picked — then the new file takes over the slot and will replace it.
+                          documentOnFile('licence') && !field.value ? (
+                            <DocumentOnFile
+                              customerId={values.customerId}
+                              document={documentOnFile('licence')!}
+                              onReplace={() => setReplacing((r) => ({ ...r, licence: true }))}
+                            />
+                          ) : (
+                            <DocumentUpload
+                              id={id}
+                              label={t('form.documents.licence')}
+                              value={field.value}
+                              onChange={field.onChange}
+                              accept={ACCEPTED_DOCUMENT_TYPES.join(',')}
+                            />
+                          )
+                        }
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.documents.insurance')} description={t('form.documents.insuranceHint')}>
+                  <FormField
+                    label={t('form.documents.insurance')}
+                    description={t('form.documents.insuranceHint')}
+                  >
                     {({ id }) => (
                       <Controller
                         control={control}
                         name="insuranceDocument"
-                        render={({ field }) => (
-                          <DocumentUpload
-                            id={id}
-                            label={t('form.documents.insurance')}
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        )}
+                        render={({ field }) =>
+                          // What the renter already has on file, unless a replacement has been
+                          // picked — then the new file takes over the slot and will replace it.
+                          documentOnFile('insurance') && !field.value ? (
+                            <DocumentOnFile
+                              customerId={values.customerId}
+                              document={documentOnFile('insurance')!}
+                              onReplace={() => setReplacing((r) => ({ ...r, insurance: true }))}
+                            />
+                          ) : (
+                            <DocumentUpload
+                              id={id}
+                              label={t('form.documents.insurance')}
+                              value={field.value}
+                              onChange={field.onChange}
+                              accept={ACCEPTED_DOCUMENT_TYPES.join(',')}
+                            />
+                          )
+                        }
                       />
                     )}
                   </FormField>
@@ -732,16 +1051,20 @@ export function BookingFormPage() {
               </Card>
 
               <Card as="section" className="p-[18px]">
-                <PanelHeading title={t('form.sections.verification')} description={t('form.verification.hint')} />
+                <PanelHeading
+                  title={t('form.sections.verification')}
+                  description={t('form.verification.hint')}
+                />
                 <div className="mt-4">
                   <Controller
                     control={control}
                     name="verifications"
-                    render={({ field }) => <BookingVerificationPicker selected={field.value} onChange={field.onChange} />}
+                    render={({ field }) => (
+                      <BookingVerificationPicker selected={field.value} onChange={field.onChange} />
+                    )}
                   />
                 </div>
               </Card>
-
             </>
           )}
 
@@ -783,7 +1106,7 @@ export function BookingFormPage() {
                           value={field.value}
                           onChange={field.onChange}
                           errors={errors.additionalDrivers}
-                          days={days}
+                          showAllErrors={Boolean(stepValidationAttempted[stepIndex])}
                         />
                       )}
                     />
@@ -797,7 +1120,12 @@ export function BookingFormPage() {
                       control={control}
                       name="fees"
                       render={({ field }) => (
-                        <BookingFeesEditor value={field.value} onChange={field.onChange} errors={errors.fees} />
+                        <BookingFeesEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          errors={errors.fees}
+                          showAllErrors={Boolean(stepValidationAttempted[stepIndex])}
+                        />
                       )}
                     />
                   </div>
@@ -805,7 +1133,11 @@ export function BookingFormPage() {
               </div>
 
               {pricing && selectedOption && (
-                <BookingPriceSummary pricing={pricing} option={selectedOption} className="xl:sticky xl:top-4" />
+                <BookingPriceSummary
+                  pricing={pricing}
+                  option={selectedOption}
+                  className="xl:sticky xl:top-4"
+                />
               )}
             </div>
           )}
@@ -836,7 +1168,10 @@ export function BookingFormPage() {
                 <ReviewSection title={t('form.review.vehicle')} onEdit={() => setStepIndex(0)}>
                   {selectedVehicle ? (
                     <ReviewRowGrid>
-                      <ReviewRow label={t('form.review.vehicleName')} value={vehicleDisplayName(selectedVehicle)} />
+                      <ReviewRow
+                        label={t('form.review.vehicleName')}
+                        value={vehicleDisplayName(selectedVehicle)}
+                      />
                       <ReviewRow label={t('form.review.plate')} value={selectedVehicle.plate} />
                       {/* The label alone ("Daily") never said what it costs — the rate rides along
                           with it. The run-out total lives in the breakdown panel, not here. */}
@@ -890,7 +1225,6 @@ export function BookingFormPage() {
                       ))}
                     </div>
                   )}
-
                 </ReviewSection>
 
                 <ReviewSection
@@ -919,7 +1253,10 @@ export function BookingFormPage() {
                   {values.additionalDrivers.length > 0 ? (
                     <ul className="flex flex-col gap-1.5">
                       {values.additionalDrivers.map((driver) => (
-                        <li key={driver.id} className="text-fg-2 flex flex-wrap items-baseline justify-between gap-x-2 text-[14px]">
+                        <li
+                          key={driver.id}
+                          className="text-fg-2 flex flex-wrap items-baseline justify-between gap-x-2 text-[14px]"
+                        >
                           <span>
                             <span className="font-semibold">{driver.name || '—'}</span>{' '}
                             <span className="text-fg-4 font-mono text-[13px]">{driver.licenceNumber}</span>
@@ -936,12 +1273,21 @@ export function BookingFormPage() {
                 </ReviewSection>
 
                 {values.fees.length > 0 && (
-                  <ReviewSection title={t('form.review.fees')} count={values.fees.length} onEdit={() => setStepIndex(2)}>
+                  <ReviewSection
+                    title={t('form.review.fees')}
+                    count={values.fees.length}
+                    onEdit={() => setStepIndex(2)}
+                  >
                     <ul className="flex flex-col gap-1.5">
                       {values.fees.map((fee) => (
-                        <li key={fee.id} className="text-fg-2 flex items-baseline justify-between gap-2 text-[14px]">
+                        <li
+                          key={fee.id}
+                          className="text-fg-2 flex items-baseline justify-between gap-2 text-[14px]"
+                        >
                           <span>{fee.label || '—'}</span>
-                          <span className="text-fg-4 shrink-0 tabular-nums">{format.currency(fee.amount)}</span>
+                          <span className="text-fg-4 shrink-0 tabular-nums">
+                            {format.currency(fee.amount)}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -951,7 +1297,11 @@ export function BookingFormPage() {
 
               <div className="flex flex-col gap-3.5">
                 {pricing && selectedOption ? (
-                  <BookingPriceSummary pricing={pricing} option={selectedOption} className="xl:sticky xl:top-4" />
+                  <BookingPriceSummary
+                    pricing={pricing}
+                    option={selectedOption}
+                    className="xl:sticky xl:top-4"
+                  />
                 ) : (
                   <ReviewSection title={t('form.summary.title')} onEdit={() => setStepIndex(2)}>
                     <p className="text-fg-4 text-[14px]">{t('form.review.noVehicle')}</p>
@@ -962,19 +1312,19 @@ export function BookingFormPage() {
           )}
 
           <Card as="section" className="flex flex-wrap items-center gap-3 p-3.5">
-            {/* Leaving the wizard sits with the other navigation rather than up in the header. */}
-            {/* Compact padding, but the row's full height — a shorter button breaks the baseline. */}
-            <Button type="button" variant="outline" size="sm" onClick={cancel} className="text-fg-3 h-9 gap-1.5">
-              <X className="size-4" aria-hidden />
-              {tCommon('actions.cancel')}
-            </Button>
-
+            {/* Back first: it is the one most reached for, and it reads left-to-right as the
+                reverse of Continue on the other end of the row. */}
             {stepIndex > 0 && (
               <Button type="button" variant="outline" onClick={goPrev} className="gap-1.5">
                 <ArrowLeft className="size-4" aria-hidden />
                 {t('form.nav.previousStep')}
               </Button>
             )}
+
+            <Button type="button" variant="outline" size="sm" onClick={cancel} className="h-9 gap-1.5">
+              <X className="size-4" aria-hidden />
+              {tCommon('actions.cancel')}
+            </Button>
 
             <div className="flex-1" />
 
@@ -984,7 +1334,14 @@ export function BookingFormPage() {
             </Button>
 
             {stepKey !== 'review' ? (
-              <Button type="button" onClick={goNext} className="gap-1.5">
+              <Button
+                type="button"
+                onClick={goNext}
+                // Leaving the trip step commits to a vehicle, so wait for availability that
+                // describes the chosen dates rather than the ones before the last edit.
+                loading={stepKey === 'trip' && hours > 0 && !scheduleReady}
+                className="gap-1.5"
+              >
                 {t('form.nav.continue')}
                 <ArrowRight className="size-4" aria-hidden />
               </Button>

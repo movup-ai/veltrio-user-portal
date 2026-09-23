@@ -54,12 +54,24 @@ export function BookingAgreementCard({ agreement, reference, onAction }: Booking
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => onAction('view')} className="gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onAction('view')}
+            className="gap-1.5"
+          >
             <FileText className="size-3.5" aria-hidden />
             {t('details.agreement.view')}
           </Button>
           {agreement.signed ? (
-            <Button type="button" variant="outline" size="sm" onClick={() => onAction('download')} className="gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onAction('download')}
+              className="gap-1.5"
+            >
               <FileDown className="size-3.5" aria-hidden />
               {t('details.agreement.download')}
             </Button>
