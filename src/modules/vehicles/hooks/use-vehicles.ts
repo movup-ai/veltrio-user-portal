@@ -11,6 +11,7 @@ import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.
 export const vehicleKeys = {
   all: ['vehicles'] as const,
   lists: () => [...vehicleKeys.all, 'list'] as const,
+  allVehicles: () => [...vehicleKeys.all, 'all'] as const,
   list: (params: VehicleListParams) => [...vehicleKeys.lists(), params] as const,
   details: () => [...vehicleKeys.all, 'detail'] as const,
   detail: (id: string) => [...vehicleKeys.details(), id] as const,
@@ -34,22 +35,27 @@ export function useVehicles(params: VehicleListParams) {
 }
 
 /**
- * Fleet totals for the given filters. Takes the same params as useVehicles so the two stay in
- * step; page/pageSize are ignored by the endpoint.
+ * The whole fleet, for the lookups below. One query so the two hooks share a single fetch, and
+ * paged through because a fleet past 100 would otherwise be cut off mid-list.
  */
-/** The most `GET /vehicles` allows in one page; past this a car falls back to its icon. */
-const THUMBNAIL_FLEET_PAGE_SIZE = 100
+function useWholeFleet() {
+  return useQuery({
+    queryKey: vehicleKeys.allVehicles(),
+    queryFn: () => vehicleApi.listAll(),
+    placeholderData: (previous) => previous,
+  })
+}
 
 /**
- * Vehicle id → cover thumbnail for the fleet, so a list that carries only the id (the bookings
- * table) can still show the car. Keyed on id rather than plate because plates are not unique.
+ * Vehicle id → cover thumbnail, so a list that carries only the id (the bookings table) can
+ * still show the car. Keyed on id rather than plate because plates are not unique.
  */
 export function useVehicleThumbnails() {
-  const { data } = useVehicles({ page: 1, pageSize: THUMBNAIL_FLEET_PAGE_SIZE })
+  const { data } = useWholeFleet()
 
   return useMemo(() => {
     const byVehicleId = new Map<string, string>()
-    for (const vehicle of data?.items ?? []) {
+    for (const vehicle of data ?? []) {
       const cover = vehicle.photos[0]
       if (cover) {
         const url = photoThumbnail(cover)
@@ -62,14 +68,18 @@ export function useVehicleThumbnails() {
 
 /** Every make in the fleet, alphabetical — feeds the make filters that page their own list. */
 export function useVehicleMakes(): string[] {
-  const { data } = useVehicles({ page: 1, pageSize: THUMBNAIL_FLEET_PAGE_SIZE })
+  const { data } = useWholeFleet()
 
   return useMemo(() => {
-    const makes = new Set((data?.items ?? []).map((v) => v.make).filter(Boolean))
+    const makes = new Set((data ?? []).map((v) => v.make).filter(Boolean))
     return [...makes].sort((a, b) => a.localeCompare(b))
   }, [data])
 }
 
+/**
+ * Fleet totals for the given filters. Takes the same params as useVehicles so the two stay in
+ * step; page/pageSize are ignored by the endpoint.
+ */
 export function useVehicleStats(params: VehicleListParams) {
   return useQuery({
     queryKey: vehicleKeys.stats(params),

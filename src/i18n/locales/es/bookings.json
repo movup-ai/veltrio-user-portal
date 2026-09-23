@@ -53,7 +53,9 @@
     "draftsNote": "{{count}} borrador guardado",
     "draftsNote_other": "{{count}} borradores guardados",
     "draftsEmptyTitle": "Sin borradores guardados",
-    "draftsEmptyDescription": "Comience una reserva y elija Guardar borrador para retomarla después."
+    "draftsEmptyDescription": "Comience una reserva y elija Guardar borrador para retomarla después.",
+    "exportFailed": "Error al exportar",
+    "exportTooLarge": "Coinciden {{total}} reservas y solo se pueden exportar {{limit}} a la vez. Ajusta los filtros e inténtalo de nuevo."
   },
   "filters": {
     "status": "Estado",

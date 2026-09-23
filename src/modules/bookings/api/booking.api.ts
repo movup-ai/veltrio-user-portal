@@ -30,6 +30,19 @@ const LIST_PAGE_SIZE = 100
  */
 const MAX_LIST_PAGES = 50
 
+/** Raised instead of returning a partial CSV, so the caller can say what went wrong. */
+export class ExportTooLargeError extends Error {
+  readonly total: number
+  readonly limit: number
+
+  constructor(total: number, limit: number) {
+    super(`Cannot export ${total} bookings; the limit is ${limit}`)
+    this.name = 'ExportTooLargeError'
+    this.total = total
+    this.limit = limit
+  }
+}
+
 /**
  * The FastAPI /bookings endpoints. Wire shapes are translated in booking.mapper.ts — nothing
  * above this file sees the API's format.
@@ -109,11 +122,16 @@ export const bookingApi = {
    */
   exportAll: async (params: Omit<BookingListParams, 'page' | 'pageSize'>) => {
     const rows: BookingTuple[] = []
+    let total = 0
     for (let page = 1; page <= MAX_LIST_PAGES; page++) {
       const result = await bookingApi.page({ ...params, page, pageSize: LIST_PAGE_SIZE })
       rows.push(...result.items)
-      if (rows.length >= result.total) break
+      total = result.total
+      if (rows.length >= total) break
     }
+    // Refused rather than truncated: a short CSV that claims to be the whole export is worse
+    // than none, because nothing on screen says records are missing.
+    if (rows.length < total) throw new ExportTooLargeError(total, MAX_LIST_PAGES * LIST_PAGE_SIZE)
     return rows
   },
 

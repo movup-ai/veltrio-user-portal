@@ -8,7 +8,7 @@ import {
   toInterval,
   type BookingWire,
 } from './booking.mapper'
-import type { BookingFilters, BookingInput } from '../types/booking.types'
+import { isReadyForPickup, type BookingFilters, type BookingInput, type PaymentState } from '../types/booking.types'
 
 const wire: BookingWire = {
   id: 'b1',
@@ -293,5 +293,30 @@ describe('toBookingFilterQuery', () => {
     })
 
     expect(query).toStrictEqual({ search: 'marisol', location: 'Miami Beach' })
+  })
+})
+
+describe('isReadyForPickup', () => {
+  const booking = (state: PaymentState, signedAt: string | null) =>
+    toBooking({
+      ...wire,
+      payment: { ...wire.payment, state },
+      contract: { signedAt, version: null },
+    })
+
+  it('needs the money taken and the contract signed', () => {
+    expect(isReadyForPickup(booking('paid', '2026-09-22T10:00:00Z'))).toBe(true)
+  })
+
+  it('does not treat a held deposit or a refund as settlement', () => {
+    // Matches the API's own predicate — anything looser and the badge would disagree with the
+    // "ready" count on the stat card.
+    for (const state of ['deposit_held', 'refunded', 'unpaid'] as PaymentState[]) {
+      expect(isReadyForPickup(booking(state, '2026-09-22T10:00:00Z'))).toBe(false)
+    }
+  })
+
+  it('is false while the contract is unsigned, however the money stands', () => {
+    expect(isReadyForPickup(booking('paid', null))).toBe(false)
   })
 })

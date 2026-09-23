@@ -53,7 +53,9 @@
     "draftsNote": "{{count}} saved draft",
     "draftsNote_other": "{{count}} saved drafts",
     "draftsEmptyTitle": "No saved drafts",
-    "draftsEmptyDescription": "Start a booking and choose Save draft to come back to it later."
+    "draftsEmptyDescription": "Start a booking and choose Save draft to come back to it later.",
+    "exportFailed": "Export failed",
+    "exportTooLarge": "{{total}} bookings match, and at most {{limit}} can be exported at once. Narrow the filters and try again."
   },
   "filters": {
     "status": "Status",

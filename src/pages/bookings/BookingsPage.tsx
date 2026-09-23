@@ -58,7 +58,8 @@ import {
 import { useVehicleMakes, useVehicleThumbnails } from '@/modules/vehicles/hooks/use-vehicles'
 import { resultSetKey } from '@/modules/bookings/utils/booking.paging'
 import { useDebounced } from '@/lib/use-debounced'
-import { bookingApi } from '@/modules/bookings/api/booking.api'
+import { bookingApi, ExportTooLargeError } from '@/modules/bookings/api/booking.api'
+import { normalizeApiError } from '@/services/api/errors'
 
 /** The Drafts tab sits beside the booking tabs but draws from its own resource. */
 const DRAFTS_TAB = 'Drafts'
@@ -247,8 +248,20 @@ export function BookingsPage() {
 
   /** Exports everything matching the filters, not just the page on screen. */
   async function handleExportAll() {
-    const all = await bookingApi.exportAll({ filters, tab: bookingTab, sort })
-    handleExport(all)
+    try {
+      handleExport(await bookingApi.exportAll({ filters, tab: bookingTab, sort }))
+    } catch (error) {
+      // Past the cap the export would be short without saying so, so it is refused and the
+      // counter is told to narrow the filters instead.
+      const tooLarge = error instanceof ExportTooLargeError
+      toast({
+        title: t('list.exportFailed'),
+        description: tooLarge
+          ? t('list.exportTooLarge', { total: error.total, limit: error.limit })
+          : normalizeApiError(error).message,
+        variant: 'error',
+      })
+    }
   }
 
   // The tuple carries the plate, not the car, so the cover shot is joined in here rather than

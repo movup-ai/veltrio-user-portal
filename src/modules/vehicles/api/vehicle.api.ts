@@ -1,6 +1,6 @@
 import { apiClient } from '@/services/api/client'
 import { toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
-import type { VehicleInput, VehicleListParams } from '../types/vehicle.types'
+import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
 import {
   toListQuery,
   toStatsQuery,
@@ -15,6 +15,12 @@ import {
  * The FastAPI /vehicles endpoints. Wire shapes differ from the portal's domain types in
  * several ways, all handled in vehicle.mapper.ts — nothing above this file sees the API's format.
  */
+/** The most `GET /vehicles` allows in one call; asking for more is a 422. */
+const FLEET_PAGE_SIZE = 100
+
+/** 10,000 vehicles — far past any real fleet, and a stop if `total` were ever wrong. */
+const MAX_FLEET_PAGES = 100
+
 export const vehicleApi = {
   list: (params: VehicleListParams) => {
     // The endpoint pages with limit/offset and returns a flat total, so translate both ways
@@ -23,6 +29,21 @@ export const vehicleApi = {
     return apiClient
       .get<ListEnvelope<VehicleWire>>('/vehicles', { params: toListQuery(params) })
       .then((r) => toPaginatedResult(r.data.items.map(toVehicle), r.data.total, { page, pageSize }))
+  },
+
+  /**
+   * The whole fleet, paged through. For the lookups that must cover every vehicle — the make
+   * filter and the booking list's cover photos — where stopping at the first 100 silently
+   * omits cars. Capped so a wrong `total` cannot spin forever.
+   */
+  listAll: async (): Promise<Vehicle[]> => {
+    const vehicles: Vehicle[] = []
+    for (let page = 1; page <= MAX_FLEET_PAGES; page++) {
+      const result = await vehicleApi.list({ page, pageSize: FLEET_PAGE_SIZE })
+      vehicles.push(...result.items)
+      if (vehicles.length >= result.total) break
+    }
+    return vehicles
   },
 
   /**

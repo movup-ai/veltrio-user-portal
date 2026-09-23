@@ -242,7 +242,9 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
 
 /** Everything that must be true before the counter can hand the keys over. */
 export function isReadyForPickup(booking: Booking): boolean {
-  return booking.payment.state !== 'unpaid' && Boolean(booking.contract.signedAt)
+  // Paid exactly, matching the API's own predicate: a held deposit is not settlement, and a
+  // refund undoes it. Anything looser would disagree with the "ready" count on the stat card.
+  return booking.payment.state === 'paid' && Boolean(booking.contract.signedAt)
 }
 
 /** The five stages a rental moves through, in order. Labels live in `bookings:details.stages.<key>`. */
