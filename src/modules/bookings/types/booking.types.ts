@@ -13,6 +13,16 @@ export type BookingTuple = [
   location: string,
   status: string,
   total: string,
+  /**
+   * The real pickup and return instants, ISO. Present on every booking from the API; absent
+   * on the dashboard's seeded rows, which only ever carried display text.
+   *
+   * The formatted window above has no year, so filtering on it alone mistakes a rental this
+   * time next year for one today, and reads a New Year crossing as a single day. These are
+   * what the filters actually sort and compare on.
+   */
+  pickupAt?: string,
+  returnAt?: string,
 ]
 
 /** Canonical booking statuses — display labels live in `domain:status.<value>`. */
@@ -38,7 +48,10 @@ export const BOOKING_ATTENTION_STATUSES: readonly string[] = [
   'Payment failed',
 ] satisfies BookingStatus[]
 
-export const BOOKING_OVERDUE_STATUSES: readonly string[] = ['Overdue fee', 'Payment failed'] satisfies BookingStatus[]
+export const BOOKING_OVERDUE_STATUSES: readonly string[] = [
+  'Overdue fee',
+  'Payment failed',
+] satisfies BookingStatus[]
 
 export const BOOKING_TABS = ['Upcoming', 'Today', 'Recent activity', 'Overdue'] as const
 export type BookingTab = (typeof BOOKING_TABS)[number]
@@ -241,7 +254,13 @@ export interface BookingChargeLine {
 }
 
 /** Events on the booking's audit trail. Labels live in `bookings:details.events.<key>`. */
-export const BOOKING_EVENTS = ['created', 'depositHold', 'licenceUploaded', 'confirmationSent', 'vehicleAssigned'] as const
+export const BOOKING_EVENTS = [
+  'created',
+  'depositHold',
+  'licenceUploaded',
+  'confirmationSent',
+  'vehicleAssigned',
+] as const
 export type BookingEvent = (typeof BOOKING_EVENTS)[number]
 
 export interface BookingEventEntry {
@@ -320,4 +339,19 @@ export interface BookingDetails {
   checks: BookingCheckStep[]
   events: BookingEventEntry[]
   renter: BookingRenter
+}
+
+/**
+ * A part-filled booking wizard, saved so the counter can come back to it. The payload is the
+ * form's own values — the API stores it untouched and validates nothing, because a draft is
+ * missing what makes a booking real. Saving one reserves no vehicle.
+ */
+export interface BookingDraft {
+  id: string
+  /** "DR-10001" — quotable while the booking is unfinished. A real BK- one lands on submit. */
+  reference: string
+  /** `BookingFormValues`, minus the attachments, which cannot be serialized. */
+  payload: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
 }

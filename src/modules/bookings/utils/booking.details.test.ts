@@ -16,7 +16,9 @@ describe('buildCharges', () => {
   })
 
   it('keeps extras intact and still adds up', () => {
-    const lines = buildCharges(900, 3, 139, 7, [{ key: 'additionalDriver', meta: { count: 1, rate: 12 }, amount: 36 }])
+    const lines = buildCharges(900, 3, 139, 7, [
+      { key: 'additionalDriver', meta: { count: 1, rate: 12 }, amount: 36 },
+    ])
 
     expect(lines.find((l) => l.key === 'additionalDriver')?.amount).toBe(36)
     expect(sum(lines.map((l) => l.amount))).toBe(900)

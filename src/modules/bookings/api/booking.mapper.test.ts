@@ -73,11 +73,14 @@ describe('toBooking', () => {
     })
   })
 
-  it('drops a deleted vehicle to undefined and falls back on an unknown status', () => {
-    const booking = toBooking({ ...wire, vehicleId: null, status: 'something_new' })
+  it('drops a deleted vehicle to undefined', () => {
+    expect(toBooking({ ...wire, vehicleId: null }).vehicleId).toBeUndefined()
+  })
 
-    expect(booking.vehicleId).toBeUndefined()
-    expect(booking.status).toBe('Deposit due')
+  it('shows a status it does not know as itself rather than inventing one', () => {
+    // Folding it into "Deposit due" would claim the rental is awaiting payment when the API
+    // said something else entirely — a false statement about money.
+    expect(toBooking({ ...wire, status: 'partially_refunded' }).status).toBe('partially_refunded')
   })
 })
 
@@ -86,7 +89,12 @@ describe('toBookingLists', () => {
 
   it('keeps open rentals upcoming and moves finished or returned ones to recent', () => {
     const open = toBooking(wire)
-    const returned = toBooking({ ...wire, reference: 'BK-2', pickupAt: '2026-09-01T00:00:00Z', returnAt: '2026-09-04T00:00:00Z' })
+    const returned = toBooking({
+      ...wire,
+      reference: 'BK-2',
+      pickupAt: '2026-09-01T00:00:00Z',
+      returnAt: '2026-09-04T00:00:00Z',
+    })
     const refunded = toBooking({ ...wire, reference: 'BK-3', status: 'refunded' })
 
     const lists = toBookingLists([open, returned, refunded], now)
@@ -110,6 +118,10 @@ describe('toBookingLists', () => {
       'Downtown',
       'Deposit due',
       '$313.51',
+      // The real instants ride along so the list filters on dates that know their year,
+      // rather than re-parsing the year-less window above.
+      '2026-10-01T13:30:00Z',
+      '2026-10-05T13:30:00Z',
     ])
   })
 })
@@ -117,7 +129,13 @@ describe('toBookingLists', () => {
 describe('toInterval', () => {
   it('maps the schedule endpoint onto the portal interval', () => {
     expect(
-      toInterval({ reference: 'BK-1', vehicleId: 'v1', vehiclePlate: 'ABC1234', pickupAt: 'a', returnAt: 'b' }),
+      toInterval({
+        reference: 'BK-1',
+        vehicleId: 'v1',
+        vehiclePlate: 'ABC1234',
+        pickupAt: 'a',
+        returnAt: 'b',
+      }),
     ).toEqual({ reference: 'BK-1', vehicleId: 'v1', plate: 'ABC1234', from: 'a', to: 'b' })
   })
 })

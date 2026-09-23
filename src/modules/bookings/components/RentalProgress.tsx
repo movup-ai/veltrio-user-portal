@@ -31,14 +31,26 @@ export function RentalProgress({ stages }: RentalProgressProps) {
 
   function noteFor(step: BookingStageStep): string {
     if (step.state === 'done' && step.at) {
-      const when = format.date(step.at, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+      const when = format.date(step.at, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
       return step.channel ? `${when} · ${t(`details.channels.${step.channel}`)}` : when
     }
 
     // Only handover and return are promises with a time on them. Confirming and closing happen
     // when the work is done, so dating them would invent a commitment nobody made.
     if (step.at && step.key === 'pickedUp') {
-      const when = format.date(step.at, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+      const when = format.date(step.at, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
       return t('details.progress.scheduled', { when })
     }
     if (step.at && step.key === 'returned') {
@@ -75,7 +87,10 @@ export function RentalProgress({ stages }: RentalProgressProps) {
               />
               <span className="flex items-center gap-1.5">
                 <Icon
-                  className={cn('size-3.5 shrink-0', done ? 'text-primary' : current ? 'text-fg-2' : 'text-fg-4')}
+                  className={cn(
+                    'size-3.5 shrink-0',
+                    done ? 'text-primary' : current ? 'text-fg-2' : 'text-fg-4',
+                  )}
                   aria-hidden
                 />
                 <span className={cn('truncate text-[13px] font-semibold', !done && !current && 'text-fg-4')}>

@@ -6,14 +6,26 @@ import type { RateOption } from '@/modules/vehicles/types/vehicle.types'
 import { formatRateOptionBasis } from '@/modules/vehicles/utils/vehicle.utils'
 import type { BookingPricing } from '../utils/booking.pricing'
 
-function Line({ label, value, hint, muted }: { label: string; value: string; hint?: string; muted?: boolean }) {
+function Line({
+  label,
+  value,
+  hint,
+  muted,
+}: {
+  label: string
+  value: string
+  hint?: string
+  muted?: boolean
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-1.5">
       <span className="min-w-0">
         <span className={cn('block text-[13.5px]', muted ? 'text-fg-4' : 'text-fg-2')}>{label}</span>
         {hint && <span className="text-fg-4 block text-[12px] tabular-nums">{hint}</span>}
       </span>
-      <span className={cn('shrink-0 text-[13.5px] tabular-nums', muted ? 'text-fg-4' : 'font-semibold')}>{value}</span>
+      <span className={cn('shrink-0 text-[13.5px] tabular-nums', muted ? 'text-fg-4' : 'font-semibold')}>
+        {value}
+      </span>
     </div>
   )
 }
@@ -39,7 +51,10 @@ export function BookingPriceSummary({ pricing, option, className }: BookingPrice
 
       <div className="divide-border-soft mt-3 divide-y">
         <Line
-          label={t('form.summary.rental', { label: option.label, basis: formatRateOptionBasis(option, tVehicles) })}
+          label={t('form.summary.rental', {
+            label: option.label,
+            basis: formatRateOptionBasis(option, tVehicles),
+          })}
           hint={t('form.summary.units', { count: pricing.units, price: format.currency(option.rate) })}
           value={format.currency(pricing.rentalSubtotal)}
         />
@@ -58,7 +73,10 @@ export function BookingPriceSummary({ pricing, option, className }: BookingPrice
         <Line label={t('form.summary.subtotal')} value={format.currency(pricing.subtotal)} />
 
         {pricing.taxRatePct > 0 && (
-          <Line label={t('form.summary.tax', { rate: pricing.taxRatePct })} value={format.currency(pricing.tax)} />
+          <Line
+            label={t('form.summary.tax', { rate: pricing.taxRatePct })}
+            value={format.currency(pricing.tax)}
+          />
         )}
 
         <div className="flex items-baseline justify-between gap-3 pt-2.5">

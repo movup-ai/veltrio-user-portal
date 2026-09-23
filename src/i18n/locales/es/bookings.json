@@ -16,7 +16,8 @@
       "Upcoming": "Próximas",
       "Today": "Hoy",
       "Recent activity": "Actividad reciente",
-      "Overdue": "Vencidas"
+      "Overdue": "Vencidas",
+      "Drafts": "Borradores"
     },
     "sort": {
       "label": "Ordenar reservas",
@@ -40,7 +41,19 @@
       "expectedRevenueNote": "Confirmado, aún sin facturar",
       "needsAttention": "Requiere atención",
       "needsAttentionNote": "{{awaitingId}} pendientes de identificación · {{depositDue}} depósito pendiente"
-    }
+    },
+    "drafts": {
+      "tab": "Borradores",
+      "savedColumn": "Guardado",
+      "noCustomer": "Sin cliente aún",
+      "noDates": "Sin fechas aún",
+      "resume": "Retomar borrador",
+      "discard": "Descartar borrador"
+    },
+    "draftsNote": "{{count}} borrador guardado",
+    "draftsNote_other": "{{count}} borradores guardados",
+    "draftsEmptyTitle": "Sin borradores guardados",
+    "draftsEmptyDescription": "Comience una reserva y elija Guardar borrador para retomarla después."
   },
   "filters": {
     "status": "Estado",
@@ -378,7 +391,11 @@
       "savedDescription": "Retome esta reserva desde Nueva reserva.",
       "restored": "Borrador recuperado",
       "restoredDescription": "Hemos recuperado la reserva que dejó a medias.",
-      "savedWithoutDocuments": "Guardado. Los escaneos de licencia y seguro no se conservaron; adjúntelos de nuevo al continuar."
+      "savedWithoutDocuments": "Guardado. Los escaneos de licencia y seguro no se conservaron; adjúntelos de nuevo al continuar.",
+      "saveFailed": "No se pudo guardar el borrador",
+      "discarded": "Borrador descartado",
+      "discardFailed": "No se pudo descartar el borrador",
+      "loading": "Cargando borrador…"
     },
     "nav": {
       "previousStep": "Atrás",

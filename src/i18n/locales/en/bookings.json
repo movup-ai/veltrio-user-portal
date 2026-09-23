@@ -16,7 +16,8 @@
       "Upcoming": "Upcoming",
       "Today": "Today",
       "Recent activity": "Recent activity",
-      "Overdue": "Overdue"
+      "Overdue": "Overdue",
+      "Drafts": "Drafts"
     },
     "sort": {
       "label": "Sort bookings",
@@ -40,7 +41,19 @@
       "expectedRevenueNote": "Confirmed, not yet invoiced",
       "needsAttention": "Needs attention",
       "needsAttentionNote": "{{awaitingId}} awaiting ID · {{depositDue}} deposit due"
-    }
+    },
+    "drafts": {
+      "tab": "Drafts",
+      "savedColumn": "Saved",
+      "noCustomer": "No renter yet",
+      "noDates": "No dates yet",
+      "resume": "Resume draft",
+      "discard": "Discard draft"
+    },
+    "draftsNote": "{{count}} saved draft",
+    "draftsNote_other": "{{count}} saved drafts",
+    "draftsEmptyTitle": "No saved drafts",
+    "draftsEmptyDescription": "Start a booking and choose Save draft to come back to it later."
   },
   "filters": {
     "status": "Status",
@@ -378,7 +391,11 @@
       "savedDescription": "Pick this booking back up from New booking.",
       "restored": "Draft restored",
       "restoredDescription": "We brought back the booking you were part-way through.",
-      "savedWithoutDocuments": "Saved. The licence and insurance scans were not kept — please attach them again when you resume."
+      "savedWithoutDocuments": "Saved. The licence and insurance scans were not kept — please attach them again when you resume.",
+      "saveFailed": "Could not save the draft",
+      "discarded": "Draft discarded",
+      "discardFailed": "Could not discard the draft",
+      "loading": "Loading draft…"
     },
     "nav": {
       "previousStep": "Back",

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
@@ -25,9 +26,13 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
-import { useCustomerDocuments, useCustomerSearch } from '@/modules/customers/hooks/use-customers'
+import {
+  customerKeys,
+  useCustomerDocuments,
+  useCustomerSearch,
+} from '@/modules/customers/hooks/use-customers'
 import { DocumentOnFile } from '@/modules/customers/components/DocumentOnFile'
-import type { DocumentKind } from '@/modules/customers/types/customer.types'
+import type { Customer, DocumentKind } from '@/modules/customers/types/customer.types'
 import {
   ACCEPTED_DOCUMENT_TYPES,
   uploadCustomerDocument,
@@ -43,6 +48,11 @@ import { BookingPriceSummary } from '@/modules/bookings/components/BookingPriceS
 import { BookingRateOptions } from '@/modules/bookings/components/BookingRateOptions'
 import { BookingVehiclePicker, type VehicleOption } from '@/modules/bookings/components/BookingVehiclePicker'
 import { useBookingSchedule, useCreateBooking } from '@/modules/bookings/hooks/use-bookings'
+import {
+  useBookingDrafts,
+  useDeleteBookingDraft,
+  useSaveBookingDraft,
+} from '@/modules/bookings/hooks/use-booking-drafts'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import {
   BOOKING_STEP_FIELDS,
@@ -62,8 +72,6 @@ type StepKey = (typeof STEP_KEYS)[number]
  * need the picker to page or search rather than listing everything.
  */
 const FLEET_PAGE_SIZE = 100
-
-const DRAFT_STORAGE_KEY = 'veltrio.bookingDraft'
 
 /** Stable empty default so an unresolved bookings query doesn't churn identity every render. */
 const EMPTY_SCHEDULE: BookedInterval[] = []
@@ -116,24 +124,69 @@ function blankValues(): BookingFormValues {
   }
 }
 
-/** A saved draft may predate a field being added — merge it over a blank form rather than trusting it wholesale. */
-function loadDraft(): BookingFormValues | null {
-  try {
-    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
-    if (!raw) return null
-    return { ...blankValues(), ...(JSON.parse(raw) as Partial<BookingFormValues>) }
-  } catch {
-    return null
+/**
+ * A saved draft may predate a field being added, so it is merged over a blank form rather
+ * than trusted wholesale. Attachments never survive a draft — a File cannot be serialized —
+ * so they are always reset.
+ */
+function fromDraftPayload(payload: Record<string, unknown>): BookingFormValues {
+  return {
+    ...blankValues(),
+    ...(payload as Partial<BookingFormValues>),
+    licenceDocument: null,
+    insuranceDocument: null,
   }
 }
 
+/**
+ * Resolves `?draft=<id>` before the wizard mounts.
+ *
+ * react-hook-form reads `defaultValues` once, so the form cannot be built until the draft it
+ * is resuming has arrived — mounting first and filling in afterwards would leave the counter
+ * looking at a blank form that silently rewrites itself.
+ */
 export function BookingFormPage() {
+  const { t } = useTranslation('bookings')
+  const [resumedDraftId] = useState(() => new URLSearchParams(window.location.search).get('draft'))
+  const { data: draftPage, isLoading } = useBookingDrafts()
+
+  if (resumedDraftId && isLoading) {
+    return (
+      <PageContainer>
+        <LoadingState label={t('form.draft.loading')} />
+      </PageContainer>
+    )
+  }
+
+  const draft = draftPage?.items.find((d) => d.id === resumedDraftId)
+
+  return (
+    // Remounts if the draft changes, so the form rebuilds its defaults rather than keeping
+    // the values of whichever draft it opened with.
+    <BookingWizard
+      key={draft?.id ?? 'new'}
+      draftId={draft?.id}
+      initialValues={draft ? fromDraftPayload(draft.payload) : null}
+    />
+  )
+}
+
+interface BookingWizardProps {
+  draftId?: string
+  /** Null for a fresh booking; the resumed draft's values otherwise. */
+  initialValues: BookingFormValues | null
+}
+
+function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const { t: tValidation } = useTranslation('validation')
   const format = useFormatters()
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
+  const saveDraft = useSaveBookingDraft()
+  const deleteDraft = useDeleteBookingDraft()
+  const queryClient = useQueryClient()
   const locations = useLocationNames()
 
   const [stepIndex, setStepIndex] = useState(0)
@@ -142,13 +195,16 @@ export function BookingFormPage() {
   // keep a row's errors to themselves until the field is blurred, so adding a blank driver or
   // fee doesn't immediately mark it invalid.
   const [stepValidationAttempted, setStepValidationAttempted] = useState<Record<number, boolean>>({})
-  const [restoredDraft] = useState(loadDraft)
+  const resumedDraftId = draftId
+  const restoredDraft = initialValues
 
   /**
    * The lookup box holds its own text, deliberately *not* bound to `customerName`. Sharing one
    * value made the two fields mirror each other, so typing a new renter's name below echoed
    * into the search above. Seeded only when a draft was linked to a real customer.
    */
+  // Seeded from the draft's own name: the matching customer has not loaded yet, so the label
+  // cannot be rebuilt here. Picking anyone replaces it with the disambiguated form.
   const [customerQuery, setCustomerQuery] = useState(
     restoredDraft?.customerId ? restoredDraft.customerName : '',
   )
@@ -209,7 +265,10 @@ export function BookingFormPage() {
   })
 
   // Only the bookings touching this window — the API does the overlap filtering.
-  const { data: scheduleData } = useBookingSchedule(pickupAt, returnAt, hours > 0)
+  const { data: scheduleData, isStale: scheduleIsStale } = useBookingSchedule(pickupAt, returnAt, hours > 0)
+  // Availability is only meaningful once the schedule describes the dates on screen. While a
+  // new window loads we hold the last one for smoothness, but must not judge cars against it.
+  const scheduleReady = hours > 0 && !scheduleIsStale
   const schedule = scheduleData ?? EMPTY_SCHEDULE
 
   // The lookup box searches the customer book as the counter types.
@@ -238,7 +297,7 @@ export function BookingFormPage() {
    * reset effect below key off a boolean instead of an array identity.
    */
   const options: VehicleOption[] = (data?.items ?? []).map((vehicle) => {
-    const clash = hours > 0 ? conflictsForVehicle(schedule, vehicle.id, pickupAt, returnAt)[0] : undefined
+    const clash = scheduleReady ? conflictsForVehicle(schedule, vehicle.id, pickupAt, returnAt)[0] : undefined
     return { vehicle, bookedUntil: clash?.to }
   })
 
@@ -294,18 +353,29 @@ export function BookingFormPage() {
   const cancel = () => navigate('/app/bookings')
 
   function handleSaveDraft() {
-    // Attachments are left out: a File cannot be serialized — JSON.stringify would quietly
-    // write `{}` and the draft would come back holding a broken one. The counter re-picks the
-    // scans when they resume, which is also why the toast says what was kept.
-    const draft: Partial<BookingFormValues> = { ...values, licenceDocument: null, insuranceDocument: null }
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
-    const hadDocuments = Boolean(values.licenceDocument || values.insuranceDocument)
-    toast({
-      title: t('form.draft.saved'),
-      description: hadDocuments ? t('form.draft.savedWithoutDocuments') : t('form.draft.savedDescription'),
-      variant: 'success',
-    })
-    navigate('/app/bookings')
+    // Attachments are left out: a File cannot be serialized, so the API would store `{}` and
+    // the draft would come back holding a broken one. The counter re-picks the scans when
+    // they resume, which is why the toast says so.
+    const { licenceDocument, insuranceDocument, ...payload } = values
+    const hadDocuments = Boolean(licenceDocument || insuranceDocument)
+
+    // Updating when resuming, creating otherwise — so returning to a draft does not leave a
+    // second copy of it behind every time it is saved.
+    saveDraft.mutate(
+      { id: resumedDraftId ?? undefined, payload: payload as Record<string, unknown> },
+      {
+        onSuccess: () => {
+          toast({
+            title: t('form.draft.saved'),
+            description: hadDocuments
+              ? t('form.draft.savedWithoutDocuments')
+              : t('form.draft.savedDescription'),
+            variant: 'success',
+          })
+          navigate('/app/bookings')
+        },
+      },
+    )
   }
 
   function handleSelectVehicle(vehicle: Vehicle) {
@@ -319,11 +389,21 @@ export function BookingFormPage() {
     setValue('rateOptionId', option.id, { shouldValidate: true })
   }
 
-  function handlePickCustomer(name: string) {
-    const match = customerMatches.find((c) => c.name === name)
+  /**
+   * What the lookup box shows for a renter. Two people genuinely share a name, so the label
+   * carries the email that distinguishes them — resolving on the name alone would silently
+   * pick whichever matched first and attach the booking (and its scans) to the wrong person.
+   */
+  function customerLabel(customer: Customer): string {
+    return `${customer.name} · ${customer.email}`
+  }
+
+  function handlePickCustomer(label: string) {
+    const match = customerMatches.find((c) => customerLabel(c) === label)
     const opts = { shouldValidate: true, shouldDirty: true } as const
-    setCustomerQuery(name)
-    setValue('customerName', name, opts)
+    // Free text stays as typed; a picked renter shows the label so the choice stays visible.
+    setCustomerQuery(label)
+    setValue('customerName', match?.name ?? label, opts)
     setValue('customerId', match?.id ?? '', opts)
     if (!match) return
     setValue('customerEmail', match.email, opts)
@@ -373,6 +453,11 @@ export function BookingFormPage() {
         failed.push(t(`form.documents.${kind}`))
       }
     }
+    // The booking mutation invalidated this customer before these uploads ran, so their
+    // documents are cached as they were a moment ago — a replaced scan would keep showing the
+    // old row (and a 404 thumbnail) until the entry went stale. Refresh once they have landed.
+    await queryClient.invalidateQueries({ queryKey: customerKeys.documents(customerId) })
+
     if (failed.length > 0) {
       toast({
         title: t('form.documents.uploadFailed'),
@@ -412,7 +497,8 @@ export function BookingFormPage() {
       // isSubmitting true until onSubmit settles, and the scans are part of "creating".
       createBooking.mutate(input, {
         onSuccess: async (booking) => {
-          localStorage.removeItem(DRAFT_STORAGE_KEY)
+          // The draft became a booking, so it should not linger in the list.
+          if (resumedDraftId) deleteDraft.mutate(resumedDraftId)
           // Documents hang off the customer, who only exists once the booking has been taken,
           // so the scans go up now against the id the API just resolved. A failed scan must not
           // discard a booking that was made: it is reported on its own and the booking stands.
@@ -746,7 +832,7 @@ export function BookingFormPage() {
                           aria-label={t('form.customer.search')}
                           value={customerQuery}
                           onChange={handlePickCustomer}
-                          options={customerMatches.map((c) => c.name)}
+                          options={customerMatches.map(customerLabel)}
                           placeholder={t('form.fields.customerNamePlaceholder')}
                         />
                       )}
@@ -1218,7 +1304,14 @@ export function BookingFormPage() {
             </Button>
 
             {stepKey !== 'review' ? (
-              <Button type="button" onClick={goNext} className="gap-1.5">
+              <Button
+                type="button"
+                onClick={goNext}
+                // Leaving the trip step commits to a vehicle, so wait for availability that
+                // describes the chosen dates rather than the ones before the last edit.
+                loading={stepKey === 'trip' && hours > 0 && !scheduleReady}
+                className="gap-1.5"
+              >
                 {t('form.nav.continue')}
                 <ArrowRight className="size-4" aria-hidden />
               </Button>

@@ -1,6 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render as rtlRender, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '@/types/api'
 import type { CustomerDocument } from '../types/customer.types'
 
 const downloadUrl = vi.fn()
@@ -13,6 +15,19 @@ vi.mock('../api/customer-document.api', () => ({
 }))
 
 const { DocumentOnFile } = await import('./DocumentOnFile')
+
+let queryClient: QueryClient
+let invalidate: ReturnType<typeof vi.fn>
+
+/** The component invalidates its own query on a 404, so it needs a real client. */
+function render(ui: React.ReactElement) {
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  invalidate = vi.fn()
+  // Spied rather than asserted through the cache: the component fires and forgets, so the
+  // call itself is the observable behaviour.
+  queryClient.invalidateQueries = invalidate as unknown as QueryClient['invalidateQueries']
+  return rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+}
 
 function document(overrides: Partial<CustomerDocument> = {}): CustomerDocument {
   return {
@@ -102,5 +117,24 @@ describe('DocumentOnFile', () => {
     // No broken image: the slot keeps its icon and the row still reads correctly.
     expect(container.querySelector('img')).not.toBeInTheDocument()
     expect(screen.getByText('licence.jpg')).toBeInTheDocument()
+  })
+  it('refetches the list when a thumbnail 404s, because the row is stale', async () => {
+    // Someone replaced this scan on another booking: the id the cache handed us is gone.
+    downloadUrl.mockRejectedValue(new ApiError('not_found', 'Document not found', { status: 404 }))
+    render(<DocumentOnFile customerId="c1" document={IMAGE} onReplace={vi.fn()} />)
+
+    await waitFor(() => expect(downloadUrl).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['customers', 'c1', 'documents'] }),
+    )
+  })
+
+  it('leaves the list alone when the link merely expired', async () => {
+    // A 403 is a stale signature, not a missing document — refetching would be noise.
+    downloadUrl.mockRejectedValue(new ApiError('forbidden', 'Expired', { status: 403 }))
+    render(<DocumentOnFile customerId="c1" document={IMAGE} onReplace={vi.fn()} />)
+
+    await waitFor(() => expect(downloadUrl).toHaveBeenCalled())
+    expect(invalidate).not.toHaveBeenCalled()
   })
 })

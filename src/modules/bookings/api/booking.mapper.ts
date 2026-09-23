@@ -5,6 +5,7 @@ import {
   type AdditionalDriver,
   type BookedInterval,
   type Booking,
+  type BookingDraft,
   type BookingFee,
   type BookingInput,
   type BookingLists,
@@ -109,7 +110,12 @@ function fromCents(cents: number): number {
 // --- Reads ---------------------------------------------------------------------------------
 
 function toDriver(wire: AdditionalDriverWire): AdditionalDriver {
-  return { id: wire.id, name: wire.name, licenceNumber: wire.licenceNumber, pricePerDay: fromCents(wire.pricePerDayCents) }
+  return {
+    id: wire.id,
+    name: wire.name,
+    licenceNumber: wire.licenceNumber,
+    pricePerDay: fromCents(wire.pricePerDayCents),
+  }
 }
 
 function toFee(wire: BookingFeeWire): BookingFee {
@@ -120,8 +126,10 @@ export function toBooking(wire: BookingWire): Booking {
   return {
     id: wire.id,
     reference: wire.reference,
-    // An unknown slug renders as unconfirmed rather than blanking the row.
-    status: STATUS_FROM_API[wire.status] ?? 'Deposit due',
+    // An unknown status shows as itself rather than "Deposit due" — claiming a rental awaits
+    // payment when the API said otherwise would misstate the money. The badge falls back to
+    // neutral colours.
+    status: STATUS_FROM_API[wire.status] ?? (wire.status as BookingStatus),
     customer: toCustomer(wire.customer),
     vehicleId: wire.vehicleId ?? undefined,
     vehicleName: wire.vehicleName,
@@ -178,14 +186,21 @@ const FINISHED_STATUSES: readonly BookingStatus[] = ['Completed', 'Refunded']
 export function toBookingLists(bookings: Booking[], now = new Date()): BookingLists {
   const cutoff = now.getTime()
   const open = (b: Booking) =>
-    !FINISHED_STATUSES.includes(b.status) && (Date.parse(b.returnAt) >= cutoff || BOOKING_OVERDUE_STATUSES.includes(b.status))
+    !FINISHED_STATUSES.includes(b.status) &&
+    (Date.parse(b.returnAt) >= cutoff || BOOKING_OVERDUE_STATUSES.includes(b.status))
 
   return {
     upcoming: bookings.filter(open).map(bookingToTuple),
     recent: bookings.filter((b) => !open(b)).map(bookingToTuple),
     schedule: bookings
       .filter((b) => b.vehicleId && !FINISHED_STATUSES.includes(b.status))
-      .map((b) => ({ reference: b.reference, vehicleId: b.vehicleId as string, plate: b.vehiclePlate, from: b.pickupAt, to: b.returnAt })),
+      .map((b) => ({
+        reference: b.reference,
+        vehicleId: b.vehicleId as string,
+        plate: b.vehiclePlate,
+        from: b.pickupAt,
+        to: b.returnAt,
+      })),
   }
 }
 
@@ -209,5 +224,26 @@ export function toBookingPayload(input: BookingInput) {
     })),
     fees: input.fees.map((f) => ({ id: f.id, label: f.label.trim(), amountCents: toCents(f.amount) })),
     verifications: input.verifications,
+  }
+}
+
+// --- Drafts --------------------------------------------------------------------------------
+
+export interface BookingDraftWire {
+  id: string
+  reference: string
+  payload: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+}
+
+/** Nothing to translate — the payload is the portal's own shape, stored as-is. */
+export function toBookingDraft(wire: BookingDraftWire): BookingDraft {
+  return {
+    id: wire.id,
+    reference: wire.reference,
+    payload: wire.payload,
+    createdAt: wire.createdAt,
+    updatedAt: wire.updatedAt,
   }
 }

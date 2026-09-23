@@ -1,7 +1,16 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowDownLeft, ArrowLeft, ArrowUpRight, CarFront, ExternalLink, KeyRound, Mail, Printer } from 'lucide-react'
+import {
+  ArrowDownLeft,
+  ArrowLeft,
+  ArrowUpRight,
+  CarFront,
+  ExternalLink,
+  KeyRound,
+  Mail,
+  Printer,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -43,7 +52,10 @@ function VehicleCover({ src }: { src?: string }) {
           alt=""
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
-          className={cn('absolute inset-0 size-full object-cover transition-opacity', loaded ? 'opacity-100' : 'opacity-0')}
+          className={cn(
+            'absolute inset-0 size-full object-cover transition-opacity',
+            loaded ? 'opacity-100' : 'opacity-0',
+          )}
         />
       )}
     </span>
@@ -84,19 +96,34 @@ export function BookingDetailsPage() {
     return (
       <PageContainer>
         <PageHeader title={t('details.notFoundTitle')} description={t('details.notFoundDescription')} />
-        <ErrorState title={t('details.notFoundTitle')} description={t('details.notFoundDescription')} onRetry={() => refetch()} />
+        <ErrorState
+          title={t('details.notFoundTitle')}
+          description={t('details.notFoundDescription')}
+          onRetry={() => refetch()}
+        />
       </PageContainer>
     )
   }
 
-  const dateTime = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false } as const
+  const dateTime = {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  } as const
   const closed = !stillOpen
 
   return (
     <PageContainer>
       <PageHeader
         leading={
-          <Button variant="outline" size="icon" onClick={() => navigate('/app/bookings')} aria-label={t('details.backToList')}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate('/app/bookings')}
+            aria-label={t('details.backToList')}
+          >
             <ArrowLeft className="size-4" />
           </Button>
         }
@@ -105,7 +132,11 @@ export function BookingDetailsPage() {
         description={`${booking.renter.name} · ${booking.vehicleName} · ${booking.pickupLocation}`}
         actions={
           <>
-            <PageActionButton icon={Printer} label={t('details.actions.printAgreement')} onClick={() => window.print()} />
+            <PageActionButton
+              icon={Printer}
+              label={t('details.actions.printAgreement')}
+              onClick={() => window.print()}
+            />
             <PageActionButton
               icon={Mail}
               label={t('details.actions.messageRenter')}
@@ -137,7 +168,10 @@ export function BookingDetailsPage() {
               when={format.date(booking.pickupAt, dateTime)}
               place={[booking.pickupLocation, booking.pickupAddress].filter(Boolean).join(' · ')}
               rows={[
-                { label: t('details.pickup.counter'), value: t('details.pickup.desk', { number: booking.counter, agent: booking.agent }) },
+                {
+                  label: t('details.pickup.counter'),
+                  value: t('details.pickup.desk', { number: booking.counter, agent: booking.agent }),
+                },
                 { label: t('details.pickup.fuelOut'), value: t('details.pickup.fuelPolicy') },
               ]}
             />
@@ -151,7 +185,10 @@ export function BookingDetailsPage() {
                   : `${booking.returnLocation} · ${t('details.return.oneWay')}`
               }
               rows={[
-                { label: t('details.return.duration'), value: t('details.return.days', { count: booking.days }) },
+                {
+                  label: t('details.return.duration'),
+                  value: t('details.return.days', { count: booking.days }),
+                },
                 {
                   label: t('details.return.mileageCap'),
                   value:
@@ -235,7 +272,10 @@ export function BookingDetailsPage() {
         open={confirmCancel}
         onOpenChange={setConfirmCancel}
         title={t('details.cancelDialog.title')}
-        description={t('details.cancelDialog.description', { reference: booking.reference, name: booking.renter.name })}
+        description={t('details.cancelDialog.description', {
+          reference: booking.reference,
+          name: booking.renter.name,
+        })}
         confirmLabel={t('details.cancelDialog.confirm')}
         cancelLabel={tCommon('actions.back')}
         onConfirm={() => {

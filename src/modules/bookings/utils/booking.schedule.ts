@@ -47,7 +47,10 @@ export function parseRentalWindow(rentalWindow: string): RentalWindowParts | nul
  * time (rentals come back at the hour they went out), and a window that wraps new year rolls
  * its end date forward.
  */
-export function rentalWindowDates(rentalWindow: string, year = new Date().getFullYear()): { from: Date; to: Date } | null {
+export function rentalWindowDates(
+  rentalWindow: string,
+  year = new Date().getFullYear(),
+): { from: Date; to: Date } | null {
   const parts = parseRentalWindow(rentalWindow)
   if (!parts) return null
 

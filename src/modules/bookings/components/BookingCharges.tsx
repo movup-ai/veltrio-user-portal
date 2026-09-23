@@ -50,7 +50,9 @@ export function BookingChargeLines({ charges, days }: BookingChargeLinesProps) {
               <span className="block text-[13px] font-semibold">{nameFor(line)}</span>
               {caption && <span className="text-fg-4 block text-[11.5px]">{caption}</span>}
             </span>
-            <span className="shrink-0 text-[13px] font-semibold tabular-nums">{format.currency(line.amount)}</span>
+            <span className="shrink-0 text-[13px] font-semibold tabular-nums">
+              {format.currency(line.amount)}
+            </span>
           </div>
         )
       })}

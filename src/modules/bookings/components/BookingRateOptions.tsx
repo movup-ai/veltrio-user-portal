@@ -15,7 +15,13 @@ interface BookingRateOptionsProps {
 }
 
 /** Rate options for the chosen vehicle, each priced against the trip length already entered. */
-export function BookingRateOptions({ options, selectedId, onSelect, hours, invalid }: BookingRateOptionsProps) {
+export function BookingRateOptions({
+  options,
+  selectedId,
+  onSelect,
+  hours,
+  invalid,
+}: BookingRateOptionsProps) {
   const { t } = useTranslation('bookings')
   const { t: tVehicles } = useTranslation('vehicles')
   const format = useFormatters()
@@ -26,7 +32,10 @@ export function BookingRateOptions({ options, selectedId, onSelect, hours, inval
 
   return (
     <div
-      className={cn('grid gap-2.5', invalid && 'rounded-[11px] outline-2 outline-offset-4 outline-[var(--color-error)]')}
+      className={cn(
+        'grid gap-2.5',
+        invalid && 'rounded-[11px] outline-2 outline-offset-4 outline-[var(--color-error)]',
+      )}
       style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
       role="radiogroup"
       aria-label={t('form.rate.pick')}
@@ -49,7 +58,9 @@ export function BookingRateOptions({ options, selectedId, onSelect, hours, inval
           >
             <span className="flex items-baseline justify-between gap-2">
               <span className="text-[14.5px] font-semibold">{option.label}</span>
-              <span className="text-[14.5px] font-bold tabular-nums">{format.currency(option.rate * units)}</span>
+              <span className="text-[14.5px] font-bold tabular-nums">
+                {format.currency(option.rate * units)}
+              </span>
             </span>
             <span className="text-fg-3 flex flex-wrap items-center gap-x-1.5 text-[13px]">
               <span>{formatRateOptionBasis(option, tVehicles)}</span>

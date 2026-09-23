@@ -63,11 +63,9 @@ export function BookingVehiclePicker({
 
   const totalPages = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE))
 
-  // Changing the branch or the dates rebuilds the list underneath the reader, and page 3 of the
-  // old fleet means nothing against the new one. Adjusted during render rather than in an
-  // effect, so the first paint is already page 1 instead of briefly showing the stale page.
-  // Keyed on which cars are listed, not how many: switching between two equally sized branches
-  // still returns to the top.
+  // Keyed on which cars are listed, not how many, so switching between two equally sized
+  // branches still returns to page 1. Set during render rather than in an effect, which would
+  // paint the stale page first.
   const listIdentity = ordered.map((o) => o.vehicle.id).join()
   if (listIdentity !== pagedList) {
     setPagedList(listIdentity)

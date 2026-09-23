@@ -107,7 +107,10 @@ export function priceBooking({
 
   const rentalSubtotal = option.rate * units
 
-  const driversPerDay = additionalDrivers.reduce((sum, d) => sum + (Number.isFinite(d.pricePerDay) ? d.pricePerDay : 0), 0)
+  const driversPerDay = additionalDrivers.reduce(
+    (sum, d) => sum + (Number.isFinite(d.pricePerDay) ? d.pricePerDay : 0),
+    0,
+  )
   const drivers: DriverCharge | null =
     additionalDrivers.length > 0
       ? { count: additionalDrivers.length, perDay: driversPerDay, amount: driversPerDay * days }

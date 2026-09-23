@@ -40,7 +40,11 @@ export function BookingChecklist({ checks, onAction }: BookingChecklistProps) {
                   check.done ? 'bg-success text-white' : 'bg-error-tint',
                 )}
               >
-                {check.done ? <Check className="size-3" strokeWidth={3} /> : <span className="bg-error size-[9px] rounded-full" />}
+                {check.done ? (
+                  <Check className="size-3" strokeWidth={3} />
+                ) : (
+                  <span className="bg-error size-[9px] rounded-full" />
+                )}
               </span>
 
               <p className={cn('m-0 text-[12px] font-bold', check.done ? 'text-success' : 'text-error')}>

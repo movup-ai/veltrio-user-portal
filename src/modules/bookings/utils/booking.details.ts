@@ -302,10 +302,23 @@ function exactCharges(booking: Booking): BookingChargeLine[] {
  * charges, deposit and renter are exact; without one — a seeded tuple — they're inferred from
  * the row's display text and the fleet, customer and branch seeds.
  *
+ * `context` carries the real vehicle and branch when the caller has them, so a live booking
+ * shows its actual photo, address and agent rather than whatever the seeds happen to hold.
+ *
  * Mock scaffolding either way: the timeline, payment state, agreement and audit trail have no
  * endpoints yet, so they're derived from the status and the rental window.
  */
-export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): BookingDetails {
+/** The real records behind a live booking, where the caller has fetched them. */
+export interface BookingDetailsContext {
+  vehicle?: Vehicle
+  branch?: { address?: string; manager?: string }
+}
+
+export function buildBookingDetails(
+  tuple: BookingTuple,
+  booking?: Booking,
+  context: BookingDetailsContext = {},
+): BookingDetails {
   const [customerName, reference, vehicleName, plate, window, , location, status, totalText] = tuple
 
   const dates = booking
@@ -315,8 +328,10 @@ export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): Boo
   const dropoff = dates ? dates.to : addDays(pickup, 1)
   const days = Math.max(1, Math.round((dropoff.getTime() - pickup.getTime()) / 86_400_000))
 
-  const vehicle = findVehicle(plate)
-  const branch = MOCK_BRANCHES.find((b) => b.name === location)
+  // The live records where the caller fetched them; the seeds are the fallback for the
+  // dashboard's mock rows, which have no real vehicle or branch behind them.
+  const vehicle = context.vehicle ?? findVehicle(plate)
+  const branch = context.branch ?? MOCK_BRANCHES.find((b) => b.name === location)
   const total = booking ? booking.pricing.total : Math.abs(parseBookingTotal(totalText))
   const taxRatePct = booking?.pricing.taxRatePct ?? vehicle?.fees.taxRatePct ?? DEFAULT_TAX_PCT
 
@@ -327,9 +342,18 @@ export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): Boo
   const deposit = booking?.pricing.deposit ?? vehicle?.fees.deposit ?? 350
   const rateOption = vehicle?.rateOptions.find((o) => o.basis === 'day')
   const listDailyRate =
-    booking && booking.rate.basis === 'day' ? booking.rate.rate : (rateOption?.rate ?? Math.round(total / days))
+    booking && booking.rate.basis === 'day'
+      ? booking.rate.rate
+      : (rateOption?.rate ?? Math.round(total / days))
   const card = `Visa · ${4000 + (sequence(reference) % 1000)}`
-  const payment = buildPayment(status, total, deposit, card, stages[1].at ?? pickup.toISOString(), stages[4].state === 'done')
+  const payment = buildPayment(
+    status,
+    total,
+    deposit,
+    card,
+    stages[1].at ?? pickup.toISOString(),
+    stages[4].state === 'done',
+  )
 
   const includedMiles = booking
     ? booking.rate.includedMiles
@@ -356,9 +380,7 @@ export function buildBookingDetails(tuple: BookingTuple, booking?: Booking): Boo
     vehicleName,
     vehiclePlate: plate,
     vehicleImage: vehicle?.photos[0]?.url,
-    vehicleSubtitle: vehicle
-      ? `${vehicle.vehicleType} · ${vehicle.year} · ${vehicle.location}`
-      : location,
+    vehicleSubtitle: vehicle ? `${vehicle.vehicleType} · ${vehicle.year} · ${vehicle.location}` : location,
     listDailyRate,
 
     charges: booking ? exactCharges(booking) : buildCharges(total, days, listDailyRate, taxRatePct, []),

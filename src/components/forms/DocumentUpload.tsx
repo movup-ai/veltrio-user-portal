@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Download, Expand, FileText, Paperclip, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
@@ -53,6 +53,23 @@ export function DocumentUpload({
   const [isDragging, setIsDragging] = useState(false)
   const [isPreviewing, setIsPreviewing] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  /**
+   * An object URL pins its file in memory until it is released. Removing or replacing the file
+   * revokes it explicitly, but every other way out of the form — cancelling, saving a draft,
+   * submitting, or simply navigating away — would otherwise leave up to 10 MB per slot held
+   * for the life of the page. A ref, because the cleanup must see the URL as it was at unmount
+   * without re-running on every change.
+   */
+  const liveUrl = useRef<string | null>(null)
+  useEffect(() => {
+    liveUrl.current = value?.url ?? null
+  }, [value?.url])
+  useEffect(() => {
+    return () => {
+      if (liveUrl.current) URL.revokeObjectURL(liveUrl.current)
+    }
+  }, [])
 
   function accept_(fileList: FileList | null) {
     const file = fileList?.[0]

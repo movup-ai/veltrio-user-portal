@@ -3,7 +3,7 @@ import type { Row, RowActionItem } from '@/components/data-display/record-table.
 import { formatCurrencyIn, formatDateIn } from '@/i18n/formatters'
 import { initials } from '@/utils/formatting'
 import { durationHours } from './booking.pricing'
-import type { Booking, BookingTuple } from '../types/booking.types'
+import type { Booking, BookingDraft, BookingTuple } from '../types/booking.types'
 
 export function bookingColumns(t: TFunction<'bookings'>) {
   return [
@@ -52,6 +52,8 @@ export function bookingToTuple(b: Booking): BookingTuple {
     b.pickupLocation,
     b.status,
     formatCurrencyIn(TUPLE_LANGUAGE, b.pricing.total),
+    b.pickupAt,
+    b.returnAt,
   ]
 }
 
@@ -81,8 +83,15 @@ function toCsvCell(value: string): string {
 }
 
 /** Builds a CSV from booking tuples and triggers a browser download — no backend export endpoint yet. */
-export function downloadBookingsCsv(bookings: BookingTuple[], filename: string, t: TFunction<'bookings'>): void {
-  const csv = [csvHeader(t), ...bookings].map((row) => row.map(toCsvCell).join(',')).join('\r\n')
+export function downloadBookingsCsv(
+  bookings: BookingTuple[],
+  filename: string,
+  t: TFunction<'bookings'>,
+): void {
+  // Only the nine display columns the header names: the tuple also carries the raw pickup and
+  // return instants, which are there for filtering, not for the exported file.
+  const rows = bookings.map((row) => row.slice(0, 9) as string[])
+  const csv = [csvHeader(t), ...rows].map((row) => row.map(toCsvCell).join(',')).join('\r\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
 
@@ -102,12 +111,75 @@ export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
   return {
     key: reference,
     cells: [
-      { kind: 'avatar', primary: customer, secondary: reference, initials: initials(customer), avatarBg: 'var(--color-surface-3)', avatarFg: 'var(--color-fg-2)', avatarRadius: '99px', subFontMono: true },
+      {
+        kind: 'avatar',
+        primary: customer,
+        secondary: reference,
+        initials: initials(customer),
+        avatarBg: 'var(--color-surface-3)',
+        avatarFg: 'var(--color-fg-2)',
+        avatarRadius: '99px',
+        subFontMono: true,
+      },
       { kind: 'stack', primary: vehicle, secondary: plate, weight: 500, subFontMono: true },
       { kind: 'stack', primary: window, secondary: note, weight: 500, subFontMono: false },
       { kind: 'text', primary: location },
       { kind: 'badge', status },
-      { kind: 'amount', primary: total, align: 'right', tone: total.charAt(0) === '−' ? 'var(--color-fg-3)' : 'var(--color-foreground)' },
+      {
+        kind: 'amount',
+        primary: total,
+        align: 'right',
+        tone: total.charAt(0) === '−' ? 'var(--color-fg-3)' : 'var(--color-foreground)',
+      },
+      { kind: 'actions', align: 'right', items: actions },
+    ],
+  }
+}
+
+/** The Drafts tab's own columns — a draft has no reference, status or total to show. */
+export function draftColumns(t: TFunction<'bookings'>) {
+  return [
+    { label: t('columns.customer'), align: 'left' as const },
+    { label: t('columns.rentalWindow'), align: 'left' as const },
+    { label: t('columns.location'), align: 'left' as const },
+    { label: t('list.drafts.savedColumn'), align: 'left' as const },
+    { label: '', align: 'right' as const },
+  ]
+}
+
+/**
+ * One row per saved draft. Everything is read defensively: the payload is whatever the wizard
+ * happened to hold when it was saved, so a draft abandoned on the first step has almost
+ * nothing in it, and an older one may predate a field entirely.
+ */
+export function draftRow(
+  draft: BookingDraft,
+  t: TFunction<'bookings'>,
+  savedLabel: string,
+  actions?: RowActionItem[],
+): Row {
+  const payload = draft.payload as Partial<Record<string, string>>
+  const customer = payload.customerName?.trim() || t('list.drafts.noCustomer')
+  const window =
+    payload.pickupDate && payload.returnDate
+      ? `${payload.pickupDate} → ${payload.returnDate}`
+      : (payload.pickupDate ?? t('list.drafts.noDates'))
+
+  return {
+    key: draft.id,
+    cells: [
+      {
+        kind: 'avatar',
+        primary: customer,
+        secondary: draft.reference,
+        initials: initials(customer),
+        avatarBg: 'var(--color-surface-3)',
+        avatarFg: 'var(--color-fg-2)',
+        avatarRadius: '99px',
+      },
+      { kind: 'text', primary: window },
+      { kind: 'text', primary: payload.pickupLocation || '—' },
+      { kind: 'text', primary: savedLabel },
       { kind: 'actions', align: 'right', items: actions },
     ],
   }

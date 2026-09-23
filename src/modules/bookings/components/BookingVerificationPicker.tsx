@@ -46,7 +46,11 @@ export function BookingVerificationPicker({ selected, onChange }: BookingVerific
               <span className="block text-[14px] font-semibold">{t(`verification.${key}.label`)}</span>
               <span className="text-fg-4 block text-[12.5px]">{t(`verification.${key}.description`)}</span>
             </span>
-            <Switch checked={checked} onCheckedChange={() => toggle(key)} aria-label={t(`verification.${key}.label`)} />
+            <Switch
+              checked={checked}
+              onCheckedChange={() => toggle(key)}
+              aria-label={t(`verification.${key}.label`)}
+            />
           </label>
         )
       })}

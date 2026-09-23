@@ -35,9 +35,8 @@ export function AdditionalDriversEditor({
   showAllErrors,
 }: AdditionalDriversEditorProps) {
   const { t } = useTranslation('bookings')
-  // A freshly-added row shouldn't flash "required" errors before the user has touched it —
-  // the form validates on change, so adding a blank row would otherwise light it up at once.
-  // Matches RateOptionsEditor on the vehicle form.
+  // The form validates on change, so a freshly-added row would flash "required" before it
+  // has been touched. Matches RateOptionsEditor on the vehicle form.
   const [touched, setTouched] = useState<Set<string>>(new Set())
 
   const markTouched = (id: string, field: string) => {

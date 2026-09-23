@@ -103,7 +103,15 @@ export type AdditionalDriverValues = z.infer<ReturnType<typeof additionalDriverS
 export type BookingFeeValues = z.infer<ReturnType<typeof bookingFeeSchema>>
 
 export const BOOKING_STEP_FIELDS = {
-  trip: ['pickupLocation', 'returnLocation', 'pickupDate', 'pickupTime', 'returnDate', 'returnTime', 'vehicleId'],
+  trip: [
+    'pickupLocation',
+    'returnLocation',
+    'pickupDate',
+    'pickupTime',
+    'returnDate',
+    'returnTime',
+    'vehicleId',
+  ],
   renter: [
     'customerName',
     'customerEmail',

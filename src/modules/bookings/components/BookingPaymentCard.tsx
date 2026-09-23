@@ -59,7 +59,9 @@ export function BookingPaymentCard({ payment, charges, days, onAction }: Booking
 
       <div className="border-border-soft mt-1 flex items-baseline justify-between gap-3 border-t pt-3">
         <span className="text-[13.5px] font-semibold">{t('details.charges.total')}</span>
-        <span className="text-[22px] leading-none font-bold tabular-nums">{format.currency(payment.total)}</span>
+        <span className="text-[22px] leading-none font-bold tabular-nums">
+          {format.currency(payment.total)}
+        </span>
       </div>
       <p className="text-fg-4 m-0 mt-1.5 text-[12px]" style={{ textWrap: 'pretty' }}>
         {outstanding
@@ -72,9 +74,17 @@ export function BookingPaymentCard({ payment, charges, days, onAction }: Booking
 
       {/* Only figures that differ from the total earn a line of their own. */}
       <div className="border-border-soft divide-border-soft mt-3 flex flex-col divide-y border-t pt-1">
-        {outstanding && <Line label={t('details.payment.captured')} value={format.currency(payment.captured)} />}
-        {payment.refunded > 0 && <Line label={t('details.payment.refunded')} value={format.currency(payment.refunded)} />}
-        <Line label={t('details.payment.balance')} value={format.currency(payment.balance)} muted={!outstanding} />
+        {outstanding && (
+          <Line label={t('details.payment.captured')} value={format.currency(payment.captured)} />
+        )}
+        {payment.refunded > 0 && (
+          <Line label={t('details.payment.refunded')} value={format.currency(payment.refunded)} />
+        )}
+        <Line
+          label={t('details.payment.balance')}
+          value={format.currency(payment.balance)}
+          muted={!outstanding}
+        />
       </div>
 
       <div className="mt-3 flex flex-col gap-2">
@@ -84,18 +94,33 @@ export function BookingPaymentCard({ payment, charges, days, onAction }: Booking
               <Link2 className="size-4" aria-hidden />
               {t('details.payment.sendLink')}
             </Button>
-            <Button type="button" variant="outline" onClick={() => onAction('markPaid')} className="w-full gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onAction('markPaid')}
+              className="w-full gap-1.5"
+            >
               <BanknoteArrowUp className="size-4" aria-hidden />
               {t('details.payment.markPaid')}
             </Button>
           </>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant="outline" onClick={() => onAction('downloadInvoice')} className="gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onAction('downloadInvoice')}
+              className="gap-1.5"
+            >
               <FileDown className="size-4" aria-hidden />
               {t('details.payment.downloadInvoice')}
             </Button>
-            <Button type="button" variant="outline" onClick={() => onAction('sendReceipt')} className="gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onAction('sendReceipt')}
+              className="gap-1.5"
+            >
               <Mail className="size-4" aria-hidden />
               {t('details.payment.sendReceipt')}
             </Button>
@@ -107,13 +132,23 @@ export function BookingPaymentCard({ payment, charges, days, onAction }: Booking
       <div className="border-border-soft mt-3.5 border-t pt-3">
         <div className="flex items-center justify-between gap-3">
           <span className="text-[13px] font-semibold">{t('details.payment.deposit')}</span>
-          <span className="text-fg-4 text-[11.5px]">{t(`details.payment.depositState.${payment.depositState}`)}</span>
+          <span className="text-fg-4 text-[11.5px]">
+            {t(`details.payment.depositState.${payment.depositState}`)}
+          </span>
         </div>
-        <p className="m-0 mt-0.5 text-[15px] font-bold tabular-nums">{format.currency(payment.depositHold)}</p>
+        <p className="m-0 mt-0.5 text-[15px] font-bold tabular-nums">
+          {format.currency(payment.depositHold)}
+        </p>
 
         <div className="mt-2 flex flex-wrap gap-2">
           {payment.depositState === 'pending' && (
-            <Button type="button" variant="outline" size="sm" onClick={() => onAction('holdDeposit')} className="flex-1 gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onAction('holdDeposit')}
+              className="flex-1 gap-1.5"
+            >
               <Lock className="size-3.5" aria-hidden />
               {t('details.payment.holdDeposit')}
             </Button>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Download, Expand, FileText, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -6,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import { customerDocumentApi, isImageDocument } from '../api/customer-document.api'
+import { customerKeys } from '../hooks/use-customers'
 import type { CustomerDocument } from '../types/customer.types'
 
 interface DocumentOnFileProps {
@@ -31,6 +33,7 @@ function formatSize(bytes: number): string {
  */
 export function DocumentOnFile({ customerId, document, onReplace, className }: DocumentOnFileProps) {
   const { t } = useTranslation('bookings')
+  const queryClient = useQueryClient()
   const isImage = isImageDocument(document.contentType)
 
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
@@ -41,6 +44,10 @@ export function DocumentOnFile({ customerId, document, onReplace, className }: D
    * The thumbnail's link is fetched once per document and lasts minutes, so it can expire
    * while the form sits open. A failed load falls back to the icon rather than a broken image,
    * and the full-size preview always fetches a fresh link of its own.
+   *
+   * A 404 means something else: this document no longer exists, so the list that named it is
+   * stale — someone replaced the scan elsewhere. Refetch it rather than sitting on a row that
+   * points at nothing.
    */
   useEffect(() => {
     if (!isImage) return
@@ -50,13 +57,17 @@ export function DocumentOnFile({ customerId, document, onReplace, className }: D
       .then((url) => {
         if (!cancelled) setThumbnailUrl(url)
       })
-      .catch(() => {
-        // Silent: the icon is a perfectly good fallback, and a toast per thumbnail would be noise.
+      .catch((error: unknown) => {
+        if (cancelled) return
+        if (normalizeApiError(error).status === 404) {
+          void queryClient.invalidateQueries({ queryKey: customerKeys.documents(customerId) })
+        }
+        // Otherwise silent: the icon is a fine fallback, and a toast per thumbnail is noise.
       })
     return () => {
       cancelled = true
     }
-  }, [customerId, document.id, isImage])
+  }, [customerId, document.id, isImage, queryClient])
 
   async function open() {
     setIsBusy(true)

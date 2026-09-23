@@ -35,9 +35,7 @@ describe('AdditionalDriversEditor', () => {
   })
 
   it('reveals every remaining error once the step is submitted', () => {
-    render(
-      <AdditionalDriversEditor value={[DRIVER]} onChange={vi.fn()} errors={ERRORS} showAllErrors />,
-    )
+    render(<AdditionalDriversEditor value={[DRIVER]} onChange={vi.fn()} errors={ERRORS} showAllErrors />)
 
     const messages = screen.getAllByRole('alert').map((n) => n.textContent)
     expect(messages).toEqual(["Enter the driver's name", 'Enter a licence number'])
