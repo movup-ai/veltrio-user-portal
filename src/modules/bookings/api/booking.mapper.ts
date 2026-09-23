@@ -177,12 +177,6 @@ export function toInterval(wire: BookedIntervalWire): BookedInterval {
 /** Statuses after which the rental is over, one way or the other. */
 const FINISHED_STATUSES: readonly BookingStatus[] = ['Completed', 'Refunded']
 
-/**
- * Splits the API's flat list into what the table renders. "Upcoming" is anything still open —
- * not yet returned and not finished; everything else is recent activity. Overdue statuses stay
- * on the upcoming side too: the car is still out. The schedule only carries live rentals, so a
- * refunded booking never blocks a vehicle.
- */
 export function toBookingLists(bookings: Booking[], now = new Date()): BookingLists {
   const cutoff = now.getTime()
   const open = (b: Booking) =>
