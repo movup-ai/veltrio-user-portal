@@ -129,21 +129,20 @@ export function useOrderScreening(reference: string) {
  */
 function useReportOpener<TArg = void>(fetchPdf: (arg: TArg) => Promise<Blob>) {
   return useMutation({
-    /**
-     * The tab is opened here, synchronously inside the click, and pointed at the PDF once it
-     * arrives. Opening it in `onSuccess` instead put it after an await, which a browser
-     * treats as an unprompted popup and blocks — the fetch succeeded and nothing appeared.
-     */
     mutationFn: async (arg: TArg) => {
-      const tab = window.open('', '_blank', 'noopener,noreferrer')
+      const tab = window.open('', '_blank')
       try {
         const pdf = await fetchPdf(arg)
         const url = URL.createObjectURL(pdf)
         if (tab) {
+          // Severed here rather than by `noopener` above, which costs us the handle.
+          tab.opener = null
           tab.location.href = url
         } else {
-          // Blocked anyway, or opened from somewhere that cannot: fall back to this tab.
-          window.location.href = url
+          const link = document.createElement('a')
+          link.href = url
+          link.download = 'background-check.pdf'
+          link.click()
         }
         setTimeout(() => URL.revokeObjectURL(url), REVOKE_AFTER_MS)
       } catch (error) {
