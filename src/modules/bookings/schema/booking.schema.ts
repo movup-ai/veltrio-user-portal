@@ -12,6 +12,26 @@ export function combineDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time || '00:00'}:00`)
 }
 
+/** Mirrors the API's own bounds, so a date it will refuse is caught before the request. */
+const MIN_RENTER_AGE = 18
+const MAX_RENTER_AGE = 110
+
+export function isPlausibleDob(value: string): boolean {
+  if (!value) return false
+  const dob = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(dob.getTime())) return false
+
+  const today = new Date()
+  if (dob > today) return false
+  // Whole years, counting a birthday that has not come round yet as the younger age.
+  let years = today.getFullYear() - dob.getFullYear()
+  const before =
+    today.getMonth() < dob.getMonth() ||
+    (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
+  if (before) years -= 1
+  return years >= MIN_RENTER_AGE && years <= MAX_RENTER_AGE
+}
+
 /**
  * A file the counter has picked but not yet sent. It carries the real `File`, which is what
  * gets uploaded once the booking exists and the renter has a customer id to attach it to.
@@ -70,9 +90,16 @@ export function bookingFormSchema(t: ValidationT) {
       customerName: z.string().min(1, t('booking.customerNameRequired')).max(60),
       customerEmail: z.email(t('booking.customerEmailInvalid')),
       customerPhone: z.string().min(6, t('booking.customerPhoneRequired')).max(25),
-      // Optional on purpose — the branch can take these at handover rather than blocking the booking.
-      customerDob: z.string(),
-      customerAddress: z.string().max(160, t('booking.addressTooLong')),
+      // Required: a background check run without a date of birth matches on the name alone,
+      // and the API refuses both fields as empty — so the form asks rather than 422s on submit.
+      customerDob: z
+        .string()
+        .min(1, t('booking.customerDobRequired'))
+        .refine(isPlausibleDob, t('booking.customerDobImplausible')),
+      customerAddress: z
+        .string()
+        .min(1, t('booking.customerAddressRequired'))
+        .max(160, t('booking.addressTooLong')),
       licenceNumber: z.string().min(1, t('booking.customerLicenceRequired')).max(30),
       licenceExpiry: z.string(),
       licenceDocument: uploadedFileSchema.nullable(),

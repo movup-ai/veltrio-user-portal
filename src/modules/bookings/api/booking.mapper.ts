@@ -18,6 +18,9 @@ import {
   type PaymentState,
   type BookingTab,
   type BookingVerification,
+  type BookingScreening,
+  type ScreeningRecord,
+  type ScreeningStatus,
 } from '../types/booking.types'
 import { bookingToTuple } from '../utils/booking.utils'
 
@@ -84,8 +87,59 @@ export interface BookingWire {
     paidAt: string | null
   }
   contract: { signedAt: string | null; version: string | null }
+  screening: ScreeningWire | null
   pickedUpAt: string | null
   returnedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+/** A US postal address. All four parts or none: Checkr rejects a partial one. */
+export interface ScreeningAddressWire {
+  street: string
+  city: string
+  state: string
+  zipCode: string
+}
+
+/** Screening someone who is not a renter: no email, no booking, no customer. */
+export interface StandaloneOrderWire {
+  name: string
+  dateOfBirth: string
+  address?: ScreeningAddressWire
+}
+
+/** One row of the verification log. */
+export interface ScreeningListWire {
+  id: string
+  name: string
+  dateOfBirth: string | null
+  email: string | null
+  customerId: string | null
+  status: ScreeningStatus
+  recordsFound: boolean
+  hasReport: boolean
+  completedAt: string | null
+  createdAt: string
+}
+
+/** What ordering a check sends: the fields Checkr matches on, plus who the renter is. */
+export interface ScreeningOrder {
+  name: string
+  email: string
+  dateOfBirth: string
+}
+
+export interface ScreeningWire {
+  id: string
+  customerId: string
+  status: ScreeningStatus
+  failureReason: string | null
+  recordsFound: boolean
+  hasReport: boolean
+  canReorder: boolean
+  reused: boolean
+  completedAt: string | null
   createdAt: string
   updatedAt: string
 }
@@ -188,9 +242,26 @@ export function toBooking(wire: BookingWire): Booking {
       signedAt: wire.contract.signedAt ?? undefined,
       version: wire.contract.version ?? undefined,
     },
+    screening: wire.screening ? toScreening(wire.screening) : undefined,
     pickedUpAt: wire.pickedUpAt ?? undefined,
     returnedAt: wire.returnedAt ?? undefined,
     createdAt: wire.createdAt,
+  }
+}
+
+export function toScreening(wire: ScreeningWire): BookingScreening {
+  return {
+    id: wire.id,
+    customerId: wire.customerId,
+    status: wire.status,
+    failureReason: wire.failureReason ?? undefined,
+    recordsFound: wire.recordsFound,
+    hasReport: wire.hasReport,
+    canReorder: wire.canReorder,
+    reused: wire.reused,
+    completedAt: wire.completedAt ?? undefined,
+    createdAt: wire.createdAt,
+    updatedAt: wire.updatedAt,
   }
 }
 
@@ -359,5 +430,21 @@ export function toBookingStats(wire: BookingStatsWire): BookingStats {
     unsigned: wire.unsigned,
     ready: wire.ready,
     tabCounts: toTabCounts(wire.tabCounts),
+  }
+}
+
+/** A verification-log row as the table renders it. */
+export function toScreeningListRow(wire: ScreeningListWire): ScreeningRecord {
+  return {
+    id: wire.id,
+    name: wire.name,
+    dateOfBirth: wire.dateOfBirth ?? undefined,
+    email: wire.email ?? undefined,
+    customerId: wire.customerId ?? undefined,
+    status: wire.status,
+    recordsFound: wire.recordsFound,
+    hasReport: wire.hasReport,
+    completedAt: wire.completedAt ?? undefined,
+    createdAt: wire.createdAt,
   }
 }

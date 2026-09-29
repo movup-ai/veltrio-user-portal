@@ -42,7 +42,10 @@
     "addressTooLong": "La dirección es demasiado larga",
     "driverRateInvalid": "Introduzca una tarifa válida",
     "feeLabelRequired": "Introduzca una descripción",
-    "feeAmountInvalid": "Introduzca un importe válido"
+    "feeAmountInvalid": "Introduzca un importe válido",
+    "customerDobRequired": "La fecha de nacimiento es obligatoria",
+    "customerDobImplausible": "El conductor debe tener al menos 18 años",
+    "customerAddressRequired": "La dirección es obligatoria"
   },
   "rateOption": {
     "labelRequired": "La etiqueta es obligatoria",
@@ -62,5 +65,10 @@
     "rateLimited": "Demasiadas solicitudes. Reduzca el ritmo e inténtelo de nuevo.",
     "serverError": "El servidor tuvo un problema. Inténtelo de nuevo en unos momentos.",
     "unknown": "Algo salió mal. Inténtelo de nuevo."
+  },
+  "screening": {
+    "addressIncomplete": "Complete los cuatro campos de la dirección o déjelos todos vacíos.",
+    "stateInvalid": "Use el código de estado de dos letras, p. ej. TX.",
+    "zipInvalid": "Use un código postal de 5 dígitos, p. ej. 73301."
   }
 }

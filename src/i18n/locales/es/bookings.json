@@ -193,7 +193,13 @@
       "extend": "Ampliar alquiler",
       "addDriver": "Añadir conductor",
       "swapVehicle": "Cambiar vehículo",
-      "cancel": "Cancelar reserva"
+      "cancel": "Cancelar reserva",
+      "hints": {
+        "modify": "Cambiar la recogida o la devolución",
+        "extend": "Retrasar la fecha de devolución",
+        "addDriver": "Añadir otro conductor al contrato",
+        "swapVehicle": "Asignar otro vehículo al conductor"
+      }
     },
     "renter": {
       "title": "Arrendatario",
@@ -382,7 +388,7 @@
       "noVehicle": "Aún no se ha seleccionado ningún vehículo.",
       "customer": "Cliente",
       "verification": "Verificación",
-      "noVerification": "No se requieren comprobaciones.",
+      "noVerification": "Sin verificación.",
       "drivers": "Conductores adicionales",
       "noDrivers": "Sin conductores adicionales.",
       "fees": "Cargos adicionales",
@@ -427,7 +433,7 @@
       "download": "Descargar {{name}}"
     },
     "verification": {
-      "hint": "Comprobaciones que la sucursal exige antes de entregar las llaves."
+      "hint": "Verifique los antecedentes penales del conductor antes de entregar las llaves."
     },
     "drivers": {
       "hint": "Cualquier otra persona autorizada a conducir. Cada una se factura por día de alquiler.",
@@ -456,17 +462,84 @@
     }
   },
   "verification": {
-    "identity": {
-      "label": "Verificación de identidad",
-      "description": "Cotejar la foto del permiso con la persona en el mostrador"
-    },
     "background": {
-      "label": "Comprobación de antecedentes",
-      "description": "Revisar el historial de conducción y siniestros"
+      "label": "Verificación de antecedentes",
+      "checking": "Comprobando si este conductor ya fue verificado…",
+      "none": "Sin registros para este conductor. Ejecutarla ahora toma unos segundos.",
+      "running": "Checkr está buscando. El resultado aparecerá aquí.",
+      "clearOn": "Verificado el {{when}} · sin hallazgos, no hace falta repetirlo",
+      "recordsOn": "Verificado el {{when}} · se encontraron antecedentes, lea el informe antes de entregar las llaves",
+      "needsRenter": "Añada primero el nombre completo, el correo y la fecha de nacimiento: Checkr necesita los tres."
+    }
+  },
+  "screening": {
+    "title": "Verificación de antecedentes",
+    "state": {
+      "notStarted": "Sin iniciar",
+      "running": "Checkr está buscando",
+      "clear": "Sin hallazgos",
+      "consider": "Requiere revisión",
+      "error": "No se pudo realizar"
     },
-    "insurance": {
-      "label": "Comprobación del seguro",
-      "description": "Confirmar que la cobertura es válida para el periodo"
+    "hint": {
+      "notStarted": "Busca antecedentes penales con el nombre y la fecha de nacimiento de esta reserva.",
+      "running": "Checkr sigue buscando. Normalmente termina en segundos.",
+      "clear": "No se encontraron antecedentes para este conductor.",
+      "consider": "Se encontraron antecedentes. Un gerente debe revisarlos en Checkr y decidir.",
+      "error": "Checkr no pudo realizar esta verificación. Al repetirla se empieza de nuevo."
+    },
+    "action": {
+      "order": "Verificar",
+      "orderAgain": "Repetir",
+      "viewReport": "Ver informe"
+    },
+    "toast": {
+      "ordered": "Verificación realizada",
+      "orderedDescription": "El resultado está en la lista de comprobación.",
+      "orderFailed": "No se pudo realizar la verificación",
+      "reportFailed": "No se pudo abrir el informe"
+    },
+    "reusedOn": "Verificado el {{when}} para una reserva anterior"
+  },
+  "verificationPage": {
+    "title": "Verificación",
+    "description": "Ejecute una verificación de antecedentes penales sobre cualquier persona: un conductor, un contratista o un nuevo empleado.",
+    "runCheck": "Ejecutar verificación",
+    "form": {
+      "title": "¿A quién va a verificar?",
+      "hint": "Checkr coincide por nombre y fecha de nacimiento.",
+      "name": "Nombre completo",
+      "namePlaceholder": "Jane Doe",
+      "dateOfBirth": "Fecha de nacimiento",
+      "address": "Dirección",
+      "addressHint": "Opcional. Acota la búsqueda al lugar de residencia: complete los cuatro campos o déjelos vacíos.",
+      "street": "Calle",
+      "streetPlaceholder": "123 Main St",
+      "city": "Ciudad",
+      "cityPlaceholder": "Austin",
+      "state": "Estado",
+      "statePlaceholder": "TX",
+      "zip": "Código postal",
+      "zipPlaceholder": "73301",
+      "submit": "Ejecutar verificación",
+      "cancel": "Cancelar"
+    },
+    "log": {
+      "title": "Verificaciones realizadas",
+      "rowCount": "{{count}} verificación",
+      "rowCount_other": "{{count}} verificaciones",
+      "page": "Página {{page}} de {{pages}}",
+      "empty": "Aún no hay verificaciones. Ejecute una arriba.",
+      "columns": {
+        "person": "Persona",
+        "source": "Origen",
+        "checked": "Verificado",
+        "result": "Resultado"
+      },
+      "renter": "Conductor",
+      "standalone": "Independiente",
+      "viewReport": "Ver informe",
+      "notRunYet": "Sin finalizar"
     }
   }
 }

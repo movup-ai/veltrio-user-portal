@@ -193,7 +193,13 @@
       "extend": "Extend rental",
       "addDriver": "Add driver",
       "swapVehicle": "Swap vehicle",
-      "cancel": "Cancel booking"
+      "cancel": "Cancel booking",
+      "hints": {
+        "modify": "Shift the pickup or return",
+        "extend": "Push the return date back",
+        "addDriver": "Name another driver on the agreement",
+        "swapVehicle": "Put the renter in a different car"
+      }
     },
     "renter": {
       "title": "Renter",
@@ -382,7 +388,7 @@
       "noVehicle": "No vehicle selected yet.",
       "customer": "Customer",
       "verification": "Verification",
-      "noVerification": "No checks required.",
+      "noVerification": "No check run.",
       "drivers": "Additional drivers",
       "noDrivers": "No additional drivers.",
       "fees": "Additional fees",
@@ -427,7 +433,7 @@
       "download": "Download {{name}}"
     },
     "verification": {
-      "hint": "Checks the branch requires before the keys change hands."
+      "hint": "Screen the renter against criminal records before the keys change hands."
     },
     "drivers": {
       "hint": "Anyone else permitted to drive. Each is billed per rental day.",
@@ -456,17 +462,84 @@
     }
   },
   "verification": {
-    "identity": {
-      "label": "ID verification",
-      "description": "Match the licence photo to the person at the counter"
-    },
     "background": {
       "label": "Background check",
-      "description": "Screen against the driving and claims history"
+      "checking": "Checking whether this renter has been screened…",
+      "none": "Nothing on file for this renter. Running it now takes a few seconds.",
+      "running": "Checkr is searching. The result appears here when it lands.",
+      "clearOn": "Checked {{when}} · nothing found, no need to run it again",
+      "recordsOn": "Checked {{when}} · records were found, read the report before handing over keys",
+      "needsRenter": "Add the renter’s full name, email and date of birth first — Checkr matches on all three."
+    }
+  },
+  "screening": {
+    "title": "Background check",
+    "state": {
+      "notStarted": "Not started",
+      "running": "Checkr is searching",
+      "clear": "Clear",
+      "consider": "Needs review",
+      "error": "Could not be run"
     },
-    "insurance": {
-      "label": "Insurance check",
-      "description": "Confirm cover is valid for the rental window"
+    "hint": {
+      "notStarted": "Searches criminal records against the name and date of birth on this booking.",
+      "running": "Checkr is still searching. This is usually done in seconds.",
+      "clear": "No records were found for this renter.",
+      "consider": "Records were found. A manager has to review them in Checkr and decide.",
+      "error": "Checkr could not run this check. Running it again starts over."
+    },
+    "action": {
+      "order": "Run check",
+      "orderAgain": "Run again",
+      "viewReport": "View report"
+    },
+    "toast": {
+      "ordered": "Background check run",
+      "orderedDescription": "The result is on the checklist.",
+      "orderFailed": "Could not run the background check",
+      "reportFailed": "Could not open the report"
+    },
+    "reusedOn": "Checked {{when}} for an earlier booking"
+  },
+  "verificationPage": {
+    "title": "Verification",
+    "description": "Run a criminal background check on anyone — a renter, a contractor, a new hire.",
+    "runCheck": "Run a check",
+    "form": {
+      "title": "Who are you checking?",
+      "hint": "Checkr matches on the name and date of birth.",
+      "name": "Full name",
+      "namePlaceholder": "Jane Doe",
+      "dateOfBirth": "Date of birth",
+      "address": "Address",
+      "addressHint": "Optional. Narrows the search to where they have lived — fill in all four or leave them blank.",
+      "street": "Street",
+      "streetPlaceholder": "123 Main St",
+      "city": "City",
+      "cityPlaceholder": "Austin",
+      "state": "State",
+      "statePlaceholder": "TX",
+      "zip": "ZIP code",
+      "zipPlaceholder": "73301",
+      "submit": "Run check",
+      "cancel": "Cancel"
+    },
+    "log": {
+      "title": "Checks run",
+      "rowCount": "{{count}} check",
+      "rowCount_other": "{{count}} checks",
+      "page": "Page {{page}} of {{pages}}",
+      "empty": "No checks yet. Run one above.",
+      "columns": {
+        "person": "Person",
+        "source": "Source",
+        "checked": "Checked",
+        "result": "Result"
+      },
+      "renter": "Renter",
+      "standalone": "Standalone",
+      "viewReport": "View report",
+      "notRunYet": "Not finished"
     }
   }
 }

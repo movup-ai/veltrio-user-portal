@@ -6,7 +6,9 @@ import {
   toBookingLists,
   toBookingPayload,
   toInterval,
+  toScreening,
   type BookingWire,
+  type ScreeningWire,
 } from './booking.mapper'
 import { isReadyForPickup, type BookingFilters, type BookingInput, type PaymentState } from '../types/booking.types'
 
@@ -55,6 +57,7 @@ const wire: BookingWire = {
     paidAt: null,
   },
   contract: { signedAt: null, version: null },
+  screening: null,
   pickedUpAt: null,
   returnedAt: null,
   createdAt: '2026-09-22T10:00:00Z',
@@ -296,6 +299,61 @@ describe('toBookingFilterQuery', () => {
   })
 })
 
+/** Only the fields the assertions touch; the rest is boilerplate the API always sends. */
+function screeningWire(overrides: Partial<ScreeningWire> = {}): ScreeningWire {
+  return {
+    id: 's1',
+    customerId: 'cus_1',
+    status: 'running',
+    failureReason: null,
+    recordsFound: false,
+    hasReport: false,
+    canReorder: false,
+    reused: false,
+    completedAt: null,
+    createdAt: '2026-09-20T10:00:00Z',
+    updatedAt: '2026-09-20T10:00:00Z',
+    ...overrides,
+  }
+}
+
+describe('toScreening', () => {
+  it('turns the wire nulls into absent fields', () => {
+    const screening = toScreening(screeningWire())
+
+    // toStrictEqual, not toEqual: the latter ignores undefined keys, so a mapper that dropped
+    // a field entirely would pass.
+    expect(screening).toStrictEqual({
+      id: 's1',
+      customerId: 'cus_1',
+      status: 'running',
+      failureReason: undefined,
+      recordsFound: false,
+      hasReport: false,
+      canReorder: false,
+      reused: false,
+      completedAt: undefined,
+      createdAt: '2026-09-20T10:00:00Z',
+      updatedAt: '2026-09-20T10:00:00Z',
+    })
+  })
+
+  it('keeps the verdict when the API sends one', () => {
+    const screening = toScreening(
+      screeningWire({
+        status: 'consider',
+        recordsFound: true,
+        hasReport: true,
+        completedAt: '2026-09-21T08:00:00Z',
+      }),
+    )
+
+    expect(screening.status).toBe('consider')
+    expect(screening.recordsFound).toBe(true)
+    expect(screening.hasReport).toBe(true)
+  })
+})
+
 describe('isReadyForPickup', () => {
   const booking = (state: PaymentState, signedAt: string | null) =>
     toBooking({
@@ -318,5 +376,13 @@ describe('isReadyForPickup', () => {
 
   it('is false while the contract is unsigned, however the money stands', () => {
     expect(isReadyForPickup(booking('paid', null))).toBe(false)
+  })
+
+  it('ignores the background check, which is informational and gates nothing', () => {
+    // Records found, no check at all - neither changes whether the keys can be handed over.
+    expect(isReadyForPickup(toBooking({ ...wire, verifications: ['background'],
+      payment: { ...wire.payment, state: 'paid' },
+      contract: { signedAt: '2026-09-22T10:00:00Z', version: 'v3' },
+      screening: null }))).toBe(true)
   })
 })

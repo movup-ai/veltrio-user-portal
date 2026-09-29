@@ -13,7 +13,8 @@
     "Payments": "Payments",
     "Pricing": "Pricing",
     "Locations": "Locations",
-    "Settings": "Settings"
+    "Settings": "Settings",
+    "Verification": "Verification"
   },
   "sidebar": {
     "primary": "Primary",

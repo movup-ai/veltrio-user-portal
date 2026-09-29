@@ -1,6 +1,7 @@
 import { CalendarPlus, Car, CreditCard, IdCard, Mail } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
@@ -55,17 +56,34 @@ export function BookingActivity({ events }: BookingActivityProps) {
     <Card as="section" className="flex flex-col p-[18px]">
       <PanelHeading title={t('details.activity.title')} className="mb-3.5" />
 
-      <ol className="flex flex-col gap-3.5">
-        {events.map((event) => {
+      <ol className="flex flex-col">
+        {events.map((event, index) => {
           const Icon = EVENT_ICONS[event.key]
+          // Oldest first (see buildEvents), so the last entry is the most recent one.
+          const newest = index === events.length - 1
 
           return (
-            <li key={`${event.key}-${event.at}`} className="flex items-start gap-2.5">
-              <span className="bg-tint text-primary flex size-7 shrink-0 items-center justify-center rounded-[8px]">
+            <li key={`${event.key}-${event.at}`} className="relative flex items-start gap-2.5">
+              {/* A rail joining the icons, so the entries read as one sequence rather than a
+                  stack of unrelated lines. Stops at the last icon instead of trailing past it. */}
+              {!newest && (
+                <span aria-hidden className="bg-border-soft absolute top-7 bottom-0 left-[13.5px] w-px" />
+              )}
+
+              <span
+                className={cn(
+                  'flex size-7 shrink-0 items-center justify-center rounded-full',
+                  // The newest entry is the one the counter is looking for; the rest recede.
+                  newest ? 'bg-primary text-white' : 'bg-surface-2 text-fg-4',
+                )}
+              >
                 <Icon className="size-3.5" aria-hidden />
               </span>
-              <span className="min-w-0">
-                <span className="block text-[13.5px] font-semibold">{t(`details.events.${event.key}`)}</span>
+
+              <span className={cn('min-w-0', !newest && 'pb-3.5')}>
+                <span className={cn('block text-[13px]', newest ? 'font-semibold' : 'font-medium')}>
+                  {t(`details.events.${event.key}`)}
+                </span>
                 <span className="text-fg-4 block text-[11.5px]">{detailFor(event)}</span>
               </span>
             </li>
