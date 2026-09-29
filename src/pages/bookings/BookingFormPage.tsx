@@ -65,16 +65,16 @@ import {
 import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import {
+  screeningForRenter,
+  type RanScreening,
+} from '@/modules/bookings/utils/booking.screening'
+import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
   combineDateTime,
   type BookingFormValues,
 } from '@/modules/bookings/schema/booking.schema'
-import type {
-  BookedInterval,
-  BookingInput,
-  BookingScreening,
-} from '@/modules/bookings/types/booking.types'
+import type { BookedInterval, BookingInput } from '@/modules/bookings/types/booking.types'
 import { durationHours, priceBooking } from '@/modules/bookings/utils/booking.pricing'
 
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
@@ -340,11 +340,14 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const orderScreening = useOrderCustomerScreening()
 
   /**
-   * A check run here, before the renter has a customer id to re-read it by. Held until the
-   * form is left, which is as long as it is needed — the booking carries it from then on.
+   * A check run here, before the renter has a customer id to re-read it by.
+   *
+   * Tagged with the email it was ordered for: without that, switching to a different renter
+   * left the previous one's verdict on the card while the report button fetched the new
+   * renter's — one person's result shown as another's.
    */
-  const [ranScreening, setRanScreening] = useState<BookingScreening | undefined>()
-  const screening = customerScreening ?? ranScreening
+  const [ranScreening, setRanScreening] = useState<RanScreening | undefined>()
+  const screening = screeningForRenter(customerScreening, ranScreening, values.customerEmail)
   // By email, the same key the card and ordering use: a renter screened at the counter has
   // no customer record to fetch a report by until they book.
   const screeningReport = useScreeningReportByEmail(values.customerEmail.trim() || undefined)
@@ -359,6 +362,8 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
       : t('verification.background.needsRenter')
 
   function handleRunCheck() {
+    const email = values.customerEmail.trim().toLowerCase()
+
     // The hook reports a failure as a toast, so nothing is thrown at the form here.
     orderScreening.mutate(
       // Only what the check matches on, plus the email that says who it is for. The rest of
@@ -368,7 +373,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
         email: values.customerEmail,
         dateOfBirth: values.customerDob,
       },
-      { onSuccess: setRanScreening },
+      { onSuccess: (result) => setRanScreening({ email, screening: result }) },
     )
   }
 

@@ -539,7 +539,8 @@
       "renter": "Conductor",
       "standalone": "Independiente",
       "viewReport": "Ver informe",
-      "notRunYet": "Sin finalizar"
+      "notRunYet": "Sin finalizar",
+      "loadError": "No se pudieron cargar las verificaciones."
     }
   }
 }

@@ -38,6 +38,11 @@ export function useScreeningByEmail(email: string | undefined) {
     queryKey: screeningKeys.forEmail(trimmed),
     queryFn: () => screeningApi.forEmail(trimmed),
     enabled: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status
+      if (!status) return false
+      return TERMINAL_SCREENING_STATUSES.includes(status) ? false : SCREENING_POLL_MS
+    },
   })
 }
 
@@ -124,11 +129,27 @@ export function useOrderScreening(reference: string) {
  */
 function useReportOpener<TArg = void>(fetchPdf: (arg: TArg) => Promise<Blob>) {
   return useMutation({
-    mutationFn: fetchPdf,
-    onSuccess: (pdf) => {
-      const url = URL.createObjectURL(pdf)
-      window.open(url, '_blank', 'noopener,noreferrer')
-      setTimeout(() => URL.revokeObjectURL(url), REVOKE_AFTER_MS)
+    /**
+     * The tab is opened here, synchronously inside the click, and pointed at the PDF once it
+     * arrives. Opening it in `onSuccess` instead put it after an await, which a browser
+     * treats as an unprompted popup and blocks — the fetch succeeded and nothing appeared.
+     */
+    mutationFn: async (arg: TArg) => {
+      const tab = window.open('', '_blank', 'noopener,noreferrer')
+      try {
+        const pdf = await fetchPdf(arg)
+        const url = URL.createObjectURL(pdf)
+        if (tab) {
+          tab.location.href = url
+        } else {
+          // Blocked anyway, or opened from somewhere that cannot: fall back to this tab.
+          window.location.href = url
+        }
+        setTimeout(() => URL.revokeObjectURL(url), REVOKE_AFTER_MS)
+      } catch (error) {
+        tab?.close()
+        throw error
+      }
     },
     onError: (error) => {
       toast({
@@ -161,6 +182,12 @@ export function useScreeningLog(params: PaginationParams) {
     queryFn: () => screeningApi.list(params),
     // Holds the rows on screen while the next page loads, so paging dims rather than blanks.
     placeholderData: keepPreviousData,
+    // A page holding an unfinished check keeps asking, so a row stops saying "Not finished"
+    // and gains its report link without the counter reloading.
+    refetchInterval: (query) =>
+      query.state.data?.items.some((row) => !TERMINAL_SCREENING_STATUSES.includes(row.status))
+        ? SCREENING_POLL_MS
+        : false,
   })
 }
 

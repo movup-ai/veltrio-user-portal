@@ -9,6 +9,7 @@ import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import type { Cell, Column, Row } from '@/components/data-display/record-table.types'
+import { ErrorState } from '@/components/feedback/ErrorState'
 import { FormField } from '@/components/forms/FormField'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -261,7 +262,16 @@ export function VerificationPage() {
         rows={rows}
         rowCountLabel={t('verificationPage.log.rowCount', { count: log.data?.total ?? 0 })}
         pageNote={t('verificationPage.log.page', { page, pages: totalPages })}
-        emptyState={t('verificationPage.log.empty')}
+        emptyState={
+          log.isError ? (
+            <ErrorState
+              description={t('verificationPage.log.loadError')}
+              onRetry={() => log.refetch()}
+            />
+          ) : (
+            t('verificationPage.log.empty')
+          )
+        }
         pagination={{
           page,
           hasNextPage: page < totalPages,

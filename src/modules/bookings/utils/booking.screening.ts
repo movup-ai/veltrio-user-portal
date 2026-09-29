@@ -70,3 +70,18 @@ export function screeningView(screening: BookingScreening | undefined): Screenin
   }
   return view
 }
+
+/** A check run in the booking form, tagged with the renter it was ordered for. */
+export interface RanScreening {
+  email: string
+  screening: BookingScreening
+}
+
+export function screeningForRenter(
+  saved: BookingScreening | undefined,
+  ran: RanScreening | undefined,
+  email: string,
+): BookingScreening | undefined {
+  if (saved) return saved
+  return ran && ran.email === email.trim().toLowerCase() ? ran.screening : undefined
+}

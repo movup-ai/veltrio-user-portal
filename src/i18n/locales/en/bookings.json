@@ -539,7 +539,8 @@
       "renter": "Renter",
       "standalone": "Standalone",
       "viewReport": "View report",
-      "notRunYet": "Not finished"
+      "notRunYet": "Not finished",
+      "loadError": "Could not load the checks."
     }
   }
 }
