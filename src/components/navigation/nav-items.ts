@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   MapPin,
   Settings,
+  ShieldCheck,
   Tag,
   Users,
   type LucideIcon,
@@ -13,7 +14,7 @@ import {
 
 /** Canonical English keys — they index into the `nav` namespace, they are not display text. */
 export type NavGroupKey = 'Operations' | 'Revenue' | 'Setup'
-export type NavLinkKey = 'Dashboard' | 'Bookings' | 'Calendar' | 'Vehicles' | 'Customers' | 'Payments' | 'Pricing' | 'Locations' | 'Settings'
+export type NavLinkKey = 'Dashboard' | 'Bookings' | 'Calendar' | 'Vehicles' | 'Customers' | 'Verification' | 'Payments' | 'Pricing' | 'Locations' | 'Settings'
 
 export type NavEntry =
   | { type: 'group'; key: NavGroupKey }
@@ -26,6 +27,7 @@ export const NAV_ITEMS: NavEntry[] = [
   { type: 'link', key: 'Calendar', to: '/app/calendar', icon: CalendarDays },
   { type: 'link', key: 'Vehicles', to: '/app/vehicles', icon: Car },
   { type: 'link', key: 'Customers', to: '/app/customers', icon: Users },
+  { type: 'link', key: 'Verification', to: '/app/verification', icon: ShieldCheck },
   { type: 'group', key: 'Revenue' },
   { type: 'link', key: 'Payments', to: '/app/payments', icon: CreditCard, badge: '2', urgent: true },
   { type: 'link', key: 'Pricing', to: '/app/pricing', icon: Tag },

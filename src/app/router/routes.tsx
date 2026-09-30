@@ -22,6 +22,9 @@ const BookingFormPage = lazy(() => import('@/pages/bookings/BookingFormPage').th
 const BookingDetailsPage = lazy(() =>
   import('@/pages/bookings/BookingDetailsPage').then((m) => ({ default: m.BookingDetailsPage })),
 )
+const VerificationPage = lazy(() =>
+  import('@/pages/verification/VerificationPage').then((m) => ({ default: m.VerificationPage })),
+)
 const CustomersPage = lazy(() => import('@/pages/customers/CustomersPage').then((m) => ({ default: m.CustomersPage })))
 const CustomerDetailsPage = lazy(() =>
   import('@/pages/customers/CustomerDetailsPage').then((m) => ({ default: m.CustomerDetailsPage })),
@@ -76,6 +79,8 @@ export const router = createBrowserRouter([
 
               { path: 'customers', element: withSuspense(<CustomersPage />) },
               { path: 'customers/:customerId', element: withSuspense(<CustomerDetailsPage />) },
+
+              { path: 'verification', element: withSuspense(<VerificationPage />) },
 
               { path: 'payments', element: withSuspense(<PaymentsPage />) },
               { path: 'locations', element: withSuspense(<LocationsPage />) },

@@ -33,6 +33,11 @@ import { BookingRenterCard } from '@/modules/bookings/components/BookingRenterCa
 import { BookingTripCard } from '@/modules/bookings/components/BookingTripCard'
 import { RentalProgress } from '@/modules/bookings/components/RentalProgress'
 import { useBookingDetails } from '@/modules/bookings/hooks/use-bookings'
+import {
+  useOrderScreening,
+  useScreening,
+  useScreeningReport,
+} from '@/modules/bookings/hooks/use-screening'
 
 /**
  * Cover shot for the booked car, with the placeholder sitting underneath rather than swapped in
@@ -72,6 +77,10 @@ export function BookingDetailsPage() {
   const [confirmCancel, setConfirmCancel] = useState(false)
 
   const { data: booking, isLoading, isError, refetch } = useBookingDetails(bookingId)
+  // Its own query, so a check that takes days can be polled without refetching the whole page.
+  const { data: screening } = useScreening(bookingId)
+  const orderScreening = useOrderScreening(bookingId ?? '')
+  const screeningReport = useScreeningReport(bookingId ?? '')
 
   usePageBreadcrumb(bookingId)
   // Checking in a rental that has already been returned and closed is meaningless.
@@ -234,7 +243,21 @@ export function BookingDetailsPage() {
             </div>
           </Card>
 
-          <BookingRenterCard renter={booking.renter} onOpenProfile={() => navigate('/app/customers')} />
+          <BookingRenterCard
+            renter={booking.renter}
+            onOpenProfile={() => navigate('/app/customers')}
+            checklist={
+              <BookingChecklist
+                checks={booking.checks}
+                screening={screening}
+                ordering={orderScreening.isPending}
+                openingReport={screeningReport.isPending}
+                onOrderScreening={() => orderScreening.mutate()}
+                onViewScreeningReport={() => screeningReport.mutate()}
+                onAction={(key) => pending(t(`details.checks.${key}`))}
+              />
+            }
+          />
 
           {/* Nothing here applies once the car is back and the paperwork is closed — you can't
               extend or cancel a rental that has already finished. */}
@@ -246,8 +269,6 @@ export function BookingDetailsPage() {
               }}
             />
           )}
-
-          <BookingActivity events={booking.events} />
         </div>
 
         <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-4">
@@ -264,7 +285,8 @@ export function BookingDetailsPage() {
             onAction={(action) => pending(t(`details.agreement.${action}`))}
           />
 
-          <BookingChecklist checks={booking.checks} onAction={(key) => pending(t(`details.checks.${key}`))} />
+          {/* Last in the sidebar: a history to glance at, not something acted on. */}
+          <BookingActivity events={booking.events} />
         </div>
       </div>
 

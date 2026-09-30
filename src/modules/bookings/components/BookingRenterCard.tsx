@@ -8,6 +8,11 @@ import type { BookingRenter } from '../types/booking.types'
 interface BookingRenterCardProps {
   renter: BookingRenter
   onOpenProfile: () => void
+  /**
+   * The pre-handover checklist, rendered inside this card. Passed in rather than imported so
+   * this stays a presentational card and the page keeps owning the screening wiring.
+   */
+  checklist?: React.ReactNode
 }
 
 /** Rows hold their place when empty — a renter added at the counter may have no licence on file yet. */
@@ -16,7 +21,9 @@ function Line({ label, value, mono }: { label: string; value: string; mono?: boo
     <div className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-fg-3 shrink-0 text-[13px]">{label}</span>
       {value ? (
-        <span className={`min-w-0 truncate text-[13px] font-semibold ${mono ? 'font-mono text-[12px]' : ''}`}>
+        <span
+          className={`min-w-0 truncate text-[13px] ${mono ? 'font-mono text-[12px]' : 'font-semibold'}`}
+        >
           {value}
         </span>
       ) : (
@@ -27,7 +34,7 @@ function Line({ label, value, mono }: { label: string; value: string; mono?: boo
 }
 
 /** Who is renting, with just enough history to judge them at the counter. */
-export function BookingRenterCard({ renter, onOpenProfile }: BookingRenterCardProps) {
+export function BookingRenterCard({ renter, onOpenProfile, checklist }: BookingRenterCardProps) {
   const { t } = useTranslation('bookings')
   const format = useFormatters()
 
@@ -59,6 +66,15 @@ export function BookingRenterCard({ renter, onOpenProfile }: BookingRenterCardPr
         <Line label={t('details.renter.licence')} value={renter.licenceNumber} mono />
         <Line label={t('details.renter.lifetimeValue')} value={format.currency(renter.lifetimeValue)} />
       </div>
+
+      {checklist && (
+        <div className="border-border-soft mt-4 border-t pt-3.5">
+          <h3 className="text-fg-3 m-0 mb-2.5 text-[11px] font-bold tracking-wide uppercase">
+            {t('details.checklist.title')}
+          </h3>
+          {checklist}
+        </div>
+      )}
     </Card>
   )
 }

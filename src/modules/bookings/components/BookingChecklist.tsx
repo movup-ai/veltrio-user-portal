@@ -2,72 +2,118 @@ import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { PanelHeading } from '@/components/layout/PanelHeading'
-import type { BookingCheck, BookingCheckStep } from '../types/booking.types'
+import type { BookingCheck, BookingCheckStep, BookingScreening } from '../types/booking.types'
+import { BackgroundCheckDot, BackgroundCheckRow } from './BackgroundCheckRow'
 
 interface BookingChecklistProps {
   checks: BookingCheckStep[]
+  /** The background check's real state. Absent when none has been ordered. */
+  screening?: BookingScreening
+  ordering: boolean
+  openingReport: boolean
+  onOrderScreening: () => void
+  onViewScreeningReport: () => void
   /** Fired with the check the counter chose to act on — verify it, or open what was signed. */
   onAction: (key: BookingCheck) => void
 }
 
 /**
- * What still has to happen before the keys change hands, as a running checklist. Completed
- * steps keep their action (staff reopen a signed agreement far more often than they re-sign
- * one), so every row stays useful rather than going inert once it's ticked.
+ * What still has to happen before the keys change hands.
+ *
+ * Tiles rather than a stacked timeline: this sits inside the renter card in the wide column,
+ * where one check per row left every hint and button stretched across ~900px. Three abreast
+ * keeps each to a readable measure and reads as a set of things to clear.
+ *
+ * No Card of its own — the renter card supplies the frame.
  */
-export function BookingChecklist({ checks, onAction }: BookingChecklistProps) {
+export function BookingChecklist({
+  checks,
+  screening,
+  ordering,
+  openingReport,
+  onOrderScreening,
+  onViewScreeningReport,
+  onAction,
+}: BookingChecklistProps) {
   const { t } = useTranslation('bookings')
 
   return (
-    <Card className="flex flex-col p-[18px]">
-      <PanelHeading title={t('details.checklist.title')} className="mb-3.5" />
+    <ol className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      {checks.map((check) => {
+        const isBackground = check.key === 'background'
 
-      <ol className="flex flex-col">
-        {checks.map((check, index) => {
-          const last = index === checks.length - 1
+        return (
+          <li
+            key={check.key}
+            className="border-border-soft bg-surface-2 flex flex-col rounded-[10px] border p-3"
+          >
+            {/* The status row is the only indented thing in the tile: the dot leads it, and the
+                title, hint and button below all start at the tile's padding edge. */}
+            <div className="flex items-center gap-1.5">
+              {isBackground ? (
+                <BackgroundCheckDot screening={screening} />
+              ) : (
+                <>
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'flex size-[16px] shrink-0 items-center justify-center rounded-full',
+                      check.done ? 'bg-success text-white' : 'bg-error-tint',
+                    )}
+                  >
+                    {check.done ? (
+                      <Check className="size-2.5" strokeWidth={3} />
+                    ) : (
+                      <span className="bg-error size-[7px] rounded-full" />
+                    )}
+                  </span>
+                  <p
+                    className={cn(
+                      'm-0 text-[11px] font-bold tracking-wide uppercase',
+                      check.done ? 'text-success' : 'text-error',
+                    )}
+                  >
+                    {check.done ? t('details.checklist.done') : t('details.checklist.pending')}
+                  </p>
+                </>
+              )}
+            </div>
 
-          return (
-            <li key={check.key} className={cn('relative pl-7', !last && 'pb-4')}>
-              {/* Connector runs from under this dot to the next one — omitted on the last row. */}
-              {!last && <span aria-hidden className="bg-border absolute top-6 bottom-0 left-[9px] w-px" />}
+            {/* flex-1 so the tiles in a row share a height and their buttons line up. */}
+            <div className="mt-2 flex flex-1 flex-col">
+              {isBackground ? (
+                <BackgroundCheckRow
+                  screening={screening}
+                  ordering={ordering}
+                  openingReport={openingReport}
+                  onOrder={onOrderScreening}
+                  onViewReport={onViewScreeningReport}
+                />
+              ) : (
+                <>
+                  <p className="m-0 text-[13px] font-semibold">{t(`details.checks.${check.key}`)}</p>
+                  <p
+                    className="text-fg-4 m-0 mt-1 text-[11.5px] leading-snug"
+                    style={{ textWrap: 'pretty' }}
+                  >
+                    {t(`details.checkHints.${check.key}`)}
+                  </p>
 
-              <span
-                aria-hidden
-                className={cn(
-                  'absolute top-0.5 left-0 flex size-[19px] items-center justify-center rounded-full',
-                  check.done ? 'bg-success text-white' : 'bg-error-tint',
-                )}
-              >
-                {check.done ? (
-                  <Check className="size-3" strokeWidth={3} />
-                ) : (
-                  <span className="bg-error size-[9px] rounded-full" />
-                )}
-              </span>
-
-              <p className={cn('m-0 text-[12px] font-bold', check.done ? 'text-success' : 'text-error')}>
-                {check.done ? t('details.checklist.done') : t('details.checklist.pending')}
-              </p>
-              <p className="m-0 mt-0.5 text-[13.5px] font-semibold">{t(`details.checks.${check.key}`)}</p>
-              <p className="text-fg-4 m-0 mt-0.5 text-[12px]" style={{ textWrap: 'pretty' }}>
-                {t(`details.checkHints.${check.key}`)}
-              </p>
-
-              <Button
-                type="button"
-                size="sm"
-                variant={check.done ? 'outline' : 'primary'}
-                onClick={() => onAction(check.key)}
-                className="mt-2 w-full"
-              >
-                {check.done ? t(`details.checkActions.${check.key}`) : t('details.checklist.verify')}
-              </Button>
-            </li>
-          )
-        })}
-      </ol>
-    </Card>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={check.done ? 'outline' : 'primary'}
+                    onClick={() => onAction(check.key)}
+                    className="mt-auto w-full"
+                  >
+                    {check.done ? t(`details.checkActions.${check.key}`) : t('details.checklist.verify')}
+                  </Button>
+                </>
+              )}
+            </div>
+          </li>
+        )
+      })}
+    </ol>
   )
 }

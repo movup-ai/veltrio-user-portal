@@ -166,7 +166,7 @@ export interface BookingFee {
   amount: number
 }
 
-/** Pre-handover checks the branch can require. Labels live in `bookings:verification.<key>`. */
+/** Pre-handover checks a booking records. Set when the booking was taken; not written by the form. */
 export const BOOKING_VERIFICATIONS = ['identity', 'background', 'insurance'] as const
 export type BookingVerification = (typeof BOOKING_VERIFICATIONS)[number]
 
@@ -234,6 +234,8 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   pricing: BookingQuote
   payment: BookingPayment
   contract: BookingContract
+  /** The background check, when one has been ordered. Absent means it was never started. */
+  screening?: BookingScreening
   /** When the car actually changed hands, which is not the same as the window's ends. */
   pickedUpAt?: string
   returnedAt?: string
@@ -244,6 +246,8 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
 export function isReadyForPickup(booking: Booking): boolean {
   // Paid exactly, matching the API's own predicate: a held deposit is not settlement, and a
   // refund undoes it. Anything looser would disagree with the "ready" count on the stat card.
+  // The background check is informational and gates nothing: it reports what Checkr found,
+  // and the branch reads the report and uses its own judgement.
   return booking.payment.state === 'paid' && Boolean(booking.contract.signedAt)
 }
 
@@ -271,6 +275,65 @@ export type BookingCheck = (typeof BOOKING_CHECKS)[number]
 export interface BookingCheckStep {
   key: BookingCheck
   done: boolean
+}
+
+/**
+ * Where a Checkr Trust instant criminal check has got to. It usually answers in the request
+ * that ordered it, so `running` is the exception; `consider` means records were found and a
+ * manager has to adjudicate, not that the renter was refused.
+ */
+export const SCREENING_STATUSES = ['running', 'clear', 'consider', 'error'] as const
+export type ScreeningStatus = (typeof SCREENING_STATUSES)[number]
+
+/** Statuses Checkr will never move away from — what the details page stops polling on. */
+export const TERMINAL_SCREENING_STATUSES: readonly ScreeningStatus[] = [
+  'clear',
+  'consider',
+  'error',
+]
+
+/** A background check on one booking. Absent entirely when none has been ordered. */
+/** One row of the verification log: any check this tenant has run, on anyone. */
+export interface ScreeningRecord {
+  id: string
+  name: string
+  dateOfBirth?: string
+  /** Absent for someone screened from the verification page — they are not a renter. */
+  email?: string
+  customerId?: string
+  status: ScreeningStatus
+  recordsFound: boolean
+  hasReport: boolean
+  completedAt?: string
+  createdAt: string
+}
+
+/** A US postal address. All four parts or none — Checkr rejects a partial one. */
+export interface ScreeningAddress {
+  street: string
+  city: string
+  state: string
+  zipCode: string
+}
+
+export interface BookingScreening {
+  id: string
+  /** The renter the check belongs to. Absent until they book. */
+  customerId?: string
+  status: ScreeningStatus
+  /** Why a check errored, or Checkr's notes on one still running. */
+  failureReason?: string
+  /** Whether anything was found. The records themselves stay in Checkr. */
+  recordsFound: boolean
+  /** Whether there is a PDF to fetch. False while the check is still running. */
+  hasReport: boolean
+  /** Whether ordering again would be accepted. False while this result still stands. */
+  canReorder: boolean
+  /** True when this result was run for an earlier booking of the same renter. */
+  reused: boolean
+  completedAt?: string
+  createdAt: string
+  updatedAt: string
 }
 
 /** The contract itself, which is a document to chase rather than a check to tick. */

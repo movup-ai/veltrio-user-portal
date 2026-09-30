@@ -13,7 +13,8 @@
     "Payments": "Pagos",
     "Pricing": "Tarifas",
     "Locations": "Sucursales",
-    "Settings": "Ajustes"
+    "Settings": "Ajustes",
+    "Verification": "Verificación"
   },
   "sidebar": {
     "primary": "Principal",

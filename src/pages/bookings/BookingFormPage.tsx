@@ -43,7 +43,16 @@ import type { RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types
 import { formatRateOptionPrice, vehicleDisplayName } from '@/modules/vehicles/utils/vehicle.utils'
 import { AdditionalDriversEditor } from '@/modules/bookings/components/AdditionalDriversEditor'
 import { BookingFeesEditor } from '@/modules/bookings/components/BookingFeesEditor'
-import { BookingVerificationPicker } from '@/modules/bookings/components/BookingVerificationPicker'
+import { BookingScreeningStatus } from '@/modules/bookings/components/BookingScreeningStatus'
+import {
+  useScreeningReportByEmail,
+  useOrderCustomerScreening,
+  useScreeningByEmail,
+} from '@/modules/bookings/hooks/use-screening'
+import {
+  customerLabel,
+  customerSearchTerm,
+} from '@/modules/bookings/utils/booking.customer-search'
 import { BookingPriceSummary } from '@/modules/bookings/components/BookingPriceSummary'
 import { BookingRateOptions } from '@/modules/bookings/components/BookingRateOptions'
 import { BookingVehiclePicker, type VehicleOption } from '@/modules/bookings/components/BookingVehiclePicker'
@@ -55,6 +64,10 @@ import {
 } from '@/modules/bookings/hooks/use-booking-drafts'
 import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
+import {
+  screeningForRenter,
+  type RanScreening,
+} from '@/modules/bookings/utils/booking.screening'
 import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
@@ -299,8 +312,20 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   // has loaded, an empty list would mark every car free and let a booked one be picked.
   const schedule = scheduleData ?? EMPTY_SCHEDULE
 
-  // The lookup box searches the customer book as the counter types.
-  const { data: customerMatches = [] } = useCustomerSearch(customerQuery)
+  // The lookup box searches the customer book as the counter types. On the name alone: the
+  // box may be showing a picked renter's full label, which no single column can match.
+  const { data: customerMatches = [] } = useCustomerSearch(customerSearchTerm(customerQuery))
+
+  /** The renter chosen from the list, so re-picking them does not depend on a refetched page. */
+  const [picked, setPicked] = useState<Customer | undefined>()
+
+  // The book is capped at a page, so a renter found by typing can fall outside it once the
+  // search goes blank. Keeping them listed is what puts the tick beside the current choice.
+  const customerOptions = useMemo(() => {
+    const labels = customerMatches.map(customerLabel)
+    const chosen = picked && customerLabel(picked)
+    return chosen && !labels.includes(chosen) ? [chosen, ...labels] : labels
+  }, [customerMatches, picked])
 
   /**
    * Scans a returning renter already has. Documents belong to the customer, not to one rental,
@@ -308,6 +333,49 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
    * empty picker instead would invite a second copy of the same document.
    */
   const { data: existingDocuments = [] } = useCustomerDocuments(values.customerId || undefined)
+
+  const { data: customerScreening, isFetching: loadingScreening } = useScreeningByEmail(
+    values.customerEmail,
+  )
+  const orderScreening = useOrderCustomerScreening()
+
+  /**
+   * A check run here, before the renter has a customer id to re-read it by.
+   *
+   * Tagged with the email it was ordered for: without that, switching to a different renter
+   * left the previous one's verdict on the card while the report button fetched the new
+   * renter's — one person's result shown as another's.
+   */
+  const [ranScreening, setRanScreening] = useState<RanScreening | undefined>()
+  const screening = screeningForRenter(customerScreening, ranScreening, values.customerEmail)
+  // By email, the same key the card and ordering use: a renter screened at the counter has
+  // no customer record to fetch a report by until they book.
+  const screeningReport = useScreeningReportByEmail(values.customerEmail.trim() || undefined)
+
+  /**
+   * Why a check cannot be run yet, naming the fields still empty. Checkr matches on name and
+   * date of birth; the email is what the renter resolves to, so all three are required.
+   */
+  const runBlockedReason =
+    values.customerName.trim() && values.customerEmail.trim() && values.customerDob
+      ? undefined
+      : t('verification.background.needsRenter')
+
+  function handleRunCheck() {
+    const email = values.customerEmail.trim().toLowerCase()
+
+    // The hook reports a failure as a toast, so nothing is thrown at the form here.
+    orderScreening.mutate(
+      // Only what the check matches on, plus the email that says who it is for. The rest of
+      // the form is not sent: a check is not an edit, and the API refuses anything else.
+      {
+        name: values.customerName,
+        email: values.customerEmail,
+        dateOfBirth: values.customerDob,
+      },
+      { onSuccess: (result) => setRanScreening({ email, screening: result }) },
+    )
+  }
 
   /** Slots the counter has chosen to replace, so the picker takes over from what is on file. */
   const [replacing, setReplacing] = useState<{ licence?: boolean; insurance?: boolean }>({})
@@ -408,22 +476,16 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
     setValue('rateOptionId', option.id, { shouldValidate: true })
   }
 
-  /**
-   * What the lookup box shows for a renter. Two people genuinely share a name, so the label
-   * carries the email that distinguishes them — resolving on the name alone would silently
-   * pick whichever matched first and attach the booking (and its scans) to the wrong person.
-   */
-  function customerLabel(customer: Customer): string {
-    return `${customer.name} · ${customer.email}`
-  }
-
   function handlePickCustomer(label: string) {
-    const match = customerMatches.find((c) => customerLabel(c) === label)
+    const match =
+      customerMatches.find((c) => customerLabel(c) === label) ??
+      (picked && customerLabel(picked) === label ? picked : undefined)
     const opts = { shouldValidate: true, shouldDirty: true } as const
     // Free text stays as typed; a picked renter shows the label so the choice stays visible.
     setCustomerQuery(label)
     setValue('customerName', match?.name ?? label, opts)
     setValue('customerId', match?.id ?? '', opts)
+    setPicked(match)
     if (!match) return
     setValue('customerEmail', match.email, opts)
     setValue('customerPhone', match.phone, opts)
@@ -438,6 +500,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   /** Clears a prefilled renter so the next one is typed from scratch rather than edited over. */
   function handleNewCustomer() {
     setCustomerQuery('')
+    setPicked(undefined)
     const fields = [
       'customerId',
       'customerName',
@@ -862,7 +925,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                           aria-label={t('form.customer.search')}
                           value={customerQuery}
                           onChange={handlePickCustomer}
-                          options={customerMatches.map(customerLabel)}
+                          options={customerOptions}
                           placeholder={t('form.fields.customerNamePlaceholder')}
                         />
                       )}
@@ -918,7 +981,11 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   >
                     {(fieldProps) => <Input type="tel" {...register('customerPhone')} {...fieldProps} />}
                   </FormField>
-                  <FormField label={t('form.fields.customerDob')} error={errors.customerDob?.message}>
+                                    <FormField
+                    label={t('form.fields.customerDob')}
+                    error={errors.customerDob?.message}
+                    required
+                  >
                     {({ id, invalid }) => (
                       <Controller
                         control={control}
@@ -941,6 +1008,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   <FormField
                     label={t('form.fields.customerAddress')}
                     error={errors.customerAddress?.message}
+                    required
                     className="md:col-span-2"
                   >
                     {(fieldProps) => (
@@ -1056,12 +1124,16 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   description={t('form.verification.hint')}
                 />
                 <div className="mt-4">
-                  <Controller
-                    control={control}
-                    name="verifications"
-                    render={({ field }) => (
-                      <BookingVerificationPicker selected={field.value} onChange={field.onChange} />
-                    )}
+                  <BookingScreeningStatus
+                    screening={screening}
+                    loading={loadingScreening}
+                    onRunCheck={handleRunCheck}
+                    running={orderScreening.isPending}
+                    runBlockedReason={runBlockedReason}
+                    onViewReport={
+                      screening ? () => screeningReport.mutate() : undefined
+                    }
+                    openingReport={screeningReport.isPending}
                   />
                 </div>
               </Card>
@@ -1229,17 +1301,11 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
 
                 <ReviewSection
                   title={t('form.review.verification')}
-                  count={values.verifications.length}
+                  count={screening ? 1 : 0}
                   onEdit={() => setStepIndex(1)}
                 >
-                  {values.verifications.length > 0 ? (
-                    <ul className="flex flex-col gap-1.5">
-                      {values.verifications.map((key) => (
-                        <li key={key} className="text-fg-2 text-[14px]">
-                          {t(`verification.${key}.label`)}
-                        </li>
-                      ))}
-                    </ul>
+                  {screening ? (
+                    <BookingScreeningStatus screening={screening} />
                   ) : (
                     <p className="text-fg-4 text-[14px]">{t('form.review.noVerification')}</p>
                   )}

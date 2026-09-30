@@ -42,7 +42,10 @@
     "addressTooLong": "Address is too long",
     "driverRateInvalid": "Enter a valid rate",
     "feeLabelRequired": "Enter a description",
-    "feeAmountInvalid": "Enter a valid amount"
+    "feeAmountInvalid": "Enter a valid amount",
+    "customerDobRequired": "Date of birth is required",
+    "customerDobImplausible": "The renter must be at least 18",
+    "customerAddressRequired": "Address is required"
   },
   "rateOption": {
     "labelRequired": "Label is required",
@@ -62,5 +65,10 @@
     "rateLimited": "Too many requests. Please slow down and try again.",
     "serverError": "The server ran into a problem. Please try again shortly.",
     "unknown": "Something went wrong. Please try again."
+  },
+  "screening": {
+    "addressIncomplete": "Fill in all four address fields, or leave them all blank.",
+    "stateInvalid": "Use the two-letter state code, e.g. TX.",
+    "zipInvalid": "Use a 5-digit ZIP, e.g. 73301."
   }
 }
