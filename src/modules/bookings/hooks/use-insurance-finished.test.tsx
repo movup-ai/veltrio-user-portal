@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { toast } from '@/components/ui/use-toast'
+import { ApiError } from '@/types/api'
 import type { BookingVerification } from '../types/booking.types'
 
 const completeInsurance = vi.fn()
@@ -148,5 +149,21 @@ describe('the return page', () => {
 
     expect(hook.current).toEqual({ type: 'unfinished' })
     expect(completeInsurance).not.toHaveBeenCalled()
+  })
+
+  it('says the link was replaced when staff have since opened a newer session', async () => {
+    // Reported as done, the renter would stop while the newer check waited for them.
+    returnTab({ closable: false })
+    completeInsurance.mockRejectedValue(
+      new ApiError('conflict', 'This link has been replaced.', {
+        status: 409,
+        code: 'verification_session_closed',
+      }),
+    )
+
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useInsuranceReturn(), { wrapper })
+
+    await waitFor(() => expect(result.current).toEqual({ type: 'replaced' }))
   })
 })

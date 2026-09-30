@@ -43,10 +43,11 @@ describe('opening a report', () => {
     })
 
     const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
-    result.current.mutate()
+    result.current.open()
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(order).toEqual(['open', 'fetch'])
+    // Synchronously, inside the click: the mutation's own awaits come after.
+    expect(order).toEqual(['open'])
+    await waitFor(() => expect(order).toEqual(['open', 'fetch']))
   })
 
   it('does not navigate this tab when window.open returns null', async () => {
@@ -58,12 +59,11 @@ describe('opening a report', () => {
     report.mockResolvedValue(PDF)
 
     const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
-    result.current.mutate()
+    result.current.open()
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(window.location.href).toBe(before)
     // Downloaded instead, which reaches the report without losing the page.
-    expect(click).toHaveBeenCalled()
+    await waitFor(() => expect(click).toHaveBeenCalled())
+    expect(window.location.href).toBe(before)
   })
 
   it('closes the blank tab when the fetch fails', async () => {
@@ -72,9 +72,8 @@ describe('opening a report', () => {
     report.mockRejectedValue(new Error('nope'))
 
     const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
-    result.current.mutate()
+    result.current.open()
 
-    await waitFor(() => expect(result.current.isError).toBe(true))
-    expect(close).toHaveBeenCalled()
+    await waitFor(() => expect(close).toHaveBeenCalled())
   })
 })

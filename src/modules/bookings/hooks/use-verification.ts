@@ -147,13 +147,13 @@ export function useOrderVerification(reference: string) {
  * Opens a report PDF in a new tab. A mutation rather than a query: it is an action the
  * counter takes, and the blob is not worth caching.
  *
- * The object URL is revoked on a timer rather than immediately - revoking it synchronously
- * can race the new tab and leave it blank.
+ * Call `open` straight from the click: the tab opens there, before the mutation's own awaits,
+ * since some browsers block a tab opened a tick after the click. The object URL is revoked on
+ * a timer rather than immediately - revoking it synchronously can race the new tab.
  */
 function useReportOpener<TArg = void>(fetchPdf: (arg: TArg) => Promise<Blob>) {
-  return useMutation({
-    mutationFn: async (arg: TArg) => {
-      const tab = window.open('', '_blank')
+  const mutation = useMutation({
+    mutationFn: async ({ arg, tab }: { arg: TArg; tab: Window | null }) => {
       try {
         const pdf = await fetchPdf(arg)
         const url = URL.createObjectURL(pdf)
@@ -181,6 +181,11 @@ function useReportOpener<TArg = void>(fetchPdf: (arg: TArg) => Promise<Blob>) {
       })
     },
   })
+
+  return {
+    open: (arg: TArg) => mutation.mutate({ arg, tab: window.open('', '_blank') }),
+    isPending: mutation.isPending,
+  }
 }
 
 export function useVerificationReport(reference: string) {
@@ -259,16 +264,15 @@ function showOpening(tab: Window) {
 /**
  * Opens an Axle session and sends the renter to it.
  *
- * The tab is opened during the click for the same reason the report is: opening it after the
- * request resolves is what a browser treats as an unprompted popup and blocks.
+ * Call `start` straight from the click. It opens the tab before anything else - before the
+ * order is validated and before the mutation runs, both of which await - because some browsers
+ * only allow a new tab synchronously inside the click, and block one opened a tick later.
  */
 export function useStartInsurance() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (input: InsuranceOrderWire) => {
-      const tab = window.open('', '_blank')
-      if (tab) showOpening(tab)
+  const mutation = useMutation({
+    mutationFn: async ({ input, tab }: { input: InsuranceOrderWire; tab: Window | null }) => {
       try {
         const session = await verificationApi.startInsurance(input)
         if (tab) {
@@ -300,6 +304,19 @@ export function useStartInsurance() {
       })
     },
   })
+
+  return {
+    /** `order` may be a function that validates first; resolving to nothing closes the tab. */
+    start: (order: InsuranceOrderWire | (() => Promise<InsuranceOrderWire | undefined>)) => {
+      const tab = window.open('', '_blank')
+      if (tab) showOpening(tab)
+      void Promise.resolve(typeof order === 'function' ? order() : order).then(
+        (input) => (input ? mutation.mutate({ input, tab }) : tab?.close()),
+        () => tab?.close(),
+      )
+    },
+    isPending: mutation.isPending,
+  }
 }
 
 /** What the return tab tells the tab the counter started from, which is the one left open. */
@@ -307,6 +324,8 @@ export type InsuranceMessage =
   | { type: 'completing' }
   | { type: 'finished'; outcome: InsuranceOutcomeWire }
   | { type: 'unfinished' }
+  // The link belonged to a session staff have since replaced; the newer one still waits.
+  | { type: 'replaced' }
   | { type: 'failed'; message: string }
 
 const INSURANCE_CHANNEL = 'veltrio:insurance'
@@ -336,6 +355,10 @@ function announce(queryClient: QueryClient, message: InsuranceMessage) {
   if (message.type === 'unfinished') {
     // The renter backed out. The session stays open, and the tile offers to reopen it.
     toast({ title: i18n.t('bookings:verification.toast.insuranceUnfinished') })
+    return
+  }
+  if (message.type === 'replaced') {
+    toast({ title: i18n.t('bookings:verification.toast.insuranceReplaced') })
     return
   }
   toast({
@@ -396,7 +419,14 @@ export function useInsuranceReturn(): InsuranceMessage | undefined {
     const { tenantId, verificationId, authCode } = redirect
     verificationApi.completeInsurance({ tenantId, verificationId, authCode }).then(
       (outcome) => finish({ type: 'finished', outcome }),
-      (error) => finish({ type: 'failed', message: normalizeApiError(error).message }),
+      (error) => {
+        const apiError = normalizeApiError(error)
+        finish(
+          apiError.code === 'verification_session_closed'
+            ? { type: 'replaced' }
+            : { type: 'failed', message: apiError.message },
+        )
+      },
     )
   }, [])
 

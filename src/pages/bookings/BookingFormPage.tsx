@@ -1157,7 +1157,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                     running={orderVerification.isPending}
                     runBlockedReason={runBlockedReason}
                     onViewReport={
-                      verification ? () => verificationReport.mutate() : undefined
+                      verification ? () => verificationReport.open() : undefined
                     }
                     openingReport={verificationReport.isPending}
                   />
@@ -1167,7 +1167,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                     kind="insurance"
                     verification={insurance}
                     loading={loadingInsurance}
-                    onRunCheck={() => startInsurance.mutate(insuranceOrder())}
+                    onRunCheck={() => startInsurance.start(insuranceOrder())}
                     onShare={() => insuranceLink.share(insuranceOrder())}
                     sharing={insuranceLink.sharing}
                     running={startInsurance.isPending || completingInsurance}

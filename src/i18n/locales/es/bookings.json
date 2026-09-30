@@ -515,7 +515,8 @@
       "insuranceChecked": "Seguro verificado",
       "insuranceUnfinished": "El conductor no terminó de conectar su seguro. La sesión sigue abierta para reabrirla.",
       "popupBlocked": "El navegador bloqueó la pestaña nueva",
-      "popupBlockedDescription": "La sesión está abierta. Permita las ventanas emergentes para este sitio o use Enviar enlace para darle el enlace al conductor."
+      "popupBlockedDescription": "La sesión está abierta. Permita las ventanas emergentes para este sitio o use Enviar enlace para darle el enlace al conductor.",
+      "insuranceReplaced": "Ese enlace de seguro fue reemplazado por uno más reciente, que sigue esperando al conductor."
     },
     "background": {
       "label": "Verificación de antecedentes",
@@ -620,6 +621,10 @@
       "title": "Algo salió mal",
       "body": "No pudimos terminar de verificar su seguro. Abra el enlace de nuevo o contacte con la empresa de alquiler."
     },
-    "back": "Volver a Veltrio"
+    "back": "Volver a Veltrio",
+    "replaced": {
+      "title": "Este enlace fue reemplazado",
+      "body": "La empresa de alquiler le envió un enlace más reciente. Ábralo para conectar su seguro."
+    }
   }
 }

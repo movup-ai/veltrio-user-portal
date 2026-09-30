@@ -102,9 +102,9 @@ export function VerificationPage() {
     return end && to !== from ? `${shortDate(start)} – ${shortDate(end)}` : shortDate(start)
   }
 
-  async function onVerifyInsurance() {
-    const input = await insuranceOrder()
-    if (input) startInsurance.mutate(input)
+  // Not async: the tab must open inside the click, so validation runs after `start` opens it.
+  function onVerifyInsurance() {
+    startInsurance.start(insuranceOrder)
   }
 
   async function onSendInsuranceLink() {
@@ -165,7 +165,7 @@ export function VerificationPage() {
           ? [
               {
                 label: t('verificationPage.log.viewReport'),
-                onClick: () => report.mutate(record.id),
+                onClick: () => report.open(record.id),
               },
             ]
           : [],

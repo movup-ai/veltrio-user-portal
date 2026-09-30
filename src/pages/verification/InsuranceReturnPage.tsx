@@ -19,7 +19,12 @@ export function InsuranceReturnPage() {
 
   if (!shown) return <LoadingState label={t('insuranceReturn.finishing')} />
 
-  const result = shown.type === 'finished' ? 'done' : shown.type === 'failed' ? 'failed' : 'unfinished'
+  const result =
+    shown.type === 'finished'
+      ? 'done'
+      : shown.type === 'failed' || shown.type === 'replaced'
+        ? shown.type
+        : 'unfinished'
 
   return (
     <div className="border-border bg-card flex w-full max-w-md flex-col items-center gap-3 rounded-lg border p-8 text-center shadow-sm">

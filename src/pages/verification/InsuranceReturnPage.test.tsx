@@ -50,4 +50,10 @@ describe('the page a renter returns to', () => {
 
     expect(screen.getByText('Finishing the insurance check…')).toBeInTheDocument()
   })
+
+  it('tells the renter a replaced link is no longer the one to use', () => {
+    renderPage({ type: 'replaced' })
+
+    expect(screen.getByRole('heading')).toHaveTextContent('This link has been replaced')
+  })
 })

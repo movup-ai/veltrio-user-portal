@@ -132,7 +132,7 @@ export function BookingDetailsPage() {
     // Axle hosts the session, so this opens a tab rather than returning a verdict. Reopening
     // a session the renter did not finish hands back the same one, so it is never billed twice.
     const order = insuranceOrder()
-    if (order) startInsurance.mutate(order)
+    if (order) startInsurance.start(order)
   }
 
   function handleShare() {
@@ -312,7 +312,7 @@ export function BookingDetailsPage() {
                 ordering={orderingKind}
                 openingReport={verificationReport.isPending}
                 onOrder={handleOrder}
-                onViewReport={() => verificationReport.mutate()}
+                onViewReport={() => verificationReport.open()}
                 onShare={handleShare}
                 sharing={insuranceLink.sharing ? 'insurance' : undefined}
                 onAction={(kind) => pending(t(`details.checks.${kind}`))}

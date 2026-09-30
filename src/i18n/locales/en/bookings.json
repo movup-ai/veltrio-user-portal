@@ -515,7 +515,8 @@
       "insuranceChecked": "Insurance checked",
       "insuranceUnfinished": "The renter did not finish connecting their insurance. The session stays open to reopen.",
       "popupBlocked": "The browser blocked the new tab",
-      "popupBlockedDescription": "The session is open. Allow pop-ups for this site, or use Send link to give the renter the link."
+      "popupBlockedDescription": "The session is open. Allow pop-ups for this site, or use Send link to give the renter the link.",
+      "insuranceReplaced": "That insurance link was replaced by a newer one, which is still waiting for the renter."
     },
     "background": {
       "label": "Background check",
@@ -620,6 +621,10 @@
       "title": "Something went wrong",
       "body": "We could not finish checking your insurance. Open the link again, or contact the rental company."
     },
-    "back": "Back to Veltrio"
+    "back": "Back to Veltrio",
+    "replaced": {
+      "title": "This link has been replaced",
+      "body": "The rental company has sent you a newer link. Open that one to connect your insurance."
+    }
   }
 }

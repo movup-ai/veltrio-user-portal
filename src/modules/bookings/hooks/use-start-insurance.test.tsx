@@ -45,14 +45,13 @@ describe('starting an insurance check', () => {
     startInsurance.mockReturnValue(new Promise((resolve) => (answer = resolve)))
 
     const { result } = renderHook(() => useStartInsurance(), { wrapper: wrapper() })
-    result.current.mutate(ORDER)
+    result.current.start(ORDER)
 
     await waitFor(() => expect(startInsurance).toHaveBeenCalled())
     expect(tab.document.body.textContent).toBe('Opening a secure connection to your insurer…')
 
     answer({ verification: {}, ignitionUri: 'https://ignition.axle.test/abc' })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(tab.location.href).toBe('https://ignition.axle.test/abc')
+    await waitFor(() => expect(tab.location.href).toBe('https://ignition.axle.test/abc'))
   })
 
   it('stays on the page when the browser blocks the new tab', async () => {
@@ -62,11 +61,33 @@ describe('starting an insurance check', () => {
     startInsurance.mockResolvedValue({ verification: {}, ignitionUri: 'https://ignition.axle.test/abc' })
 
     const { result } = renderHook(() => useStartInsurance(), { wrapper: wrapper() })
-    result.current.mutate(ORDER)
+    result.current.start(ORDER)
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(toast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'The browser blocked the new tab' }),
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'The browser blocked the new tab' }),
+      ),
     )
+  })
+
+  it('opens the tab inside the click, before the order has been validated', () => {
+    // Opened after an await, some browsers treat the tab as an unprompted popup and block it.
+    const open = vi.spyOn(window, 'open').mockReturnValue(null)
+
+    const { result } = renderHook(() => useStartInsurance(), { wrapper: wrapper() })
+    result.current.start(() => new Promise(() => {}))
+
+    expect(open).toHaveBeenCalledOnce()
+  })
+
+  it('closes the tab and starts nothing when the order does not validate', async () => {
+    const close = vi.fn()
+    vi.spyOn(window, 'open').mockReturnValue({ close } as unknown as Window)
+
+    const { result } = renderHook(() => useStartInsurance(), { wrapper: wrapper() })
+    result.current.start(async () => undefined)
+
+    await waitFor(() => expect(close).toHaveBeenCalled())
+    expect(startInsurance).not.toHaveBeenCalled()
   })
 })
