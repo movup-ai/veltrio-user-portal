@@ -270,6 +270,10 @@ function showOpening(tab: Window) {
  */
 export function useStartInsurance() {
   const queryClient = useQueryClient()
+  // Set on the click itself, before validation: a second click in that gap opened a second tab,
+  // and the return code completes only once. A ref, since state would land a render too late.
+  const busy = useRef(false)
+  const [preparing, setPreparing] = useState(false)
 
   const mutation = useMutation({
     mutationFn: async ({ input, tab }: { input: InsuranceOrderWire; tab: Window | null }) => {
@@ -308,14 +312,28 @@ export function useStartInsurance() {
   return {
     /** `order` may be a function that validates first; resolving to nothing closes the tab. */
     start: (order: InsuranceOrderWire | (() => Promise<InsuranceOrderWire | undefined>)) => {
+      if (busy.current) return
+      busy.current = true
+      setPreparing(true)
+      const release = () => {
+        busy.current = false
+        setPreparing(false)
+      }
       const tab = window.open('', '_blank')
       if (tab) showOpening(tab)
       void Promise.resolve(typeof order === 'function' ? order() : order).then(
-        (input) => (input ? mutation.mutate({ input, tab }) : tab?.close()),
-        () => tab?.close(),
+        (input) => {
+          if (input) return mutation.mutate({ input, tab }, { onSettled: release })
+          tab?.close()
+          release()
+        },
+        () => {
+          tab?.close()
+          release()
+        },
       )
     },
-    isPending: mutation.isPending,
+    isPending: preparing || mutation.isPending,
   }
 }
 

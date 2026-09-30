@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { toast } from '@/components/ui/use-toast'
 
@@ -89,5 +89,24 @@ describe('starting an insurance check', () => {
 
     await waitFor(() => expect(close).toHaveBeenCalled())
     expect(startInsurance).not.toHaveBeenCalled()
+  })
+
+  it('ignores a second click while the first is still being checked, and shows it busy', async () => {
+    // A second tab would hold a second session link, and the return code completes only once.
+    const open = vi.spyOn(window, 'open').mockReturnValue({ close: vi.fn() } as unknown as Window)
+    let validated: (order: undefined) => void = () => {}
+    const validating = () => new Promise<undefined>((resolve) => (validated = resolve))
+
+    const { result } = renderHook(() => useStartInsurance(), { wrapper: wrapper() })
+    act(() => result.current.start(validating))
+    act(() => result.current.start(validating))
+
+    expect(open).toHaveBeenCalledOnce()
+    expect(result.current.isPending).toBe(true)
+
+    await act(async () => validated(undefined))
+    await waitFor(() => expect(result.current.isPending).toBe(false))
+    act(() => result.current.start(validating))
+    expect(open).toHaveBeenCalledTimes(2)
   })
 })
