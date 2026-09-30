@@ -41,17 +41,6 @@ function onboardingSchema(t: TFunction<'auth'>) {
 
 type OnboardingValues = z.infer<ReturnType<typeof onboardingSchema>>
 
-/** The fields an API error can be placed under — the request's keys are the form's names. */
-const ONBOARDING_FIELDS: Record<keyof OnboardingValues, true> = {
-  ownerFullName: true,
-  tenantName: true,
-  subdomain: true,
-  website: true,
-  country: true,
-  fleetSize: true,
-  timezone: true,
-}
-
 /**
  * Second half of sign-up: Clerk has verified who the person is, this creates the
  * company they operate. Reached after `<SignUp />`, and also whenever
@@ -72,6 +61,7 @@ export function OnboardingPage() {
 
   const countries = useMemo(() => countryOptions(i18n.resolvedLanguage ?? 'en'), [i18n.resolvedLanguage])
   const countryNames = useMemo(() => countries.map((c) => c.name), [countries])
+  const schema = useMemo(() => onboardingSchema(t), [t])
 
   const {
     control,
@@ -81,7 +71,7 @@ export function OnboardingPage() {
     setError,
     formState: { errors, isSubmitting, isSubmitted },
   } = useForm<OnboardingValues>({
-    resolver: zodResolver(useMemo(() => onboardingSchema(t), [t])),
+    resolver: zodResolver(schema),
     defaultValues: {
       ownerFullName: '',
       tenantName: '',
@@ -122,7 +112,8 @@ export function OnboardingPage() {
       // A 422 names the fields it rejected. Showing only "Request validation failed" left the
       // form with nothing to fix, so each message goes under the field it belongs to.
       const fieldErrors = error instanceof ApiError ? (error.fieldErrors ?? []) : []
-      const placed = fieldErrors.filter(({ field }) => field in ONBOARDING_FIELDS)
+      // The request's keys are the form's names, so the schema says which ones a field shows.
+      const placed = fieldErrors.filter(({ field }) => field in schema.shape)
       for (const { field, message } of placed) {
         setError(field as keyof OnboardingValues, { message }, { shouldFocus: true })
       }

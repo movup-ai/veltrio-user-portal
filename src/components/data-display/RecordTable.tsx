@@ -88,7 +88,7 @@ function CellContent({ cell }: { cell: Cell }) {
         </span>
       )
     case 'badge':
-      return <StatusBadge status={cell.status} />
+      return <StatusBadge status={cell.status} label={cell.label} />
     case 'badges':
       return (
         <span className="flex flex-wrap items-center gap-1.5">

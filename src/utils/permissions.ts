@@ -19,8 +19,9 @@ export function hasAllPermissions(granted: Permission[], required: Permission[])
  * re-checks the role with `require_role` on every request, and widening a role
  * here grants nothing.
  *
- * The split that matters is `vehicles.create` / `vehicles.delete`, which the API
- * restricts to owner and manager (app/modules/vehicles/router.py). Can.test.tsx
+ * The split that matters is `vehicles.create` / `vehicles.delete` and `verifications.delete`,
+ * which the API restricts to owner and manager (vehicles/router.py, verification_router.py).
+ * Can.test.tsx
  * pins it, because a drift either hides a button that works or offers one the
  * API answers with 403. The rest are not enforced anywhere yet — the endpoints
  * they describe do not exist.
@@ -44,6 +45,7 @@ export const ROLE_PERMISSIONS: Record<MembershipRole, Permission[]> = {
     'locations.manage',
     'pricing.read',
     'pricing.manage',
+    'verifications.delete',
     'settings.manage',
     'users.manage',
   ],
@@ -66,6 +68,7 @@ export const ROLE_PERMISSIONS: Record<MembershipRole, Permission[]> = {
     'locations.manage',
     'pricing.read',
     'pricing.manage',
+    'verifications.delete',
   ],
   // Front desk: works the daily flow, no destructive or money-moving actions.
   staff: [

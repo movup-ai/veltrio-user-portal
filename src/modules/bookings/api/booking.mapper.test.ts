@@ -335,9 +335,28 @@ describe('toVerification', () => {
       canReorder: false,
       reused: false,
       policy: undefined,
+      coversFrom: undefined,
+      coversThrough: undefined,
+      forOtherDates: false,
       completedAt: undefined,
       createdAt: '2026-09-20T10:00:00Z',
       updatedAt: '2026-09-20T10:00:00Z',
+    })
+  })
+
+  it('keeps which rental an insurance check was for, and whether it answers this one', () => {
+    const verification = toVerification(
+      verificationWire({
+        coversFrom: '2026-10-01',
+        coversThrough: '2026-10-05',
+        forOtherDates: true,
+      }),
+    )
+
+    expect(verification).toMatchObject({
+      coversFrom: '2026-10-01',
+      coversThrough: '2026-10-05',
+      forOtherDates: true,
     })
   })
 

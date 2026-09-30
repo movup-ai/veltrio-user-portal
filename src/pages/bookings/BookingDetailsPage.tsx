@@ -37,7 +37,6 @@ import {
   useInsuranceLinkDialog,
   useInsuranceResults,
   useOrderVerification,
-  useStartInsurance,
   useVerification,
   useVerificationReport,
 } from '@/modules/bookings/hooks/use-verification'
@@ -93,19 +92,17 @@ export function BookingDetailsPage() {
   const { data: insurance } = useVerification(bookingId, 'insurance')
   const orderVerification = useOrderVerification(bookingId ?? '')
   const verificationReport = useVerificationReport(bookingId ?? '')
-  const startInsurance = useStartInsurance()
-  const completingInsurance = useInsuranceResults()
+  // Still heard when a sent link is finished in this browser, such as one the desk opened.
+  useInsuranceResults()
   const insuranceLink = useInsuranceLinkDialog()
 
   const verifications: Partial<Record<ProviderKind, BookingVerification>> = { background, insurance }
 
   const orderingKind: ProviderKind | undefined = orderVerification.isPending
     ? 'background'
-    : startInsurance.isPending || completingInsurance
-      ? 'insurance'
-      : undefined
+    : undefined
 
-  /** The same order whether the counter opens the session or sends the renter its link. */
+  /** The session to send the renter; asking again while it is open returns the same link. */
   function insuranceOrder(): InsuranceOrderWire | undefined {
     // Declared above the loading guard, so the booking is narrowed here rather than there.
     if (!booking) return undefined
@@ -124,15 +121,9 @@ export function BookingDetailsPage() {
     }
   }
 
+  // Only the background check runs from here; insurance is sent to the renter (handleShare).
   function handleOrder(kind: ProviderKind) {
-    if (kind === 'background') {
-      orderVerification.mutate()
-      return
-    }
-    // Axle hosts the session, so this opens a tab rather than returning a verdict. Reopening
-    // a session the renter did not finish hands back the same one, so it is never billed twice.
-    const order = insuranceOrder()
-    if (order) startInsurance.start(order)
+    if (kind === 'background') orderVerification.mutate()
   }
 
   function handleShare() {
@@ -315,6 +306,7 @@ export function BookingDetailsPage() {
                 onViewReport={() => verificationReport.open()}
                 onShare={handleShare}
                 sharing={insuranceLink.sharing ? 'insurance' : undefined}
+                closed={closed}
                 onAction={(kind) => pending(t(`details.checks.${kind}`))}
               />
             }

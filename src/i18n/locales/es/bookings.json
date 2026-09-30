@@ -468,14 +468,16 @@
         "running": "Checkr está buscando",
         "clear": "Sin hallazgos",
         "consider": "Requiere revisión",
-        "error": "No se pudo realizar"
+        "error": "No se pudo realizar",
+        "otherDates": "Otras fechas"
       },
       "insurance": {
         "notStarted": "Sin iniciar",
         "running": "Esperando al conductor",
         "clear": "Cubierto",
         "consider": "Requiere revisión",
-        "error": "No se pudo realizar"
+        "error": "No se pudo realizar",
+        "otherDates": "Otras fechas"
       }
     },
     "hint": {
@@ -484,14 +486,16 @@
         "running": "Checkr sigue buscando. Normalmente termina en segundos.",
         "clear": "No se encontraron antecedentes para este conductor.",
         "consider": "Se encontraron antecedentes. Lea el informe antes de la entrega.",
-        "error": "Checkr no pudo realizar esta verificación. Al repetirla se empieza de nuevo."
+        "error": "Checkr no pudo realizar esta verificación. Al repetirla se empieza de nuevo.",
+        "otherDates": "La última verificación registrada fue para otra reserva."
       },
       "insurance": {
         "notStarted": "El conductor conecta su propia aseguradora y comprobamos que la póliza cubre todos los días del alquiler.",
-        "running": "Hay una sesión abierta para que el conductor conecte su aseguradora. Ábrala de nuevo si cerró la pestaña.",
+        "running": "Esperando a que el conductor conecte su aseguradora. Envíe el enlace de nuevo si lo perdió.",
         "clear": "Una póliza activa cubre todo el alquiler.",
-        "consider": "Ninguna póliza cubre todos los días de este alquiler. Revise la cobertura antes de entregar las llaves.",
-        "error": "Axle no pudo completar esta verificación. Empezar de nuevo abre una sesión nueva."
+        "consider": "La póliza no basta por sí sola para este alquiler. Revísela antes de entregar las llaves.",
+        "error": "Axle no pudo completar esta verificación. Empezar de nuevo abre una sesión nueva.",
+        "otherDates": "La última verificación registrada fue para otro alquiler. Envíe el enlace para verificar estas fechas."
       }
     },
     "action": {
@@ -513,9 +517,7 @@
       "reportFailed": "No se pudo abrir el informe",
       "insuranceFailed": "No se pudo iniciar la verificación del seguro",
       "insuranceChecked": "Seguro verificado",
-      "insuranceUnfinished": "El conductor no terminó de conectar su seguro. La sesión sigue abierta para reabrirla.",
-      "popupBlocked": "El navegador bloqueó la pestaña nueva",
-      "popupBlockedDescription": "La sesión está abierta. Permita las ventanas emergentes para este sitio o use Enviar enlace para darle el enlace al conductor.",
+      "insuranceUnfinished": "El conductor no terminó de conectar su seguro. Su enlace sigue funcionando.",
       "insuranceReplaced": "Ese enlace de seguro fue reemplazado por uno más reciente, que sigue esperando al conductor."
     },
     "background": {
@@ -530,13 +532,14 @@
     "insurance": {
       "label": "Verificación de seguro",
       "checking": "Comprobando si el seguro de este conductor ya fue verificado…",
-      "none": "Sin registros. El conductor conecta su aseguradora en una pestaña nueva.",
+      "none": "Sin registros. Envíe al conductor un enlace para conectar su aseguradora desde su propio teléfono.",
       "running": "Esperando a que el conductor conecte su aseguradora. El resultado aparecerá aquí cuando termine.",
       "clearOn": "Verificado el {{when}} · una póliza activa cubre todo el alquiler",
-      "recordsOn": "Verificado el {{when}} · ninguna póliza cubre todos los días, revise la cobertura antes de entregar las llaves",
-      "needsRenter": "Añada primero el nombre completo, el correo y la fecha de nacimiento del conductor.",
+      "recordsOn": "Verificado el {{when}} · la póliza no basta para este alquiler, revísela antes de entregar las llaves",
+      "needsRenter": "Añada primero el nombre completo, el correo y la fecha de nacimiento del conductor. La póliza debe incluir a este conductor, y el resultado se guarda con su correo.",
       "needsDob": "Este conductor no tiene fecha de nacimiento registrada. Añádala primero a su perfil.",
-      "opening": "Abriendo una conexión segura con su aseguradora…"
+      "otherDates": "Verificado para {{range}} · no para estas fechas, envíe el enlace para verificar este alquiler",
+      "otherRental": "Verificado para otro alquiler · envíe el enlace para verificar estas fechas"
     },
     "policyExpires": "Vence el {{date}}"
   },
@@ -546,7 +549,7 @@
     "runCheck": "Ejecutar verificación",
     "form": {
       "title": "¿A quién va a verificar?",
-      "hint": "Ambas verificaciones coinciden por nombre y fecha de nacimiento. La dirección solo acota la de antecedentes.",
+      "hint": "Elija una verificación y luego a quién va dirigida. Todas coinciden por nombre y fecha de nacimiento.",
       "name": "Nombre completo",
       "namePlaceholder": "Jane Doe",
       "dateOfBirth": "Fecha de nacimiento",
@@ -561,14 +564,31 @@
       "zip": "Código postal",
       "zipPlaceholder": "73301",
       "submit": "Verificar antecedentes",
+      "kindLabel": "Tipo de verificación",
+      "kinds": {
+        "background": {
+          "title": "Antecedentes",
+          "meta": "Al instante",
+          "description": "Busca antecedentes penales por nombre y fecha de nacimiento."
+        },
+        "insurance": {
+          "title": "Seguro",
+          "meta": "Se envía un enlace",
+          "description": "Conecta su aseguradora desde un enlace seguro en su propio teléfono."
+        }
+      },
+      "next": {
+        "background": "El resultado aparece en la lista de abajo, normalmente en segundos.",
+        "insurance": "Recibirá un enlace para copiar o enviar. El resultado aparece abajo cuando termine."
+      },
+      "createLink": "Crear enlace de seguro",
       "cancel": "Cancelar",
-      "verifyInsurance": "Verificar seguro",
       "coverNeeded": "Cobertura de seguro necesaria",
       "coverHint": "Los días que la póliza debe cubrir, como un alquiler. Déjelo en blanco para comprobar que está vigente hoy.",
       "coverToday": "Solo hoy"
     },
     "log": {
-      "title": "Verificaciones realizadas",
+      "title": "Historial de verificaciones",
       "rowCount_other": "{{count}} verificaciones",
       "empty": "Aún no hay verificaciones. Ejecute una arriba.",
       "columns": {
@@ -581,12 +601,19 @@
       "renter": "Conductor",
       "standalone": "Independiente",
       "viewReport": "Ver informe",
-      "notRunYet": "Sin finalizar",
+      "delete": "Eliminar",
+      "deleteTitle": "¿Eliminar esta verificación?",
+      "deleteDescription": "La {{check}} de {{name}} se elimina del historial para siempre. El registro de auditoría conserva constancia de la eliminación.",
+      "deleted": "Verificación eliminada",
+      "deleteFailed": "No se pudo eliminar la verificación",
+      "inProgress": "En curso",
+      "startedOn": "Iniciada el {{when}}",
       "loadError": "No se pudieron cargar las verificaciones."
     }
   },
   "insuranceLink": {
     "action": "Enviar enlace",
+    "actionNew": "Enviar enlace nuevo",
     "title": "Enviar enlace de seguro",
     "description": "{{name}} conecta su aseguradora desde este enlace, en cualquier dispositivo. El resultado aparece en la verificación cuando termina.",
     "opening": "Creando el enlace…",

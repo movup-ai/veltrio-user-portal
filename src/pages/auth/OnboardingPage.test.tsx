@@ -137,4 +137,25 @@ describe('OnboardingPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('That portal address is already taken')
   })
+
+  it('puts a rejected field’s message under that field, and anything else above the form', async () => {
+    registerTenant.mockRejectedValue(
+      new ApiError('validation', 'Request validation failed', {
+        status: 422,
+        fieldErrors: [
+          { field: 'website', message: 'Not a valid address' },
+          { field: 'plan', message: 'Unknown plan' },
+        ],
+      }),
+    )
+    const user = userEvent.setup()
+    renderPage()
+
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: 'Finish setup' }))
+
+    // `plan` is not a field on this form, so it is left out rather than shown under another.
+    expect(await screen.findByText('Not a valid address')).toBeInTheDocument()
+    expect(screen.queryByText('Unknown plan')).not.toBeInTheDocument()
+  })
 })

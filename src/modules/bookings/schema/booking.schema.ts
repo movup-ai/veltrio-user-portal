@@ -39,7 +39,6 @@ export function isPlausibleDob(value: string): boolean {
 const uploadedFileSchema = z.object({
   id: z.string(),
   name: z.string(),
-  url: z.string(),
   size: z.number(),
   file: z.instanceof(File),
 })

@@ -109,6 +109,74 @@ describe('the insurance card', () => {
     expect(onRunCheck).toHaveBeenCalledOnce()
   })
 
+  it('makes Send link the primary action when it is the only one', () => {
+    renderRow(<BookingVerificationStatus kind="insurance" onShare={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Send link' })).toHaveClass('bg-primary')
+  })
+
+  it('shows a check for other dates as on file, never as cover for this rental', () => {
+    renderRow(
+      <BookingVerificationStatus
+        kind="insurance"
+        verification={verification({
+          hasReport: false,
+          forOtherDates: true,
+          coversFrom: '2026-10-01',
+          coversThrough: '2026-10-05',
+        })}
+        onShare={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Other dates')).toBeInTheDocument()
+    expect(screen.getByText(/^Last checked for Oct 1 – Oct 5/)).toBeInTheDocument()
+    expect(screen.queryByText('Covered')).not.toBeInTheDocument()
+    // A session for these dates is a new one, whatever the old dates' session is doing.
+    expect(screen.getByRole('button', { name: 'Send new link' })).toBeInTheDocument()
+  })
+
+  it('keeps a verdict to the result, without the reason line beneath it', () => {
+    renderRow(
+      <BookingVerificationStatus
+        kind="insurance"
+        verification={verification({
+          status: 'consider',
+          hasReport: false,
+          failureReason: 'This policy does not list the renter by name and date of birth',
+        })}
+      />,
+    )
+
+    expect(screen.queryByText(/does not list the renter/)).not.toBeInTheDocument()
+  })
+
+  it('still says why a check could not be run at all', () => {
+    renderRow(
+      <BookingVerificationStatus
+        verification={verification({
+          status: 'error',
+          hasReport: false,
+          failureReason: 'Checkr could not be reached to finish this check',
+        })}
+      />,
+    )
+
+    expect(screen.getByText('Checkr could not be reached to finish this check')).toBeInTheDocument()
+  })
+
+  it('says a new link is sent once there is a result to replace', () => {
+    renderRow(
+      <BookingVerificationStatus
+        kind="insurance"
+        verification={verification({ status: 'consider', hasReport: false, canReorder: true })}
+        onShare={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('button')).toHaveTextContent('Send new link')
+  })
+
   it('says which policy the verdict came from', () => {
     renderRow(
       <BookingVerificationStatus

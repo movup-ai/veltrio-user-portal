@@ -4,9 +4,10 @@ import { statusColors } from './status-colors'
 /**
  * `status` is always the canonical English value (it's what colors and filters key off).
  * Display text comes from the shared `domain:status` vocabulary, so every table in the app
- * localizes its badges without each module having to know about translations.
+ * localizes its badges without each module having to know about translations. `label` is for
+ * a module whose own words are more exact, such as a check's "Needs review".
  */
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
   const domain = useDomainLabels()
   const { bg, fg } = statusColors(status)
 
@@ -16,7 +17,7 @@ export function StatusBadge({ status }: { status: string }) {
       style={{ background: bg, color: fg }}
     >
       <span className="size-[6px] rounded-full" style={{ background: fg }} />
-      {domain.status(status)}
+      {label ?? domain.status(status)}
     </span>
   )
 }

@@ -468,14 +468,16 @@
         "running": "Checkr is searching",
         "clear": "Clear",
         "consider": "Needs review",
-        "error": "Could not be run"
+        "error": "Could not be run",
+        "otherDates": "Other dates"
       },
       "insurance": {
         "notStarted": "Not started",
         "running": "Waiting for renter",
         "clear": "Covered",
         "consider": "Needs review",
-        "error": "Could not be run"
+        "error": "Could not be run",
+        "otherDates": "Other dates"
       }
     },
     "hint": {
@@ -484,14 +486,16 @@
         "running": "Checkr is still searching. This is usually done in seconds.",
         "clear": "No records were found for this renter.",
         "consider": "Records were found. Read the report before handover.",
-        "error": "Checkr could not run this check. Running it again starts over."
+        "error": "Checkr could not run this check. Running it again starts over.",
+        "otherDates": "The last check on file was for another booking."
       },
       "insurance": {
         "notStarted": "The renter connects their own insurer, and we check the policy covers every day of the rental.",
-        "running": "A session is open for the renter to connect their insurer. Reopen it if they closed the tab.",
+        "running": "Waiting for the renter to connect their insurer. Send the link again if they lost it.",
         "clear": "An active policy covers the whole rental.",
-        "consider": "No policy covers every day of this rental. Check the cover before handing over keys.",
-        "error": "Axle could not finish this check. Starting again opens a new session."
+        "consider": "The policy does not clear this rental on its own. Check it before handing over keys.",
+        "error": "Axle could not finish this check. Starting again opens a new session.",
+        "otherDates": "The last check on file was for another rental. Send the link to check these dates."
       }
     },
     "action": {
@@ -513,9 +517,7 @@
       "reportFailed": "Could not open the report",
       "insuranceFailed": "Could not start the insurance check",
       "insuranceChecked": "Insurance checked",
-      "insuranceUnfinished": "The renter did not finish connecting their insurance. The session stays open to reopen.",
-      "popupBlocked": "The browser blocked the new tab",
-      "popupBlockedDescription": "The session is open. Allow pop-ups for this site, or use Send link to give the renter the link.",
+      "insuranceUnfinished": "The renter did not finish connecting their insurance. Their link still works.",
       "insuranceReplaced": "That insurance link was replaced by a newer one, which is still waiting for the renter."
     },
     "background": {
@@ -530,13 +532,14 @@
     "insurance": {
       "label": "Insurance verification",
       "checking": "Checking whether this renter’s insurance has been verified…",
-      "none": "Nothing on file. The renter connects their insurer in a new tab.",
+      "none": "Nothing on file. Send the renter a link to connect their insurer on their own phone.",
       "running": "Waiting for the renter to connect their insurer. The result appears here when they finish.",
       "clearOn": "Checked {{when}} · an active policy covers the whole rental",
-      "recordsOn": "Checked {{when}} · no policy covers every day, check the cover before handing over keys",
-      "needsRenter": "Add the renter’s full name, email and date of birth first.",
+      "recordsOn": "Checked {{when}} · the policy does not clear this rental, check it before handing over keys",
+      "needsRenter": "Add the renter’s full name, email and date of birth first. The policy has to list this renter, and the result is saved against their email.",
       "needsDob": "This renter has no date of birth on file. Add it to their profile first.",
-      "opening": "Opening a secure connection to your insurer…"
+      "otherDates": "Last checked for {{range}} · not these dates, send the link to check this rental",
+      "otherRental": "Last checked for another rental · send the link to check these dates"
     },
     "policyExpires": "Expires {{date}}"
   },
@@ -546,7 +549,7 @@
     "runCheck": "Run a check",
     "form": {
       "title": "Who are you checking?",
-      "hint": "Both checks match on the name and date of birth. The address narrows the background check only.",
+      "hint": "Pick a check, then who it is for. Every check matches on the name and date of birth.",
       "name": "Full name",
       "namePlaceholder": "Jane Doe",
       "dateOfBirth": "Date of birth",
@@ -561,14 +564,31 @@
       "zip": "ZIP code",
       "zipPlaceholder": "73301",
       "submit": "Run background check",
+      "kindLabel": "Check type",
+      "kinds": {
+        "background": {
+          "title": "Background check",
+          "meta": "Instant",
+          "description": "Searches criminal records on the name and date of birth."
+        },
+        "insurance": {
+          "title": "Insurance",
+          "meta": "Sent as a link",
+          "description": "They connect their insurer from a secure link on their own phone."
+        }
+      },
+      "next": {
+        "background": "The result appears in the list below, usually within seconds.",
+        "insurance": "You get a link to copy or send them. The result appears below when they finish."
+      },
+      "createLink": "Create insurance link",
       "cancel": "Cancel",
-      "verifyInsurance": "Verify insurance",
       "coverNeeded": "Insurance cover needed",
       "coverHint": "The days the policy has to cover, such as a rental. Leave blank to check it is in force today.",
       "coverToday": "Today only"
     },
     "log": {
-      "title": "Checks run",
+      "title": "Verification history",
       "rowCount_other": "{{count}} checks",
       "empty": "No checks yet. Run one above.",
       "columns": {
@@ -581,12 +601,19 @@
       "renter": "Renter",
       "standalone": "Standalone",
       "viewReport": "View report",
-      "notRunYet": "Not finished",
+      "delete": "Delete",
+      "deleteTitle": "Delete this check?",
+      "deleteDescription": "The {{check}} for {{name}} is removed from the history for good. The audit log keeps a record of the deletion.",
+      "deleted": "Check deleted",
+      "deleteFailed": "Could not delete the check",
+      "inProgress": "In progress",
+      "startedOn": "Started {{when}}",
       "loadError": "Could not load the checks."
     }
   },
   "insuranceLink": {
     "action": "Send link",
+    "actionNew": "Send new link",
     "title": "Send insurance link",
     "description": "{{name}} connects their insurer from this link, on any device. The result appears on the check when they finish.",
     "opening": "Creating the link…",

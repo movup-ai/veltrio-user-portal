@@ -27,6 +27,8 @@ interface BookingChecklistProps {
   /** Kinds the renter can finish on their own device are given a link to send them. */
   onShare?: (kind: ProviderKind) => void
   sharing?: ProviderKind
+  /** The rental is over, so nothing is checked again: reports can still be read. */
+  closed?: boolean
   /** Fired for a kind with no provider — verify it, or open what was signed. */
   onAction: (kind: VerificationKind) => void
 }
@@ -54,6 +56,7 @@ export function BookingChecklist({
   onViewReport,
   onShare,
   sharing,
+  closed,
   onAction,
 }: BookingChecklistProps) {
   const { t } = useTranslation('bookings')
@@ -110,10 +113,17 @@ export function BookingChecklist({
                   verification={verifications[kind]}
                   ordering={ordering === kind}
                   openingReport={openingReport}
-                  onOrder={() => onOrder(kind)}
+                  // Sent to the renter, never opened here: see SHAREABLE_KINDS.
+                  onOrder={
+                    closed || (onShare && SHAREABLE_KINDS.includes(kind))
+                      ? undefined
+                      : () => onOrder(kind)
+                  }
                   onViewReport={() => onViewReport(kind)}
                   onShare={
-                    onShare && SHAREABLE_KINDS.includes(kind) ? () => onShare(kind) : undefined
+                    !closed && onShare && SHAREABLE_KINDS.includes(kind)
+                      ? () => onShare(kind)
+                      : undefined
                   }
                   sharing={sharing === kind}
                 />

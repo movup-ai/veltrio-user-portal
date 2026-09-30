@@ -51,7 +51,10 @@ describe('Can', () => {
  * either hides a button that works or offers one the API answers with 403.
  */
 describe('role permissions against what the API enforces', () => {
-  function renderFor(role: MembershipRole, permission: 'vehicles.create' | 'vehicles.delete') {
+  function renderFor(
+    role: MembershipRole,
+    permission: 'vehicles.create' | 'vehicles.delete' | 'verifications.delete',
+  ) {
     setPermissions([...ROLE_PERMISSIONS[role]])
     render(<Can permission={permission}>Manage fleet</Can>)
   }
@@ -61,10 +64,18 @@ describe('role permissions against what the API enforces', () => {
     expect(screen.getByText('Manage fleet')).toBeInTheDocument()
   })
 
-  it.each(['vehicles.create', 'vehicles.delete'] as const)('hides %s from staff', (permission) => {
-    renderFor('staff', permission)
-    expect(screen.queryByText('Manage fleet')).not.toBeInTheDocument()
+  it.each(['owner', 'manager'] as const)('lets %s delete a check from the log', (role) => {
+    renderFor(role, 'verifications.delete')
+    expect(screen.getByText('Manage fleet')).toBeInTheDocument()
   })
+
+  it.each(['vehicles.create', 'vehicles.delete', 'verifications.delete'] as const)(
+    'hides %s from staff',
+    (permission) => {
+      renderFor('staff', permission)
+      expect(screen.queryByText('Manage fleet')).not.toBeInTheDocument()
+    },
+  )
 
   it('still lets staff work the daily flow', () => {
     setPermissions([...ROLE_PERMISSIONS.staff])

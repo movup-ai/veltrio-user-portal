@@ -61,17 +61,7 @@ import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { useDebounced } from '@/lib/use-debounced'
 import { bookingApi, ExportTooLargeError } from '@/modules/bookings/api/booking.api'
 import { normalizeApiError } from '@/services/api/errors'
-
-/** The Drafts tab sits beside the booking tabs but draws from its own resource. */
-const DRAFTS_TAB = 'Drafts'
-
-/** Shown while the counts load, so the tabs render without flickering through zero. */
-const EMPTY_TAB_COUNTS: Record<BookingTab, number> = {
-  Upcoming: 0,
-  Today: 0,
-  'Recent activity': 0,
-  Overdue: 0,
-}
+import { DRAFTS_TAB, EMPTY_TAB_COUNTS } from '@/modules/bookings/constants/booking.constants'
 
 export function BookingsPage() {
   const { t } = useTranslation('bookings')

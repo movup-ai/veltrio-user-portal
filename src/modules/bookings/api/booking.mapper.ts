@@ -153,6 +153,9 @@ export interface VerificationListWire {
   dateOfBirth: string | null
   email: string | null
   customerId: string | null
+  bookingReference?: string | null
+  coversFrom?: string | null
+  coversThrough?: string | null
   status: VerificationStatus
   recordsFound: boolean
   hasReport: boolean
@@ -177,6 +180,9 @@ export interface VerificationWire {
   canReorder: boolean
   reused: boolean
   policy?: InsurancePolicyWire | null
+  coversFrom?: string | null
+  coversThrough?: string | null
+  forOtherDates?: boolean
   completedAt: string | null
   createdAt: string
   updatedAt: string
@@ -311,6 +317,9 @@ export function toVerification(wire: VerificationWire): BookingVerification {
           expiresOn: wire.policy.expiresOn ?? undefined,
         }
       : undefined,
+    coversFrom: wire.coversFrom ?? undefined,
+    coversThrough: wire.coversThrough ?? undefined,
+    forOtherDates: wire.forOtherDates ?? false,
     completedAt: wire.completedAt ?? undefined,
     createdAt: wire.createdAt,
     updatedAt: wire.updatedAt,
@@ -503,6 +512,9 @@ export function toVerificationListRow(wire: VerificationListWire): VerificationR
     dateOfBirth: wire.dateOfBirth ?? undefined,
     email: wire.email ?? undefined,
     customerId: wire.customerId ?? undefined,
+    bookingReference: wire.bookingReference ?? undefined,
+    coversFrom: wire.coversFrom ?? undefined,
+    coversThrough: wire.coversThrough ?? undefined,
     status: wire.status,
     recordsFound: wire.recordsFound,
     hasReport: wire.hasReport,

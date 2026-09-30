@@ -181,7 +181,10 @@ export function isProviderKind(kind: VerificationKind): kind is ProviderKind {
   return (PROVIDER_KINDS as readonly VerificationKind[]).includes(kind)
 }
 
-/** Kinds the renter completes themselves, so a link can be sent for them to finish anywhere. */
+/**
+ * Kinds the renter completes themselves, so the counter sends them a link rather than opening the
+ * session here: they sign in to their insurer, which belongs on their own device, not the desk's.
+ */
 export const SHAREABLE_KINDS: readonly ProviderKind[] = ['insurance']
 
 /**
@@ -310,6 +313,11 @@ export interface VerificationRecord {
   /** Absent for someone screened from the verification page — they are not a renter. */
   email?: string
   customerId?: string
+  /** The booking that called for it, so a new insurance link lands on that booking. */
+  bookingReference?: string
+  /** The rental an insurance check was judged for, as `YYYY-MM-DD` dates. */
+  coversFrom?: string
+  coversThrough?: string
   status: VerificationStatus
   recordsFound: boolean
   hasReport: boolean
@@ -342,6 +350,14 @@ export interface BookingVerification {
   reused: boolean
   /** The policy an insurance verdict was read from, once the renter has linked one. */
   policy?: { carrier?: string; policyNumber?: string; expiresOn?: string }
+  /** The rental an insurance check was judged for, as `YYYY-MM-DD` dates. */
+  coversFrom?: string
+  coversThrough?: string
+  /**
+   * The renter's latest insurance check, returned because none answers this rental's dates.
+   * Shown as on file, never as cover for these dates.
+   */
+  forOtherDates?: boolean
   completedAt?: string
   createdAt: string
   updatedAt: string

@@ -19,18 +19,13 @@ import type {
   VerificationOrder,
 } from '../api/booking.mapper'
 import { verificationApi, type CoverWindow } from '../api/verification.api'
+import { REVOKE_AFTER_MS, VERIFICATION_POLL_MS } from '../constants/verification.constants'
 import {
   TERMINAL_VERIFICATION_STATUSES,
   type ProviderKind,
 } from '../types/booking.types'
 import { readInsuranceRedirect } from '../utils/booking.insurance-redirect'
 import { bookingKeys } from './use-bookings'
-
-/** Long enough for the new tab to have loaded the blob before the URL is released. */
-const REVOKE_AFTER_MS = 60_000
-
-/** How often to re-ask while Checkr is still working — the same shape as the photo poll. */
-const VERIFICATION_POLL_MS = 15_000
 
 export const verificationKeys = {
   detail: (reference: string, kind: ProviderKind = 'background') =>
@@ -245,96 +240,30 @@ export function useOrderStandaloneVerification() {
   })
 }
 
-/** Opens a report from the log, where a standalone check has no renter to key on. */
-export function useVerificationReportById() {
-  return useReportOpener((verificationId: string) => verificationApi.reportById(verificationId))
-}
-
-/** A line of text for the new tab while the session is fetched; a bare about:blank reads as broken. */
-function showOpening(tab: Window) {
-  const doc = tab.document
-  if (!doc?.body) return
-  const message = doc.createElement('p')
-  message.textContent = i18n.t('bookings:verification.insurance.opening')
-  message.style.cssText = 'font: 15px system-ui, sans-serif; color: #666; text-align: center; margin-top: 40vh'
-  doc.title = message.textContent
-  doc.body.replaceChildren(message)
-}
-
-/**
- * Opens an Axle session and sends the renter to it.
- *
- * Call `start` straight from the click. It opens the tab before anything else - before the
- * order is validated and before the mutation runs, both of which await - because some browsers
- * only allow a new tab synchronously inside the click, and block one opened a tick later.
- */
-export function useStartInsurance() {
+/** Deletes a check from the log. A booking that showed it shows the renter's next one, if any. */
+export function useDeleteVerification() {
   const queryClient = useQueryClient()
-  // Set on the click itself, before validation: a second click in that gap opened a second tab,
-  // and the return code completes only once. A ref, since state would land a render too late.
-  const busy = useRef(false)
-  const [preparing, setPreparing] = useState(false)
 
-  const mutation = useMutation({
-    mutationFn: async ({ input, tab }: { input: InsuranceOrderWire; tab: Window | null }) => {
-      try {
-        const session = await verificationApi.startInsurance(input)
-        if (tab) {
-          tab.opener = null
-          tab.location.href = session.ignitionUri
-        } else {
-          // Blocked. Leaving for Axle here would throw away a booking form half filled in, so
-          // stay: the session is open, and Send link hands it over without leaving the page.
-          toast({
-            title: i18n.t('bookings:verification.toast.popupBlocked'),
-            description: i18n.t('bookings:verification.toast.popupBlockedDescription'),
-          })
-        }
-        return session
-      } catch (error) {
-        tab?.close()
-        throw error
-      }
-    },
+  return useMutation({
+    mutationFn: (verificationId: string) => verificationApi.remove(verificationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: verificationKeys.logs() })
       queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+      toast({ title: i18n.t('bookings:verificationPage.log.deleted'), variant: 'success' })
     },
     onError: (error) => {
       toast({
-        title: i18n.t('bookings:verification.toast.insuranceFailed'),
+        title: i18n.t('bookings:verificationPage.log.deleteFailed'),
         description: normalizeApiError(error).message,
         variant: 'error',
       })
     },
   })
+}
 
-  return {
-    /** `order` may be a function that validates first; resolving to nothing closes the tab. */
-    start: (order: InsuranceOrderWire | (() => Promise<InsuranceOrderWire | undefined>)) => {
-      if (busy.current) return
-      busy.current = true
-      setPreparing(true)
-      const release = () => {
-        busy.current = false
-        setPreparing(false)
-      }
-      const tab = window.open('', '_blank')
-      if (tab) showOpening(tab)
-      void Promise.resolve(typeof order === 'function' ? order() : order).then(
-        (input) => {
-          if (input) return mutation.mutate({ input, tab }, { onSettled: release })
-          tab?.close()
-          release()
-        },
-        () => {
-          tab?.close()
-          release()
-        },
-      )
-    },
-    isPending: preparing || mutation.isPending,
-  }
+/** Opens a report from the log, where a standalone check has no renter to key on. */
+export function useVerificationReportById() {
+  return useReportOpener((verificationId: string) => verificationApi.reportById(verificationId))
 }
 
 /** What the return tab tells the tab the counter started from, which is the one left open. */

@@ -20,7 +20,8 @@ export type Cell =
     }
   | { kind: 'stack'; primary: string; secondary?: string; weight?: number; subFontMono?: boolean; align?: CellAlign }
   | { kind: 'text'; primary: string; fontMono?: boolean; align?: CellAlign }
-  | { kind: 'badge'; status: string; align?: CellAlign }
+  /** `label` replaces the shared wording while keeping the status's colours. */
+  | { kind: 'badge'; status: string; label?: string; align?: CellAlign }
   /** Several badges on one row, e.g. a lifecycle status plus a derived flag. */
   | { kind: 'badges'; statuses: string[]; align?: CellAlign }
   | { kind: 'amount'; primary: string; tone?: string; align?: CellAlign }

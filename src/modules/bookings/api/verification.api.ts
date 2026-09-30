@@ -118,6 +118,10 @@ export const verificationApi = {
   sendInsuranceLink: (verificationId: string, input: InsuranceLinkWire) =>
     apiClient.post<void>(`/verifications/${verificationId}/insurance-link`, input).then(() => undefined),
 
+  /** Removes a finished check from the log. Owners and managers only. */
+  remove: (verificationId: string) =>
+    apiClient.delete<void>(`/verifications/${verificationId}`).then(() => undefined),
+
   /** A specific check's report, which is how the log opens one with no renter to key on. */
   reportById: (verificationId: string) =>
     apiClient

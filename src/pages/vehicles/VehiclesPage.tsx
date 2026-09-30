@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Car, ChevronDown, Download, Gauge, GripVertical, Plus, Tag, Wrench } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
-import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -55,9 +55,6 @@ function tripsForVehicle(v: Vehicle): number {
 /** Canonical values — `All` means "no status filter", `Drafts` filters on isDraft instead of status, the rest map 1:1 to VehicleStatus. */
 const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts', 'Archived'] as const
 type Tab = (typeof TABS)[number]
-
-/** One big page so the filtered set is draggable at once. 100 is the API's ceiling on `limit`. */
-const MANUAL_PAGE_SIZE = 100
 
 /**
  * The fleet order lives on the server and is shared across the tenant, so ordering only makes
@@ -110,7 +107,7 @@ export function VehiclesPage() {
       manualOrderMode
         ? // The reorder endpoint takes the whole fleet, so order mode ignores the filters
           // rather than saving an arrangement of whatever happened to be on screen.
-          { ...UNFILTERED, sortBy: 'manual' as const, page: 1, pageSize: MANUAL_PAGE_SIZE }
+          { ...UNFILTERED, sortBy: 'manual' as const, page: 1, pageSize: MAX_PAGE_SIZE }
         : {
             search: search || undefined,
             status: effectiveStatus,

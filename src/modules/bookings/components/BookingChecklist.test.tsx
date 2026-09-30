@@ -73,8 +73,22 @@ describe('which tiles a provider answers for', () => {
       insurance: verification({ status: 'consider', hasReport: false }),
     })
 
-    expect(screen.getByText(/no policy covers every day of this rental/i)).toBeInTheDocument()
+    expect(screen.getByText(/the policy does not clear this rental/i)).toBeInTheDocument()
     expect(screen.queryByText(/records were found/i)).not.toBeInTheDocument()
+  })
+
+  it('keeps a verdict to the result, but says why a check could not run', () => {
+    renderList(['background', 'insurance'], {
+      background: verification({ status: 'error', failureReason: 'Checkr could not be reached' }),
+      insurance: verification({
+        status: 'consider',
+        hasReport: false,
+        failureReason: 'This policy does not list the renter by name and date of birth',
+      }),
+    })
+
+    expect(screen.queryByText(/does not list the renter/)).not.toBeInTheDocument()
+    expect(screen.getByText('Checkr could not be reached')).toBeInTheDocument()
   })
 
   it('shows each kind its own verification, not one shared result', () => {
@@ -106,6 +120,30 @@ describe('which tiles a provider answers for', () => {
   })
 })
 
+describe('a rental that is over', () => {
+  it('offers nothing to check again, but still opens what was found', () => {
+    render(
+      <BookingChecklist
+        checks={CHECKS}
+        verifications={{
+          background: verification({ status: 'consider' }),
+          insurance: verification({ status: 'consider', hasReport: false }),
+        }}
+        providerKinds={['background', 'insurance']}
+        openingReport={false}
+        onOrder={vi.fn()}
+        onViewReport={vi.fn()}
+        onShare={vi.fn()}
+        closed
+        onAction={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: /run again|send/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'View report' })).toBeInTheDocument()
+  })
+})
+
 describe('sending the renter a link', () => {
   it('is offered only for a check the renter finishes themselves', () => {
     // A background check runs on Checkr's side; a link would give the renter nothing to do.
@@ -125,7 +163,30 @@ describe('sending the renter a link', () => {
 
     const send = screen.getAllByRole('button', { name: 'Send link' })
     expect(send).toHaveLength(1)
+    // The tile's only action, so it takes the filled style the order button used to.
+    expect(send[0]).toHaveClass('bg-primary')
     send[0].click()
     expect(onShare).toHaveBeenCalledWith('insurance')
+  })
+
+  it('replaces opening the session at the desk, where the renter would sign in to their insurer', () => {
+    render(
+      <BookingChecklist
+        checks={CHECKS}
+        verifications={{
+          insurance: verification({ status: 'running', canReorder: false, completedAt: undefined }),
+        }}
+        providerKinds={['background', 'insurance']}
+        openingReport={false}
+        onOrder={vi.fn()}
+        onViewReport={vi.fn()}
+        onShare={vi.fn()}
+        onAction={vi.fn()}
+      />,
+    )
+
+    // A renter who has not finished is sent the same link again, not a session to reopen here.
+    expect(screen.getByRole('button', { name: 'Send link' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /verify insurance|reopen session/i })).toBeNull()
   })
 })

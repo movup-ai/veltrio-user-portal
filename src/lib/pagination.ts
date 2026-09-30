@@ -6,6 +6,9 @@ export const DEFAULT_PAGE_SIZE = 10
 /** What the rows-per-page picker offers. */
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
+/** The API's ceiling on `limit`: a list asked for in one go is capped here. */
+export const MAX_PAGE_SIZE = 100
+
 /**
  * Query shape the API actually pages with. The UI thinks in page/pageSize (it renders
  * "page 3 of 7" and Previous/Next), so the two are translated at the API boundary rather

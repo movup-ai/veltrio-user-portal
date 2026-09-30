@@ -49,7 +49,6 @@ import {
   useOrderCustomerVerification,
   useInsuranceLinkDialog,
   useInsuranceResults,
-  useStartInsurance,
   useVerificationByEmail,
 } from '@/modules/bookings/hooks/use-verification'
 import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
@@ -388,11 +387,10 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
     'insurance',
     { from: values.pickupDate, to: values.returnDate },
   )
-  const startInsurance = useStartInsurance()
-  const completingInsurance = useInsuranceResults()
+  useInsuranceResults()
   const insuranceLink = useInsuranceLinkDialog()
 
-  /** The same order whether the counter opens the session or sends the renter its link. */
+  /** The session to send the renter; asking again while it is open returns the same link. */
   const insuranceOrder = (): InsuranceOrderWire => ({
     name: values.customerName.trim(),
     email: values.customerEmail.trim().toLowerCase(),
@@ -1167,10 +1165,8 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                     kind="insurance"
                     verification={insurance}
                     loading={loadingInsurance}
-                    onRunCheck={() => startInsurance.start(insuranceOrder())}
                     onShare={() => insuranceLink.share(insuranceOrder())}
                     sharing={insuranceLink.sharing}
-                    running={startInsurance.isPending || completingInsurance}
                     runBlockedReason={
                       runBlockedReason && t('verification.insurance.needsRenter')
                     }

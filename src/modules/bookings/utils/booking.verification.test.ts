@@ -1,6 +1,90 @@
 import { describe, expect, it } from 'vitest'
-import type { BookingVerification, VerificationStatus } from '../types/booking.types'
-import { verificationView } from './booking.verification'
+import type {
+  BookingVerification,
+  VerificationRecord,
+  VerificationStatus,
+} from '../types/booking.types'
+import {
+  logActions,
+  resendInsuranceOrder,
+  sendsNewLink,
+  verificationView,
+} from './booking.verification'
+
+function row(overrides: Partial<VerificationRecord> = {}): VerificationRecord {
+  return {
+    id: 'v1',
+    kind: 'insurance',
+    name: 'Kevin Ragira',
+    dateOfBirth: '1987-11-11',
+    status: 'consider',
+    recordsFound: false,
+    hasReport: false,
+    completedAt: '2026-09-30T14:31:00Z',
+    createdAt: '2026-09-30T14:30:00Z',
+    ...overrides,
+  }
+}
+
+describe('what a history row offers', () => {
+  it('opens a background report, and lets a manager delete the finished check', () => {
+    expect(logActions(row({ kind: 'background', status: 'clear', hasReport: true }), true)).toEqual([
+      'viewReport',
+      'delete',
+    ])
+  })
+
+  it('offers insurance a new link after a verdict that needs one', () => {
+    expect(logActions(row({ status: 'consider' }), true)).toEqual(['sendNewLink', 'delete'])
+    expect(logActions(row({ status: 'error' }), false)).toEqual(['sendNewLink'])
+  })
+
+  it('offers the same link again while the renter has not finished, and no delete', () => {
+    // The API refuses to delete a running check: the renter could still answer it.
+    expect(logActions(row({ status: 'running', completedAt: undefined }), true)).toEqual(['sendLink'])
+  })
+
+  it('leaves covered insurance with nothing to send', () => {
+    expect(logActions(row({ status: 'clear' }), true)).toEqual(['delete'])
+  })
+
+  it('keeps delete from counter staff', () => {
+    expect(logActions(row({ status: 'clear' }), false)).toEqual([])
+  })
+
+  it('cannot send a link for a row with no birth date to match on', () => {
+    expect(logActions(row({ dateOfBirth: undefined }), false)).toEqual([])
+  })
+})
+
+describe('the session a history row opens again', () => {
+  const RETURN = 'https://portal.test/insurance/return'
+
+  it('goes back through the booking, so it is judged for that rental and shows on it', () => {
+    const order = resendInsuranceOrder(
+      row({ bookingReference: 'BK-10001', email: 'k@example.com', coversFrom: '2026-10-22' }),
+      RETURN,
+    )
+
+    expect(order).toEqual({
+      name: 'Kevin Ragira',
+      dateOfBirth: '1987-11-11',
+      email: 'k@example.com',
+      reference: 'BK-10001',
+      redirectUri: RETURN,
+    })
+  })
+
+  it('keeps the dates it was judged for when there is no booking', () => {
+    const order = resendInsuranceOrder(
+      row({ coversFrom: '2026-10-22', coversThrough: '2026-10-23' }),
+      RETURN,
+    )
+
+    expect(order).toMatchObject({ coversFrom: '2026-10-22', coversThrough: '2026-10-23' })
+    expect(order).not.toHaveProperty('reference')
+  })
+})
 
 function verification(overrides: Partial<BookingVerification> = {}): BookingVerification {
   return {
@@ -16,6 +100,36 @@ function verification(overrides: Partial<BookingVerification> = {}): BookingVeri
     ...overrides,
   }
 }
+
+describe('an insurance check on file for other dates', () => {
+  it('is no verdict for this rental, and offers to check it', () => {
+    const view = verificationView(verification({ forOtherDates: true }), 'insurance')
+
+    expect(view.tone).toBe('neutral')
+    expect(view.stateKey).toBe('otherDates')
+    expect(view.action).toBe('order')
+  })
+
+  it('still offers a check while a session for the old dates is open', () => {
+    // canReorder is false for that session, yet checking these dates replaces it.
+    const open = verification({ status: 'running', canReorder: false, forOtherDates: true })
+
+    expect(verificationView(open, 'insurance').action).toBe('order')
+  })
+})
+
+describe('whether a link starts a fresh check', () => {
+  it('hands back the open session while the renter is still on it', () => {
+    expect(sendsNewLink(undefined)).toBe(false)
+    expect(sendsNewLink(verification({ status: 'running' }))).toBe(false)
+  })
+
+  it('starts a new one after a result, or for other dates', () => {
+    expect(sendsNewLink(verification({ status: 'consider' }))).toBe(true)
+    expect(sendsNewLink(verification({ status: 'error' }))).toBe(true)
+    expect(sendsNewLink(verification({ status: 'running', forOtherDates: true }))).toBe(true)
+  })
+})
 
 describe('verificationView', () => {
   it('offers to run the check when none has been ordered', () => {

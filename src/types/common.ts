@@ -32,7 +32,6 @@ export type AsyncStatus = 'idle' | 'loading' | 'success' | 'error'
 export interface UploadedFile {
   id: string
   name: string
-  url: string
   /** Bytes, for display only. */
   size: number
   file: File
