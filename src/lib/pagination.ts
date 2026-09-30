@@ -1,5 +1,11 @@
 import type { PaginatedResult, PaginationParams } from '@/types/common'
 
+/** Rows per page until someone picks another. One value, so every list opens the same way. */
+export const DEFAULT_PAGE_SIZE = 10
+
+/** What the rows-per-page picker offers. */
+export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
+
 /**
  * Query shape the API actually pages with. The UI thinks in page/pageSize (it renders
  * "page 3 of 7" and Previous/Next), so the two are translated at the API boundary rather

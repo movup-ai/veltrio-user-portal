@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import type { BookingScreening } from '../types/booking.types'
-import { BookingScreeningStatus } from './BookingScreeningStatus'
+import type { BookingVerification } from '../types/booking.types'
+import { BookingVerificationStatus } from './BookingVerificationStatus'
 
-function screening(overrides: Partial<BookingScreening> = {}): BookingScreening {
+function verification(overrides: Partial<BookingVerification> = {}): BookingVerification {
   return {
     id: 's1',
     customerId: 'cus_1',
@@ -31,7 +31,7 @@ describe('the run button while the renter is incomplete', () => {
     const onRunCheck = vi.fn()
 
     renderRow(
-      <BookingScreeningStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />,
+      <BookingVerificationStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />,
     )
 
     expect(screen.getByRole('button')).toBeDisabled()
@@ -41,7 +41,7 @@ describe('the run button while the renter is incomplete', () => {
     // The button is disabled, so it fires no pointer events itself — the wrapper span is
     // what receives the hover. Without it the tooltip never opens.
     renderRow(
-      <BookingScreeningStatus onRunCheck={vi.fn()} runBlockedReason="Add the renter first" />,
+      <BookingVerificationStatus onRunCheck={vi.fn()} runBlockedReason="Add the renter first" />,
     )
 
     await userEvent.hover(screen.getByRole('button').parentElement as HTMLElement)
@@ -53,7 +53,7 @@ describe('the run button while the renter is incomplete', () => {
     const onRunCheck = vi.fn()
 
     renderRow(
-      <BookingScreeningStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />,
+      <BookingVerificationStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />,
     )
     await userEvent.click(screen.getByRole('button'))
 
@@ -63,7 +63,7 @@ describe('the run button while the renter is incomplete', () => {
   it('runs once the renter is complete', async () => {
     const onRunCheck = vi.fn()
 
-    renderRow(<BookingScreeningStatus onRunCheck={onRunCheck} />)
+    renderRow(<BookingVerificationStatus onRunCheck={onRunCheck} />)
     await userEvent.click(screen.getByRole('button'))
 
     expect(onRunCheck).toHaveBeenCalledOnce()
@@ -73,8 +73,8 @@ describe('the run button while the renter is incomplete', () => {
 describe('a renter who already has a check', () => {
   it('offers the report and no re-run while the result still stands', () => {
     renderRow(
-      <BookingScreeningStatus
-        screening={screening({ status: 'consider', canReorder: false })}
+      <BookingVerificationStatus
+        verification={verification({ status: 'consider', canReorder: false })}
         onRunCheck={vi.fn()}
         onViewReport={vi.fn()}
       />,
@@ -82,5 +82,30 @@ describe('a renter who already has a check', () => {
 
     const labels = screen.getAllByRole('button').map((b) => b.textContent)
     expect(labels).toEqual(['View report'])
+  })
+})
+
+describe('the insurance card', () => {
+  it('offers to verify insurance when nothing is on file', () => {
+    renderRow(<BookingVerificationStatus kind="insurance" onRunCheck={vi.fn()} />)
+
+    expect(screen.getByText('Insurance verification')).toBeInTheDocument()
+    expect(screen.getByRole('button')).toHaveTextContent('Verify insurance')
+  })
+
+  it('reopens a session the renter left unfinished', async () => {
+    // Without this the card sat on "Waiting for renter" with no way back into the session.
+    const onRunCheck = vi.fn()
+
+    renderRow(
+      <BookingVerificationStatus
+        kind="insurance"
+        verification={verification({ status: 'running', hasReport: false, completedAt: undefined })}
+        onRunCheck={onRunCheck}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Reopen session' }))
+
+    expect(onRunCheck).toHaveBeenCalledOnce()
   })
 })

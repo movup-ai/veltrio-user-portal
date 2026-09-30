@@ -66,7 +66,7 @@
     "serverError": "El servidor tuvo un problema. Inténtelo de nuevo en unos momentos.",
     "unknown": "Algo salió mal. Inténtelo de nuevo."
   },
-  "screening": {
+  "verification": {
     "addressIncomplete": "Complete los cuatro campos de la dirección o déjelos todos vacíos.",
     "stateInvalid": "Use el código de estado de dos letras, p. ej. TX.",
     "zipInvalid": "Use un código postal de 5 dígitos, p. ej. 73301."

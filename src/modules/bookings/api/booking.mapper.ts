@@ -17,10 +17,10 @@ import {
   type BookingStatus,
   type PaymentState,
   type BookingTab,
+  type VerificationKind,
   type BookingVerification,
-  type BookingScreening,
-  type ScreeningRecord,
-  type ScreeningStatus,
+  type VerificationRecord,
+  type VerificationStatus,
 } from '../types/booking.types'
 import { bookingToTuple } from '../utils/booking.utils'
 
@@ -67,7 +67,7 @@ export interface BookingWire {
   returnAt: string
   additionalDrivers: AdditionalDriverWire[]
   fees: BookingFeeWire[]
-  verifications: BookingVerification[]
+  verifications: VerificationKind[]
   pricing: {
     rentalSubtotalCents: number
     driversCents: number
@@ -87,7 +87,7 @@ export interface BookingWire {
     paidAt: string | null
   }
   contract: { signedAt: string | null; version: string | null }
-  screening: ScreeningWire | null
+  verification: VerificationWire | null
   pickedUpAt: string | null
   returnedAt: string | null
   createdAt: string
@@ -95,28 +95,65 @@ export interface BookingWire {
 }
 
 /** A US postal address. All four parts or none: Checkr rejects a partial one. */
-export interface ScreeningAddressWire {
+export interface VerificationAddressWire {
   street: string
   city: string
   state: string
   zipCode: string
 }
 
-/** Screening someone who is not a renter: no email, no booking, no customer. */
+/** Verification someone who is not a renter: no email, no booking, no customer. */
 export interface StandaloneOrderWire {
   name: string
   dateOfBirth: string
-  address?: ScreeningAddressWire
+  address?: VerificationAddressWire
+}
+
+/** Who to verify insurance for, and where Axle returns them afterwards. */
+export interface InsuranceOrderWire {
+  name: string
+  dateOfBirth: string
+  email?: string
+  reference?: string
+  /** The rental's last day, from the booking form; the API reads it off the booking otherwise. */
+  coversThrough?: string
+  redirectUri: string
+}
+
+/** The session to send the renter to, and the row waiting on them. */
+export interface InsuranceSessionWire {
+  verification: VerificationWire
+  ignitionUri: string
+}
+
+/** What the redirect came back with. Posted without a login: the renter may be on their phone. */
+export interface InsuranceCallbackWire {
+  tenantId: string
+  verificationId: string
+  authCode: string
+}
+
+/** All the public completion returns: the verdict, not the person or their policy. */
+export interface InsuranceOutcomeWire {
+  verificationId: string
+  status: VerificationStatus
+}
+
+/** Sends the renter their session link. The API side of this is not built yet. */
+export interface InsuranceLinkWire {
+  channel: 'email' | 'sms'
+  to: string
 }
 
 /** One row of the verification log. */
-export interface ScreeningListWire {
+export interface VerificationListWire {
   id: string
+  kind: VerificationKind
   name: string
   dateOfBirth: string | null
   email: string | null
   customerId: string | null
-  status: ScreeningStatus
+  status: VerificationStatus
   recordsFound: boolean
   hasReport: boolean
   completedAt: string | null
@@ -124,16 +161,16 @@ export interface ScreeningListWire {
 }
 
 /** What ordering a check sends: the fields Checkr matches on, plus who the renter is. */
-export interface ScreeningOrder {
+export interface VerificationOrder {
   name: string
   email: string
   dateOfBirth: string
 }
 
-export interface ScreeningWire {
+export interface VerificationWire {
   id: string
   customerId: string
-  status: ScreeningStatus
+  status: VerificationStatus
   failureReason: string | null
   recordsFound: boolean
   hasReport: boolean
@@ -242,14 +279,14 @@ export function toBooking(wire: BookingWire): Booking {
       signedAt: wire.contract.signedAt ?? undefined,
       version: wire.contract.version ?? undefined,
     },
-    screening: wire.screening ? toScreening(wire.screening) : undefined,
+    verification: wire.verification ? toVerification(wire.verification) : undefined,
     pickedUpAt: wire.pickedUpAt ?? undefined,
     returnedAt: wire.returnedAt ?? undefined,
     createdAt: wire.createdAt,
   }
 }
 
-export function toScreening(wire: ScreeningWire): BookingScreening {
+export function toVerification(wire: VerificationWire): BookingVerification {
   return {
     id: wire.id,
     customerId: wire.customerId,
@@ -434,9 +471,10 @@ export function toBookingStats(wire: BookingStatsWire): BookingStats {
 }
 
 /** A verification-log row as the table renders it. */
-export function toScreeningListRow(wire: ScreeningListWire): ScreeningRecord {
+export function toVerificationListRow(wire: VerificationListWire): VerificationRecord {
   return {
     id: wire.id,
+    kind: wire.kind,
     name: wire.name,
     dateOfBirth: wire.dateOfBirth ?? undefined,
     email: wire.email ?? undefined,

@@ -14,7 +14,35 @@ export function slugify(value: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
+/**
+ * Subdomains the platform keeps for itself. Mirrors RESERVED_SUBDOMAINS in the API's
+ * app/core/tenancy.py — the pattern alone let `app` or `portal` through to a bare 422.
+ */
+const RESERVED_SUBDOMAINS = new Set([
+  'admin', 'api', 'app', 'assets', 'auth', 'docs', 'help',
+  'mail', 'portal', 'static', 'status', 'support', 'www',
+])
+
 /** 3-63 characters of lowercase letters, digits and single hyphens, hyphen-free at both ends. */
 export function isValidSubdomain(value: string): boolean {
   return /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(value) && !value.includes('--')
+}
+
+export function isReservedSubdomain(value: string): boolean {
+  return RESERVED_SUBDOMAINS.has(value)
+}
+
+/**
+ * Mirrors the API's `Website` check: a bare host gets https://, and the host needs a dot.
+ * Blank is fine - plenty of small rental companies have no site.
+ */
+export function isValidWebsite(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return true
+  try {
+    const { hostname } = new URL(/^https?:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`)
+    return hostname.includes('.') && !hostname.endsWith('.')
+  } catch {
+    return false
+  }
 }

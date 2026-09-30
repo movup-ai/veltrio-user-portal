@@ -10,7 +10,7 @@ interface BookingRenterCardProps {
   onOpenProfile: () => void
   /**
    * The pre-handover checklist, rendered inside this card. Passed in rather than imported so
-   * this stays a presentational card and the page keeps owning the screening wiring.
+   * this stays a presentational card and the page keeps owning the verification wiring.
    */
   checklist?: React.ReactNode
 }

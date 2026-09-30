@@ -2,19 +2,33 @@ import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import type { BookingCheck, BookingCheckStep, BookingScreening } from '../types/booking.types'
-import { BackgroundCheckDot, BackgroundCheckRow } from './BackgroundCheckRow'
+import {
+  SHAREABLE_KINDS,
+  type BookingCheckStep,
+  type BookingVerification,
+  type ProviderKind,
+  type VerificationKind,
+} from '../types/booking.types'
+import { VerificationCheckDot, VerificationCheckRow } from './VerificationCheckRow'
 
 interface BookingChecklistProps {
   checks: BookingCheckStep[]
-  /** The background check's real state. Absent when none has been ordered. */
-  screening?: BookingScreening
-  ordering: boolean
+  /**
+   * What each kind has actually been verified as, keyed by kind. A kind missing from this map
+   * has no provider behind it — the counter clears it themselves.
+   */
+  verifications: Partial<Record<ProviderKind, BookingVerification>>
+  /** Kinds a provider answers for, so the tile shows real state rather than a manual tick. */
+  providerKinds: readonly ProviderKind[]
+  ordering?: ProviderKind
   openingReport: boolean
-  onOrderScreening: () => void
-  onViewScreeningReport: () => void
-  /** Fired with the check the counter chose to act on — verify it, or open what was signed. */
-  onAction: (key: BookingCheck) => void
+  onOrder: (kind: ProviderKind) => void
+  onViewReport: (kind: ProviderKind) => void
+  /** Kinds the renter can finish on their own device are given a link to send them. */
+  onShare?: (kind: ProviderKind) => void
+  sharing?: ProviderKind
+  /** Fired for a kind with no provider — verify it, or open what was signed. */
+  onAction: (kind: VerificationKind) => void
 }
 
 /**
@@ -24,15 +38,22 @@ interface BookingChecklistProps {
  * where one check per row left every hint and button stretched across ~900px. Three abreast
  * keeps each to a readable measure and reads as a set of things to clear.
  *
+ * Every tile is the same shape. A kind a provider answers for shows that provider's verdict;
+ * one without shows a tick the counter sets. Nothing here knows which provider is which —
+ * adding a fourth kind means adding it to `providerKinds`, not a branch.
+ *
  * No Card of its own — the renter card supplies the frame.
  */
 export function BookingChecklist({
   checks,
-  screening,
+  verifications,
+  providerKinds,
   ordering,
   openingReport,
-  onOrderScreening,
-  onViewScreeningReport,
+  onOrder,
+  onViewReport,
+  onShare,
+  sharing,
   onAction,
 }: BookingChecklistProps) {
   const { t } = useTranslation('bookings')
@@ -40,7 +61,9 @@ export function BookingChecklist({
   return (
     <ol className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
       {checks.map((check) => {
-        const isBackground = check.key === 'background'
+        const kind = (providerKinds as readonly VerificationKind[]).includes(check.key)
+          ? (check.key as ProviderKind)
+          : undefined
 
         return (
           <li
@@ -50,8 +73,8 @@ export function BookingChecklist({
             {/* The status row is the only indented thing in the tile: the dot leads it, and the
                 title, hint and button below all start at the tile's padding edge. */}
             <div className="flex items-center gap-1.5">
-              {isBackground ? (
-                <BackgroundCheckDot screening={screening} />
+              {kind ? (
+                <VerificationCheckDot kind={kind} verification={verifications[kind]} />
               ) : (
                 <>
                   <span
@@ -81,13 +104,18 @@ export function BookingChecklist({
 
             {/* flex-1 so the tiles in a row share a height and their buttons line up. */}
             <div className="mt-2 flex flex-1 flex-col">
-              {isBackground ? (
-                <BackgroundCheckRow
-                  screening={screening}
-                  ordering={ordering}
+              {kind ? (
+                <VerificationCheckRow
+                  kind={kind}
+                  verification={verifications[kind]}
+                  ordering={ordering === kind}
                   openingReport={openingReport}
-                  onOrder={onOrderScreening}
-                  onViewReport={onViewScreeningReport}
+                  onOrder={() => onOrder(kind)}
+                  onViewReport={() => onViewReport(kind)}
+                  onShare={
+                    onShare && SHAREABLE_KINDS.includes(kind) ? () => onShare(kind) : undefined
+                  }
+                  sharing={sharing === kind}
                 />
               ) : (
                 <>
@@ -106,7 +134,9 @@ export function BookingChecklist({
                     onClick={() => onAction(check.key)}
                     className="mt-auto w-full"
                   >
-                    {check.done ? t(`details.checkActions.${check.key}`) : t('details.checklist.verify')}
+                    {check.done
+                      ? t(`details.checkActions.${check.key}`)
+                      : t('details.checklist.verify')}
                   </Button>
                 </>
               )}

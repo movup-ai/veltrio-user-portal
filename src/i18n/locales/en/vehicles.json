@@ -14,7 +14,6 @@
     "doneOrdering": "Done ordering",
     "dragToReorder_one": "{{count}} vehicle · drag to reorder",
     "dragToReorder_other": "{{count}} vehicles · drag to reorder",
-    "pageNote": "Showing {{from}}–{{to}} of {{total}} vehicles",
     "noneFound": "No vehicles found",
     "draftsNote": "{{count}} unfinished draft",
     "draftsNote_other": "{{count}} unfinished drafts",

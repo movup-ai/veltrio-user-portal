@@ -4,6 +4,7 @@ import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { DashboardLayout } from '@/app/layouts/DashboardLayout'
 import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
+import { InsuranceReturnPage } from '@/pages/verification/InsuranceReturnPage'
 import { ProtectedRoute } from './protected-route'
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
@@ -53,6 +54,9 @@ export const router = createBrowserRouter([
           { path: '/login/*', element: withSuspense(<LoginPage />) },
           { path: '/sign-up/*', element: withSuspense(<SignUpPage />) },
           { path: '/onboarding', element: withSuspense(<OnboardingPage />) },
+          // Public: Axle returns the renter here, and they may be on their own phone. Not lazy,
+          // since a tab staff opened only finishes the check and closes.
+          { path: '/insurance/return', element: <InsuranceReturnPage /> },
         ],
       },
 

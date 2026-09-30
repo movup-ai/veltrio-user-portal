@@ -17,7 +17,7 @@ import { authApi, FLEET_SIZES } from '@/services/auth/auth.api'
 import { ME_QUERY_KEY, useMe } from '@/services/auth/use-me'
 import { ApiError } from '@/types/api'
 import { countryOptions, isCountryCode } from '@/utils/countries'
-import { isValidSubdomain, slugify } from '@/utils/slug'
+import { isReservedSubdomain, isValidSubdomain, isValidWebsite, slugify } from '@/utils/slug'
 
 const TIMEZONES = Intl.supportedValuesOf('timeZone')
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -30,8 +30,9 @@ function onboardingSchema(t: TFunction<'auth'>) {
       .string()
       .trim()
       .min(1, t('errors.subdomainRequired'))
-      .refine(isValidSubdomain, t('errors.subdomainInvalid')),
-    website: z.string().trim(),
+      .refine(isValidSubdomain, t('errors.subdomainInvalid'))
+      .refine((value) => !isReservedSubdomain(value), t('errors.subdomainReserved')),
+    website: z.string().trim().refine(isValidWebsite, t('errors.websiteInvalid')),
     country: z.string().refine(isCountryCode, t('errors.countryRequired')),
     fleetSize: z.enum(FLEET_SIZES, t('errors.fleetSizeRequired')),
     timezone: z.string().min(1, t('errors.timezoneRequired')),
@@ -39,6 +40,17 @@ function onboardingSchema(t: TFunction<'auth'>) {
 }
 
 type OnboardingValues = z.infer<ReturnType<typeof onboardingSchema>>
+
+/** The fields an API error can be placed under — the request's keys are the form's names. */
+const ONBOARDING_FIELDS: Record<keyof OnboardingValues, true> = {
+  ownerFullName: true,
+  tenantName: true,
+  subdomain: true,
+  website: true,
+  country: true,
+  fleetSize: true,
+  timezone: true,
+}
 
 /**
  * Second half of sign-up: Clerk has verified who the person is, this creates the
@@ -66,6 +78,7 @@ export function OnboardingPage() {
     register,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors, isSubmitting, isSubmitted },
   } = useForm<OnboardingValues>({
     resolver: zodResolver(useMemo(() => onboardingSchema(t), [t])),
@@ -106,6 +119,14 @@ export function OnboardingPage() {
         setFormError(t('errors.subdomainTaken'))
         return
       }
+      // A 422 names the fields it rejected. Showing only "Request validation failed" left the
+      // form with nothing to fix, so each message goes under the field it belongs to.
+      const fieldErrors = error instanceof ApiError ? (error.fieldErrors ?? []) : []
+      const placed = fieldErrors.filter(({ field }) => field in ONBOARDING_FIELDS)
+      for (const { field, message } of placed) {
+        setError(field as keyof OnboardingValues, { message }, { shouldFocus: true })
+      }
+      if (placed.length) return
       setFormError(error instanceof Error ? error.message : t('errors.unknown'))
     }
   }

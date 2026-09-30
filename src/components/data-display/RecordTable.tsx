@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Ellipsis, GripVertical } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { StatusBadge } from './StatusBadge'
-import { PAGE_SIZE_OPTIONS, type Cell, type Column, type Row } from './record-table.types'
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination'
+import type { Cell, Column, Row } from './record-table.types'
 
 function CellContent({ cell }: { cell: Cell }) {
   const { t } = useTranslation('common')
@@ -177,16 +178,20 @@ interface RecordTableProps {
   rows: Row[]
   /** Omit to hide entirely — not every table needs a count next to its title. */
   rowCountLabel?: string
-  pageNote: string
+  /**
+   * Footer text. Omit it on a paginated table to get the shared "1–10 of 43" range; supply it
+   * for states the range does not describe, such as drafts or an empty result.
+   */
+  pageNote?: string
   minWidth?: string
   onRowClick?: (key: string) => void
   /** Omit to keep the footer's static/disabled Previous-Next look used elsewhere. */
   pagination?: {
     page: number
-    hasNextPage: boolean
+    pageSize: number
+    total: number
     onPageChange: (page: number) => void
-    /** Supplying both adds the rows-per-page picker; omit them for Previous/Next only. */
-    pageSize?: number
+    /** Adds the rows-per-page picker. */
     onPageSizeChange?: (pageSize: number) => void
   }
   /** Rendered at the end of the header row (e.g. an Export button) — after the row count label. */
@@ -216,6 +221,17 @@ export function RecordTable({
 }: RecordTableProps) {
   const { t } = useTranslation('common')
   const [dragKey, setDragKey] = useState<string | null>(null)
+  const rowsPerPageId = useId()
+  const hasNextPage = pagination ? pagination.page * pagination.pageSize < pagination.total : false
+  const footerNote =
+    pageNote ??
+    (pagination && pagination.total > 0
+      ? t('table.showing', {
+          from: (pagination.page - 1) * pagination.pageSize + 1,
+          to: Math.min(pagination.page * pagination.pageSize, pagination.total),
+          total: pagination.total,
+        })
+      : undefined)
 
   function handleDrop(overKey: string) {
     if (!dragKey || dragKey === overKey || !onReorder) {
@@ -338,28 +354,37 @@ export function RecordTable({
       </div>
 
       <div className="border-border-soft bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-t px-4 py-[11px]">
-        <div className="flex items-center gap-3">
-          <span className="text-fg-3 text-[12.5px]">{pageNote}</span>
-          {pagination?.pageSize !== undefined && pagination.onPageSizeChange && (
-            <Select
-              value={String(pagination.pageSize)}
-              onValueChange={(value) => pagination.onPageSizeChange?.(Number(value))}
-            >
-              {/* Sized and weighted like the Previous/Next buttons it sits beside. */}
-              <SelectTrigger
-                aria-label={t('table.rowsPerPage')}
-                className="border-border bg-surface text-fg-2 h-[30px] w-[68px] rounded-lg px-[11px] text-[12.5px] font-semibold"
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="text-fg-3 text-[12.5px] tabular-nums">{footerNote}</span>
+          {pagination?.onPageSizeChange && (
+            <span className="flex items-center gap-2">
+              <span id={rowsPerPageId} className="text-fg-3 text-[12.5px]">
+                {t('table.rowsPerPage')}
+              </span>
+              <Select
+                value={String(pagination.pageSize)}
+                onValueChange={(value) => {
+                  pagination.onPageSizeChange?.(Number(value))
+                  // Page 4 at 10 rows is not page 4 at 50; start the new size from the top.
+                  pagination.onPageChange(1)
+                }}
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((size) => (
-                  <SelectItem key={size} value={String(size)} className="text-[12.5px]">
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                {/* Sized and weighted like the Previous/Next buttons it sits beside. */}
+                <SelectTrigger
+                  aria-labelledby={rowsPerPageId}
+                  className="border-border bg-surface text-fg-2 h-[30px] w-[68px] rounded-lg px-[11px] text-[12.5px] font-semibold"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <SelectItem key={size} value={String(size)} className="text-[12.5px]">
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </span>
           )}
         </div>
         <div className="flex gap-1.5">
@@ -380,11 +405,11 @@ export function RecordTable({
             type="button"
             // Without `pagination` there is nothing to advance to, so match Previous and stay
             // disabled — otherwise the button invites a click that does nothing.
-            disabled={pagination ? !pagination.hasNextPage : true}
+            disabled={!hasNextPage}
             onClick={() => pagination?.onPageChange(pagination.page + 1)}
             className={cn(
               'h-[30px] rounded-lg border px-[11px] text-[12.5px] font-semibold transition-colors',
-              !pagination || !pagination.hasNextPage
+              !hasNextPage
                 ? 'bg-surface border-border text-border-strong cursor-not-allowed'
                 : 'bg-surface border-border text-fg-2 hover:bg-surface-3',
             )}

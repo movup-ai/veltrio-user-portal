@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { ShieldCheck } from 'lucide-react'
+import { FileCheck2, Send, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -15,26 +15,31 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import {
-  useOrderStandaloneScreening,
-  useScreeningLog,
-  useScreeningReportById,
-} from '@/modules/bookings/hooks/use-screening'
+  useInsuranceLinkDialog,
+  useInsuranceResults,
+  useOrderStandaloneVerification,
+  useStartInsurance,
+  useVerificationLog,
+  useVerificationReportById,
+} from '@/modules/bookings/hooks/use-verification'
+import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
+import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
+import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
 import {
-  blankScreeningValues,
-  screeningFormSchema,
-  toScreeningOrder,
-  type ScreeningFormValues,
-} from '@/modules/bookings/schema/screening.schema'
-import type { ScreeningRecord } from '@/modules/bookings/types/booking.types'
-
-const PAGE_SIZE = 25
+  blankVerificationValues,
+  verificationFormSchema,
+  toVerificationOrder,
+  type VerificationFormValues,
+} from '@/modules/bookings/schema/verification.schema'
+import type { VerificationRecord } from '@/modules/bookings/types/booking.types'
 
 /** Wide enough for any adult — the picker pages by dropdown, not month by month. */
 const DOB_YEAR_RANGE = { from: new Date().getFullYear() - 100, to: new Date().getFullYear() }
 
 /**
- * Screening as its own tool, rather than something that only happens inside a booking.
+ * Verification as its own tool, rather than something that only happens inside a booking.
  *
  * The same Checkr check the booking form runs, on anyone: a contractor, a valet, a new hire.
  * Nothing here creates a customer — a person screened on this page is not a renter.
@@ -44,26 +49,51 @@ export function VerificationPage() {
   const { t: tValidation } = useTranslation('validation')
   const { shortDate } = useFormatters()
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
-  const log = useScreeningLog({ page, pageSize: PAGE_SIZE })
-  const order = useOrderStandaloneScreening()
-  const report = useScreeningReportById()
+  const log = useVerificationLog({ page, pageSize })
+  const order = useOrderStandaloneVerification()
+  const report = useVerificationReportById()
+  const startInsurance = useStartInsurance()
+  useInsuranceResults()
+  const insuranceLink = useInsuranceLinkDialog()
 
-  const form = useForm<ScreeningFormValues>({
-    resolver: zodResolver(screeningFormSchema(tValidation)),
-    defaultValues: blankScreeningValues(),
+  const form = useForm<VerificationFormValues>({
+    resolver: zodResolver(verificationFormSchema(tValidation)),
+    defaultValues: blankVerificationValues(),
     mode: 'onBlur',
   })
 
-  function onSubmit(values: ScreeningFormValues) {
-    order.mutate(toScreeningOrder(values), {
+  function onSubmit(values: VerificationFormValues) {
+    order.mutate(toVerificationOrder(values), {
       // Cleared only on success: a failed check leaves the details in place to try again.
-      onSuccess: () => form.reset(blankScreeningValues()),
+      onSuccess: () => form.reset(blankVerificationValues()),
     })
+  }
+
+  /**
+   * Insurance needs only the name and date of birth, so it validates just those two rather
+   * than the whole form - a half-filled address has no bearing on it.
+   */
+  async function insuranceOrder(): Promise<InsuranceOrderWire | undefined> {
+    if (!(await form.trigger(['name', 'dateOfBirth']))) return undefined
+    const { name, dateOfBirth } = form.getValues()
+    return { name: name.trim(), dateOfBirth, redirectUri: insuranceReturnUri(window.location) }
+  }
+
+  async function onVerifyInsurance() {
+    const input = await insuranceOrder()
+    if (input) startInsurance.mutate(input)
+  }
+
+  async function onSendInsuranceLink() {
+    const input = await insuranceOrder()
+    if (input) insuranceLink.share(input)
   }
 
   const columns: Column[] = [
     { label: t('verificationPage.log.columns.person'), align: 'left' },
+    { label: t('verificationPage.log.columns.kind'), align: 'left' },
     { label: t('verificationPage.log.columns.source'), align: 'left' },
     { label: t('verificationPage.log.columns.checked'), align: 'left' },
     { label: t('verificationPage.log.columns.result'), align: 'left' },
@@ -71,7 +101,7 @@ export function VerificationPage() {
     { label: '', align: 'right' },
   ]
 
-  function resultCell(record: ScreeningRecord): Cell {
+  function resultCell(record: VerificationRecord): Cell {
     // Reuses the shared status vocabulary rather than inventing colours: a found record reads
     // as Flagged, a clean one as Completed, whatever the module calls them internally.
     const status =
@@ -93,6 +123,7 @@ export function VerificationPage() {
         primary: record.name,
         secondary: record.dateOfBirth ? shortDate(record.dateOfBirth) : undefined,
       },
+      { kind: 'text', primary: t(`details.checks.${record.kind}`) },
       {
         kind: 'text',
         primary: record.customerId
@@ -120,8 +151,6 @@ export function VerificationPage() {
       },
     ],
   }))
-
-  const totalPages = log.data?.totalPages ?? 1
 
   return (
     <PageContainer>
@@ -247,7 +276,27 @@ export function VerificationPage() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              loading={insuranceLink.sharing}
+              onClick={onSendInsuranceLink}
+              className="gap-1.5"
+            >
+              <Send className="size-4" aria-hidden />
+              {t('insuranceLink.action')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              loading={startInsurance.isPending}
+              onClick={onVerifyInsurance}
+              className="gap-1.5"
+            >
+              <FileCheck2 className="size-4" aria-hidden />
+              {t('verificationPage.form.verifyInsurance')}
+            </Button>
             <Button type="submit" variant="primary" loading={order.isPending} className="gap-1.5">
               <ShieldCheck className="size-4" aria-hidden />
               {t('verificationPage.form.submit')}
@@ -256,12 +305,13 @@ export function VerificationPage() {
         </form>
       </Card>
 
+      {/* No email or phone on this form: the person is not on file, so the counter types them. */}
+      <InsuranceLinkDialog {...insuranceLink.dialog} renterName={form.getValues('name').trim()} />
+
       <RecordTable
         title={t('verificationPage.log.title')}
         columns={columns}
         rows={rows}
-        rowCountLabel={t('verificationPage.log.rowCount', { count: log.data?.total ?? 0 })}
-        pageNote={t('verificationPage.log.page', { page, pages: totalPages })}
         emptyState={
           log.isError ? (
             <ErrorState
@@ -274,8 +324,10 @@ export function VerificationPage() {
         }
         pagination={{
           page,
-          hasNextPage: page < totalPages,
+          pageSize,
+          total: log.data?.total ?? 0,
           onPageChange: setPage,
+          onPageSizeChange: setPageSize,
         }}
       />
     </PageContainer>

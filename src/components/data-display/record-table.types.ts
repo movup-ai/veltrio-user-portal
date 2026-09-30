@@ -1,8 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
 
-/** Rows per page a table can offer. Matches DataTablePagination's own options. */
-export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
-
 export type CellAlign = 'left' | 'right'
 
 export type Cell =

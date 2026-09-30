@@ -4,15 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const report = vi.fn()
 
-vi.mock('../api/screening.api', () => ({
-  screeningApi: {
+vi.mock('../api/verification.api', () => ({
+  verificationApi: {
     report: (...args: unknown[]) => report(...args),
   },
 }))
 
 vi.mock('@/components/ui/use-toast', () => ({ toast: vi.fn() }))
 
-const { useScreeningReport } = await import('./use-screening')
+const { useVerificationReport } = await import('./use-verification')
 
 function wrapper() {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
@@ -42,7 +42,7 @@ describe('opening a report', () => {
       return Promise.resolve(PDF)
     })
 
-    const { result } = renderHook(() => useScreeningReport('BK-1'), { wrapper: wrapper() })
+    const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
     result.current.mutate()
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -57,7 +57,7 @@ describe('opening a report', () => {
     const before = window.location.href
     report.mockResolvedValue(PDF)
 
-    const { result } = renderHook(() => useScreeningReport('BK-1'), { wrapper: wrapper() })
+    const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
     result.current.mutate()
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -71,7 +71,7 @@ describe('opening a report', () => {
     vi.spyOn(window, 'open').mockReturnValue({ close } as unknown as Window)
     report.mockRejectedValue(new Error('nope'))
 
-    const { result } = renderHook(() => useScreeningReport('BK-1'), { wrapper: wrapper() })
+    const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
     result.current.mutate()
 
     await waitFor(() => expect(result.current.isError).toBe(true))

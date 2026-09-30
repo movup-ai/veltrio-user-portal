@@ -255,6 +255,7 @@ function buildRenter(name: string, bookingTotal: number, booking?: Booking): Boo
       email: booking.customer.email,
       phone: booking.customer.phone,
       licenceNumber: booking.customer.licenceNumber,
+      dateOfBirth: booking.customer.dateOfBirth,
       rentals: 1,
       lifetimeValue: booking.pricing.total,
       since: new Date(booking.createdAt).getFullYear(),

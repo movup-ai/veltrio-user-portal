@@ -57,15 +57,13 @@ import {
 } from '@/modules/bookings/utils/booking.utils'
 import { useVehicleMakes, useVehicleThumbnails } from '@/modules/vehicles/hooks/use-vehicles'
 import { resultSetKey } from '@/modules/bookings/utils/booking.paging'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { useDebounced } from '@/lib/use-debounced'
 import { bookingApi, ExportTooLargeError } from '@/modules/bookings/api/booking.api'
 import { normalizeApiError } from '@/services/api/errors'
 
 /** The Drafts tab sits beside the booking tabs but draws from its own resource. */
 const DRAFTS_TAB = 'Drafts'
-
-/** Rows per page until the counter picks another; the picker offers PAGE_SIZE_OPTIONS. */
-const DEFAULT_PAGE_SIZE = 10
 
 /** Shown while the counts load, so the tabs render without flickering through zero. */
 const EMPTY_TAB_COUNTS: Record<BookingTab, number> = {
@@ -151,7 +149,6 @@ export function BookingsPage() {
   const drafts = draftPage?.items ?? []
 
   const rowsData = pageData?.items ?? []
-  const tabTotal = pageData?.total ?? 0
   const tabCounts = filteredCounts ?? EMPTY_TAB_COUNTS
 
   // Makes come from the fleet, not the loaded page: a filter offering only what this page
@@ -446,18 +443,18 @@ export function BookingsPage() {
           pageNote={
             showingDrafts
               ? t('list.draftsNote', { count: drafts.length })
-              : rows.length > 0
-                ? t('list.pageNote', { shown: rows.length, total: tabTotal })
-                : t('list.noneFound')
+              : rows.length === 0
+                ? t('list.noneFound')
+                : undefined
           }
           pagination={
             // Drafts are capped well under one page, so they never paginate.
             !showingDrafts && pageData
               ? {
                   page: pageData.page,
-                  hasNextPage: pageData.page < pageData.totalPages,
-                  onPageChange: setPage,
                   pageSize,
+                  total: pageData.total,
+                  onPageChange: setPage,
                   onPageSizeChange: setPageSize,
                 }
               : undefined
