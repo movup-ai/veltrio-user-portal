@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next'
 import { z } from 'zod'
-import { BOOKING_VERIFICATIONS } from '../types/booking.types'
+import { VERIFICATION_KINDS } from '../types/booking.types'
 
 type ValidationT = TFunction<'validation'>
 
@@ -39,7 +39,6 @@ export function isPlausibleDob(value: string): boolean {
 const uploadedFileSchema = z.object({
   id: z.string(),
   name: z.string(),
-  url: z.string(),
   size: z.number(),
   file: z.instanceof(File),
 })
@@ -104,7 +103,7 @@ export function bookingFormSchema(t: ValidationT) {
       licenceExpiry: z.string(),
       licenceDocument: uploadedFileSchema.nullable(),
       insuranceDocument: uploadedFileSchema.nullable(),
-      verifications: z.array(z.enum(BOOKING_VERIFICATIONS)),
+      verifications: z.array(z.enum(VERIFICATION_KINDS)),
       additionalDrivers: z.array(additionalDriverSchema(t)),
 
       // Step 3 — Price

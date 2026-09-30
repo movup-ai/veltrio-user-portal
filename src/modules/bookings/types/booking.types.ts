@@ -167,8 +167,25 @@ export interface BookingFee {
 }
 
 /** Pre-handover checks a booking records. Set when the booking was taken; not written by the form. */
-export const BOOKING_VERIFICATIONS = ['identity', 'background', 'insurance'] as const
-export type BookingVerification = (typeof BOOKING_VERIFICATIONS)[number]
+export const VERIFICATION_KINDS = ['identity', 'background', 'insurance'] as const
+export type VerificationKind = (typeof VERIFICATION_KINDS)[number]
+
+/**
+ * Kinds a provider answers for: Checkr for background, Axle for insurance. Identity is not one —
+ * the counter matches the licence to the person in front of them.
+ */
+export const PROVIDER_KINDS = ['background', 'insurance'] as const satisfies readonly VerificationKind[]
+export type ProviderKind = (typeof PROVIDER_KINDS)[number]
+
+export function isProviderKind(kind: VerificationKind): kind is ProviderKind {
+  return (PROVIDER_KINDS as readonly VerificationKind[]).includes(kind)
+}
+
+/**
+ * Kinds the renter completes themselves, so the counter sends them a link rather than opening the
+ * session here: they sign in to their insurer, which belongs on their own device, not the desk's.
+ */
+export const SHAREABLE_KINDS: readonly ProviderKind[] = ['insurance']
 
 /**
  * Payload for creating a booking. The server assigns the reference and status, prices the
@@ -191,7 +208,7 @@ export interface BookingInput {
   returnAt: string
   additionalDrivers: AdditionalDriver[]
   fees: BookingFee[]
-  verifications: BookingVerification[]
+  verifications: VerificationKind[]
 }
 
 /** The rate option as it was when booked — vehicle rate cards change afterwards. */
@@ -235,7 +252,7 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   payment: BookingPayment
   contract: BookingContract
   /** The background check, when one has been ordered. Absent means it was never started. */
-  screening?: BookingScreening
+  verification?: BookingVerification
   /** When the car actually changed hands, which is not the same as the window's ends. */
   pickedUpAt?: string
   returnedAt?: string
@@ -265,15 +282,9 @@ export interface BookingStageStep {
   channel?: 'web' | 'auto' | 'counter'
 }
 
-/**
- * Pre-handover checks shown on the details page — the same three the booking form asks for
- * (see BOOKING_VERIFICATIONS). Labels live in `bookings:details.checks.<key>`.
- */
-export const BOOKING_CHECKS = ['background', 'identity', 'insurance'] as const
-export type BookingCheck = (typeof BOOKING_CHECKS)[number]
-
 export interface BookingCheckStep {
-  key: BookingCheck
+  /** One of VERIFICATION_KINDS; labels live in `bookings:details.checks.<key>`. */
+  key: VerificationKind
   done: boolean
 }
 
@@ -283,10 +294,10 @@ export interface BookingCheckStep {
  * manager has to adjudicate, not that the renter was refused.
  */
 export const SCREENING_STATUSES = ['running', 'clear', 'consider', 'error'] as const
-export type ScreeningStatus = (typeof SCREENING_STATUSES)[number]
+export type VerificationStatus = (typeof SCREENING_STATUSES)[number]
 
 /** Statuses Checkr will never move away from — what the details page stops polling on. */
-export const TERMINAL_SCREENING_STATUSES: readonly ScreeningStatus[] = [
+export const TERMINAL_VERIFICATION_STATUSES: readonly VerificationStatus[] = [
   'clear',
   'consider',
   'error',
@@ -294,14 +305,20 @@ export const TERMINAL_SCREENING_STATUSES: readonly ScreeningStatus[] = [
 
 /** A background check on one booking. Absent entirely when none has been ordered. */
 /** One row of the verification log: any check this tenant has run, on anyone. */
-export interface ScreeningRecord {
+export interface VerificationRecord {
   id: string
+  kind: VerificationKind
   name: string
   dateOfBirth?: string
   /** Absent for someone screened from the verification page — they are not a renter. */
   email?: string
   customerId?: string
-  status: ScreeningStatus
+  /** The booking that called for it, so a new insurance link lands on that booking. */
+  bookingReference?: string
+  /** The rental an insurance check was judged for, as `YYYY-MM-DD` dates. */
+  coversFrom?: string
+  coversThrough?: string
+  status: VerificationStatus
   recordsFound: boolean
   hasReport: boolean
   completedAt?: string
@@ -309,18 +326,18 @@ export interface ScreeningRecord {
 }
 
 /** A US postal address. All four parts or none — Checkr rejects a partial one. */
-export interface ScreeningAddress {
+export interface VerificationAddress {
   street: string
   city: string
   state: string
   zipCode: string
 }
 
-export interface BookingScreening {
+export interface BookingVerification {
   id: string
   /** The renter the check belongs to. Absent until they book. */
   customerId?: string
-  status: ScreeningStatus
+  status: VerificationStatus
   /** Why a check errored, or Checkr's notes on one still running. */
   failureReason?: string
   /** Whether anything was found. The records themselves stay in Checkr. */
@@ -331,6 +348,16 @@ export interface BookingScreening {
   canReorder: boolean
   /** True when this result was run for an earlier booking of the same renter. */
   reused: boolean
+  /** The policy an insurance verdict was read from, once the renter has linked one. */
+  policy?: { carrier?: string; policyNumber?: string; expiresOn?: string }
+  /** The rental an insurance check was judged for, as `YYYY-MM-DD` dates. */
+  coversFrom?: string
+  coversThrough?: string
+  /**
+   * The renter's latest insurance check, returned because none answers this rental's dates.
+   * Shown as on file, never as cover for these dates.
+   */
+  forOtherDates?: boolean
   completedAt?: string
   createdAt: string
   updatedAt: string
@@ -402,6 +429,8 @@ export interface BookingRenter {
   email: string
   phone: string
   licenceNumber: string
+  /** Carried through for insurance verification, which matches on it. Absent on older rows. */
+  dateOfBirth?: string
   rentals: number
   lifetimeValue: number
   /** Year they first rented — the "customer since" line. */

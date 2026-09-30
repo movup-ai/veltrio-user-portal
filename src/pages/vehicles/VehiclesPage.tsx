@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Car, ChevronDown, Download, Gauge, GripVertical, Plus, Tag, Wrench } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -55,10 +56,6 @@ function tripsForVehicle(v: Vehicle): number {
 const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts', 'Archived'] as const
 type Tab = (typeof TABS)[number]
 
-const PAGE_SIZE = 8
-/** One big page so the filtered set is draggable at once. 100 is the API's ceiling on `limit`. */
-const MANUAL_PAGE_SIZE = 100
-
 /**
  * The fleet order lives on the server and is shared across the tenant, so ordering only makes
  * sense over the whole fleet: the API rejects a partial list rather than renumber vehicles the
@@ -98,6 +95,7 @@ export function VehiclesPage() {
   const [sortBy, setSortBy] = useState<VehicleSort>('newest')
   const [manualOrderMode, setManualOrderMode] = useState(false)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null)
   const [importOpen, setImportOpen] = useState(false)
 
@@ -109,7 +107,7 @@ export function VehiclesPage() {
       manualOrderMode
         ? // The reorder endpoint takes the whole fleet, so order mode ignores the filters
           // rather than saving an arrangement of whatever happened to be on screen.
-          { ...UNFILTERED, sortBy: 'manual' as const, page: 1, pageSize: MANUAL_PAGE_SIZE }
+          { ...UNFILTERED, sortBy: 'manual' as const, page: 1, pageSize: MAX_PAGE_SIZE }
         : {
             search: search || undefined,
             status: effectiveStatus,
@@ -120,9 +118,9 @@ export function VehiclesPage() {
             priceBands,
             sortBy,
             page,
-            pageSize: PAGE_SIZE,
+            pageSize,
           },
-    [search, effectiveStatus, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page],
+    [search, effectiveStatus, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page, pageSize],
   )
 
   // Same filters minus the status each tab pins, so a tab's count reflects what it would reveal.
@@ -131,7 +129,7 @@ export function VehiclesPage() {
   const { data, isLoading, isError, refetch } = useVehicles(listParams)
   const { data: tabStats } = useVehicleStats(tabCountParams)
   // Unfiltered: the stat cards describe the whole fleet, not the current view.
-  const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: PAGE_SIZE })
+  const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: DEFAULT_PAGE_SIZE })
   // Drafts are the "add vehicle" wizard, so they follow the same permission as creating one.
   const canAddVehicles = hasPermission(usePermissions(), 'vehicles.create')
   const { data: draftsData } = useVehicleDrafts(DRAFTS_PAGE, canAddVehicles)
@@ -140,7 +138,7 @@ export function VehiclesPage() {
     ...UNFILTERED,
     status: 'Archived',
     page: 1,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
   })
   const queryClient = useQueryClient()
   const archiveVehicle = useArchiveVehicle()
@@ -476,11 +474,7 @@ export function VehiclesPage() {
               : manualOrderMode
                 ? t('list.dragToReorder', { count: orderedItems.length })
                 : data && data.total > 0
-                  ? t('list.pageNote', {
-                      from: (data.page - 1) * PAGE_SIZE + 1,
-                      to: Math.min(data.page * PAGE_SIZE, data.total),
-                      total: data.total,
-                    })
+                  ? undefined
                   : t('list.noneFound')
           }
           minWidth="960px"
@@ -492,7 +486,13 @@ export function VehiclesPage() {
           pagination={
             // Drafts are capped well under one page, so they never paginate.
             !manualOrderMode && !isDraftsTab && data
-              ? { page: data.page, hasNextPage: data.page < data.totalPages, onPageChange: setPage }
+              ? {
+                  page: data.page,
+                  pageSize,
+                  total: data.total,
+                  onPageChange: setPage,
+                  onPageSizeChange: setPageSize,
+                }
               : undefined
           }
           reorderable={manualOrderMode && !isDraftsTab}

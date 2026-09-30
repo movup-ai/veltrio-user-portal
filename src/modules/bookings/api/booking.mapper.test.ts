@@ -6,11 +6,13 @@ import {
   toBookingLists,
   toBookingPayload,
   toInterval,
-  toScreening,
+  toVerification,
   type BookingWire,
-  type ScreeningWire,
+  type VerificationWire,
 } from './booking.mapper'
 import { isReadyForPickup, type BookingFilters, type BookingInput, type PaymentState } from '../types/booking.types'
+import { buildBookingDetails } from '../utils/booking.details'
+import { bookingToTuple } from '../utils/booking.utils'
 
 const wire: BookingWire = {
   id: 'b1',
@@ -57,7 +59,7 @@ const wire: BookingWire = {
     paidAt: null,
   },
   contract: { signedAt: null, version: null },
-  screening: null,
+  verification: null,
   pickedUpAt: null,
   returnedAt: null,
   createdAt: '2026-09-22T10:00:00Z',
@@ -300,7 +302,7 @@ describe('toBookingFilterQuery', () => {
 })
 
 /** Only the fields the assertions touch; the rest is boilerplate the API always sends. */
-function screeningWire(overrides: Partial<ScreeningWire> = {}): ScreeningWire {
+function verificationWire(overrides: Partial<VerificationWire> = {}): VerificationWire {
   return {
     id: 's1',
     customerId: 'cus_1',
@@ -317,13 +319,13 @@ function screeningWire(overrides: Partial<ScreeningWire> = {}): ScreeningWire {
   }
 }
 
-describe('toScreening', () => {
+describe('toVerification', () => {
   it('turns the wire nulls into absent fields', () => {
-    const screening = toScreening(screeningWire())
+    const verification = toVerification(verificationWire())
 
     // toStrictEqual, not toEqual: the latter ignores undefined keys, so a mapper that dropped
     // a field entirely would pass.
-    expect(screening).toStrictEqual({
+    expect(verification).toStrictEqual({
       id: 's1',
       customerId: 'cus_1',
       status: 'running',
@@ -332,15 +334,50 @@ describe('toScreening', () => {
       hasReport: false,
       canReorder: false,
       reused: false,
+      policy: undefined,
+      coversFrom: undefined,
+      coversThrough: undefined,
+      forOtherDates: false,
       completedAt: undefined,
       createdAt: '2026-09-20T10:00:00Z',
       updatedAt: '2026-09-20T10:00:00Z',
     })
   })
 
+  it('keeps which rental an insurance check was for, and whether it answers this one', () => {
+    const verification = toVerification(
+      verificationWire({
+        coversFrom: '2026-10-01',
+        coversThrough: '2026-10-05',
+        forOtherDates: true,
+      }),
+    )
+
+    expect(verification).toMatchObject({
+      coversFrom: '2026-10-01',
+      coversThrough: '2026-10-05',
+      forOtherDates: true,
+    })
+  })
+
+  it('names the policy an insurance verdict was read from, in words rather than a slug', () => {
+    const verification = toVerification(
+      verificationWire({
+        status: 'clear',
+        policy: { carrier: 'state-farm', policyNumber: 'SF-123456', expiresOn: '2027-01-01' },
+      }),
+    )
+
+    expect(verification.policy).toEqual({
+      carrier: 'State Farm',
+      policyNumber: 'SF-123456',
+      expiresOn: '2027-01-01',
+    })
+  })
+
   it('keeps the verdict when the API sends one', () => {
-    const screening = toScreening(
-      screeningWire({
+    const verification = toVerification(
+      verificationWire({
         status: 'consider',
         recordsFound: true,
         hasReport: true,
@@ -348,9 +385,9 @@ describe('toScreening', () => {
       }),
     )
 
-    expect(screening.status).toBe('consider')
-    expect(screening.recordsFound).toBe(true)
-    expect(screening.hasReport).toBe(true)
+    expect(verification.status).toBe('consider')
+    expect(verification.recordsFound).toBe(true)
+    expect(verification.hasReport).toBe(true)
   })
 })
 
@@ -383,6 +420,15 @@ describe('isReadyForPickup', () => {
     expect(isReadyForPickup(toBooking({ ...wire, verifications: ['background'],
       payment: { ...wire.payment, state: 'paid' },
       contract: { signedAt: '2026-09-22T10:00:00Z', version: 'v3' },
-      screening: null }))).toBe(true)
+      verification: null }))).toBe(true)
+  })
+})
+
+describe('booking details renter', () => {
+  it('carries the date of birth an insurance check matches on', () => {
+    // Dropped here, the details page sent an empty date and the API answered with a 422.
+    const booking = toBooking({ ...wire, customer: { ...wire.customer, dateOfBirth: '1991-04-17' } })
+
+    expect(buildBookingDetails(bookingToTuple(booking), booking).renter.dateOfBirth).toBe('1991-04-17')
   })
 })

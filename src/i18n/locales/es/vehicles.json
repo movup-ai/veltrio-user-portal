@@ -14,7 +14,6 @@
     "doneOrdering": "Listo",
     "dragToReorder_one": "{{count}} vehículo · arrastre para reordenar",
     "dragToReorder_other": "{{count}} vehículos · arrastre para reordenar",
-    "pageNote": "Mostrando {{from}}–{{to}} de {{total}} vehículos",
     "noneFound": "No se encontraron vehículos",
     "draftsNote": "{{count}} borrador sin terminar",
     "draftsNote_other": "{{count}} borradores sin terminar",

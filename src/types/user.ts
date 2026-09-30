@@ -23,6 +23,7 @@ export type Permission =
   | 'locations.manage'
   | 'pricing.read'
   | 'pricing.manage'
+  | 'verifications.delete'
   | 'settings.manage'
   | 'users.manage'
 

@@ -40,6 +40,7 @@
     "noResults": "No results",
     "noResultsDescription": "Nothing matches your current filters yet.",
     "range": "{{from}}–{{to}} of {{total}}",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
     "countOf": "{{count}} of {{total}}",
     "firstPage": "First page",
     "lastPage": "Last page",

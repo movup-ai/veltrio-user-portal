@@ -4,15 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const report = vi.fn()
 
-vi.mock('../api/screening.api', () => ({
-  screeningApi: {
+vi.mock('../api/verification.api', () => ({
+  verificationApi: {
     report: (...args: unknown[]) => report(...args),
   },
 }))
 
 vi.mock('@/components/ui/use-toast', () => ({ toast: vi.fn() }))
 
-const { useScreeningReport } = await import('./use-screening')
+const { useVerificationReport } = await import('./use-verification')
 
 function wrapper() {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
@@ -42,11 +42,12 @@ describe('opening a report', () => {
       return Promise.resolve(PDF)
     })
 
-    const { result } = renderHook(() => useScreeningReport('BK-1'), { wrapper: wrapper() })
-    result.current.mutate()
+    const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
+    result.current.open()
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(order).toEqual(['open', 'fetch'])
+    // Synchronously, inside the click: the mutation's own awaits come after.
+    expect(order).toEqual(['open'])
+    await waitFor(() => expect(order).toEqual(['open', 'fetch']))
   })
 
   it('does not navigate this tab when window.open returns null', async () => {
@@ -57,13 +58,12 @@ describe('opening a report', () => {
     const before = window.location.href
     report.mockResolvedValue(PDF)
 
-    const { result } = renderHook(() => useScreeningReport('BK-1'), { wrapper: wrapper() })
-    result.current.mutate()
+    const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
+    result.current.open()
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(window.location.href).toBe(before)
     // Downloaded instead, which reaches the report without losing the page.
-    expect(click).toHaveBeenCalled()
+    await waitFor(() => expect(click).toHaveBeenCalled())
+    expect(window.location.href).toBe(before)
   })
 
   it('closes the blank tab when the fetch fails', async () => {
@@ -71,10 +71,9 @@ describe('opening a report', () => {
     vi.spyOn(window, 'open').mockReturnValue({ close } as unknown as Window)
     report.mockRejectedValue(new Error('nope'))
 
-    const { result } = renderHook(() => useScreeningReport('BK-1'), { wrapper: wrapper() })
-    result.current.mutate()
+    const { result } = renderHook(() => useVerificationReport('BK-1'), { wrapper: wrapper() })
+    result.current.open()
 
-    await waitFor(() => expect(result.current.isError).toBe(true))
-    expect(close).toHaveBeenCalled()
+    await waitFor(() => expect(close).toHaveBeenCalled())
   })
 })

@@ -43,12 +43,17 @@ import type { RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types
 import { formatRateOptionPrice, vehicleDisplayName } from '@/modules/vehicles/utils/vehicle.utils'
 import { AdditionalDriversEditor } from '@/modules/bookings/components/AdditionalDriversEditor'
 import { BookingFeesEditor } from '@/modules/bookings/components/BookingFeesEditor'
-import { BookingScreeningStatus } from '@/modules/bookings/components/BookingScreeningStatus'
+import { BookingVerificationStatus } from '@/modules/bookings/components/BookingVerificationStatus'
 import {
-  useScreeningReportByEmail,
-  useOrderCustomerScreening,
-  useScreeningByEmail,
-} from '@/modules/bookings/hooks/use-screening'
+  useVerificationReportByEmail,
+  useOrderCustomerVerification,
+  useInsuranceLinkDialog,
+  useInsuranceResults,
+  useVerificationByEmail,
+} from '@/modules/bookings/hooks/use-verification'
+import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
+import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
+import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
 import {
   customerLabel,
   customerSearchTerm,
@@ -65,9 +70,9 @@ import {
 import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import {
-  screeningForRenter,
-  type RanScreening,
-} from '@/modules/bookings/utils/booking.screening'
+  verificationForRenter,
+  type RanVerification,
+} from '@/modules/bookings/utils/booking.verification'
 import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
@@ -334,10 +339,10 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
    */
   const { data: existingDocuments = [] } = useCustomerDocuments(values.customerId || undefined)
 
-  const { data: customerScreening, isFetching: loadingScreening } = useScreeningByEmail(
+  const { data: customerVerification, isFetching: loadingVerification } = useVerificationByEmail(
     values.customerEmail,
   )
-  const orderScreening = useOrderCustomerScreening()
+  const orderVerification = useOrderCustomerVerification()
 
   /**
    * A check run here, before the renter has a customer id to re-read it by.
@@ -346,11 +351,11 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
    * left the previous one's verdict on the card while the report button fetched the new
    * renter's — one person's result shown as another's.
    */
-  const [ranScreening, setRanScreening] = useState<RanScreening | undefined>()
-  const screening = screeningForRenter(customerScreening, ranScreening, values.customerEmail)
+  const [ranVerification, setRanVerification] = useState<RanVerification | undefined>()
+  const verification = verificationForRenter(customerVerification, ranVerification, values.customerEmail)
   // By email, the same key the card and ordering use: a renter screened at the counter has
   // no customer record to fetch a report by until they book.
-  const screeningReport = useScreeningReportByEmail(values.customerEmail.trim() || undefined)
+  const verificationReport = useVerificationReportByEmail(values.customerEmail.trim() || undefined)
 
   /**
    * Why a check cannot be run yet, naming the fields still empty. Checkr matches on name and
@@ -365,7 +370,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
     const email = values.customerEmail.trim().toLowerCase()
 
     // The hook reports a failure as a toast, so nothing is thrown at the form here.
-    orderScreening.mutate(
+    orderVerification.mutate(
       // Only what the check matches on, plus the email that says who it is for. The rest of
       // the form is not sent: a check is not an edit, and the API refuses anything else.
       {
@@ -373,9 +378,28 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
         email: values.customerEmail,
         dateOfBirth: values.customerDob,
       },
-      { onSuccess: (result) => setRanScreening({ email, screening: result }) },
+      { onSuccess: (result) => setRanVerification({ email, verification: result }) },
     )
   }
+
+  const { data: insurance, isFetching: loadingInsurance } = useVerificationByEmail(
+    values.customerEmail,
+    'insurance',
+    { from: values.pickupDate, to: values.returnDate },
+  )
+  useInsuranceResults()
+  const insuranceLink = useInsuranceLinkDialog()
+
+  /** The session to send the renter; asking again while it is open returns the same link. */
+  const insuranceOrder = (): InsuranceOrderWire => ({
+    name: values.customerName.trim(),
+    email: values.customerEmail.trim().toLowerCase(),
+    dateOfBirth: values.customerDob,
+    // There is no booking yet to read the rental window from.
+    coversFrom: values.pickupDate,
+    coversThrough: values.returnDate,
+    redirectUri: insuranceReturnUri(window.location),
+  })
 
   /** Slots the counter has chosen to replace, so the picker takes over from what is on file. */
   const [replacing, setReplacing] = useState<{ licence?: boolean; insurance?: boolean }>({})
@@ -1124,16 +1148,34 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   description={t('form.verification.hint')}
                 />
                 <div className="mt-4">
-                  <BookingScreeningStatus
-                    screening={screening}
-                    loading={loadingScreening}
+                  <BookingVerificationStatus
+                    verification={verification}
+                    loading={loadingVerification}
                     onRunCheck={handleRunCheck}
-                    running={orderScreening.isPending}
+                    running={orderVerification.isPending}
                     runBlockedReason={runBlockedReason}
                     onViewReport={
-                      screening ? () => screeningReport.mutate() : undefined
+                      verification ? () => verificationReport.open() : undefined
                     }
-                    openingReport={screeningReport.isPending}
+                    openingReport={verificationReport.isPending}
+                  />
+                </div>
+                <div className="mt-3">
+                  <BookingVerificationStatus
+                    kind="insurance"
+                    verification={insurance}
+                    loading={loadingInsurance}
+                    onShare={() => insuranceLink.share(insuranceOrder())}
+                    sharing={insuranceLink.sharing}
+                    runBlockedReason={
+                      runBlockedReason && t('verification.insurance.needsRenter')
+                    }
+                  />
+                  <InsuranceLinkDialog
+                    {...insuranceLink.dialog}
+                    renterName={values.customerName.trim()}
+                    defaultEmail={values.customerEmail.trim()}
+                    defaultPhone={values.customerPhone.trim()}
                   />
                 </div>
               </Card>
@@ -1301,11 +1343,16 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
 
                 <ReviewSection
                   title={t('form.review.verification')}
-                  count={screening ? 1 : 0}
+                  count={[verification, insurance].filter(Boolean).length}
                   onEdit={() => setStepIndex(1)}
                 >
-                  {screening ? (
-                    <BookingScreeningStatus screening={screening} />
+                  {verification || insurance ? (
+                    <div className="flex flex-col gap-3">
+                      {verification && <BookingVerificationStatus verification={verification} />}
+                      {insurance && (
+                        <BookingVerificationStatus kind="insurance" verification={insurance} />
+                      )}
+                    </div>
                   ) : (
                     <p className="text-fg-4 text-[14px]">{t('form.review.noVerification')}</p>
                   )}

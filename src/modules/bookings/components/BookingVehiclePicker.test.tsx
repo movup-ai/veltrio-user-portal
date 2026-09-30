@@ -50,6 +50,17 @@ function rowNames(): string[] {
 }
 
 describe('BookingVehiclePicker', () => {
+  it('marks the list invalid, with the same thin error edge an input gets', () => {
+    render(
+      <BookingVehiclePicker options={options(2)} selectedId="" onSelect={vi.fn()} hours={HOURS} invalid />,
+    )
+
+    const group = screen.getByRole('radiogroup')
+    expect(group).toHaveAttribute('aria-invalid', 'true')
+    expect(group).toHaveClass('outline', 'outline-error')
+    expect(group).not.toHaveClass('outline-2')
+  })
+
   it('shows five vehicles a page and pages through the rest', async () => {
     const user = userEvent.setup()
     render(<BookingVehiclePicker options={options(11)} selectedId="" onSelect={vi.fn()} hours={HOURS} />)

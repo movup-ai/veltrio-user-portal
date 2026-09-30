@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isValidSubdomain, slugify } from './slug'
+import { isReservedSubdomain, isValidSubdomain, isValidWebsite, slugify } from './slug'
 
 describe('slugify', () => {
   it('lowercases and hyphenates a company name', () => {
@@ -37,5 +37,31 @@ describe('isValidSubdomain', () => {
 
   it('rejects double hyphens, matching the backend', () => {
     expect(isValidSubdomain('sun--state')).toBe(false)
+  })
+})
+
+describe('isReservedSubdomain', () => {
+  it('rejects the names the API keeps for itself', () => {
+    // These passed the pattern and failed at the API with a bare "Request validation failed".
+    for (const name of ['app', 'admin', 'portal', 'www']) expect(isReservedSubdomain(name)).toBe(true)
+  })
+
+  it('allows an ordinary company name', () => {
+    expect(isReservedSubdomain('sun-state-rentals')).toBe(false)
+  })
+})
+
+describe('isValidWebsite', () => {
+  it('allows no website at all', () => {
+    expect(isValidWebsite('')).toBe(true)
+  })
+
+  it('accepts a bare host the way the API does, adding the scheme itself', () => {
+    expect(isValidWebsite('sunstaterentals.com')).toBe(true)
+    expect(isValidWebsite('https://sunstaterentals.com')).toBe(true)
+  })
+
+  it('rejects a host with no dot, which the API refuses', () => {
+    expect(isValidWebsite('sunstaterentals')).toBe(false)
   })
 })

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Download, Expand, FileText, Paperclip, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
@@ -20,12 +20,24 @@ interface DocumentUploadProps {
 }
 
 /**
- * Preview only, and only valid on this page. An object URL keeps the bytes out of React state
- * — a base64 data URL of a 10 MB scan is ~13 MB of string re-rendered on every keystroke, and
- * it would end up inside any draft the form serializes.
+ * Points an image or link at the file for as long as that element is on screen.
+ *
+ * The URL belongs to the element, not to the stored file: the form outlives the slot - stepping
+ * to Review and back remounts it - and a URL revoked on the way out left a broken image on the
+ * way back. An object URL rather than a data URL keeps a 10 MB scan out of React state, and the
+ * ref's cleanup releases it whenever the file changes or the element goes.
  */
-function previewUrl(file: File): string {
-  return URL.createObjectURL(file)
+function usePreviewRef(file: File | undefined) {
+  return useCallback(
+    (node: HTMLImageElement | HTMLAnchorElement | null) => {
+      if (!node || !file) return
+      const url = URL.createObjectURL(file)
+      if (node instanceof HTMLImageElement) node.src = url
+      else node.href = url
+      return () => URL.revokeObjectURL(url)
+    },
+    [file],
+  )
 }
 
 function formatSize(bytes: number): string {
@@ -53,23 +65,7 @@ export function DocumentUpload({
   const [isDragging, setIsDragging] = useState(false)
   const [isPreviewing, setIsPreviewing] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  /**
-   * An object URL pins its file in memory until it is released. Removing or replacing the file
-   * revokes it explicitly, but every other way out of the form — cancelling, saving a draft,
-   * submitting, or simply navigating away — would otherwise leave up to 10 MB per slot held
-   * for the life of the page. A ref, because the cleanup must see the URL as it was at unmount
-   * without re-running on every change.
-   */
-  const liveUrl = useRef<string | null>(null)
-  useEffect(() => {
-    liveUrl.current = value?.url ?? null
-  }, [value?.url])
-  useEffect(() => {
-    return () => {
-      if (liveUrl.current) URL.revokeObjectURL(liveUrl.current)
-    }
-  }, [])
+  const previewRef = usePreviewRef(value?.file)
 
   function accept_(fileList: FileList | null) {
     const file = fileList?.[0]
@@ -84,11 +80,7 @@ export function DocumentUpload({
       return
     }
 
-    // The slot only accepts a file when it is empty, but release any previous URL anyway:
-    // an object URL that is overwritten rather than revoked pins its file in memory for the
-    // life of the page.
-    if (value) URL.revokeObjectURL(value.url)
-    onChange({ id: crypto.randomUUID(), name: file.name, url: previewUrl(file), size: file.size, file })
+    onChange({ id: crypto.randomUUID(), name: file.name, size: file.size, file })
   }
 
   if (value) {
@@ -97,7 +89,7 @@ export function DocumentUpload({
       <div className={cn(SLOT, 'border-border bg-surface-2 border', className)}>
         <span className="border-border bg-surface flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[7px] border">
           {isImage ? (
-            <img src={value.url} alt="" className="size-full object-cover" />
+            <img ref={previewRef} alt="" className="size-full object-cover" />
           ) : (
             <FileText className="text-fg-4 size-4" aria-hidden />
           )}
@@ -119,7 +111,7 @@ export function DocumentUpload({
           </button>
         ) : (
           <a
-            href={value.url}
+            ref={previewRef}
             download={value.name}
             aria-label={t('upload.download', { label })}
             className="text-fg-4 hover:bg-surface-3 hover:text-foreground flex size-7 shrink-0 items-center justify-center rounded-[7px] transition-colors"
@@ -130,11 +122,7 @@ export function DocumentUpload({
         <button
           type="button"
           aria-label={t('upload.remove', { label })}
-          onClick={() => {
-            // The object URL pins the file in memory until it is released.
-            URL.revokeObjectURL(value.url)
-            onChange(null)
-          }}
+          onClick={() => onChange(null)}
           className="text-fg-4 hover:bg-surface-3 hover:text-foreground flex size-7 shrink-0 items-center justify-center rounded-[7px] transition-colors"
         >
           <X className="size-4" />
@@ -146,7 +134,7 @@ export function DocumentUpload({
           <DialogContent className="max-w-3xl gap-3 p-4">
             <DialogTitle className="truncate pr-8 text-[14.5px]">{value.name}</DialogTitle>
             <img
-              src={value.url}
+              ref={previewRef}
               alt={value.name}
               className="max-h-[70vh] w-full rounded-[7px] object-contain"
             />

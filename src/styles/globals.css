@@ -77,6 +77,26 @@
   }
 }
 
+/*
+ * The two type styles that carry a default colour sit a layer below the utilities, so a colour
+ * utility beside them wins. Among the utilities they came last and won instead: every
+ * `text-caption text-error` field error rendered as grey hint text.
+ */
+@layer components {
+  .text-description {
+    font-size: var(--text-description);
+    line-height: var(--text-description--line-height);
+    font-weight: var(--text-description--font-weight);
+    color: var(--color-muted-foreground);
+  }
+  .text-caption {
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+    font-weight: var(--text-caption--font-weight);
+    color: var(--color-muted-foreground);
+  }
+}
+
 @layer utilities {
   .text-page-title {
     font-size: var(--text-page-title);
@@ -97,18 +117,6 @@
     font-size: var(--text-label);
     line-height: var(--text-label--line-height);
     font-weight: var(--text-label--font-weight);
-  }
-  .text-description {
-    font-size: var(--text-description);
-    line-height: var(--text-description--line-height);
-    font-weight: var(--text-description--font-weight);
-    color: var(--color-muted-foreground);
-  }
-  .text-caption {
-    font-size: var(--text-caption);
-    line-height: var(--text-caption--line-height);
-    font-weight: var(--text-caption--font-weight);
-    color: var(--color-muted-foreground);
   }
 
   /*

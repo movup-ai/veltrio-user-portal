@@ -34,10 +34,20 @@ import { BookingTripCard } from '@/modules/bookings/components/BookingTripCard'
 import { RentalProgress } from '@/modules/bookings/components/RentalProgress'
 import { useBookingDetails } from '@/modules/bookings/hooks/use-bookings'
 import {
-  useOrderScreening,
-  useScreening,
-  useScreeningReport,
-} from '@/modules/bookings/hooks/use-screening'
+  useInsuranceLinkDialog,
+  useInsuranceResults,
+  useOrderVerification,
+  useVerification,
+  useVerificationReport,
+} from '@/modules/bookings/hooks/use-verification'
+import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
+import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
+import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
+import {
+  PROVIDER_KINDS,
+  type BookingVerification,
+  type ProviderKind,
+} from '@/modules/bookings/types/booking.types'
 
 /**
  * Cover shot for the booked car, with the placeholder sitting underneath rather than swapped in
@@ -78,9 +88,48 @@ export function BookingDetailsPage() {
 
   const { data: booking, isLoading, isError, refetch } = useBookingDetails(bookingId)
   // Its own query, so a check that takes days can be polled without refetching the whole page.
-  const { data: screening } = useScreening(bookingId)
-  const orderScreening = useOrderScreening(bookingId ?? '')
-  const screeningReport = useScreeningReport(bookingId ?? '')
+  const { data: background } = useVerification(bookingId, 'background')
+  const { data: insurance } = useVerification(bookingId, 'insurance')
+  const orderVerification = useOrderVerification(bookingId ?? '')
+  const verificationReport = useVerificationReport(bookingId ?? '')
+  // Still heard when a sent link is finished in this browser, such as one the desk opened.
+  useInsuranceResults()
+  const insuranceLink = useInsuranceLinkDialog()
+
+  const verifications: Partial<Record<ProviderKind, BookingVerification>> = { background, insurance }
+
+  const orderingKind: ProviderKind | undefined = orderVerification.isPending
+    ? 'background'
+    : undefined
+
+  /** The session to send the renter; asking again while it is open returns the same link. */
+  function insuranceOrder(): InsuranceOrderWire | undefined {
+    // Declared above the loading guard, so the booking is narrowed here rather than there.
+    if (!booking) return undefined
+    const { dateOfBirth } = booking.renter
+    // Older customers can lack one, and the API matches on it; say so rather than toast a 422.
+    if (!dateOfBirth) {
+      toast({ title: t('verification.insurance.needsDob'), variant: 'error' })
+      return undefined
+    }
+    return {
+      name: booking.renter.name,
+      email: booking.renter.email,
+      dateOfBirth,
+      reference: booking.reference,
+      redirectUri: insuranceReturnUri(window.location),
+    }
+  }
+
+  // Only the background check runs from here; insurance is sent to the renter (handleShare).
+  function handleOrder(kind: ProviderKind) {
+    if (kind === 'background') orderVerification.mutate()
+  }
+
+  function handleShare() {
+    const order = insuranceOrder()
+    if (order) insuranceLink.share(order)
+  }
 
   usePageBreadcrumb(bookingId)
   // Checking in a rental that has already been returned and closed is meaningless.
@@ -249,26 +298,22 @@ export function BookingDetailsPage() {
             checklist={
               <BookingChecklist
                 checks={booking.checks}
-                screening={screening}
-                ordering={orderScreening.isPending}
-                openingReport={screeningReport.isPending}
-                onOrderScreening={() => orderScreening.mutate()}
-                onViewScreeningReport={() => screeningReport.mutate()}
-                onAction={(key) => pending(t(`details.checks.${key}`))}
+                verifications={verifications}
+                providerKinds={PROVIDER_KINDS}
+                ordering={orderingKind}
+                openingReport={verificationReport.isPending}
+                onOrder={handleOrder}
+                onViewReport={() => verificationReport.open()}
+                onShare={handleShare}
+                sharing={insuranceLink.sharing ? 'insurance' : undefined}
+                closed={closed}
+                onAction={(kind) => pending(t(`details.checks.${kind}`))}
               />
             }
           />
 
-          {/* Nothing here applies once the car is back and the paperwork is closed — you can't
-              extend or cancel a rental that has already finished. */}
-          {!closed && (
-            <BookingManagePanel
-              onAction={(action) => {
-                if (action === 'cancel') return setConfirmCancel(true)
-                pending(t(`details.manage.${action}`))
-              }}
-            />
-          )}
+          {/* Under the renter: the booking's history reads best at the width of the page. */}
+          <BookingActivity events={booking.events} />
         </div>
 
         <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-4">
@@ -285,8 +330,16 @@ export function BookingDetailsPage() {
             onAction={(action) => pending(t(`details.agreement.${action}`))}
           />
 
-          {/* Last in the sidebar: a history to glance at, not something acted on. */}
-          <BookingActivity events={booking.events} />
+          {/* Nothing here applies once the car is back and the paperwork is closed — you can't
+              extend or cancel a rental that has already finished. */}
+          {!closed && (
+            <BookingManagePanel
+              onAction={(action) => {
+                if (action === 'cancel') return setConfirmCancel(true)
+                pending(t(`details.manage.${action}`))
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -304,6 +357,13 @@ export function BookingDetailsPage() {
           setConfirmCancel(false)
           pending(t('details.manage.cancel'))
         }}
+      />
+
+      <InsuranceLinkDialog
+        {...insuranceLink.dialog}
+        renterName={booking.renter.name}
+        defaultEmail={booking.renter.email}
+        defaultPhone={booking.renter.phone}
       />
     </PageContainer>
   )

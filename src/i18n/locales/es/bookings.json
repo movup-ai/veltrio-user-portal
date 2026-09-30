@@ -6,7 +6,6 @@
     "export": "Exportar",
     "newBooking": "Nueva reserva",
     "searchPlaceholder": "Buscar referencia, cliente, matrícula",
-    "pageNote": "Mostrando {{shown}} de {{total}} reservas",
     "noneFound": "No se encontraron reservas",
     "loading": "Cargando reservas…",
     "loadError": "No pudimos cargar sus reservas.",
@@ -433,7 +432,7 @@
       "download": "Descargar {{name}}"
     },
     "verification": {
-      "hint": "Verifique los antecedentes penales del conductor antes de entregar las llaves."
+      "hint": "Verifique los antecedentes del conductor y confirme su seguro antes de entregar las llaves."
     },
     "drivers": {
       "hint": "Cualquier otra persona autorizada a conducir. Cada una se factura por día de alquiler.",
@@ -462,6 +461,65 @@
     }
   },
   "verification": {
+    "title": "Verificación de antecedentes",
+    "state": {
+      "background": {
+        "notStarted": "Sin iniciar",
+        "running": "Checkr está buscando",
+        "clear": "Sin hallazgos",
+        "consider": "Requiere revisión",
+        "error": "No se pudo realizar",
+        "otherDates": "Otras fechas"
+      },
+      "insurance": {
+        "notStarted": "Sin iniciar",
+        "running": "Esperando al conductor",
+        "clear": "Cubierto",
+        "consider": "Requiere revisión",
+        "error": "No se pudo realizar",
+        "otherDates": "Otras fechas"
+      }
+    },
+    "hint": {
+      "background": {
+        "notStarted": "Busca antecedentes penales con el nombre y la fecha de nacimiento de esta reserva.",
+        "running": "Checkr sigue buscando. Normalmente termina en segundos.",
+        "clear": "No se encontraron antecedentes para este conductor.",
+        "consider": "Se encontraron antecedentes. Lea el informe antes de la entrega.",
+        "error": "Checkr no pudo realizar esta verificación. Al repetirla se empieza de nuevo.",
+        "otherDates": "La última verificación registrada fue para otra reserva."
+      },
+      "insurance": {
+        "notStarted": "El conductor conecta su propia aseguradora y comprobamos que la póliza cubre todos los días del alquiler.",
+        "running": "Esperando a que el conductor conecte su aseguradora. Envíe el enlace de nuevo si lo perdió.",
+        "clear": "Una póliza activa cubre todo el alquiler.",
+        "consider": "La póliza no basta por sí sola para este alquiler. Revísela antes de entregar las llaves.",
+        "error": "Axle no pudo completar esta verificación. Empezar de nuevo abre una sesión nueva.",
+        "otherDates": "La última verificación registrada fue para otro alquiler. Envíe el enlace para verificar estas fechas."
+      }
+    },
+    "action": {
+      "background": {
+        "order": "Verificar",
+        "orderAgain": "Repetir"
+      },
+      "insurance": {
+        "order": "Verificar seguro",
+        "orderAgain": "Verificar de nuevo",
+        "resume": "Reabrir sesión"
+      },
+      "viewReport": "Ver informe"
+    },
+    "toast": {
+      "ordered": "Verificación realizada",
+      "orderedDescription": "El resultado está en la lista de comprobación.",
+      "orderFailed": "No se pudo realizar la verificación",
+      "reportFailed": "No se pudo abrir el informe",
+      "insuranceFailed": "No se pudo iniciar la verificación del seguro",
+      "insuranceChecked": "Seguro verificado",
+      "insuranceUnfinished": "El conductor no terminó de conectar su seguro. Su enlace sigue funcionando.",
+      "insuranceReplaced": "Ese enlace de seguro fue reemplazado por uno más reciente, que sigue esperando al conductor."
+    },
     "background": {
       "label": "Verificación de antecedentes",
       "checking": "Comprobando si este conductor ya fue verificado…",
@@ -470,44 +528,28 @@
       "clearOn": "Verificado el {{when}} · sin hallazgos, no hace falta repetirlo",
       "recordsOn": "Verificado el {{when}} · se encontraron antecedentes, lea el informe antes de entregar las llaves",
       "needsRenter": "Añada primero el nombre completo, el correo y la fecha de nacimiento: Checkr necesita los tres."
-    }
-  },
-  "screening": {
-    "title": "Verificación de antecedentes",
-    "state": {
-      "notStarted": "Sin iniciar",
-      "running": "Checkr está buscando",
-      "clear": "Sin hallazgos",
-      "consider": "Requiere revisión",
-      "error": "No se pudo realizar"
     },
-    "hint": {
-      "notStarted": "Busca antecedentes penales con el nombre y la fecha de nacimiento de esta reserva.",
-      "running": "Checkr sigue buscando. Normalmente termina en segundos.",
-      "clear": "No se encontraron antecedentes para este conductor.",
-      "consider": "Se encontraron antecedentes. Un gerente debe revisarlos en Checkr y decidir.",
-      "error": "Checkr no pudo realizar esta verificación. Al repetirla se empieza de nuevo."
+    "insurance": {
+      "label": "Verificación de seguro",
+      "checking": "Comprobando si el seguro de este conductor ya fue verificado…",
+      "none": "Sin registros. Envíe al conductor un enlace para conectar su aseguradora desde su propio teléfono.",
+      "running": "Esperando a que el conductor conecte su aseguradora. El resultado aparecerá aquí cuando termine.",
+      "clearOn": "Verificado el {{when}} · una póliza activa cubre todo el alquiler",
+      "recordsOn": "Verificado el {{when}} · la póliza no basta para este alquiler, revísela antes de entregar las llaves",
+      "needsRenter": "Añada primero el nombre completo, el correo y la fecha de nacimiento del conductor. La póliza debe incluir a este conductor, y el resultado se guarda con su correo.",
+      "needsDob": "Este conductor no tiene fecha de nacimiento registrada. Añádala primero a su perfil.",
+      "otherDates": "Verificado para {{range}} · no para estas fechas, envíe el enlace para verificar este alquiler",
+      "otherRental": "Verificado para otro alquiler · envíe el enlace para verificar estas fechas"
     },
-    "action": {
-      "order": "Verificar",
-      "orderAgain": "Repetir",
-      "viewReport": "Ver informe"
-    },
-    "toast": {
-      "ordered": "Verificación realizada",
-      "orderedDescription": "El resultado está en la lista de comprobación.",
-      "orderFailed": "No se pudo realizar la verificación",
-      "reportFailed": "No se pudo abrir el informe"
-    },
-    "reusedOn": "Verificado el {{when}} para una reserva anterior"
+    "policyExpires": "Vence el {{date}}"
   },
   "verificationPage": {
     "title": "Verificación",
-    "description": "Ejecute una verificación de antecedentes penales sobre cualquier persona: un conductor, un contratista o un nuevo empleado.",
+    "description": "Realice una verificación de antecedentes penales o del seguro a cualquier persona: un conductor, un contratista o un nuevo empleado.",
     "runCheck": "Ejecutar verificación",
     "form": {
       "title": "¿A quién va a verificar?",
-      "hint": "Checkr coincide por nombre y fecha de nacimiento.",
+      "hint": "Elija una verificación y luego a quién va dirigida. Todas coinciden por nombre y fecha de nacimiento.",
       "name": "Nombre completo",
       "namePlaceholder": "Jane Doe",
       "dateOfBirth": "Fecha de nacimiento",
@@ -521,26 +563,95 @@
       "statePlaceholder": "TX",
       "zip": "Código postal",
       "zipPlaceholder": "73301",
-      "submit": "Ejecutar verificación",
-      "cancel": "Cancelar"
+      "submit": "Verificar antecedentes",
+      "kindLabel": "Tipo de verificación",
+      "kinds": {
+        "background": {
+          "title": "Antecedentes",
+          "meta": "Al instante",
+          "description": "Busca antecedentes penales por nombre y fecha de nacimiento."
+        },
+        "insurance": {
+          "title": "Seguro",
+          "meta": "Se envía un enlace",
+          "description": "Conecta su aseguradora desde un enlace seguro en su propio teléfono."
+        }
+      },
+      "next": {
+        "background": "El resultado aparece en la lista de abajo, normalmente en segundos.",
+        "insurance": "Recibirá un enlace para copiar o enviar. El resultado aparece abajo cuando termine."
+      },
+      "createLink": "Crear enlace de seguro",
+      "cancel": "Cancelar",
+      "coverNeeded": "Cobertura de seguro necesaria",
+      "coverHint": "Los días que la póliza debe cubrir, como un alquiler. Déjelo en blanco para comprobar que está vigente hoy.",
+      "coverToday": "Solo hoy"
     },
     "log": {
-      "title": "Verificaciones realizadas",
-      "rowCount": "{{count}} verificación",
+      "title": "Historial de verificaciones",
       "rowCount_other": "{{count}} verificaciones",
-      "page": "Página {{page}} de {{pages}}",
       "empty": "Aún no hay verificaciones. Ejecute una arriba.",
       "columns": {
         "person": "Persona",
         "source": "Origen",
         "checked": "Verificado",
-        "result": "Resultado"
+        "result": "Resultado",
+        "kind": "Verificación"
       },
       "renter": "Conductor",
       "standalone": "Independiente",
       "viewReport": "Ver informe",
-      "notRunYet": "Sin finalizar",
+      "delete": "Eliminar",
+      "deleteTitle": "¿Eliminar esta verificación?",
+      "deleteDescription": "La {{check}} de {{name}} se elimina del historial para siempre. El registro de auditoría conserva constancia de la eliminación.",
+      "deleted": "Verificación eliminada",
+      "deleteFailed": "No se pudo eliminar la verificación",
+      "inProgress": "En curso",
+      "startedOn": "Iniciada el {{when}}",
       "loadError": "No se pudieron cargar las verificaciones."
+    }
+  },
+  "insuranceLink": {
+    "action": "Enviar enlace",
+    "actionNew": "Enviar enlace nuevo",
+    "title": "Enviar enlace de seguro",
+    "description": "{{name}} conecta su aseguradora desde este enlace, en cualquier dispositivo. El resultado aparece en la verificación cuando termina.",
+    "opening": "Creando el enlace…",
+    "linkLabel": "Enlace",
+    "copy": "Copiar enlace",
+    "copied": "Copiado",
+    "copyFailed": "No se pudo copiar el enlace. Selecciónelo y cópielo manualmente.",
+    "email": "Correo",
+    "sms": "Mensaje de texto",
+    "emailLabel": "Correo del conductor",
+    "phoneLabel": "Móvil del conductor",
+    "sendEmail": "Enviar correo",
+    "sendSms": "Enviar mensaje",
+    "sent": {
+      "email": "Enlace enviado por correo al conductor",
+      "sms": "Enlace enviado por mensaje al conductor"
+    },
+    "sendFailed": "No se pudo enviar el enlace",
+    "sendingSoon": "El envío por correo o mensaje llegará pronto. Por ahora, copie el enlace y envíeselo usted mismo al conductor."
+  },
+  "insuranceReturn": {
+    "finishing": "Finalizando la verificación del seguro…",
+    "done": {
+      "title": "Su seguro está conectado",
+      "body": "Gracias. Puede cerrar esta página: la empresa de alquiler ya tiene lo que necesita."
+    },
+    "unfinished": {
+      "title": "El seguro aún no está conectado",
+      "body": "La conexión no se completó. Abra de nuevo el enlace que recibió para intentarlo otra vez."
+    },
+    "failed": {
+      "title": "Algo salió mal",
+      "body": "No pudimos terminar de verificar su seguro. Abra el enlace de nuevo o contacte con la empresa de alquiler."
+    },
+    "back": "Volver a Veltrio",
+    "replaced": {
+      "title": "Este enlace fue reemplazado",
+      "body": "La empresa de alquiler le envió un enlace más reciente. Ábralo para conectar su seguro."
     }
   }
 }

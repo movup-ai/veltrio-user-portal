@@ -90,10 +90,12 @@ export function BookingVehiclePicker({
       <div
         className={cn(
           'divide-border-soft divide-y',
-          invalid && 'rounded-lg outline-2 -outline-offset-1 outline-[var(--color-error)]',
+          // The same 1px error edge an invalid input gets, rather than a heavier frame.
+          invalid && 'outline-error rounded-lg outline -outline-offset-1',
         )}
         role="radiogroup"
         aria-label={t('form.vehicle.pick')}
+        aria-invalid={invalid || undefined}
       >
         {visible.map(({ vehicle: v, bookedUntil }) => {
           const selected = v.id === selectedId

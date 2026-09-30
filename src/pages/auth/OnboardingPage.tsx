@@ -17,7 +17,7 @@ import { authApi, FLEET_SIZES } from '@/services/auth/auth.api'
 import { ME_QUERY_KEY, useMe } from '@/services/auth/use-me'
 import { ApiError } from '@/types/api'
 import { countryOptions, isCountryCode } from '@/utils/countries'
-import { isValidSubdomain, slugify } from '@/utils/slug'
+import { isReservedSubdomain, isValidSubdomain, isValidWebsite, slugify } from '@/utils/slug'
 
 const TIMEZONES = Intl.supportedValuesOf('timeZone')
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -30,8 +30,9 @@ function onboardingSchema(t: TFunction<'auth'>) {
       .string()
       .trim()
       .min(1, t('errors.subdomainRequired'))
-      .refine(isValidSubdomain, t('errors.subdomainInvalid')),
-    website: z.string().trim(),
+      .refine(isValidSubdomain, t('errors.subdomainInvalid'))
+      .refine((value) => !isReservedSubdomain(value), t('errors.subdomainReserved')),
+    website: z.string().trim().refine(isValidWebsite, t('errors.websiteInvalid')),
     country: z.string().refine(isCountryCode, t('errors.countryRequired')),
     fleetSize: z.enum(FLEET_SIZES, t('errors.fleetSizeRequired')),
     timezone: z.string().min(1, t('errors.timezoneRequired')),
@@ -60,15 +61,17 @@ export function OnboardingPage() {
 
   const countries = useMemo(() => countryOptions(i18n.resolvedLanguage ?? 'en'), [i18n.resolvedLanguage])
   const countryNames = useMemo(() => countries.map((c) => c.name), [countries])
+  const schema = useMemo(() => onboardingSchema(t), [t])
 
   const {
     control,
     register,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors, isSubmitting, isSubmitted },
   } = useForm<OnboardingValues>({
-    resolver: zodResolver(useMemo(() => onboardingSchema(t), [t])),
+    resolver: zodResolver(schema),
     defaultValues: {
       ownerFullName: '',
       tenantName: '',
@@ -106,6 +109,15 @@ export function OnboardingPage() {
         setFormError(t('errors.subdomainTaken'))
         return
       }
+      // A 422 names the fields it rejected. Showing only "Request validation failed" left the
+      // form with nothing to fix, so each message goes under the field it belongs to.
+      const fieldErrors = error instanceof ApiError ? (error.fieldErrors ?? []) : []
+      // The request's keys are the form's names, so the schema says which ones a field shows.
+      const placed = fieldErrors.filter(({ field }) => field in schema.shape)
+      for (const { field, message } of placed) {
+        setError(field as keyof OnboardingValues, { message }, { shouldFocus: true })
+      }
+      if (placed.length) return
       setFormError(error instanceof Error ? error.message : t('errors.unknown'))
     }
   }
