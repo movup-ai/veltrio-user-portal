@@ -340,6 +340,8 @@ export interface BookingVerification {
   canReorder: boolean
   /** True when this result was run for an earlier booking of the same renter. */
   reused: boolean
+  /** The policy an insurance verdict was read from, once the renter has linked one. */
+  policy?: { carrier?: string; policyNumber?: string; expiresOn?: string }
   completedAt?: string
   createdAt: string
   updatedAt: string

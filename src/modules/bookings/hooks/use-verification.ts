@@ -18,10 +18,9 @@ import type {
   StandaloneOrderWire,
   VerificationOrder,
 } from '../api/booking.mapper'
-import { verificationApi } from '../api/verification.api'
+import { verificationApi, type CoverWindow } from '../api/verification.api'
 import {
   TERMINAL_VERIFICATION_STATUSES,
-  type BookingVerification,
   type ProviderKind,
 } from '../types/booking.types'
 import { readInsuranceRedirect } from '../utils/booking.insurance-redirect'
@@ -36,8 +35,8 @@ const VERIFICATION_POLL_MS = 15_000
 export const verificationKeys = {
   detail: (reference: string, kind: ProviderKind = 'background') =>
     [...bookingKeys.all, 'verification', reference, kind] as const,
-  forEmail: (email: string, kind: ProviderKind = 'background') =>
-    [...bookingKeys.all, 'verification', 'email', email, kind] as const,
+  forEmail: (email: string, kind: ProviderKind = 'background', cover?: CoverWindow) =>
+    [...bookingKeys.all, 'verification', 'email', email, kind, cover ?? null] as const,
   logs: () => ['verifications'] as const,
   log: (params: PaginationParams) => ['verifications', params] as const,
 }
@@ -52,14 +51,15 @@ export const verificationKeys = {
 export function useVerificationByEmail(
   email: string | undefined,
   kind: ProviderKind = 'background',
+  cover?: CoverWindow,
 ) {
   // Debounced and shape-checked: the counter types this a character at a time, and a half
   // written address is a request that can only come back empty.
   const trimmed = useDebounced(email?.trim().toLowerCase() ?? '')
 
   return useQuery({
-    queryKey: verificationKeys.forEmail(trimmed, kind),
-    queryFn: () => verificationApi.forEmail(trimmed, kind),
+    queryKey: verificationKeys.forEmail(trimmed, kind, cover),
+    queryFn: () => verificationApi.forEmail(trimmed, kind, cover),
     enabled: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed),
     refetchInterval: (query) => {
       const status = query.state.data?.status
@@ -275,9 +275,12 @@ export function useStartInsurance() {
           tab.opener = null
           tab.location.href = session.ignitionUri
         } else {
-          // No tab to use. Unlike a report, leaving is safe here: Axle's redirect returns the
-          // counter to this same page, where the result is read back.
-          window.location.assign(session.ignitionUri)
+          // Blocked. Leaving for Axle here would throw away a booking form half filled in, so
+          // stay: the session is open, and Send link hands it over without leaving the page.
+          toast({
+            title: i18n.t('bookings:verification.toast.popupBlocked'),
+            description: i18n.t('bookings:verification.toast.popupBlockedDescription'),
+          })
         }
         return session
       } catch (error) {
@@ -316,24 +319,17 @@ function broadcast(message: InsuranceMessage) {
 }
 
 /**
- * Puts an outcome on screen: the verdict onto every cached card showing that check at once,
- * with a refetch behind it for the rest of the record, and a toast saying what happened.
+ * Puts an outcome on screen: refetches the cards and the log, and a toast saying what happened.
+ * The verdict comes from those staff reads - the public completion deliberately carries none.
  */
 function announce(queryClient: QueryClient, message: InsuranceMessage) {
   if (message.type === 'completing') return
   if (message.type === 'finished') {
-    const { verificationId, status } = message.outcome
-    queryClient.setQueriesData<BookingVerification | undefined>(
-      { queryKey: [...bookingKeys.all, 'verification'] },
-      (old) => (old?.id === verificationId ? { ...old, status } : old),
-    )
     queryClient.invalidateQueries({ queryKey: verificationKeys.logs() })
     queryClient.invalidateQueries({ queryKey: bookingKeys.all })
     toast({
       title: i18n.t('bookings:verification.toast.insuranceChecked'),
-      description: i18n.t(`bookings:verification.hint.insurance.${status}`),
-      // Not an error when the cover falls short: the check worked, and a human decides.
-      variant: status === 'clear' ? 'success' : 'default',
+      description: i18n.t('bookings:verification.toast.orderedDescription'),
     })
     return
   }

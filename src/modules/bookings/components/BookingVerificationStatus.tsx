@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useFormatters } from '@/i18n'
 import type { BookingVerification, ProviderKind } from '../types/booking.types'
 import { verificationView, type VerificationTone } from '../utils/booking.verification'
+import { PolicyLine } from './VerificationCheckRow'
 
 interface RunCheckButtonProps {
   label: string
@@ -171,6 +172,7 @@ export function BookingVerificationStatus({
               {verification.failureReason}
             </span>
           )}
+          {verification?.policy && <PolicyLine policy={verification.policy} />}
         </span>
 
         <span className="flex shrink-0 items-center gap-2">

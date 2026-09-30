@@ -386,6 +386,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const { data: insurance, isFetching: loadingInsurance } = useVerificationByEmail(
     values.customerEmail,
     'insurance',
+    { from: values.pickupDate, to: values.returnDate },
   )
   const startInsurance = useStartInsurance()
   const completingInsurance = useInsuranceResults()
@@ -396,7 +397,8 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
     name: values.customerName.trim(),
     email: values.customerEmail.trim().toLowerCase(),
     dateOfBirth: values.customerDob,
-    // There is no booking yet to read the rental's last day from.
+    // There is no booking yet to read the rental window from.
+    coversFrom: values.pickupDate,
     coversThrough: values.returnDate,
     redirectUri: insuranceReturnUri(window.location),
   })

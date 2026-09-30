@@ -12,6 +12,8 @@ interface ImportMetaEnv {
    * development and in CI: the picker falls back to a plain text field.
    */
   readonly VITE_GOOGLE_MAPS_API_KEY?: string
+  /** `true` once the API can email or text a renter their insurance link. */
+  readonly VITE_INSURANCE_LINK_DELIVERY?: string
 }
 
 interface ImportMeta {

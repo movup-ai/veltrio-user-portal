@@ -108,4 +108,35 @@ describe('the insurance card', () => {
 
     expect(onRunCheck).toHaveBeenCalledOnce()
   })
+
+  it('says which policy the verdict came from', () => {
+    renderRow(
+      <BookingVerificationStatus
+        kind="insurance"
+        verification={verification({
+          hasReport: false,
+          policy: { carrier: 'State Farm', policyNumber: 'SF-123456', expiresOn: '2027-01-01' },
+        })}
+      />,
+    )
+
+    expect(screen.getByText(/^State Farm · SF-123456 · Expires /)).toBeInTheDocument()
+  })
+
+  it('shows the expiry date itself, not the day before in a US time zone', () => {
+    // new Date('2027-01-01') is UTC midnight: 31 December anywhere west of Greenwich.
+    vi.stubEnv('TZ', 'America/New_York')
+    try {
+      renderRow(
+        <BookingVerificationStatus
+          kind="insurance"
+          verification={verification({ hasReport: false, policy: { expiresOn: '2027-01-01' } })}
+        />,
+      )
+
+      expect(screen.getByText('Expires Jan 1')).toBeInTheDocument()
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
 })

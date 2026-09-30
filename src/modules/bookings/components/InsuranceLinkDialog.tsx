@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/use-toast'
+import { insuranceLinkDelivery } from '@/lib/features'
 import { useSendInsuranceLink, type InsuranceLinkSession } from '../hooks/use-verification'
 
 const COPIED_FOR_MS = 2_000
@@ -20,6 +21,8 @@ interface InsuranceLinkDialogProps {
   renterName: string
   defaultEmail?: string
   defaultPhone?: string
+  /** Whether Send email and Send text are offered. Defaults to whether the API can yet. */
+  canSend?: boolean
 }
 
 /**
@@ -33,6 +36,7 @@ export function InsuranceLinkDialog({
   renterName,
   defaultEmail = '',
   defaultPhone = '',
+  canSend = insuranceLinkDelivery,
 }: InsuranceLinkDialogProps) {
   const { t } = useTranslation('bookings')
 
@@ -46,7 +50,12 @@ export function InsuranceLinkDialog({
 
         {/* Mounted per link, so each opening starts from the renter's current details. */}
         {session ? (
-          <LinkBody session={session} defaultEmail={defaultEmail} defaultPhone={defaultPhone} />
+          <LinkBody
+            session={session}
+            defaultEmail={defaultEmail}
+            defaultPhone={defaultPhone}
+            canSend={canSend}
+          />
         ) : (
           <LoadingState label={t('insuranceLink.opening')} />
         )}
@@ -59,10 +68,12 @@ function LinkBody({
   session,
   defaultEmail,
   defaultPhone,
+  canSend,
 }: {
   session: InsuranceLinkSession
   defaultEmail: string
   defaultPhone: string
+  canSend: boolean
 }) {
   const { t } = useTranslation('bookings')
   const send = useSendInsuranceLink(session.verificationId)
@@ -99,36 +110,40 @@ function LinkBody({
         </div>
       </div>
 
-      <Tabs defaultValue="email">
-        <TabsList>
-          <TabsTrigger value="email">{t('insuranceLink.email')}</TabsTrigger>
-          <TabsTrigger value="sms">{t('insuranceLink.sms')}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="email" className="mt-3">
-          <SendRow
-            id="insurance-link-email"
-            type="email"
-            label={t('insuranceLink.emailLabel')}
-            value={email}
-            onChange={setEmail}
-            action={t('insuranceLink.sendEmail')}
-            sending={send.isPending && send.variables?.channel === 'email'}
-            onSend={() => send.mutate({ channel: 'email', to: email.trim() })}
-          />
-        </TabsContent>
-        <TabsContent value="sms" className="mt-3">
-          <SendRow
-            id="insurance-link-sms"
-            type="tel"
-            label={t('insuranceLink.phoneLabel')}
-            value={phone}
-            onChange={setPhone}
-            action={t('insuranceLink.sendSms')}
-            sending={send.isPending && send.variables?.channel === 'sms'}
-            onSend={() => send.mutate({ channel: 'sms', to: phone.trim() })}
-          />
-        </TabsContent>
-      </Tabs>
+      {!canSend ? (
+        <p className="text-fg-4 m-0 text-[12.5px]">{t('insuranceLink.sendingSoon')}</p>
+      ) : (
+        <Tabs defaultValue="email">
+          <TabsList>
+            <TabsTrigger value="email">{t('insuranceLink.email')}</TabsTrigger>
+            <TabsTrigger value="sms">{t('insuranceLink.sms')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="email" className="mt-3">
+            <SendRow
+              id="insurance-link-email"
+              type="email"
+              label={t('insuranceLink.emailLabel')}
+              value={email}
+              onChange={setEmail}
+              action={t('insuranceLink.sendEmail')}
+              sending={send.isPending && send.variables?.channel === 'email'}
+              onSend={() => send.mutate({ channel: 'email', to: email.trim() })}
+            />
+          </TabsContent>
+          <TabsContent value="sms" className="mt-3">
+            <SendRow
+              id="insurance-link-sms"
+              type="tel"
+              label={t('insuranceLink.phoneLabel')}
+              value={phone}
+              onChange={setPhone}
+              action={t('insuranceLink.sendSms')}
+              sending={send.isPending && send.variables?.channel === 'sms'}
+              onSend={() => send.mutate({ channel: 'sms', to: phone.trim() })}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
     </>
   )
 }

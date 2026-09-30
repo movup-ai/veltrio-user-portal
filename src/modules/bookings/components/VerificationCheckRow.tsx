@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { Check, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { fromDateValue } from '@/components/ui/date-range-picker'
+import { useFormatters } from '@/i18n'
 import type { BookingVerification, ProviderKind } from '../types/booking.types'
 import { verificationView, type VerificationTone } from '../utils/booking.verification'
 
@@ -15,6 +17,25 @@ interface VerificationCheckRowProps {
   /** Hands the renter a link to finish the check on their own device, where the kind allows. */
   onShare?: () => void
   sharing?: boolean
+}
+
+/**
+ * Which policy an insurance verdict was read from - "State Farm · SF-123456 · Expires 1 Jan" -
+ * so the counter can tell the renter which cover fell short, or when it runs out.
+ */
+export function PolicyLine({ policy }: { policy: NonNullable<BookingVerification['policy']> }) {
+  const { t } = useTranslation('bookings')
+  const { shortDate } = useFormatters()
+  // A date, not an instant: `new Date('2027-01-01')` is UTC midnight, a day early in the US.
+  const expires = policy.expiresOn ? fromDateValue(policy.expiresOn) : undefined
+  const parts = [
+    policy.carrier,
+    policy.policyNumber,
+    expires && t('verification.policyExpires', { date: shortDate(expires) }),
+  ].filter(Boolean)
+
+  if (parts.length === 0) return null
+  return <span className="text-fg-3 mt-1 block text-[11.5px]">{parts.join(' · ')}</span>
 }
 
 const DOT: Record<VerificationTone, string> = {
@@ -110,6 +131,7 @@ export function VerificationCheckRow({
       {verification?.failureReason && (
         <p className="text-fg-4 m-0 mt-1 text-[11.5px] italic">{verification.failureReason}</p>
       )}
+      {verification?.policy && <PolicyLine policy={verification.policy} />}
 
       {/* mt-auto pins the buttons to the bottom so they align across tiles of unequal height;
           side by side so a tile with two actions is no taller than one with a single. */}

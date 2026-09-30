@@ -334,9 +334,25 @@ describe('toVerification', () => {
       hasReport: false,
       canReorder: false,
       reused: false,
+      policy: undefined,
       completedAt: undefined,
       createdAt: '2026-09-20T10:00:00Z',
       updatedAt: '2026-09-20T10:00:00Z',
+    })
+  })
+
+  it('names the policy an insurance verdict was read from, in words rather than a slug', () => {
+    const verification = toVerification(
+      verificationWire({
+        status: 'clear',
+        policy: { carrier: 'state-farm', policyNumber: 'SF-123456', expiresOn: '2027-01-01' },
+      }),
+    )
+
+    expect(verification.policy).toEqual({
+      carrier: 'State Farm',
+      policyNumber: 'SF-123456',
+      expiresOn: '2027-01-01',
     })
   })
 

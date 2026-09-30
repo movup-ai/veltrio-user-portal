@@ -2,10 +2,16 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { FileCheck2, Send, ShieldCheck } from 'lucide-react'
+import { CalendarRange, FileCheck2, Send, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
+import {
+  DateRangePicker,
+  EMPTY_DATE_RANGE,
+  fromDateValue,
+  type DateRange,
+} from '@/components/ui/date-range-picker'
 import { Input } from '@/components/ui/input'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import type { Cell, Column, Row } from '@/components/data-display/record-table.types'
@@ -48,6 +54,8 @@ export function VerificationPage() {
   const { t } = useTranslation('bookings')
   const { t: tValidation } = useTranslation('validation')
   const { shortDate } = useFormatters()
+  // Insurance only: the days the cover has to span. Blank checks that a policy is in force today.
+  const [cover, setCover] = useState<DateRange>(EMPTY_DATE_RANGE)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
@@ -78,7 +86,20 @@ export function VerificationPage() {
   async function insuranceOrder(): Promise<InsuranceOrderWire | undefined> {
     if (!(await form.trigger(['name', 'dateOfBirth']))) return undefined
     const { name, dateOfBirth } = form.getValues()
-    return { name: name.trim(), dateOfBirth, redirectUri: insuranceReturnUri(window.location) }
+    return {
+      name: name.trim(),
+      dateOfBirth,
+      coversFrom: cover.from || undefined,
+      coversThrough: cover.to || cover.from || undefined,
+      redirectUri: insuranceReturnUri(window.location),
+    }
+  }
+
+  function coverLabel({ from, to }: DateRange): string {
+    const start = fromDateValue(from)
+    if (!start) return t('verificationPage.form.coverToday')
+    const end = fromDateValue(to)
+    return end && to !== from ? `${shortDate(start)} – ${shortDate(end)}` : shortDate(start)
   }
 
   async function onVerifyInsurance() {
@@ -274,6 +295,33 @@ export function VerificationPage() {
                 )}
               </FormField>
             </div>
+          </div>
+
+          <div className="border-border-soft border-t pt-4">
+            <FormField
+              label={t('verificationPage.form.coverNeeded')}
+              description={t('verificationPage.form.coverHint')}
+              className="md:max-w-[340px]"
+            >
+              {({ id, 'aria-describedby': describedBy }) => (
+                <DateRangePicker
+                  value={cover}
+                  onChange={setCover}
+                  trigger={
+                    <Button
+                      id={id}
+                      aria-describedby={describedBy}
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-between font-normal"
+                    >
+                      {coverLabel(cover)}
+                      <CalendarRange className="size-4 opacity-50" aria-hidden />
+                    </Button>
+                  }
+                />
+              )}
+            </FormField>
           </div>
 
           <div className="flex flex-wrap justify-end gap-2">

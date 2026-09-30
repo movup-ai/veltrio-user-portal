@@ -26,8 +26,8 @@ function renderPage(message: InsuranceMessage | undefined, signedIn = false) {
 
 describe('the page a renter returns to', () => {
   it('thanks the renter without telling them the verdict', () => {
-    // Cover that falls short is for the rental company to raise, not a page to break it on.
-    renderPage({ type: 'finished', outcome: { verificationId: 'v1', status: 'consider' } })
+    // The verdict is for the rental company to raise, not a page to break it on.
+    renderPage({ type: 'finished', outcome: { verificationId: 'v1' } })
 
     expect(screen.getByRole('heading')).toHaveTextContent('Your insurance is connected')
     expect(screen.queryByText(/review|covered|policy/i)).not.toBeInTheDocument()
@@ -40,7 +40,7 @@ describe('the page a renter returns to', () => {
   })
 
   it('takes staff back, when their own tab landed here because the popup was blocked', () => {
-    renderPage({ type: 'finished', outcome: { verificationId: 'v1', status: 'clear' } }, true)
+    renderPage({ type: 'finished', outcome: { verificationId: 'v1' } }, true)
 
     expect(screen.getByRole('link', { name: 'Back to Veltrio' })).toBeInTheDocument()
   })

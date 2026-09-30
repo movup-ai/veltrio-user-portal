@@ -513,7 +513,9 @@
       "reportFailed": "Could not open the report",
       "insuranceFailed": "Could not start the insurance check",
       "insuranceChecked": "Insurance checked",
-      "insuranceUnfinished": "The renter did not finish connecting their insurance. The session stays open to reopen."
+      "insuranceUnfinished": "The renter did not finish connecting their insurance. The session stays open to reopen.",
+      "popupBlocked": "The browser blocked the new tab",
+      "popupBlockedDescription": "The session is open. Allow pop-ups for this site, or use Send link to give the renter the link."
     },
     "background": {
       "label": "Background check",
@@ -534,7 +536,8 @@
       "needsRenter": "Add the renter’s full name, email and date of birth first.",
       "needsDob": "This renter has no date of birth on file. Add it to their profile first.",
       "opening": "Opening a secure connection to your insurer…"
-    }
+    },
+    "policyExpires": "Expires {{date}}"
   },
   "verificationPage": {
     "title": "Verification",
@@ -558,7 +561,10 @@
       "zipPlaceholder": "73301",
       "submit": "Run background check",
       "cancel": "Cancel",
-      "verifyInsurance": "Verify insurance"
+      "verifyInsurance": "Verify insurance",
+      "coverNeeded": "Insurance cover needed",
+      "coverHint": "The days the policy has to cover, such as a rental. Leave blank to check it is in force today.",
+      "coverToday": "Today only"
     },
     "log": {
       "title": "Checks run",
@@ -597,7 +603,8 @@
       "email": "Link emailed to the renter",
       "sms": "Link texted to the renter"
     },
-    "sendFailed": "Could not send the link"
+    "sendFailed": "Could not send the link",
+    "sendingSoon": "Sending by email or text is coming soon. For now, copy the link and send it to the renter yourself."
   },
   "insuranceReturn": {
     "finishing": "Finishing the insurance check…",

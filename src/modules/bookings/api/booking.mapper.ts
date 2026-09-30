@@ -115,7 +115,8 @@ export interface InsuranceOrderWire {
   dateOfBirth: string
   email?: string
   reference?: string
-  /** The rental's last day, from the booking form; the API reads it off the booking otherwise. */
+  /** The rental window, from the booking form; the API reads it off the booking otherwise. */
+  coversFrom?: string
   coversThrough?: string
   redirectUri: string
 }
@@ -133,10 +134,9 @@ export interface InsuranceCallbackWire {
   authCode: string
 }
 
-/** All the public completion returns: the verdict, not the person or their policy. */
+/** All the public completion returns. No verdict: anyone holding the return link could read it. */
 export interface InsuranceOutcomeWire {
   verificationId: string
-  status: VerificationStatus
 }
 
 /** Sends the renter their session link. The API side of this is not built yet. */
@@ -176,9 +176,17 @@ export interface VerificationWire {
   hasReport: boolean
   canReorder: boolean
   reused: boolean
+  policy?: InsurancePolicyWire | null
   completedAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+/** The policy behind an insurance verdict. `carrier` is Axle's slug, such as `state-farm`. */
+export interface InsurancePolicyWire {
+  carrier: string | null
+  policyNumber: string | null
+  expiresOn: string | null
 }
 
 export interface BookedIntervalWire {
@@ -296,10 +304,26 @@ export function toVerification(wire: VerificationWire): BookingVerification {
     hasReport: wire.hasReport,
     canReorder: wire.canReorder,
     reused: wire.reused,
+    policy: wire.policy
+      ? {
+          carrier: wire.policy.carrier ? toCarrierName(wire.policy.carrier) : undefined,
+          policyNumber: wire.policy.policyNumber ?? undefined,
+          expiresOn: wire.policy.expiresOn ?? undefined,
+        }
+      : undefined,
     completedAt: wire.completedAt ?? undefined,
     createdAt: wire.createdAt,
     updatedAt: wire.updatedAt,
   }
+}
+
+/** `state-farm` → `State Farm`: Axle names carriers by slug. */
+function toCarrierName(slug: string): string {
+  return slug
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(' ')
 }
 
 export function toInterval(wire: BookedIntervalWire): BookedInterval {

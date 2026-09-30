@@ -513,7 +513,9 @@
       "reportFailed": "No se pudo abrir el informe",
       "insuranceFailed": "No se pudo iniciar la verificación del seguro",
       "insuranceChecked": "Seguro verificado",
-      "insuranceUnfinished": "El conductor no terminó de conectar su seguro. La sesión sigue abierta para reabrirla."
+      "insuranceUnfinished": "El conductor no terminó de conectar su seguro. La sesión sigue abierta para reabrirla.",
+      "popupBlocked": "El navegador bloqueó la pestaña nueva",
+      "popupBlockedDescription": "La sesión está abierta. Permita las ventanas emergentes para este sitio o use Enviar enlace para darle el enlace al conductor."
     },
     "background": {
       "label": "Verificación de antecedentes",
@@ -534,7 +536,8 @@
       "needsRenter": "Añada primero el nombre completo, el correo y la fecha de nacimiento del conductor.",
       "needsDob": "Este conductor no tiene fecha de nacimiento registrada. Añádala primero a su perfil.",
       "opening": "Abriendo una conexión segura con su aseguradora…"
-    }
+    },
+    "policyExpires": "Vence el {{date}}"
   },
   "verificationPage": {
     "title": "Verificación",
@@ -558,7 +561,10 @@
       "zipPlaceholder": "73301",
       "submit": "Verificar antecedentes",
       "cancel": "Cancelar",
-      "verifyInsurance": "Verificar seguro"
+      "verifyInsurance": "Verificar seguro",
+      "coverNeeded": "Cobertura de seguro necesaria",
+      "coverHint": "Los días que la póliza debe cubrir, como un alquiler. Déjelo en blanco para comprobar que está vigente hoy.",
+      "coverToday": "Solo hoy"
     },
     "log": {
       "title": "Verificaciones realizadas",
@@ -597,7 +603,8 @@
       "email": "Enlace enviado por correo al conductor",
       "sms": "Enlace enviado por mensaje al conductor"
     },
-    "sendFailed": "No se pudo enviar el enlace"
+    "sendFailed": "No se pudo enviar el enlace",
+    "sendingSoon": "El envío por correo o mensaje llegará pronto. Por ahora, copie el enlace y envíeselo usted mismo al conductor."
   },
   "insuranceReturn": {
     "finishing": "Finalizando la verificación del seguro…",

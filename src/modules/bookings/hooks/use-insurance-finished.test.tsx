@@ -33,7 +33,7 @@ function check(overrides: Partial<BookingVerification> = {}): BookingVerificatio
 }
 
 const CARD = verificationKeys.detail('BK-1', 'insurance')
-const COVERED = { verificationId: 'v1', status: 'clear' }
+const DONE = { verificationId: 'v1' }
 const RETURN_URL =
   '/insurance/return?returnTo=%2Fapp%2Fbookings%2FBK-1' +
   '&tenantId=t1&verificationId=v1&status=complete&authCode=cod_1'
@@ -78,15 +78,14 @@ afterEach(() => {
 })
 
 describe('the tab the counter started from', () => {
-  it('shows the verdict the return tab reached, and says so', async () => {
+  it('re-reads the check as staff once the return tab has finished it, and says so', async () => {
+    // The public completion carries no verdict, so the card gets it from its own staff read.
     const { client, wrapper } = setup()
     renderHook(() => useInsuranceResults(), { wrapper })
 
-    fromReturnTab({ type: 'finished', outcome: COVERED })
+    fromReturnTab({ type: 'finished', outcome: DONE })
 
-    await waitFor(() =>
-      expect(client.getQueryData<BookingVerification>(CARD)?.status).toBe('clear'),
-    )
+    await waitFor(() => expect(client.getQueryState(CARD)?.isInvalidated).toBe(true))
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Insurance checked' }))
   })
 
@@ -97,7 +96,7 @@ describe('the tab the counter started from', () => {
     fromReturnTab({ type: 'completing' })
     await waitFor(() => expect(result.current).toBe(true))
 
-    fromReturnTab({ type: 'finished', outcome: COVERED })
+    fromReturnTab({ type: 'finished', outcome: DONE })
     await waitFor(() => expect(result.current).toBe(false))
   })
 })
@@ -108,7 +107,7 @@ describe('the return page', () => {
     const heard: unknown[] = []
     const listener = new BroadcastChannel('veltrio:insurance')
     listener.onmessage = ({ data }) => heard.push(data)
-    completeInsurance.mockResolvedValue(COVERED)
+    completeInsurance.mockResolvedValue(DONE)
 
     const { wrapper } = setup()
     const { result } = renderHook(() => useInsuranceReturn(), { wrapper })
@@ -120,7 +119,7 @@ describe('the return page', () => {
       authCode: 'cod_1',
     })
     await waitFor(() =>
-      expect(heard).toEqual([{ type: 'completing' }, { type: 'finished', outcome: COVERED }]),
+      expect(heard).toEqual([{ type: 'completing' }, { type: 'finished', outcome: DONE }]),
     )
     // Closed, so there is nothing to show.
     expect(result.current).toBeUndefined()
@@ -130,12 +129,12 @@ describe('the return page', () => {
   it('shows the outcome in a tab the browser will not close, such as the renter’s phone', async () => {
     // Before, the return page sat behind the login, so a renter sent the link never finished.
     returnTab({ closable: false })
-    completeInsurance.mockResolvedValue(COVERED)
+    completeInsurance.mockResolvedValue(DONE)
 
     const { wrapper } = setup()
     const { result } = renderHook(() => useInsuranceReturn(), { wrapper })
 
-    await waitFor(() => expect(result.current).toEqual({ type: 'finished', outcome: COVERED }))
+    await waitFor(() => expect(result.current).toEqual({ type: 'finished', outcome: DONE }))
   })
 
   it('spends nothing when the renter backed out', async () => {

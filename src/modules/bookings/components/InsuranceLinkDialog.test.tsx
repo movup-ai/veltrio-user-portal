@@ -22,7 +22,7 @@ const SESSION: InsuranceLinkSession = {
 }
 
 // null rather than undefined, which would fall back to the default session.
-function renderDialog(session: InsuranceLinkSession | null = SESSION) {
+function renderDialog(session: InsuranceLinkSession | null = SESSION, canSend = true) {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
@@ -33,6 +33,7 @@ function renderDialog(session: InsuranceLinkSession | null = SESSION) {
         renterName="Benjamin Wilson"
         defaultEmail="benjamin@example.com"
         defaultPhone="9179206267"
+        canSend={canSend}
       />
     </QueryClientProvider>,
   )
@@ -48,6 +49,15 @@ describe('sending the renter their insurance link', () => {
 
     expect(screen.getByText('Creating the link…')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /copy link/i })).not.toBeInTheDocument()
+  })
+
+  it('offers only the link while the API cannot send it', () => {
+    // Send email and Send text posted to an endpoint that does not exist yet, and failed.
+    renderDialog(SESSION, false)
+
+    expect(screen.getByRole('button', { name: /copy link/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send email' })).not.toBeInTheDocument()
+    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
   })
 
   it('copies the session link', async () => {

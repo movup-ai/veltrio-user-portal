@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { toast } from '@/components/ui/use-toast'
 
 const startInsurance = vi.fn()
 
@@ -52,5 +53,20 @@ describe('starting an insurance check', () => {
     answer({ verification: {}, ignitionUri: 'https://ignition.axle.test/abc' })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(tab.location.href).toBe('https://ignition.axle.test/abc')
+  })
+
+  it('stays on the page when the browser blocks the new tab', async () => {
+    // Leaving for Axle threw away a booking form half filled in. The session is still open, and
+    // Send link hands it over without leaving.
+    vi.spyOn(window, 'open').mockReturnValue(null)
+    startInsurance.mockResolvedValue({ verification: {}, ignitionUri: 'https://ignition.axle.test/abc' })
+
+    const { result } = renderHook(() => useStartInsurance(), { wrapper: wrapper() })
+    result.current.mutate(ORDER)
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'The browser blocked the new tab' }),
+    )
   })
 })

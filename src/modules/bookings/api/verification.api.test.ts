@@ -102,6 +102,21 @@ describe('verificationApi.forEmail', () => {
     })
   })
 
+  it('asks for an insurance verdict that answers for the rental being taken', async () => {
+    get.mockResolvedValue({ data: null } as never)
+
+    await verificationApi.forEmail('m@example.com', 'insurance', { from: '2026-10-20', to: '2026-10-25' })
+
+    expect(get).toHaveBeenCalledWith('/customers/verification', {
+      params: {
+        email: 'm@example.com',
+        kind: 'insurance',
+        coversFrom: '2026-10-20',
+        coversThrough: '2026-10-25',
+      },
+    })
+  })
+
   it('reports no check when the last one is too old to stand', async () => {
     // The API nulls a stale result rather than returning it, so the form says "no check on
     // file" — which is what ordering would then do anyway.
