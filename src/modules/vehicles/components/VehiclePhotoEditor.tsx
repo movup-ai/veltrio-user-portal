@@ -6,7 +6,7 @@ import { cn, moveItem } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import {
-  ACCEPTED_PHOTO_TYPES,
+  MAX_PHOTO_BYTES,
   MAX_PHOTOS_PER_VEHICLE,
   vehiclePhotoApi,
   type PhotoTarget,
@@ -14,6 +14,8 @@ import {
 import { useVehiclePhotoUpload, type PhotoUpload } from '../hooks/use-photo-upload'
 import { vehicleKeys } from '../hooks/use-vehicles'
 import { vehicleDraftKeys } from '../hooks/use-vehicle-drafts'
+import { PHOTO_ACCEPT } from '../utils/photo-files'
+import { previewsByPhoto, unlistedUploads } from '../utils/photo-tiles'
 import { photoThumbnail } from '../utils/vehicle.utils'
 import type { VehiclePhoto } from '../types/vehicle.types'
 
@@ -29,9 +31,25 @@ interface Props {
   photos: VehiclePhoto[]
 }
 
+/** Marks a photo the server is still processing, over a picture that is already showing. */
+function ProcessingBadge() {
+  const { t } = useTranslation('vehicles')
+  return (
+    <span
+      role="status"
+      aria-label={t('photos.processing')}
+      className="bg-foreground/70 text-background pointer-events-none absolute right-1 bottom-1 flex size-5 items-center justify-center rounded-full"
+    >
+      <Loader2 className="size-3 animate-spin" aria-hidden />
+    </span>
+  )
+}
+
 function UploadTile({ upload }: { upload: PhotoUpload }) {
   const { t } = useTranslation('vehicles')
   const failed = upload.phase === 'failed'
+  // Uploaded, and waiting for the photo list to include it: the picture, no longer dimmed.
+  const finished = upload.phase === 'done'
 
   return (
     <div
@@ -42,22 +60,25 @@ function UploadTile({ upload }: { upload: PhotoUpload }) {
       )}
     >
       {upload.previewUrl && (
-        <img src={upload.previewUrl} alt="" className="size-full object-cover opacity-40" draggable={false} />
+        <img
+          src={upload.previewUrl}
+          alt=""
+          className={cn('size-full object-cover', !finished && 'opacity-40')}
+          draggable={false}
+        />
       )}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center">
-        {failed ? (
-          <span className="text-error text-[10px] font-semibold">{t('photos.failed')}</span>
-        ) : (
-          <>
+      {finished ? (
+        <ProcessingBadge />
+      ) : (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center">
+          {failed ? (
+            <span className="text-error text-[10px] font-semibold">{t('photos.failed')}</span>
+          ) : (
             <Loader2 className="text-fg-2 size-4 animate-spin" aria-hidden />
-            {/* The percentage is real information; the processing phase is just the spinner. */}
-            {upload.phase !== 'completing' && (
-              <span className="text-fg-2 text-[10px] font-semibold">{upload.progress}%</span>
-            )}
-          </>
-        )}
-      </div>
-      {!failed && (
+          )}
+        </div>
+      )}
+      {!failed && !finished && (
         <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10">
           <div
             className="bg-primary h-full transition-[width] duration-200"
@@ -76,9 +97,10 @@ export function VehiclePhotoEditor({ target, photos }: Props) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
-  const { uploads, start, clearFinished, isUploading } = useVehiclePhotoUpload(target)
+  const { uploads, start, isUploading } = useVehiclePhotoUpload(target)
 
-  const pendingUploads = uploads.filter((u) => u.phase !== 'done')
+  const pendingUploads = unlistedUploads(uploads, photos)
+  const previews = previewsByPhoto(uploads)
   const canAdd = photos.length + pendingUploads.length < MAX_PHOTOS_PER_VEHICLE
 
   // A draft's photos are not in the vehicle detail cache; they are fetched with the draft.
@@ -93,7 +115,6 @@ export function VehiclePhotoEditor({ target, photos }: Props) {
     const result = await start(files, photos.length)
     if (result.uploaded > 0) {
       await refreshVehicle()
-      clearFinished()
       toast({ title: t('photos.uploadSummary', { count: result.uploaded }), variant: 'success' })
     }
     if (result.failed > 0) toast({ title: t('photos.uploadFailed'), variant: 'error' })
@@ -155,13 +176,17 @@ export function VehiclePhotoEditor({ target, photos }: Props) {
         <ImagePlus className="text-fg-4 size-6" />
         <p className="text-[13px] font-semibold">{t('photos.dropzone')}</p>
         <p className="text-fg-4 text-[12px]">
-          {t('photos.dropzoneHint', { max: MAX_PHOTOS_PER_VEHICLE, size: 15, used: photos.length })}
+          {t('photos.dropzoneHint', {
+            max: MAX_PHOTOS_PER_VEHICLE,
+            size: MAX_PHOTO_BYTES / (1024 * 1024),
+            used: photos.length,
+          })}
         </p>
         <input
           ref={inputRef}
           type="file"
           multiple
-          accept={ACCEPTED_PHOTO_TYPES.join(',')}
+          accept={PHOTO_ACCEPT}
           className="hidden"
           disabled={isUploading}
           onChange={(e) => {
@@ -195,13 +220,25 @@ export function VehiclePhotoEditor({ target, photos }: Props) {
                   dropIndex === index && dragIndex !== index && 'outline-primary outline-2 -outline-offset-2',
                 )}
               >
+                {/* Uploaded this session: its preview sits underneath, so the tile is never blank
+                    while the server processes it, and the thumbnail loads over it. */}
+                {previews.has(photo.id) && (
+                  <img
+                    src={previews.get(photo.id)}
+                    alt=""
+                    className="pointer-events-none absolute inset-0 size-full object-cover"
+                    draggable={false}
+                  />
+                )}
                 {photo.url ? (
                   <img
                     src={photoThumbnail(photo)}
                     alt={photo.name}
-                    className="pointer-events-none size-full object-cover"
+                    className="pointer-events-none relative size-full object-cover"
                     draggable={false}
                   />
+                ) : previews.has(photo.id) ? (
+                  <ProcessingBadge />
                 ) : (
                   <span
                     role="status"

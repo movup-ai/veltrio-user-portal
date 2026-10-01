@@ -63,6 +63,7 @@ import {
 import { applyVehicleApiError } from '@/modules/vehicles/utils/vehicle-errors'
 import { handOffPhotos } from '@/modules/vehicles/utils/photo-handoff'
 import { uploadPhotos } from '@/modules/vehicles/hooks/use-photo-upload'
+import { initialFurthestStep } from '@/modules/vehicles/utils/form-steps'
 import { draftTarget, vehicleTarget, type PhotoTarget } from '@/modules/vehicles/api/vehicle-photo.api'
 
 const STEP_KEYS = ['details', 'photos', 'pricing', 'review'] as const
@@ -251,7 +252,7 @@ function VehicleForm({
   // No delete hook here: publishing removes the draft server-side, in the same transaction.
   const publishDraft = usePublishVehicleDraft()
   const [stepIndex, setStepIndex] = useState(0)
-  const [furthestIndex, setFurthestIndex] = useState(0)
+  const [furthestIndex, setFurthestIndex] = useState(() => initialFurthestStep(isEdit, STEP_KEYS.length))
   const [vinToDecode, setVinToDecode] = useState('')
   const [isDecodingVin, setIsDecodingVin] = useState(false)
   const [aiAction, setAiAction] = useState<DescriptionAiAction | null>(null)
@@ -306,7 +307,14 @@ function VehicleForm({
   const uploadToDraft = async (id: string, files: File[]) => {
     try {
       const result = await uploadPhotos(draftTarget(id), files)
-      if (result.failed > 0) toast({ title: t('photos.uploadFailed'), variant: 'error' })
+      // Name the refused files: photos picked before the first save are not shown again otherwise.
+      if (result.failed > 0) {
+        toast({
+          title: t('photos.uploadFailed'),
+          description: result.problems.join(' · ') || undefined,
+          variant: 'error',
+        })
+      }
     } catch (error) {
       toast({ title: t('photos.uploadFailed'), description: normalizeApiError(error).message, variant: 'error' })
     }

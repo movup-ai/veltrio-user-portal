@@ -32,14 +32,13 @@ export const ACCEPTED_PHOTO_TYPES = [
   'image/webp',
   'image/heic',
   'image/heif',
+  'image/avif',
 ] as const
+
+export type PhotoContentType = (typeof ACCEPTED_PHOTO_TYPES)[number]
 
 export const MAX_PHOTO_BYTES = 15 * 1024 * 1024
 export const MAX_PHOTOS_PER_VEHICLE = 20
-
-export function describeFile(file: File): PhotoUploadFile {
-  return { name: file.name, contentType: file.type, sizeBytes: file.size }
-}
 
 /**
  * What the photos hang off: a published vehicle, or a draft in the wizard. Both use the same

@@ -3,10 +3,9 @@ import { GripVertical, ImagePlus, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
-import { MAX_PHOTOS_PER_VEHICLE } from '@/modules/vehicles/api/vehicle-photo.api'
+import { MAX_PHOTO_BYTES, MAX_PHOTOS_PER_VEHICLE } from '@/modules/vehicles/api/vehicle-photo.api'
 import type { VehiclePhoto } from '@/modules/vehicles/types/vehicle.types'
-
-const MAX_FILE_SIZE_MB = 15
+import { PHOTO_ACCEPT, screenPhotos } from '@/modules/vehicles/utils/photo-files'
 
 interface PhotoDropzoneProps {
   value: VehiclePhoto[]
@@ -31,15 +30,11 @@ export function PhotoDropzone({ value, onChange, max = MAX_PHOTOS_PER_VEHICLE, c
       return
     }
 
-    const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'))
-    const oversized = files.filter((f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024)
-    const accepted = files.filter((f) => f.size <= MAX_FILE_SIZE_MB * 1024 * 1024).slice(0, remaining)
-
-    if (oversized.length > 0) {
-      toast({ title: t('photos.skipped'), description: t('photos.skippedDescription', { size: MAX_FILE_SIZE_MB }), variant: 'error' })
-    }
-    if (files.length > remaining) {
-      toast({ title: t('photos.limitReached'), description: t('photos.limitPartial', { added: remaining, max }), variant: 'error' })
+    // The check the upload makes, so a file it would refuse is refused now and by name, rather
+    // than dropped without a word when the first save uploads it.
+    const { accepted, problems } = screenPhotos(Array.from(fileList), remaining)
+    if (problems.length > 0) {
+      toast({ title: t('photos.skipped'), description: problems.join(' · '), variant: 'error' })
     }
 
     // Object URLs, not data URLs: base64 is ~1.4x the size and would blow the draft's 64 KB cap.
@@ -87,12 +82,12 @@ export function PhotoDropzone({ value, onChange, max = MAX_PHOTOS_PER_VEHICLE, c
         <ImagePlus className="text-fg-4 size-6" />
         <p className="text-[13px] font-semibold">{t('photos.dropzone')}</p>
         <p className="text-fg-4 text-[12px]">
-          {t('photos.dropzoneHint', { max, size: MAX_FILE_SIZE_MB, used: value.length })}
+          {t('photos.dropzoneHint', { max, size: MAX_PHOTO_BYTES / (1024 * 1024), used: value.length })}
         </p>
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={PHOTO_ACCEPT}
           multiple
           className="hidden"
           onChange={(e) => {
