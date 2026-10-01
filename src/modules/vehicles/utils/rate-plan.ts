@@ -202,15 +202,17 @@ export function previewDays(options: RateOption[], tiers: DiscountTier[]): numbe
     .map(optionHours)
     .filter((h) => h % 24 === 0)
     .map((h) => h / 24)
+  // Nothing past the longest rental, which the engine will not price. Dropped before the rows fill,
+  // or unpriceable lengths would take the slots valid ones need.
+  const inRange = (d: number) => d <= MAX_RENTAL_DAYS
   // Every tier threshold first: a discount the operator set must be checkable here, and there are
   // never more tiers than rows. The other lengths fill what is left, shortest first.
-  const days = new Set<number>(tiers.map((t) => t.minDays))
-  for (const day of [...PREVIEW_DAYS, ...exactDays].sort((a, b) => a - b)) {
+  const days = new Set<number>(tiers.map((t) => t.minDays).filter(inRange))
+  for (const day of [...PREVIEW_DAYS, ...exactDays].filter(inRange).sort((a, b) => a - b)) {
     if (days.size >= MAX_PREVIEW_ROWS) break
     days.add(day)
   }
-  // Nothing past the longest rental: the engine will not price it.
-  return [...days].filter((d) => d <= MAX_RENTAL_DAYS).sort((a, b) => a - b)
+  return [...days].sort((a, b) => a - b)
 }
 
 /**

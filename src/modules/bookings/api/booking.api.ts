@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/api/client'
 import { locationApi } from '@/modules/locations/api/location.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
-import { MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
+import { MAX_LIST_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { BookingFilters, BookingInput, BookingTuple } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
@@ -20,15 +20,6 @@ import {
   type BookingTabCountsWire,
   type BookingWire,
 } from './booking.mapper'
-
-/** The most `GET /bookings` will return in one call; asking for more is a 422. */
-const LIST_PAGE_SIZE = MAX_PAGE_SIZE
-
-/**
- * Stops a runaway loop from hammering the API if `total` were ever wrong. 50 pages is 5,000
- * bookings — far past where this page should have moved to server-side filtering anyway.
- */
-const MAX_LIST_PAGES = 50
 
 /** Raised instead of returning a partial CSV, so the caller can say what went wrong. */
 export class ExportTooLargeError extends Error {
@@ -56,14 +47,14 @@ export const bookingApi = {
    */
   list: async () => {
     const first = await apiClient.get<ListEnvelope<BookingWire>>('/bookings', {
-      params: { limit: LIST_PAGE_SIZE, offset: 0 },
+      params: { limit: MAX_PAGE_SIZE, offset: 0 },
     })
     const wires = [...first.data.items]
 
-    const pages = Math.min(Math.ceil(first.data.total / LIST_PAGE_SIZE), MAX_LIST_PAGES)
+    const pages = Math.min(Math.ceil(first.data.total / MAX_PAGE_SIZE), MAX_LIST_PAGES)
     for (let page = 1; page < pages; page++) {
       const next = await apiClient.get<ListEnvelope<BookingWire>>('/bookings', {
-        params: { limit: LIST_PAGE_SIZE, offset: page * LIST_PAGE_SIZE },
+        params: { limit: MAX_PAGE_SIZE, offset: page * MAX_PAGE_SIZE },
       })
       wires.push(...next.data.items)
     }
@@ -121,11 +112,11 @@ export const bookingApi = {
    * the endpoint caps at 100; capped in turn so a huge book cannot hang the browser.
    */
   exportAll: async (params: Omit<BookingListParams, 'page' | 'pageSize'>) => {
-    const limit = MAX_LIST_PAGES * LIST_PAGE_SIZE
+    const limit = MAX_LIST_PAGES * MAX_PAGE_SIZE
     const rows: BookingTuple[] = []
     let total = 0
     for (let page = 1; page <= MAX_LIST_PAGES; page++) {
-      const result = await bookingApi.page({ ...params, page, pageSize: LIST_PAGE_SIZE })
+      const result = await bookingApi.page({ ...params, page, pageSize: MAX_PAGE_SIZE })
       total = result.total
       // The first response already says whether this can finish, so an oversized export costs
       // one request rather than fetching and mapping every page only to refuse at the end.

@@ -163,6 +163,13 @@ describe('previewDays', () => {
     expect(previewDays([DAILY], [{ minDays: 400, percentOff: 10 }])).not.toContain(400)
   })
 
+  it('does not let out-of-range lengths take the rows valid ones need', () => {
+    const tiers = Array.from({ length: 10 }, (_, i) => ({ minDays: 400 + i, percentOff: 10 }))
+    const twoMonths = option({ basis: 'fixed', blockDuration: 2, blockDurationUnit: 'months' })
+    const tooLong = option({ basis: 'fixed', blockDuration: 13, blockDurationUnit: 'months' })
+    expect(previewDays([DAILY, twoMonths, tooLong], tiers)).toEqual([1, 3, 4, 7, 10, 14, 60])
+  })
+
   it('always keeps a tier threshold, however many shorter lengths compete for the rows', () => {
     const packages = [2, 5, 6, 8, 9].map((d) =>
       option({ id: `p${d}`, basis: 'fixed', blockDuration: d, blockDurationUnit: 'days' }),

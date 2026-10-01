@@ -9,6 +9,12 @@ export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 /** The API's ceiling on `limit`: a list asked for in one go is capped here. */
 export const MAX_PAGE_SIZE = 100
 
+/**
+ * How many full pages a fetch-everything loop reads before giving up: 5,000 rows, far past any
+ * real fleet or book, and a stop if `total` were ever wrong.
+ */
+export const MAX_LIST_PAGES = 50
+
 /** The API caps drafts per tenant well below this, so one page always holds them all. */
 export const DRAFTS_PAGE: PaginationParams = { page: 1, pageSize: 50 }
 
