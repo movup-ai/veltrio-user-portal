@@ -159,6 +159,10 @@ describe('previewDays', () => {
     ])
   })
 
+  it('leaves out a threshold past the longest rental, which the engine will not price', () => {
+    expect(previewDays([DAILY], [{ minDays: 400, percentOff: 10 }])).not.toContain(400)
+  })
+
   it('always keeps a tier threshold, however many shorter lengths compete for the rows', () => {
     const packages = [2, 5, 6, 8, 9].map((d) =>
       option({ id: `p${d}`, basis: 'fixed', blockDuration: d, blockDurationUnit: 'days' }),

@@ -38,14 +38,11 @@ export function EffectiveRatesPreview({ options, tiers, hoursPerDay }: Effective
 
   const usable = priceable(options)
   const usableTiers = complete(tiers)
-  // planRental only returns null for an empty card, which is shown as its own message below.
-  const rows =
-    usable.length === 0
-      ? []
-      : previewDays(usable, usableTiers).map((days) => ({
-          days,
-          plan: planRental(usable, usableTiers, days * 24, hoursPerDay)!,
-        }))
+  // Values arrive as typed, before validation, so a length the engine refuses is skipped, not shown.
+  const rows = previewDays(usable, usableTiers).flatMap((days) => {
+    const plan = planRental(usable, usableTiers, days * 24, hoursPerDay)
+    return plan ? [{ days, plan }] : []
+  })
 
   return (
     <div className="border-border rounded-[9px] border">

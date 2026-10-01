@@ -209,7 +209,8 @@ export function previewDays(options: RateOption[], tiers: DiscountTier[]): numbe
     if (days.size >= MAX_PREVIEW_ROWS) break
     days.add(day)
   }
-  return [...days].sort((a, b) => a - b)
+  // Nothing past the longest rental: the engine will not price it.
+  return [...days].filter((d) => d <= MAX_RENTAL_DAYS).sort((a, b) => a - b)
 }
 
 /**

@@ -65,4 +65,17 @@ describe('EffectiveRatesPreview', () => {
     expect(within(screen.getByText('1-day rental').closest('li')!).getByText('$120')).toBeInTheDocument()
     expect(screen.getByText(/Hourly rates are capped at 8 hours a day/)).toBeInTheDocument()
   })
+
+  it('skips a threshold past the longest rental instead of crashing', async () => {
+    // The preview reads values as they are typed, before the form validates them.
+    const user = userEvent.setup({ delay: null })
+    render(
+      <EffectiveRatesPreview options={CARD} tiers={[{ minDays: 400, percentOff: 10 }]} hoursPerDay={8} />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Show effective rates' }))
+
+    expect(screen.getByText('14-day rental')).toBeInTheDocument()
+    expect(screen.queryByText('400-day rental')).not.toBeInTheDocument()
+  })
 })
