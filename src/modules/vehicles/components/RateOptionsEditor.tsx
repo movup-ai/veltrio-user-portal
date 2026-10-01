@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { GripVertical, Plus, Trash2 } from 'lucide-react'
 import type { FieldErrors } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useDomainLabels } from '@/i18n/domain'
-import { cn } from '@/lib/utils'
+import { cn, moveItem } from '@/lib/utils'
 import { BILLING_BASES, DURATION_UNITS, type BillingBasis, type DurationUnit } from '../types/vehicle.types'
 import type { RateOptionValues, VehicleFormValues } from '../schema/vehicle.schema'
 
 /** Shared grid so the header labels line up with each row's controls. The 1px column is the pricing | mileage divider. */
-const ROW_GRID = 'grid grid-cols-1 gap-x-3 gap-y-2 lg:grid-cols-[1.25fr_1.6fr_0.85fr_1px_1fr_92px_40px] lg:items-start'
+const ROW_GRID = 'grid grid-cols-1 gap-x-3 gap-y-2 lg:grid-cols-[24px_1.25fr_1.6fr_0.85fr_1px_1fr_92px_40px] lg:items-start'
 
 function newRateOption(): RateOptionValues {
   return {
@@ -40,6 +40,9 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
   // A freshly-added row shouldn't flash "required" errors before the user has touched it —
   // only surface a field's error once it's been blurred, or once showAllErrors kicks in.
   const [touched, setTouched] = useState<Set<string>>(new Set())
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [overId, setOverId] = useState<string | null>(null)
+  const handles = useRef(new Map<string, HTMLButtonElement>())
 
   /** "Included miles (per day)" — the unit reads as a noun here, not a billing-basis phrase. */
   const includedMilesLabel = (basis: BillingBasis) =>
@@ -49,6 +52,17 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
 
   const update = (id: string, patch: Partial<RateOptionValues>) => {
     onChange(value.map((o) => (o.id === id ? { ...o, ...patch } : o)))
+  }
+
+  const move = (id: string, to: number) => {
+    const from = value.findIndex((o) => o.id === id)
+    if (from === -1 || to < 0 || to >= value.length || from === to) return
+    onChange(moveItem(value, from, to))
+  }
+
+  const endDrag = () => {
+    setDragId(null)
+    setOverId(null)
   }
 
   const markTouched = (id: string, field: string) => {
@@ -90,6 +104,7 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
   return (
     <div className="flex flex-col gap-2.5">
       <div className={cn(ROW_GRID, 'text-meta text-fg-3 hidden px-3.5 lg:grid')}>
+        <span />
         <span>{t('rateOptions.label')}</span>
         <span>{t('rateOptions.billingBasis')}</span>
         <span>{t('rateOptions.rate')}</span>
@@ -105,7 +120,57 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
         const durationError = errorFor(option, index, 'blockDuration')
 
         return (
-          <div key={option.id} className={cn(ROW_GRID, 'border-border bg-surface-2 rounded-[9px] border p-3.5')}>
+          <div
+            key={option.id}
+            // Only while a row is being dragged: otherwise text dropped into an input must still land.
+            onDragOver={(e) => {
+              if (!dragId) return
+              e.preventDefault()
+              setOverId(option.id)
+            }}
+            onDrop={(e) => {
+              if (!dragId) return
+              e.preventDefault()
+              move(dragId, index)
+              endDrag()
+            }}
+            className={cn(
+              ROW_GRID,
+              'border-border bg-surface-2 rounded-[9px] border p-3.5',
+              dragId === option.id && 'opacity-40',
+              overId === option.id && dragId !== option.id && 'outline-primary outline-2 -outline-offset-2',
+            )}
+          >
+            <div className="hidden lg:flex lg:h-9 lg:items-center">
+              <button
+                ref={(el) => {
+                  if (el) handles.current.set(option.id, el)
+                  else handles.current.delete(option.id)
+                }}
+                type="button"
+                draggable
+                aria-label={t('rateOptions.reorder', { label: option.label || t('rateOptions.removeFallback') })}
+                className="text-fg-4 hover:text-foreground flex size-6 cursor-grab items-center justify-center rounded active:cursor-grabbing"
+                onDragStart={(e) => {
+                  // Firefox starts no drag without data; the image shows the whole row, not the icon.
+                  e.dataTransfer.setData('text/plain', option.id)
+                  const row = e.currentTarget.parentElement?.parentElement
+                  if (row) e.dataTransfer.setDragImage(row, 16, 18)
+                  setDragId(option.id)
+                }}
+                onDragEnd={endDrag}
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+                  e.preventDefault()
+                  move(option.id, index + (e.key === 'ArrowUp' ? -1 : 1))
+                  // React re-inserts the moved row's DOM node, which drops focus; put it back.
+                  requestAnimationFrame(() => handles.current.get(option.id)?.focus())
+                }}
+              >
+                <GripVertical className="size-4" />
+              </button>
+            </div>
+
             <div className="flex flex-col gap-1">
               <span className="text-meta text-fg-3 lg:hidden">{t('rateOptions.label')}</span>
               <Input

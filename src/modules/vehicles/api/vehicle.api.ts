@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api/client'
-import { toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
+import { MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
 import {
   toListQuery,
@@ -16,7 +16,7 @@ import {
  * several ways, all handled in vehicle.mapper.ts — nothing above this file sees the API's format.
  */
 /** The most `GET /vehicles` allows in one call; asking for more is a 422. */
-const FLEET_PAGE_SIZE = 100
+const FLEET_PAGE_SIZE = MAX_PAGE_SIZE
 
 /** 10,000 vehicles — far past any real fleet, and a stop if `total` were ever wrong. */
 const MAX_FLEET_PAGES = 100

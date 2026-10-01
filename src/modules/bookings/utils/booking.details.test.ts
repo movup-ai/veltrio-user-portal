@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '../mock/booking.mock'
-import { buildBookingDetails, buildCharges } from './booking.details'
+import type { Booking } from '../types/booking.types'
+import { buildBookingDetails, buildCharges, exactCharges } from './booking.details'
 import { parseBookingTotal } from './booking.utils'
 
 function sum(amounts: number[]): number {
@@ -57,5 +58,55 @@ describe('buildBookingDetails', () => {
     // Seeded rows carry no payment row, so settlement is still inferred from the status.
     expect(open.payment.settled).toBe(false)
     expect(open.payment.balance).toBe(open.total)
+  })
+})
+
+describe('exactCharges', () => {
+  it('lists each combined rate and takes the discount off, still summing to the total', () => {
+    // Weekly + Daily × 3 = $3,400, less 15% for 7+ days = $2,890; 10% tax = $289.
+    const booking = {
+      rate: {
+        lines: [
+          { optionId: 'w', label: 'Weekly', basis: 'week', rate: 2200, count: 1 },
+          { optionId: 'd', label: 'Daily', basis: 'day', rate: 400, count: 3 },
+        ],
+      },
+      pricing: {
+        rentalSubtotal: 3400,
+        discount: { minDays: 7, percentOff: 15, amount: 510 },
+        drivers: 0,
+        fees: 0,
+        subtotal: 2890,
+        taxRatePct: 10,
+        tax: 289,
+        total: 3179,
+        deposit: 0,
+      },
+      additionalDrivers: [],
+      fees: [],
+    } as unknown as Booking
+
+    const lines = exactCharges(booking)
+
+    expect(lines.map((l) => [l.key, l.label, l.amount])).toEqual([
+      ['baseRate', 'Weekly', 2200],
+      ['baseRate', 'Daily', 1200],
+      ['discount', undefined, -510],
+      ['taxes', undefined, 289],
+    ])
+    expect(sum(lines.map((l) => l.amount))).toBe(booking.pricing.total)
+  })
+
+  it('keeps the cap on an automatic hourly day, so the line can say so', () => {
+    const booking = {
+      rate: {
+        lines: [{ optionId: 'h', label: 'Hourly', basis: 'day', rate: 120, count: 2, cappedHours: 8 }],
+      },
+      pricing: { discount: null, taxRatePct: 0, tax: 0, total: 240 },
+      additionalDrivers: [],
+      fees: [],
+    } as unknown as Booking
+
+    expect(exactCharges(booking)[0].meta).toEqual({ rate: 120, count: 2, cappedHours: 8 })
   })
 })

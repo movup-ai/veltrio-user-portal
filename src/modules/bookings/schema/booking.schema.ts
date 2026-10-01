@@ -107,7 +107,6 @@ export function bookingFormSchema(t: ValidationT) {
       additionalDrivers: z.array(additionalDriverSchema(t)),
 
       // Step 3 — Price
-      rateOptionId: z.string().min(1, t('booking.rateOptionRequired')),
       fees: z.array(bookingFeeSchema(t)),
     })
     .superRefine((values, ctx) => {
@@ -147,6 +146,6 @@ export const BOOKING_STEP_FIELDS = {
     'licenceNumber',
     'licenceExpiry',
   ],
-  pricing: ['rateOptionId', 'additionalDrivers', 'fees'],
+  pricing: ['additionalDrivers', 'fees'],
   review: [],
 } as const satisfies Record<string, (keyof BookingFormValues)[]>

@@ -22,7 +22,8 @@
     "photosMax": "Puede subir hasta {{max}} fotos",
     "rateOptionsMin": "Añada al menos una opción de tarifa para que el vehículo sea reservable",
     "depositRequired": "Introduzca un depósito de garantía",
-    "overageRateRequired": "Introduzca una tarifa por exceso"
+    "overageRateRequired": "Introduzca una tarifa por exceso",
+    "billableHoursRange": "Horas enteras, 1–24"
   },
   "booking": {
     "pickupLocationRequired": "Seleccione una sucursal de recogida",
@@ -32,7 +33,6 @@
     "timeRequired": "Introduzca una hora válida",
     "returnBeforePickup": "La devolución debe ser posterior a la recogida",
     "vehicleRequired": "Seleccione un vehículo",
-    "rateOptionRequired": "Seleccione una opción de tarifa",
     "customerNameRequired": "El nombre del cliente es obligatorio",
     "customerEmailInvalid": "Introduzca una dirección de correo válida",
     "customerPhoneRequired": "Introduzca un teléfono de contacto",
@@ -54,6 +54,11 @@
     "ratePositive": "La tarifa debe ser mayor que 0",
     "durationRequired": "Introduzca la duración del bloque",
     "durationRange": "Debe ser un número entero, 1–{{max}} {{unit}}"
+  },
+  "discountTier": {
+    "daysRange": "Días enteros, 1–365",
+    "percentRange": "Porcentaje entero, 1–99",
+    "daysDuplicate": "Ya hay un tramo que empieza en {{days}} días"
   },
   "api": {
     "network": "No se puede conectar con el servidor. Compruebe su conexión.",

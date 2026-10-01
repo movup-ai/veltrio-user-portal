@@ -71,7 +71,7 @@ export function BookingsPage() {
   const format = useFormatters()
   const navigate = useNavigate()
 
-  const [tab, setTab] = useState<BookingTab | typeof DRAFTS_TAB>('Upcoming')
+  const [tab, setTab] = useState<BookingTab | typeof DRAFTS_TAB>('All')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')

@@ -12,6 +12,7 @@
     "emptyTitle": "Ninguna reserva coincide con sus filtros",
     "emptyDescription": "Pruebe a ajustar la búsqueda o los filtros.",
     "tabs": {
+      "All": "Todas",
       "Upcoming": "Próximas",
       "Today": "Hoy",
       "Recent activity": "Actividad reciente",
@@ -161,7 +162,10 @@
       "additionalDriverDetail_other": "{{count}} conductores · {{rate}}/día",
       "taxes": "Impuestos y tasas",
       "taxesDetail": "Recargo de sucursal + {{pct}}% de impuesto sobre ventas",
-      "total": "Total"
+      "total": "Total",
+      "baseRateUnits": "{{rate}} × {{count}}",
+      "discount": "Descuento por duración",
+      "discountDetail": "{{days}}+ días · −{{pct}}%"
     },
     "payment": {
       "title": "Pago",
@@ -300,7 +304,7 @@
       "trip": "Viaje",
       "tripHint": "Cuándo y dónde empieza y termina el alquiler. La disponibilidad se comprueba al cambiar las fechas.",
       "renter": "Arrendatario",
-      "rate": "Opción de tarifa",
+      "rate": "Tarifas",
       "documents": "Permiso y documentos",
       "verification": "Verificación",
       "drivers": "Conductores adicionales",
@@ -342,12 +346,10 @@
       "loadError": "No pudimos cargar la flota.",
       "noneTitle": "No hay vehículos en esta sucursal",
       "noneDescription": "Aquí no hay nada en playa. Pruebe con otra sucursal de recogida.",
-      "forUnits_one": "{{price}} por {{count}} {{unit}}",
-      "forUnits_other": "{{price}} por {{count}} {{unit}}s"
+      "forTrip": "{{price}} por este viaje"
     },
     "rate": {
-      "hint": "Calculado para la duración que ha indicado.",
-      "pick": "Elija una opción de tarifa",
+      "hint": "Elegidas según la duración: gana la tarifa que coincide exactamente; si no, la combinación más barata, menos cualquier descuento por duración.",
       "none": "Este vehículo todavía no tiene opciones de tarifa.",
       "unitBreakdown_one": "{{count}} × {{price}}",
       "unitBreakdown_other": "{{count}} × {{price}}"
@@ -383,15 +385,14 @@
       "vehicle": "Vehículo",
       "vehicleName": "Vehículo",
       "plate": "Matrícula",
-      "rate": "Opción de tarifa",
+      "rate": "Tarifas",
       "noVehicle": "Aún no se ha seleccionado ningún vehículo.",
       "customer": "Cliente",
       "verification": "Verificación",
       "noVerification": "Sin verificación.",
       "drivers": "Conductores adicionales",
       "noDrivers": "Sin conductores adicionales.",
-      "fees": "Cargos adicionales",
-      "rateValue": "{{label}} · {{rate}}"
+      "fees": "Cargos adicionales"
     },
     "draft": {
       "save": "Guardar borrador",

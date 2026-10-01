@@ -48,7 +48,7 @@ beforeEach(() => {
 
 describe('OnboardingPage', () => {
   it('derives the portal address from the company name as it is typed', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await user.type(screen.getByLabelText(/Company name/), 'Peña Car Rentals & Co.')
@@ -57,7 +57,7 @@ describe('OnboardingPage', () => {
   })
 
   it('stops tracking the company name once the address is edited by hand', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await user.type(screen.getByLabelText(/Company name/), 'Sunstate')
@@ -69,7 +69,7 @@ describe('OnboardingPage', () => {
   })
 
   it('resumes tracking when the address is cleared', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await user.type(screen.getByLabelText(/Company name/), 'Sunstate')
@@ -81,7 +81,7 @@ describe('OnboardingPage', () => {
   })
 
   it('submits the company profile with the country as an ISO code', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await fillRequiredFields(user)
@@ -102,7 +102,7 @@ describe('OnboardingPage', () => {
   })
 
   it('omits an empty website rather than sending a blank string', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await fillRequiredFields(user)
@@ -113,7 +113,7 @@ describe('OnboardingPage', () => {
   })
 
   it('blocks submission until a country and fleet size are chosen', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await user.type(screen.getByLabelText(/Your full name/), 'Diego Rivas')
@@ -129,7 +129,7 @@ describe('OnboardingPage', () => {
     registerTenant.mockRejectedValue(
       new ApiError('unknown', 'Subdomain is already taken', { status: 409, code: 'subdomain_taken' }),
     )
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await fillRequiredFields(user)
@@ -148,7 +148,7 @@ describe('OnboardingPage', () => {
         ],
       }),
     )
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderPage()
 
     await fillRequiredFields(user)

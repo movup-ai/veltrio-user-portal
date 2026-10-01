@@ -46,6 +46,8 @@ const wire: VehicleWire = {
       unlimitedMileage: false,
     },
   ],
+  discountTiers: [{ minDays: 3, percentOff: 10 }],
+  billableHoursPerDay: 8,
   fees: {
     depositCents: 50000,
     overageRatePerMileCents: 75,
@@ -73,6 +75,8 @@ const input: VehicleInput = {
   rateOptions: [
     { id: 'client-uuid', label: 'Daily', basis: 'day', rate: 55, includedMiles: 200, unlimitedMileage: false },
   ],
+  discountTiers: [{ minDays: 3, percentOff: 10 }],
+  billableHoursPerDay: 8,
   fees: { deposit: 500, overageRatePerMile: 0.75, taxRatePct: 8.25 },
   specs: { transmission: 'Manual', fuelType: 'Electric', seats: 5, doors: 4 },
   features: ['airConditioning', 'sunroof'],
@@ -151,6 +155,12 @@ describe('toVehiclePayload', () => {
   it('never sends photos or rate option ids, which the API rejects', () => {
     expect(payload).not.toHaveProperty('photos')
     expect(payload.rateOptions[0]).not.toHaveProperty('id')
+  })
+
+  it('sends discount tiers without a form row id, which the API would reject', () => {
+    // The form keys its rows with an id; a tier that carried one through would be a 422.
+    const withRowId = { ...input, discountTiers: [{ id: 'row-1', minDays: 3, percentOff: 10 }] }
+    expect(toVehiclePayload(withRowId).discountTiers).toEqual([{ minDays: 3, percentOff: 10 }])
   })
 
   it('omits notes entirely rather than nulling a field the wizard never edits', () => {

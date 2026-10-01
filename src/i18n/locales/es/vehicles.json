@@ -102,7 +102,12 @@
       "location": "Sucursal",
       "status": "Estado",
       "total": "Total"
-    }
+    },
+    "discounts": "Descuentos",
+    "discountsNone": "Sin descuentos por duración. Añádalos al editar el vehículo.",
+    "hourlyCap_one": "Las tarifas por hora cobran como máximo {{count}} hora al día.",
+    "hourlyCap_other": "Las tarifas por hora cobran como máximo {{count}} horas al día.",
+    "hourlyCappedByDaily": "La tarifa por hora nunca cuesta más que la tarifa diaria en un día."
   },
   "fees": {
     "deposit": "Depósito",
@@ -220,7 +225,10 @@
       "rateOptionsHint": "Cada opción es una forma en que un cliente puede reservar este vehículo, con su propio límite de millaje.",
       "fees": "Depósito, cargos e impuestos",
       "feesHint": "Se aplican a cada reserva, sea cual sea la opción de tarifa.",
-      "features": "Equipamiento"
+      "features": "Equipamiento",
+      "discounts": "Descuentos",
+      "optional": "opcional",
+      "discountsHint": "Porcentaje de descuento en alquileres largos. Una opción de tarifa cuya duración coincide exactamente con el alquiler siempre gana y nunca se descuenta."
     },
     "fields": {
       "make": "Marca",
@@ -259,7 +267,10 @@
       "overageRatePlaceholder": "p. ej. 0.35",
       "fuelCharge": "Cargo por combustible (por 1/8 de tanque)",
       "fuelChargeUnit": "/ 1/8 de tanque",
-      "taxRate": "Tasa de impuesto (%)"
+      "taxRate": "Tasa de impuesto (%)",
+      "billableHours": "Tope por hora al día",
+      "billableHoursHint": "Si el cliente se queda el coche más de un día, paga como máximo estas horas por cada día. Se calcula automáticamente; con 24 no hay tope.",
+      "billableHoursUnit": "horas al día"
     },
     "ai": {
       "generate": "Generar",
@@ -289,9 +300,8 @@
       "noRateOptions": "No se añadieron opciones de tarifa.",
       "untitledOption": "Opción sin título",
       "fees": "Depósito, cargos e impuestos",
-      "seatsDoors": "Asientos / Puertas",
-      "seatsDoorsValue": "{{seats}} asientos · {{doors}} puertas",
-      "features": "Equipamiento"
+      "features": "Equipamiento",
+      "discounts": "Descuentos"
     },
     "publishFailed": "No se pudo publicar el vehículo"
   },
@@ -313,6 +323,7 @@
     "unlimitedMiles": "Millaje ilimitado",
     "remove": "Eliminar {{label}}",
     "removeFallback": "opción de tarifa",
+    "reorder": "Reordenar {{label}}: arrastre o use las flechas",
     "fixedBasis": "Fija · {{count}} {{unit}}"
   },
   "photos": {
@@ -527,5 +538,42 @@
     },
     "subtitle_one": "{{count}} registro · {{total}} en total",
     "subtitle_other": "{{count}} registros · {{total}} en total"
+  },
+  "ratePlan": {
+    "lineTimes": "{{label}} × {{count}}",
+    "exactMatch": "{{label}} (coincidencia exacta)",
+    "discount": "{{days}}+ días: −{{pct}}%",
+    "cappedLabel": "{{label}} (tope de {{hours}} h/día)",
+    "automatic": "Automático",
+    "notice": {
+      "capped": "Precio automático: {{label}} tiene un tope de {{hours}} horas al día, así que cada día completo cuesta {{price}}.",
+      "repeated_one": "Precio automático: ninguna tarifa coincide con la duración del viaje, así que {{label}} se cobra una vez para cubrirla.",
+      "repeated_other": "Precio automático: ninguna tarifa coincide con la duración del viaje, así que {{label}} se cobra {{count}} veces para cubrirla."
+    }
+  },
+  "discounts": {
+    "when": "Cuándo",
+    "description": "Descripción",
+    "discount": "Descuento",
+    "daysLabel": "Días mínimos",
+    "daysSuffix": "+ días",
+    "percentLabel": "Porcentaje de descuento",
+    "describe_one": "Si el cliente reserva {{count}} día o más, se aplica el descuento",
+    "describe_other": "Si el cliente reserva {{count}} días o más, se aplica el descuento",
+    "describePlaceholder": "Escriba un mínimo de días y luego el porcentaje",
+    "add": "Añadir tramo de descuento",
+    "remove": "Eliminar {{label}}",
+    "tierName_one": "{{count}}+ día",
+    "tierName_other": "{{count}}+ días",
+    "tierFallback": "tramo de descuento"
+  },
+  "effectiveRates": {
+    "show": "Mostrar tarifas efectivas",
+    "hide": "Ocultar tarifas efectivas",
+    "empty": "Añada una opción de tarifa para ver lo que pagaría el cliente.",
+    "rental_one": "Alquiler de {{count}} día",
+    "rental_other": "Alquiler de {{count}} días",
+    "autoNote_one": "Automático: precio calculado automáticamente. Las tarifas por hora tienen un tope de {{count}} hora al día, y un paquete se repite cuando ninguna tarifa coincide con la duración.",
+    "autoNote_other": "Automático: precio calculado automáticamente. Las tarifas por hora tienen un tope de {{count}} horas al día, y un paquete se repite cuando ninguna tarifa coincide con la duración."
   }
 }

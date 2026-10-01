@@ -2,8 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { useFormatters } from '@/i18n'
-import type { RateOption } from '@/modules/vehicles/types/vehicle.types'
-import { formatRateOptionBasis } from '@/modules/vehicles/utils/vehicle.utils'
+import { formatRateOptionBasis, rateLineLabel } from '@/modules/vehicles/utils/vehicle.utils'
 import type { BookingPricing } from '../utils/booking.pricing'
 
 function Line({
@@ -32,12 +31,11 @@ function Line({
 
 interface BookingPriceSummaryProps {
   pricing: BookingPricing
-  option: RateOption
   className?: string
 }
 
 /** The running charge breakdown — shown live beside the wizard and again on the review step. */
-export function BookingPriceSummary({ pricing, option, className }: BookingPriceSummaryProps) {
+export function BookingPriceSummary({ pricing, className }: BookingPriceSummaryProps) {
   const { t } = useTranslation('bookings')
   const { t: tVehicles } = useTranslation('vehicles')
   const format = useFormatters()
@@ -50,14 +48,27 @@ export function BookingPriceSummary({ pricing, option, className }: BookingPrice
       </p>
 
       <div className="divide-border-soft mt-3 divide-y">
-        <Line
-          label={t('form.summary.rental', {
-            label: option.label,
-            basis: formatRateOptionBasis(option, tVehicles),
-          })}
-          hint={t('form.summary.units', { count: pricing.units, price: format.currency(option.rate) })}
-          value={format.currency(pricing.rentalSubtotal)}
-        />
+        {pricing.plan.lines.map(({ option, count, amount, cappedHours }) => (
+          <Line
+            key={`${option.id}-${cappedHours ?? 0}`}
+            label={t('form.summary.rental', {
+              label: rateLineLabel({ label: option.label, cappedHours }, tVehicles),
+              basis: formatRateOptionBasis(option, tVehicles),
+            })}
+            hint={t('form.summary.units', { count, price: format.currency(option.rate) })}
+            value={format.currency(amount)}
+          />
+        ))}
+
+        {pricing.plan.discount && (
+          <Line
+            label={tVehicles('ratePlan.discount', {
+              days: pricing.plan.discount.minDays,
+              pct: pricing.plan.discount.percentOff,
+            })}
+            value={`−${format.currency(pricing.discount)}`}
+          />
+        )}
 
         {pricing.drivers && (
           <Line

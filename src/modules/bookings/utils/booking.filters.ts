@@ -4,7 +4,6 @@ import {
   BOOKING_VALUE_BANDS,
   type BookingFilters,
   type BookingLists,
-  type BookingSort,
   type BookingTab,
   type BookingTuple,
 } from '../types/booking.types'
@@ -57,13 +56,8 @@ export function bookingDurationDays(b: BookingTuple): number {
 }
 
 /** First word of the vehicle name — "BMW X5 xDrive40i" → "BMW". */
-export function bookingMake(b: BookingTuple): string {
+function bookingMake(b: BookingTuple): string {
   return b[2].split(' ')[0] ?? ''
-}
-
-/** Every make present in the given bookings, alphabetical — feeds the Vehicle make filter. */
-export function bookingMakes(bookings: BookingTuple[]): string[] {
-  return [...new Set(bookings.map(bookingMake).filter(Boolean))].sort((a, b) => a.localeCompare(b))
 }
 
 export const EMPTY_BOOKING_LISTS: BookingLists = { upcoming: [], recent: [], schedule: [] }
@@ -75,6 +69,8 @@ export function allBookings(lists: BookingLists): BookingTuple[] {
 /** The set a tab draws from, before any filter is applied. */
 export function bookingsForTab(tab: BookingTab, lists: BookingLists): BookingTuple[] {
   switch (tab) {
+    case 'All':
+      return allBookings(lists)
     case 'Today':
       return lists.upcoming.filter((b) => bookingPickupOrdinal(b) === todayOrdinal())
     case 'Recent activity':
@@ -129,40 +125,6 @@ function matchesPickup(b: BookingTuple, range: DateRange): boolean {
   if (range.from && pickup < dateOrdinal(range.from)) return false
   if (range.to && pickup > dateOrdinal(range.to)) return false
   return true
-}
-
-/**
- * References are issued in order ("BK-48210" then "BK-48211"), so their number stands in for a
- * created-at the tuples don't carry. Swap for the real timestamp once bookings come from the API.
- */
-function bookingSequence(b: BookingTuple): number {
-  const digits = b[1].replace(/\D/g, '')
-  return digits ? Number(digits) : 0
-}
-
-/**
- * Ordered copy — never in place, since the caller's array is the query cache's own data.
- * Refunds sort on their signed total, so a credit sits at the bottom of a high-to-low list
- * rather than masquerading as a large booking.
- */
-export function sortBookings(bookings: BookingTuple[], sort: BookingSort): BookingTuple[] {
-  const sorted = [...bookings]
-
-  switch (sort) {
-    case 'oldest':
-      return sorted.sort((a, b) => bookingSequence(a) - bookingSequence(b))
-    case 'pickupAsc':
-      return sorted.sort((a, b) => bookingPickupOrdinal(a) - bookingPickupOrdinal(b))
-    case 'pickupDesc':
-      return sorted.sort((a, b) => bookingPickupOrdinal(b) - bookingPickupOrdinal(a))
-    case 'totalDesc':
-      return sorted.sort((a, b) => parseBookingTotal(b[8]) - parseBookingTotal(a[8]))
-    case 'totalAsc':
-      return sorted.sort((a, b) => parseBookingTotal(a[8]) - parseBookingTotal(b[8]))
-    case 'newest':
-    default:
-      return sorted.sort((a, b) => bookingSequence(b) - bookingSequence(a))
-  }
 }
 
 export function filterBookings(bookings: BookingTuple[], f: BookingFilters): BookingTuple[] {

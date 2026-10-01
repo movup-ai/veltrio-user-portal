@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
+import { DRAFTS_PAGE } from '@/lib/pagination'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import type { PaginationParams } from '@/types/common'
@@ -9,9 +10,6 @@ export const bookingDraftKeys = {
   all: ['booking-drafts'] as const,
   list: (params: PaginationParams) => [...bookingDraftKeys.all, 'list', params] as const,
 }
-
-/** The API caps drafts per tenant well below this, so one page always holds them all. */
-export const DRAFTS_PAGE: PaginationParams = { page: 1, pageSize: 50 }
 
 export function useBookingDrafts(params: PaginationParams = DRAFTS_PAGE) {
   return useQuery({

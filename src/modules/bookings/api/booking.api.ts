@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/api/client'
 import { locationApi } from '@/modules/locations/api/location.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
-import { toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
+import { MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { BookingFilters, BookingInput, BookingTuple } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
@@ -22,7 +22,7 @@ import {
 } from './booking.mapper'
 
 /** The most `GET /bookings` will return in one call; asking for more is a 422. */
-const LIST_PAGE_SIZE = 100
+const LIST_PAGE_SIZE = MAX_PAGE_SIZE
 
 /**
  * Stops a runaway loop from hammering the API if `total` were ever wrong. 50 pages is 5,000

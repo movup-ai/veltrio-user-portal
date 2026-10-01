@@ -102,7 +102,12 @@
       "location": "Location",
       "status": "Status",
       "total": "Total"
-    }
+    },
+    "discounts": "Discounts",
+    "discountsNone": "No length-of-rental discounts. Add them when editing the vehicle.",
+    "hourlyCap_one": "Hourly rates bill at most {{count}} hour a day.",
+    "hourlyCap_other": "Hourly rates bill at most {{count}} hours a day.",
+    "hourlyCappedByDaily": "Hourly billing never costs more than the Daily rate in a day."
   },
   "fees": {
     "deposit": "Deposit",
@@ -220,7 +225,10 @@
       "rateOptionsHint": "Each option is one way a renter can book this vehicle, with its own mileage allowance.",
       "fees": "Deposit, fees & tax",
       "feesHint": "Applied to every booking, whichever rate option is used.",
-      "features": "Features"
+      "features": "Features",
+      "discounts": "Discounts",
+      "optional": "optional",
+      "discountsHint": "Percent off longer rentals. A rate option that matches the rental’s length exactly always wins and is never discounted."
     },
     "fields": {
       "make": "Make",
@@ -259,7 +267,10 @@
       "overageRatePlaceholder": "e.g. 0.35",
       "fuelCharge": "Fuel charge (per 1/8 tank)",
       "fuelChargeUnit": "/ 1/8 tank",
-      "taxRate": "Tax rate (%)"
+      "taxRate": "Tax rate (%)",
+      "billableHours": "Hourly cap per day",
+      "billableHoursHint": "A renter who keeps the car past a day pays for at most this many hours of each day. Priced automatically; 24 turns the cap off.",
+      "billableHoursUnit": "hours a day"
     },
     "ai": {
       "generate": "Generate",
@@ -289,9 +300,8 @@
       "noRateOptions": "No rate options added.",
       "untitledOption": "Untitled option",
       "fees": "Deposit, fees & tax",
-      "seatsDoors": "Seats / Doors",
-      "seatsDoorsValue": "{{seats}} seats · {{doors}} doors",
-      "features": "Features"
+      "features": "Features",
+      "discounts": "Discounts"
     },
     "publishFailed": "Could not publish vehicle"
   },
@@ -313,6 +323,7 @@
     "unlimitedMiles": "Unlimited miles",
     "remove": "Remove {{label}}",
     "removeFallback": "rate option",
+    "reorder": "Reorder {{label}}: drag, or use the arrow keys",
     "fixedBasis": "Fixed · {{count}} {{unit}}"
   },
   "photos": {
@@ -527,5 +538,42 @@
     },
     "subtitle_one": "{{count}} record · {{total}} total",
     "subtitle_other": "{{count}} records · {{total}} total"
+  },
+  "ratePlan": {
+    "lineTimes": "{{label}} × {{count}}",
+    "exactMatch": "{{label}} (exact match)",
+    "discount": "{{days}}+ days: −{{pct}}%",
+    "cappedLabel": "{{label}} ({{hours}} h/day cap)",
+    "automatic": "Auto",
+    "notice": {
+      "capped": "Priced automatically: {{label}} is capped at {{hours}} hours a day, so each full day costs {{price}}.",
+      "repeated_one": "Priced automatically: no rate matches this trip’s length, so {{label}} is billed once to cover it.",
+      "repeated_other": "Priced automatically: no rate matches this trip’s length, so {{label}} is billed {{count}} times to cover it."
+    }
+  },
+  "discounts": {
+    "when": "When",
+    "description": "Description",
+    "discount": "Discount",
+    "daysLabel": "Minimum days",
+    "daysSuffix": "+ days",
+    "percentLabel": "Percent off",
+    "describe_one": "If the renter books {{count}} day or more, apply the discount",
+    "describe_other": "If the renter books {{count}} or more days, apply the discount",
+    "describePlaceholder": "Type a day threshold, then the percent off",
+    "add": "Add discount tier",
+    "remove": "Remove {{label}}",
+    "tierName_one": "{{count}}+ day",
+    "tierName_other": "{{count}}+ days",
+    "tierFallback": "discount tier"
+  },
+  "effectiveRates": {
+    "show": "Show effective rates",
+    "hide": "Hide effective rates",
+    "empty": "Add a rate option to see what renters would pay.",
+    "rental_one": "{{count}}-day rental",
+    "rental_other": "{{count}}-day rental",
+    "autoNote_one": "Auto: priced automatically. Hourly rates are capped at {{count}} hour a day, and a package repeats when no rate fits the length.",
+    "autoNote_other": "Auto: priced automatically. Hourly rates are capped at {{count}} hours a day, and a package repeats when no rate fits the length."
   }
 }

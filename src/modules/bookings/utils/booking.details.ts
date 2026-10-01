@@ -288,10 +288,24 @@ function buildRenter(name: string, bookingTotal: number, booking?: Booking): Boo
 }
 
 /** The stored quote, line by line — it already sums to the total, so nothing is reconciled. */
-function exactCharges(booking: Booking): BookingChargeLine[] {
+export function exactCharges(booking: Booking): BookingChargeLine[] {
   const { pricing, rate, additionalDrivers, fees } = booking
   return [
-    { key: 'baseRate', meta: { rate: rate.rate, days: rate.units }, amount: pricing.rentalSubtotal },
+    ...rate.lines.map((line) => ({
+      key: 'baseRate' as const,
+      label: line.label,
+      meta: { rate: line.rate, count: line.count, cappedHours: line.cappedHours },
+      amount: line.rate * line.count,
+    })),
+    ...(pricing.discount
+      ? [
+          {
+            key: 'discount' as const,
+            meta: { days: pricing.discount.minDays, pct: pricing.discount.percentOff },
+            amount: -pricing.discount.amount,
+          },
+        ]
+      : []),
     ...(additionalDrivers.length > 0
       ? [
           {

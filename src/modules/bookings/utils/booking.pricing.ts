@@ -1,16 +1,8 @@
-import type { BillingBasis, RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types'
+import { fromCents, percentOfCents, toCents } from '@/lib/money'
+import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
+import { planRental, planTotal, type RatePlan } from '@/modules/vehicles/utils/rate-plan'
 
 const MS_PER_HOUR = 1000 * 60 * 60
-
-/** Hours in one billable unit. `fixed` is excluded — its block length is per rate option. */
-const HOURS_PER_UNIT: Record<Exclude<BillingBasis, 'fixed'>, number> = {
-  hour: 1,
-  day: 24,
-  week: 24 * 7,
-  month: 24 * 30,
-}
-
-const HOURS_PER_DURATION_UNIT = { hours: 1, days: 24, weeks: 24 * 7, months: 24 * 30 } as const
 
 /** Billable days for the trip — what the per-day driver charge is billed on. Always at least one. */
 export function rentalDays(hours: number): number {
@@ -40,9 +32,11 @@ export interface BookingPricing {
   hours: number
   /** Whole rental days, rounded up — what the per-day driver charge is billed on. */
   days: number
-  /** Billable units of the chosen rate option (3 days, 2 weeks, 1 fixed block, …). */
-  units: number
+  /** The rates the cost engine chose, and any length-of-rental discount. */
+  plan: RatePlan
+  /** Before the discount. */
   rentalSubtotal: number
+  discount: number
   /** Null when the renter is driving alone. */
   drivers: DriverCharge | null
   /** Ad-hoc charges added to this booking, each a flat amount. */
@@ -54,7 +48,7 @@ export interface BookingPricing {
   total: number
   /** Held, not charged — reported alongside the total rather than inside it. */
   deposit: number
-  /** Total miles included across all units; `null` means unlimited. */
+  /** Total miles included across the rental; `null` means unlimited. */
   includedMiles: number | null
 }
 
@@ -66,25 +60,8 @@ export function durationHours(pickupAt: string, returnAt: string): number {
   return (to - from) / MS_PER_HOUR
 }
 
-/** Length of one `fixed` block in hours — defaults to a single day when the option is incomplete. */
-function fixedBlockHours(option: RateOption): number {
-  const unit = option.blockDurationUnit ?? 'days'
-  const count = option.blockDuration ?? 1
-  return Math.max(1, count) * HOURS_PER_DURATION_UNIT[unit]
-}
-
-/**
- * Billable units for a rental of `hours`, always rounded up and never below 1 — a 26-hour
- * rental on a daily rate is 2 days, and any non-zero rental is charged at least one unit.
- */
-export function billableUnits(option: RateOption, hours: number): number {
-  const perUnit = option.basis === 'fixed' ? fixedBlockHours(option) : HOURS_PER_UNIT[option.basis]
-  return Math.max(1, Math.ceil(hours / perUnit))
-}
-
 interface PriceBookingArgs {
   vehicle: Vehicle
-  option: RateOption
   pickupAt: string
   returnAt: string
   /** Drivers beyond the main renter, each with its own daily rate. */
@@ -93,51 +70,61 @@ interface PriceBookingArgs {
   fees?: { id: string; label: string; amount: number }[]
 }
 
+/**
+ * The quote the form shows. The API's `pricing.py` re-prices the booking on create with the
+ * same rules, so what the renter sees here is what they are charged. Null when the vehicle has
+ * no rate options to bill at.
+ */
 export function priceBooking({
   vehicle,
-  option,
   pickupAt,
   returnAt,
   additionalDrivers = [],
   fees = [],
-}: PriceBookingArgs): BookingPricing {
+}: PriceBookingArgs): BookingPricing | null {
   const hours = durationHours(pickupAt, returnAt)
+  const plan = planRental(vehicle.rateOptions, vehicle.discountTiers, hours, vehicle.billableHoursPerDay)
+  if (!plan) return null
   const days = rentalDays(hours)
-  const units = billableUnits(option, hours)
 
-  const rentalSubtotal = option.rate * units
-
-  const driversPerDay = additionalDrivers.reduce(
-    (sum, d) => sum + (Number.isFinite(d.pricePerDay) ? d.pricePerDay : 0),
+  // Summed in whole cents, as the API does: float dollars drift a cent off what it charges.
+  const driversPerDayCents = additionalDrivers.reduce(
+    (sum, d) => sum + (Number.isFinite(d.pricePerDay) ? toCents(d.pricePerDay) : 0),
     0,
   )
+  const driversCents = driversPerDayCents * days
   const drivers: DriverCharge | null =
     additionalDrivers.length > 0
-      ? { count: additionalDrivers.length, perDay: driversPerDay, amount: driversPerDay * days }
+      ? {
+          count: additionalDrivers.length,
+          perDay: fromCents(driversPerDayCents),
+          amount: fromCents(driversCents),
+        }
       : null
 
   const feeCharges: FeeCharge[] = fees
     .filter((f) => f.label.trim().length > 0)
     .map((f) => ({ id: f.id, label: f.label.trim(), amount: Number.isFinite(f.amount) ? f.amount : 0 }))
-  const feesTotal = feeCharges.reduce((sum, f) => sum + f.amount, 0)
+  const feesCents = feeCharges.reduce((sum, f) => sum + toCents(f.amount), 0)
 
-  const subtotal = rentalSubtotal + (drivers?.amount ?? 0) + feesTotal
+  const subtotalCents = toCents(planTotal(plan)) + driversCents + feesCents
   const taxRatePct = vehicle.fees.taxRatePct ?? 0
-  const tax = Math.round(subtotal * taxRatePct) / 100
+  const taxCents = percentOfCents(subtotalCents, taxRatePct)
 
   return {
     hours,
     days,
-    units,
-    rentalSubtotal,
+    plan,
+    rentalSubtotal: plan.subtotal,
+    discount: plan.discount?.amount ?? 0,
     drivers,
     fees: feeCharges,
-    feesTotal,
-    subtotal,
+    feesTotal: fromCents(feesCents),
+    subtotal: fromCents(subtotalCents),
     taxRatePct,
-    tax,
-    total: subtotal + tax,
+    tax: fromCents(taxCents),
+    total: fromCents(subtotalCents + taxCents),
     deposit: vehicle.fees.deposit ?? 0,
-    includedMiles: option.unlimitedMileage ? null : (option.includedMiles ?? 0) * units,
+    includedMiles: plan.includedMiles,
   }
 }

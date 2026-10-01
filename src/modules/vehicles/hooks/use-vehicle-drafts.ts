@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
+import { DRAFTS_PAGE } from '@/lib/pagination'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import type { PaginationParams } from '@/types/common'
@@ -13,9 +14,6 @@ export const vehicleDraftKeys = {
   all: ['vehicle-drafts'] as const,
   list: (params: PaginationParams) => [...vehicleDraftKeys.all, 'list', params] as const,
 }
-
-/** The API caps drafts per tenant well below this, so one page always holds them all. */
-export const DRAFTS_PAGE: PaginationParams = { page: 1, pageSize: 50 }
 
 /** Matches the vehicle detail poll — a cover photo takes a second or two to render. */
 const PHOTO_POLL_MS = 2_000

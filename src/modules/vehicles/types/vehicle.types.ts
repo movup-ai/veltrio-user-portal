@@ -62,6 +62,15 @@ export interface RateOption {
   unlimitedMileage: boolean
 }
 
+/**
+ * Percent off a rental that reaches `minDays` — "10% off 3+ days". Whole percents only, which
+ * keeps the portal's quote and the API's charge rounding identically.
+ */
+export interface DiscountTier {
+  minDays: number
+  percentOff: number
+}
+
 /** Sizes the backend renders for every uploaded photo. */
 export const PHOTO_SIZES = ['thumbnail', 'medium', 'large'] as const
 export type PhotoSize = (typeof PHOTO_SIZES)[number]
@@ -139,6 +148,9 @@ export interface Vehicle {
   notes?: string
   photos: VehiclePhoto[]
   rateOptions: RateOption[]
+  discountTiers: DiscountTier[]
+  /** Most an hourly rate bills per day of a longer rental; 24 means no cap. */
+  billableHoursPerDay: number
   fees: VehicleFees
   specs: VehicleSpecs
   features: VehicleFeature[]

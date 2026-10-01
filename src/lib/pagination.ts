@@ -9,12 +9,15 @@ export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 /** The API's ceiling on `limit`: a list asked for in one go is capped here. */
 export const MAX_PAGE_SIZE = 100
 
+/** The API caps drafts per tenant well below this, so one page always holds them all. */
+export const DRAFTS_PAGE: PaginationParams = { page: 1, pageSize: 50 }
+
 /**
  * Query shape the API actually pages with. The UI thinks in page/pageSize (it renders
  * "page 3 of 7" and Previous/Next), so the two are translated at the API boundary rather
  * than leaking limit/offset into components.
  */
-export interface LimitOffsetParams {
+interface LimitOffsetParams {
   limit: number
   offset: number
 }

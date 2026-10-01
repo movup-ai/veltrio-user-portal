@@ -1,6 +1,8 @@
+import { fromCents as centsToDollars, toCents as dollarsToCents } from '@/lib/money'
 import { toLimitOffset } from '@/lib/pagination'
 import {
   type BillingBasis,
+  type DiscountTier,
   type DurationUnit,
   type FuelType,
   type PhotoSize,
@@ -46,7 +48,7 @@ import type {
 
 // --- Wire types (mirror of the API's VehicleRead; see its /openapi.json) --------------------
 
-export interface PhotoVariantWire {
+interface PhotoVariantWire {
   size: PhotoSize
   width: number
   height: number
@@ -64,7 +66,7 @@ export interface VehiclePhotoWire {
   createdAt: string
 }
 
-export interface RateOptionWire {
+interface RateOptionWire {
   id: string
   label: string
   basis: BillingBasis
@@ -94,6 +96,8 @@ export interface VehicleWire {
   notes: string | null
   photos: VehiclePhotoWire[]
   rateOptions: RateOptionWire[]
+  discountTiers: DiscountTier[]
+  billableHoursPerDay: number
   fees: {
     depositCents: number | null
     overageRatePerMileCents: number | null
@@ -190,11 +194,11 @@ function decode<P extends string>(map: Record<string, P>, slug: string, fallback
 
 /** The API stores integer cents; the portal edits dollars. */
 function toCents(dollars: number | undefined): number | null {
-  return dollars == null ? null : Math.round(dollars * 100)
+  return dollars == null ? null : dollarsToCents(dollars)
 }
 
 function fromCents(cents: number | null | undefined): number | undefined {
-  return cents == null ? undefined : cents / 100
+  return cents == null ? undefined : centsToDollars(cents)
 }
 
 // --- Reads ---------------------------------------------------------------------------------
@@ -255,6 +259,8 @@ export function toVehicle(wire: VehicleWire): Vehicle {
     notes: wire.notes ?? undefined,
     photos: wire.photos.map(toPhoto),
     rateOptions: wire.rateOptions.map(toRateOption),
+    discountTiers: wire.discountTiers,
+    billableHoursPerDay: wire.billableHoursPerDay,
     fees: {
       deposit: fromCents(wire.fees.depositCents),
       overageRatePerMile: fromCents(wire.fees.overageRatePerMileCents),
@@ -313,6 +319,8 @@ export function toVehiclePayload(input: VehicleInput) {
     mileage: input.mileage,
     description: input.description?.trim() || null,
     rateOptions: input.rateOptions.map(toRateOptionPayload),
+    discountTiers: input.discountTiers.map(({ minDays, percentOff }) => ({ minDays, percentOff })),
+    billableHoursPerDay: input.billableHoursPerDay,
     fees: {
       depositCents: toCents(input.fees.deposit),
       overageRatePerMileCents: toCents(input.fees.overageRatePerMile),
@@ -428,7 +436,7 @@ export interface ServiceRecordWire {
   nextDueOdometer: number | null
 }
 
-export interface ServiceDueWire {
+interface ServiceDueWire {
   recordId: string
   serviceType: string
   state: ServiceDueState

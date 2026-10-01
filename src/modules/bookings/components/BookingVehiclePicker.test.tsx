@@ -33,6 +33,8 @@ function vehicle(id: string, overrides: Partial<Vehicle> = {}): Vehicle {
         unlimitedMileage: false,
       },
     ],
+    discountTiers: [],
+    billableHoursPerDay: 8,
     fees: {},
     specs: { transmission: 'Automatic', fuelType: 'Petrol', seats: 5, doors: 4 },
     features: [],
@@ -147,10 +149,17 @@ describe('BookingVehiclePicker prices', () => {
   })
 
   it('bills a short trip on a weekly rate as one full week', () => {
-    // 24 hours against a weekly option is still one billed week, not one day.
+    // 24 hours against a weekly option is still one billed week, not one day's share of it.
     render(<BookingVehiclePicker options={[weekly()]} selectedId="" onSelect={vi.fn()} hours={24} />)
 
-    // The run-out line counts billed units, so it reads "1 week" rather than "1 day".
-    expect(screen.getByRole('radio')).toHaveTextContent(/1 week/i)
+    expect(screen.getByRole('radio')).toHaveTextContent('$3,000 for this trip')
+  })
+
+  it('quotes the trip at the cost engine’s price, discount included', () => {
+    // Four days at $100, less 10% for reaching 3 days: the row must match the booking's total.
+    const discounted = { vehicle: vehicle('d1', { discountTiers: [{ minDays: 3, percentOff: 10 }] }) }
+    render(<BookingVehiclePicker options={[discounted]} selectedId="" onSelect={vi.fn()} hours={HOURS} />)
+
+    expect(screen.getByRole('radio')).toHaveTextContent('$360 for this trip')
   })
 })

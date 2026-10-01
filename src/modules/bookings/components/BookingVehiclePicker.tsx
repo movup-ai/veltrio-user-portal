@@ -5,15 +5,14 @@ import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Pagination } from '@/components/data-display/Pagination'
 import { useFormatters } from '@/i18n'
-import { useDomainLabels } from '@/i18n/domain'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
+import { planRental, planTotal } from '@/modules/vehicles/utils/rate-plan'
 import {
   formatRateOptionPrice,
   headlineRateOption,
   vehicleDisplayName,
   vehicleSubtitle,
 } from '@/modules/vehicles/utils/vehicle.utils'
-import { billableUnits } from '../utils/booking.pricing'
 
 export interface VehicleOption {
   vehicle: Vehicle
@@ -50,7 +49,6 @@ export function BookingVehiclePicker({
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const format = useFormatters()
-  const domain = useDomainLabels()
   const [page, setPage] = useState(1)
   const [pagedList, setPagedList] = useState('')
 
@@ -101,7 +99,8 @@ export function BookingVehiclePicker({
           const selected = v.id === selectedId
           const cover = v.photos[0]
           const headline = headlineRateOption(v)
-          const runOut = headline ? headline.rate * billableUnits(headline, hours) : null
+          const plan = planRental(v.rateOptions, v.discountTiers, hours, v.billableHoursPerDay)
+          const tripPrice = plan ? planTotal(plan) : null
 
           return (
             <button
@@ -151,15 +150,10 @@ export function BookingVehiclePicker({
                     <span className="block text-[14.5px] font-bold tabular-nums">
                       {formatRateOptionPrice(headline)}
                     </span>
-                    {runOut != null && (
-                      // Billed units, not calendar days: a weekly rate over a two-day trip
-                      // charges one week, and saying "for 2 days" would misstate the price.
+                    {tripPrice != null && (
+                      // The cost engine's price, so the row matches the total the booking bills.
                       <span className="text-fg-4 block text-[12.5px] tabular-nums">
-                        {t('form.vehicle.forUnits', {
-                          count: billableUnits(headline, hours),
-                          unit: domain.label('billingBasisUnit', headline.basis),
-                          price: format.currency(runOut),
-                        })}
+                        {t('form.vehicle.forTrip', { price: format.currency(tripPrice) })}
                       </span>
                     )}
                   </span>

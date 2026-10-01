@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { Ellipsis, GripVertical } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
+import { cn, moveItem } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -245,10 +245,7 @@ export function RecordTable({
       setDragKey(null)
       return
     }
-    const next = [...keys]
-    next.splice(from, 1)
-    next.splice(to, 0, dragKey)
-    onReorder(next)
+    onReorder(moveItem(keys, from, to))
     setDragKey(null)
   }
   return (

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Archive, ArrowLeft, ChevronLeft, ChevronRight, Download, SquarePen } from 'lucide-react'
 import { useFormatters } from '@/i18n'
+import { MAX_PAGE_SIZE } from '@/lib/pagination'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
@@ -24,6 +25,7 @@ import { useBookings } from '@/modules/bookings/hooks/use-bookings'
 import { intervalsForPlate } from '@/modules/bookings/utils/booking.schedule'
 import { downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils/booking.utils'
 import { AvailabilityStrip } from '@/modules/vehicles/components/AvailabilityStrip'
+import { HourlyCapNote } from '@/modules/vehicles/components/HourlyCapNote'
 import { VehiclePerformance } from '@/modules/vehicles/components/VehiclePerformance'
 import { VehiclePhotoGallery } from '@/modules/vehicles/components/VehiclePhotoGallery'
 import { VehicleServiceHistory } from '@/modules/vehicles/components/VehicleServiceHistory'
@@ -99,7 +101,7 @@ export function VehicleDetailsPage() {
   const [confirmService, setConfirmService] = useState(false)
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
-  const { data: fleet } = useVehicles({ page: 1, pageSize: 100 })
+  const { data: fleet } = useVehicles({ page: 1, pageSize: MAX_PAGE_SIZE })
   const { data: bookingLists } = useBookings()
   const schedule = bookingLists?.schedule ?? []
   const updateVehicle = useUpdateVehicle(vehicleId ?? '')
@@ -284,6 +286,30 @@ export function VehicleDetailsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+            <HourlyCapNote
+              options={vehicle.rateOptions}
+              hoursPerDay={vehicle.billableHoursPerDay}
+              className="text-fg-4 text-[11.5px]"
+            />
+          </Card>
+
+          <Card className="flex flex-col gap-3 p-[18px]">
+            <PanelHeading title={t('details.discounts')} />
+            <div className="border-border-soft divide-y divide-[var(--color-border-soft)] border-t">
+              {vehicle.discountTiers.length === 0 ? (
+                <p className="text-fg-4 py-2.5 text-[12.5px]">{t('details.discountsNone')}</p>
+              ) : (
+                vehicle.discountTiers.map((tier) => (
+                  <div key={tier.minDays} className="flex flex-col gap-0.5 py-2.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[13px] font-semibold">{t('discounts.tierName', { count: tier.minDays })}</span>
+                      <span className="text-success text-[13px] font-semibold">−{tier.percentOff}%</span>
+                    </div>
+                    <span className="text-fg-4 text-[11.5px]">{t('discounts.describe', { count: tier.minDays })}</span>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
 
