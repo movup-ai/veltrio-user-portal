@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next'
 import { z } from 'zod'
 import { translateDurationUnit } from '@/i18n/domain'
+import { MAX_DISCOUNT_TIERS } from '../constants/rate-plan.constants'
 import {
   BILLING_BASES,
   DURATION_UNITS,
@@ -65,6 +66,39 @@ export function rateOptionSchema(t: ValidationT) {
     })
 }
 
+/** Bounds match DiscountTier on the API, which rejects anything outside them. */
+function discountTierSchema(t: ValidationT) {
+  return z.object({
+    id: z.string(),
+    minDays: z
+      .number({ message: t('discountTier.daysRange') })
+      .int(t('discountTier.daysRange'))
+      .min(1, t('discountTier.daysRange'))
+      .max(365, t('discountTier.daysRange')),
+    percentOff: z
+      .number({ message: t('discountTier.percentRange') })
+      .int(t('discountTier.percentRange'))
+      .min(1, t('discountTier.percentRange'))
+      .max(99, t('discountTier.percentRange')),
+  })
+}
+
+function discountTiersSchema(t: ValidationT) {
+  return z
+    .array(discountTierSchema(t))
+    .max(MAX_DISCOUNT_TIERS)
+    .superRefine((tiers, ctx) => {
+      tiers.forEach((tier, index) => {
+        if (tiers.findIndex((other) => other.minDays === tier.minDays) === index) return
+        ctx.addIssue({
+          code: 'custom',
+          path: [index, 'minDays'],
+          message: t('discountTier.daysDuplicate', { days: tier.minDays }),
+        })
+      })
+    })
+}
+
 /**
  * Built as a factory rather than a module-level constant so every message resolves in the
  * language that is active when the form mounts — callers memoize it on `i18n.language`.
@@ -102,6 +136,12 @@ export function vehicleFormSchema(t: ValidationT) {
 
     // Step 3 — Pricing
     rateOptions: z.array(rateOptionSchema(t)).min(1, t('vehicle.rateOptionsMin')),
+    discountTiers: discountTiersSchema(t),
+    billableHoursPerDay: z
+      .number({ message: t('vehicle.billableHoursRange') })
+      .int(t('vehicle.billableHoursRange'))
+      .min(1, t('vehicle.billableHoursRange'))
+      .max(24, t('vehicle.billableHoursRange')),
     deposit: z.number({ message: t('vehicle.depositRequired') }).nonnegative(t('vehicle.depositRequired')),
     overageRatePerMile: z
       .number({ message: t('vehicle.overageRateRequired') })
@@ -113,6 +153,7 @@ export function vehicleFormSchema(t: ValidationT) {
 
 export type VehicleFormValues = z.infer<ReturnType<typeof vehicleFormSchema>>
 export type RateOptionValues = z.infer<ReturnType<typeof rateOptionSchema>>
+export type DiscountTierValues = z.infer<ReturnType<typeof discountTierSchema>>
 
 export const STEP_FIELDS = {
   details: [
@@ -134,6 +175,6 @@ export const STEP_FIELDS = {
     'description',
   ],
   photos: ['photos'],
-  pricing: ['rateOptions', 'deposit', 'overageRatePerMile', 'fuelChargeRate', 'taxRatePct'],
+  pricing: ['rateOptions', 'discountTiers', 'billableHoursPerDay', 'deposit', 'overageRatePerMile', 'fuelChargeRate', 'taxRatePct'],
   review: [],
 } as const satisfies Record<string, (keyof VehicleFormValues)[]>

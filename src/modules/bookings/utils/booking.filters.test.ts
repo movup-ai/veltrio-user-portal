@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { BookingTuple } from '../types/booking.types'
 import { bookingDurationDays, bookingPickupOrdinal, bookingsForTab, filterBookings } from './booking.filters'
 import { EMPTY_BOOKING_LISTS } from './booking.filters'
@@ -33,7 +33,12 @@ function row(overrides: {
 const TODAY = new Date('2026-09-23T10:00:00Z')
 
 describe('dates keep their year', () => {
+  afterEach(() => vi.useRealTimers())
+
   it('does not treat the same day in another year as today', () => {
+    // The Today tab reads the real clock; unpinned, this only passed on TODAY's date.
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(TODAY)
     const thisYear = row({ pickupAt: '2026-09-23T09:30:00Z', returnAt: '2026-09-25T09:30:00Z' })
     const nextYear = row({
       reference: 'BK-2',

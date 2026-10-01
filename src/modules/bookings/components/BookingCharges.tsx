@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useFormatters } from '@/i18n'
+import { rateLineLabel } from '@/modules/vehicles/utils/vehicle.utils'
 import type { BookingChargeLine } from '../types/booking.types'
 
 interface BookingChargeLinesProps {
@@ -13,20 +14,32 @@ interface BookingChargeLinesProps {
  */
 export function BookingChargeLines({ charges, days }: BookingChargeLinesProps) {
   const { t } = useTranslation('bookings')
+  const { t: tVehicles } = useTranslation('vehicles')
   const format = useFormatters()
 
-  /** An ad-hoc fee is named by whoever added it; every other line has a fixed, translated name. */
+  /** A fee or a live booking's rate carries its own name; every other line has a fixed, translated one. */
   function nameFor(line: BookingChargeLine): string {
-    return line.key === 'extraFee' ? (line.label ?? '') : t(`details.charges.${line.key}`)
+    if (line.key === 'extraFee') return line.label ?? ''
+    if (line.key === 'baseRate' && line.label)
+      return rateLineLabel({ label: line.label, cappedHours: line.meta?.cappedHours }, tVehicles)
+    return line.label ?? t(`details.charges.${line.key}`)
   }
 
   function captionFor(line: BookingChargeLine): string | null {
     switch (line.key) {
       case 'baseRate':
-        return t('details.charges.baseRateDetail', {
-          rate: format.currency(line.meta?.rate ?? 0),
-          count: line.meta?.days ?? days,
-        })
+        // A live booking's line counts the rate's own units (2 weeks), not days.
+        return line.meta?.count != null
+          ? t('details.charges.baseRateUnits', {
+              rate: format.currency(line.meta.rate ?? 0),
+              count: line.meta.count,
+            })
+          : t('details.charges.baseRateDetail', {
+              rate: format.currency(line.meta?.rate ?? 0),
+              count: line.meta?.days ?? days,
+            })
+      case 'discount':
+        return t('details.charges.discountDetail', { days: line.meta?.days ?? 0, pct: line.meta?.pct ?? 0 })
       case 'additionalDriver':
         return t('details.charges.additionalDriverDetail', {
           count: line.meta?.count ?? 1,

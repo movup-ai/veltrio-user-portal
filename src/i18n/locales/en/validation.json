@@ -22,7 +22,8 @@
     "photosMax": "You can upload up to {{max}} photos",
     "rateOptionsMin": "Add at least one rate option to make this vehicle bookable",
     "depositRequired": "Enter a security deposit",
-    "overageRateRequired": "Enter an overage rate"
+    "overageRateRequired": "Enter an overage rate",
+    "billableHoursRange": "Whole hours, 1–24"
   },
   "booking": {
     "pickupLocationRequired": "Select a pickup location",
@@ -32,7 +33,6 @@
     "timeRequired": "Enter a valid time",
     "returnBeforePickup": "Return must be after pickup",
     "vehicleRequired": "Select a vehicle",
-    "rateOptionRequired": "Select a rate option",
     "customerNameRequired": "Customer name is required",
     "customerEmailInvalid": "Enter a valid email address",
     "customerPhoneRequired": "Enter a contact phone number",
@@ -45,7 +45,8 @@
     "feeAmountInvalid": "Enter a valid amount",
     "customerDobRequired": "Date of birth is required",
     "customerDobImplausible": "The renter must be at least 18",
-    "customerAddressRequired": "Address is required"
+    "customerAddressRequired": "Address is required",
+    "rentalTooLong": "A rental can be at most {{days}} days"
   },
   "rateOption": {
     "labelRequired": "Label is required",
@@ -54,6 +55,11 @@
     "ratePositive": "Rate must be greater than 0",
     "durationRequired": "Enter a block duration",
     "durationRange": "Must be a whole number, 1–{{max}} {{unit}}"
+  },
+  "discountTier": {
+    "daysRange": "Whole days, 1–365",
+    "percentRange": "Whole percent, 1–99",
+    "daysDuplicate": "Another tier already starts at {{days}} days"
   },
   "api": {
     "network": "Unable to reach the server. Check your connection.",

@@ -1,5 +1,6 @@
 import { toCustomer, toCustomerPayload, type CustomerWire } from '@/modules/customers/api/customer.mapper'
 import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
+import { fromCents, toCents } from '@/lib/money'
 import { toLimitOffset } from '@/lib/pagination'
 import type { PaginationParams } from '@/types/common'
 import {
@@ -32,14 +33,14 @@ import { bookingToTuple } from '../utils/booking.utils'
 
 // --- Wire types (mirror of the API's BookingRead) ------------------------------------------
 
-export interface AdditionalDriverWire {
+interface AdditionalDriverWire {
   id: string
   name: string
   licenceNumber: string
   pricePerDayCents: number
 }
 
-export interface BookingFeeWire {
+interface BookingFeeWire {
   id: string
   label: string
   amountCents: number
@@ -60,6 +61,14 @@ export interface BookingWire {
     rateCents: number
     units: number
     includedMiles: number | null
+    lines: {
+      optionId: string
+      label: string
+      basis: BillingBasis
+      rateCents: number
+      count: number
+      cappedHours: number | null
+    }[]
   }
   pickupLocation: string
   returnLocation: string
@@ -70,6 +79,7 @@ export interface BookingWire {
   verifications: VerificationKind[]
   pricing: {
     rentalSubtotalCents: number
+    discount: { minDays: number; percentOff: number; amountCents: number } | null
     driversCents: number
     feesCents: number
     subtotalCents: number
@@ -95,7 +105,7 @@ export interface BookingWire {
 }
 
 /** A US postal address. All four parts or none: Checkr rejects a partial one. */
-export interface VerificationAddressWire {
+interface VerificationAddressWire {
   street: string
   city: string
   state: string
@@ -189,7 +199,7 @@ export interface VerificationWire {
 }
 
 /** The policy behind an insurance verdict. `carrier` is Axle's slug, such as `state-farm`. */
-export interface InsurancePolicyWire {
+interface InsurancePolicyWire {
   carrier: string | null
   policyNumber: string | null
   expiresOn: string | null
@@ -218,16 +228,6 @@ const STATUS_TO_API = {
 const STATUS_FROM_API = Object.fromEntries(
   Object.entries(STATUS_TO_API).map(([portal, slug]) => [slug, portal]),
 ) as Record<string, BookingStatus>
-
-// --- Money ---------------------------------------------------------------------------------
-
-function toCents(dollars: number): number {
-  return Math.round(dollars * 100)
-}
-
-function fromCents(cents: number): number {
-  return cents / 100
-}
 
 // --- Reads ---------------------------------------------------------------------------------
 
@@ -263,8 +263,15 @@ export function toBooking(wire: BookingWire): Booking {
       rate: fromCents(wire.rate.rateCents),
       units: wire.rate.units,
       includedMiles: wire.rate.includedMiles,
+      lines: wire.rate.lines.map((line) => ({
+        optionId: line.optionId,
+        label: line.label,
+        basis: line.basis,
+        rate: fromCents(line.rateCents),
+        count: line.count,
+        cappedHours: line.cappedHours ?? undefined,
+      })),
     },
-    rateOptionId: wire.rate.optionId,
     pickupLocation: wire.pickupLocation,
     returnLocation: wire.returnLocation,
     pickupAt: wire.pickupAt,
@@ -274,6 +281,11 @@ export function toBooking(wire: BookingWire): Booking {
     verifications: wire.verifications,
     pricing: {
       rentalSubtotal: fromCents(wire.pricing.rentalSubtotalCents),
+      discount: wire.pricing.discount && {
+        minDays: wire.pricing.discount.minDays,
+        percentOff: wire.pricing.discount.percentOff,
+        amount: fromCents(wire.pricing.discount.amountCents),
+      },
       drivers: fromCents(wire.pricing.driversCents),
       fees: fromCents(wire.pricing.feesCents),
       subtotal: fromCents(wire.pricing.subtotalCents),
@@ -376,7 +388,6 @@ export function toBookingPayload(input: BookingInput) {
     ...(input.customerId && { customerId: input.customerId }),
     customer: toCustomerPayload(input.customer),
     vehicleId: input.vehicleId,
-    rateOptionId: input.rateOptionId,
     pickupLocation: input.pickupLocation,
     returnLocation: input.returnLocation,
     pickupAt: input.pickupAt,
@@ -416,7 +427,9 @@ export function toBookingDraft(wire: BookingDraftWire): BookingDraft {
 // --- List query ----------------------------------------------------------------------------
 
 /** Tabs, as the API names them. The portal's own labels stay in BOOKING_TABS. */
-const TAB_TO_API: Record<BookingTab, string> = {
+const TAB_TO_API: Record<BookingTab, string | undefined> = {
+  // The API has no "all" tab; leaving the param off is what returns the whole book.
+  All: undefined,
   Upcoming: 'upcoming',
   Today: 'today',
   'Recent activity': 'recent',
@@ -437,9 +450,10 @@ export function toBookingListQuery(params: BookingListParams): Record<string, un
   const { filters, tab, sort } = params
   const query: Record<string, unknown> = {
     ...toLimitOffset({ page: params.page, pageSize: params.pageSize }),
-    tab: TAB_TO_API[tab],
     sort,
   }
+  const apiTab = TAB_TO_API[tab]
+  if (apiTab) query.tab = apiTab
 
   const search = filters.search.trim()
   if (search) query.search = search
@@ -483,6 +497,9 @@ export interface BookingStatsWire {
 
 export function toTabCounts(wire: BookingTabCountsWire): Record<BookingTab, number> {
   return {
+    // Upcoming is the API's open clause and recent its negation, over non-null columns, so
+    // together they are every booking under the same filters.
+    All: wire.upcoming + wire.recent,
     Upcoming: wire.upcoming,
     Today: wire.today,
     'Recent activity': wire.recent,

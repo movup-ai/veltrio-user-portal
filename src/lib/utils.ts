@@ -15,3 +15,12 @@ const twMerge = extendTailwindMerge({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+/** A copy of `items` with the one at `from` moved to `to`, for drag-and-drop reordering. */
+export function moveItem<T>(items: readonly T[], from: number, to: number): T[] {
+  const next = [...items]
+  if (from < 0 || to < 0 || from >= next.length || to >= next.length) return next
+  const [moved] = next.splice(from, 1)
+  next.splice(to, 0, moved)
+  return next
+}

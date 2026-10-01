@@ -42,7 +42,10 @@ function page(offset: number, total: number) {
   return { data: { items, total } }
 }
 
-beforeEach(() => get.mockReset())
+// A block body: a function returned from beforeEach runs as cleanup, which would call `get()`.
+beforeEach(() => {
+  get.mockReset()
+})
 
 describe('vehicleApi.listAll', () => {
   it('pages past the API cap rather than stopping at the first 100', async () => {
@@ -57,6 +60,15 @@ describe('vehicleApi.listAll', () => {
     expect(fleet).toHaveLength(250)
     expect(get).toHaveBeenCalledTimes(3)
     expect(new Set(fleet.map((v) => v.id)).size).toBe(250)
+  })
+
+  it('reads a fleet past the bookings cap of 5,000 in full', async () => {
+    get.mockImplementation((_url, config) => {
+      const { offset } = config?.params as { offset: number }
+      return Promise.resolve(page(offset, 6_000)) as never
+    })
+
+    expect(await vehicleApi.listAll()).toHaveLength(6_000)
   })
 
   it('stops after one call when the fleet fits on a page', async () => {

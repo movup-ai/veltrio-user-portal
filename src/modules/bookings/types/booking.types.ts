@@ -65,7 +65,7 @@ export const BOOKING_ATTENTION_STATUSES: readonly string[] = ['Overdue'] satisfi
 
 export const BOOKING_OVERDUE_STATUSES: readonly string[] = ['Overdue'] satisfies BookingStatus[]
 
-export const BOOKING_TABS = ['Upcoming', 'Today', 'Recent activity', 'Overdue'] as const
+export const BOOKING_TABS = ['All', 'Upcoming', 'Today', 'Recent activity', 'Overdue'] as const
 export type BookingTab = (typeof BOOKING_TABS)[number]
 
 /** Rental length in days — bounds only; the label lives in `bookings:filters.durationBand.<value>`. */
@@ -199,8 +199,8 @@ export interface BookingInput {
    */
   customerId?: string
   customer: BookingCustomer
+  /** No rate option: the cost engine picks the rates from the vehicle's card. */
   vehicleId: string
-  rateOptionId: string
   pickupLocation: string
   returnLocation: string
   /** ISO timestamps. */
@@ -211,21 +211,36 @@ export interface BookingInput {
   verifications: VerificationKind[]
 }
 
-/** The rate option as it was when booked — vehicle rate cards change afterwards. */
+/** One rate the rental was billed at, as it was when booked: "Daily × 3". */
+export interface BookingRateLine {
+  optionId: string
+  label: string
+  basis: BillingBasis
+  rate: number
+  count: number
+  /** Set when the engine billed a day of an hourly option as this many hours. */
+  cappedHours?: number
+}
+
+/** The rates as they were when booked — vehicle rate cards change afterwards. */
 export interface BookingRate {
   optionId: string
   label: string
   basis: BillingBasis
   rate: number
-  /** Billable units of the rate (3 days, 2 weeks, 1 fixed block). */
+  /** Billable units of the first line (3 days, 2 weeks, 1 fixed block). */
   units: number
   /** Across the whole rental; `null` means unlimited. */
   includedMiles: number | null
+  /** Longest unit first; more than one when the engine combined rates. */
+  lines: BookingRateLine[]
 }
 
 /** The quote as stored with the booking. The lines sum to `total`; the deposit is held, not charged. */
 export interface BookingQuote {
   rentalSubtotal: number
+  /** Off `rentalSubtotal`; `subtotal` is already net of it. */
+  discount: { minDays: number; percentOff: number; amount: number } | null
   drivers: number
   fees: number
   subtotal: number
@@ -374,14 +389,15 @@ export interface BookingAgreement {
 }
 
 /**
- * One line of the charges breakdown. `extraFee` carries the label the counter typed; every other
- * kind is named by `bookings:details.charges.<key>`. The lines always sum to the booking total.
+ * One line of the charges breakdown. `extraFee` carries the label the counter typed, and a live
+ * booking's `baseRate` lines the rate's own name; everything else is named by
+ * `bookings:details.charges.<key>`. The lines always sum to the booking total.
  */
 export interface BookingChargeLine {
-  key: 'baseRate' | 'additionalDriver' | 'extraFee' | 'taxes'
+  key: 'baseRate' | 'discount' | 'additionalDriver' | 'extraFee' | 'taxes'
   label?: string
   /** Interpolation values for the line's sub-caption. */
-  meta?: { rate?: number; days?: number; count?: number; pct?: number }
+  meta?: { rate?: number; days?: number; count?: number; pct?: number; cappedHours?: number }
   amount: number
 }
 

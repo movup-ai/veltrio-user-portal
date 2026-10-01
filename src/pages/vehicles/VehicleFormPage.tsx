@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowRight, ImageOff, Loader2, ScanLine, Save, Sparkles } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
+import { DRAFTS_PAGE } from '@/lib/pagination'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,11 @@ import { FormField } from '@/components/forms/FormField'
 import { PhotoDropzone } from '@/components/forms/PhotoDropzone'
 import { VehiclePhotoEditor } from '@/modules/vehicles/components/VehiclePhotoEditor'
 import { RateOptionsEditor } from '@/modules/vehicles/components/RateOptionsEditor'
+import { DiscountTiersEditor } from '@/modules/vehicles/components/DiscountTiersEditor'
+import { EffectiveRatesPreview } from '@/modules/vehicles/components/EffectiveRatesPreview'
+import { DEFAULT_BILLABLE_HOURS_PER_DAY } from '@/modules/vehicles/constants/rate-plan.constants'
+import { HourlyCapNote } from '@/modules/vehicles/components/HourlyCapNote'
+import { hourlyCapApplies } from '@/modules/vehicles/utils/rate-plan'
 import { VehicleFeatureChips } from '@/modules/vehicles/components/VehicleFeatureChips'
 import { VehicleFeaturesPicker } from '@/modules/vehicles/components/VehicleFeaturesPicker'
 import { ReviewRow, ReviewRowGrid, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
@@ -45,7 +51,6 @@ import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/modules/vehicl
 import {
   usePublishVehicleDraft,
   useSaveVehicleDraft,
-  DRAFTS_PAGE,
   useVehicleDrafts,
 } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import {
@@ -92,6 +97,8 @@ const EMPTY_VALUES: VehicleFormValues = {
   description: '',
   photos: [],
   rateOptions: [],
+  discountTiers: [],
+  billableHoursPerDay: DEFAULT_BILLABLE_HOURS_PER_DAY,
   deposit: undefined as unknown as number,
   overageRatePerMile: undefined as unknown as number,
   fuelChargeRate: undefined,
@@ -131,6 +138,8 @@ function formValuesToVehicleInput(values: VehicleFormValues): VehicleInput {
     photos: values.photos,
     features: values.features,
     rateOptions: values.rateOptions,
+    discountTiers: values.discountTiers.map(({ minDays, percentOff }) => ({ minDays, percentOff })),
+    billableHoursPerDay: values.billableHoursPerDay,
     fees: {
       deposit: values.deposit,
       overageRatePerMile: values.overageRatePerMile,
@@ -264,6 +273,7 @@ function VehicleForm({
   } = useForm<VehicleFormValues>({ resolver: zodResolver(schema), defaultValues: initialValues, mode: 'onChange' })
 
   const watchedValues = useWatch({ control }) as VehicleFormValues
+  const capApplies = hourlyCapApplies(watchedValues.rateOptions ?? [])
 
   // Locations arrive after the form is built, so the default branch is filled in when it
   // lands — once, and never over a choice the user or the saved vehicle already made.
@@ -886,6 +896,63 @@ function VehicleForm({
                     />
                   )}
                 />
+                {/* Only needed while there is an hourly rate and no Daily one; kept on screen while it is
+                    invalid, since a hidden error would block the step with nothing to fix. */}
+                {capApplies || errors.billableHoursPerDay ? (
+                  <div className="mt-4">
+                    <FormField
+                      label={t('form.fields.billableHours')}
+                      description={t('form.fields.billableHoursHint')}
+                      error={errors.billableHoursPerDay?.message}
+                      required
+                    >
+                      {(fieldProps) => (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            className="w-[80px]"
+                            {...register('billableHoursPerDay', { valueAsNumber: true })}
+                            {...fieldProps}
+                          />
+                          <span className="text-fg-3 text-[13px]">{t('form.fields.billableHoursUnit')}</span>
+                        </div>
+                      )}
+                    </FormField>
+                  </div>
+                ) : (
+                  <HourlyCapNote
+                    options={watchedValues.rateOptions ?? []}
+                    hoursPerDay={watchedValues.billableHoursPerDay}
+                    className="text-fg-4 mt-3 text-[12.5px]"
+                  />
+                )}
+              </div>
+
+              <div className="border-border-soft border-t pt-5">
+                <p className="text-meta text-fg-3 mb-1">
+                  {t('form.sections.discounts')}{' '}
+                  <span className="text-fg-4 normal-case">({t('form.sections.optional')})</span>
+                </p>
+                <p className="text-fg-4 mb-3.5 text-[12.5px]">{t('form.sections.discountsHint')}</p>
+                <Controller
+                  control={control}
+                  name="discountTiers"
+                  render={({ field }) => (
+                    <DiscountTiersEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      errors={errors.discountTiers}
+                      showAllErrors={Boolean(stepValidationAttempted[stepIndex])}
+                    />
+                  )}
+                />
+                <div className="mt-4">
+                  <EffectiveRatesPreview
+                    options={watchedValues.rateOptions ?? []}
+                    tiers={watchedValues.discountTiers ?? []}
+                    hoursPerDay={watchedValues.billableHoursPerDay}
+                  />
+                </div>
               </div>
 
               <div className="border-border-soft border-t pt-5">
@@ -1017,7 +1084,7 @@ function ReviewStep({
       <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-2">
         <div className="flex flex-col gap-3.5">
           <ReviewSection title={t('form.review.identity')} onEdit={editDetails}>
-            <ReviewRowGrid>
+            <ReviewRowGrid maxColumns={3}>
               <ReviewRow label={t('specs.make')} value={values.make || '—'} />
               <ReviewRow label={t('specs.model')} value={values.model || '—'} />
               <ReviewRow label={t('specs.year')} value={values.year || '—'} />
@@ -1032,7 +1099,7 @@ function ReviewStep({
           </ReviewSection>
 
           <ReviewSection title={t('form.review.registration')} onEdit={editDetails}>
-            <ReviewRowGrid>
+            <ReviewRowGrid maxColumns={3}>
               <ReviewRow label={t('specs.plate')} value={values.plate || '—'} />
               <ReviewRow label={t('specs.vin')} value={values.vin || '—'} />
               <ReviewRow label={t('specs.status')} value={values.status ? domain.status(values.status) : '—'} />
@@ -1040,7 +1107,7 @@ function ReviewStep({
           </ReviewSection>
 
           <ReviewSection title={t('form.review.specs')} onEdit={editDetails}>
-            <ReviewRowGrid>
+            <ReviewRowGrid maxColumns={3}>
               <ReviewRow label={t('specs.currentMileage')} value={`${format.number(values.mileage ?? 0)} mi`} />
               <ReviewRow
                 label={t('specs.transmission')}
@@ -1050,10 +1117,8 @@ function ReviewStep({
                 label={t('specs.fuelType')}
                 value={values.fuelType ? domain.label('fuelType', values.fuelType) : '—'}
               />
-              <ReviewRow
-                label={t('form.review.seatsDoors')}
-                value={t('form.review.seatsDoorsValue', { seats: values.seats, doors: values.doors })}
-              />
+              <ReviewRow label={t('form.fields.seats')} value={values.seats ?? '—'} />
+              <ReviewRow label={t('form.fields.doors')} value={values.doors ?? '—'} />
             </ReviewRowGrid>
           </ReviewSection>
 
@@ -1129,7 +1194,30 @@ function ReviewStep({
             ) : (
               <p className="text-fg-4 text-[13px]">{t('form.review.noRateOptions')}</p>
             )}
+            <HourlyCapNote
+              options={values.rateOptions}
+              hoursPerDay={values.billableHoursPerDay}
+              className="text-fg-4 mt-1 text-[12.5px]"
+            />
           </ReviewSection>
+
+          {values.discountTiers.length > 0 && (
+            <ReviewSection
+              title={t('form.review.discounts')}
+              count={values.discountTiers.length}
+              onEdit={() => onEditStep('pricing')}
+            >
+              <ReviewRowGrid maxColumns={3}>
+                {values.discountTiers.map((tier) => (
+                  <ReviewRow
+                    key={tier.id}
+                    label={t('discounts.tierName', { count: tier.minDays })}
+                    value={`−${tier.percentOff}%`}
+                  />
+                ))}
+              </ReviewRowGrid>
+            </ReviewSection>
+          )}
 
           <ReviewSection title={t('form.review.fees')} onEdit={() => onEditStep('pricing')}>
             <ReviewRowGrid>

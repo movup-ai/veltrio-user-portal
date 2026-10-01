@@ -1,10 +1,14 @@
 import type { BookingTab } from '../types/booking.types'
 
+/** Spacing of the pickup and return time slots, and what a new booking's default rounds up to. */
+export const BOOKING_TIME_STEP_MINUTES = 30
+
 /** The Drafts tab sits beside the booking tabs but draws from its own resource. */
 export const DRAFTS_TAB = 'Drafts'
 
 /** Shown while the counts load, so the tabs render without flickering through zero. */
 export const EMPTY_TAB_COUNTS: Record<BookingTab, number> = {
+  All: 0,
   Upcoming: 0,
   Today: 0,
   'Recent activity': 0,

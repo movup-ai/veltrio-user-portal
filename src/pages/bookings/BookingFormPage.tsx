@@ -5,6 +5,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleSlash, Paperclip, Save, UserPlus, X } from 'lucide-react'
+import { MAX_PAGE_SIZE } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -39,8 +40,8 @@ import {
 } from '@/modules/customers/api/customer-document.api'
 import { ReviewRow, ReviewRowGrid, ReviewSection } from '@/modules/vehicles/components/ReviewSummary'
 import { useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
-import type { RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types'
-import { formatRateOptionPrice, vehicleDisplayName } from '@/modules/vehicles/utils/vehicle.utils'
+import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
+import { formatPlanLines, planLineNames, vehicleDisplayName } from '@/modules/vehicles/utils/vehicle.utils'
 import { AdditionalDriversEditor } from '@/modules/bookings/components/AdditionalDriversEditor'
 import { BookingFeesEditor } from '@/modules/bookings/components/BookingFeesEditor'
 import { BookingVerificationStatus } from '@/modules/bookings/components/BookingVerificationStatus'
@@ -59,7 +60,7 @@ import {
   customerSearchTerm,
 } from '@/modules/bookings/utils/booking.customer-search'
 import { BookingPriceSummary } from '@/modules/bookings/components/BookingPriceSummary'
-import { BookingRateOptions } from '@/modules/bookings/components/BookingRateOptions'
+import { BookingRatePlan } from '@/modules/bookings/components/BookingRatePlan'
 import { BookingVehiclePicker, type VehicleOption } from '@/modules/bookings/components/BookingVehiclePicker'
 import { useBookingSchedule, useCreateBooking } from '@/modules/bookings/hooks/use-bookings'
 import {
@@ -81,6 +82,8 @@ import {
 } from '@/modules/bookings/schema/booking.schema'
 import type { BookedInterval, BookingInput } from '@/modules/bookings/types/booking.types'
 import { durationHours, priceBooking } from '@/modules/bookings/utils/booking.pricing'
+import { defaultTripWindow, toDateInput } from '@/modules/bookings/utils/booking.trip-defaults'
+import { BOOKING_TIME_STEP_MINUTES } from '@/modules/bookings/constants/booking.constants'
 
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
@@ -90,41 +93,21 @@ type StepKey = (typeof STEP_KEYS)[number]
  * is a 422, not a larger page — so a tenant past that many available cars at one branch will
  * need the picker to page or search rather than listing everything.
  */
-const FLEET_PAGE_SIZE = 100
+const FLEET_PAGE_SIZE = MAX_PAGE_SIZE
 
 /** Stable empty default so an unresolved bookings query doesn't churn identity every render. */
 const EMPTY_SCHEDULE: BookedInterval[] = []
-
-function pad(n: number): string {
-  return String(n).padStart(2, '0')
-}
-
-/** `<input type="date">` wants YYYY-MM-DD in *local* time — toISOString() would shift the day. */
-function toDateInput(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
-function addDays(date: Date, days: number): Date {
-  const next = new Date(date)
-  next.setDate(next.getDate() + days)
-  return next
-}
 
 const TODAY_INPUT = toDateInput(new Date())
 
 /** Wide enough for any adult renter — the DOB picker pages by dropdown, not month by month. */
 const DOB_YEAR_RANGE = { from: new Date().getFullYear() - 100, to: new Date().getFullYear() }
 
-/** Tomorrow to the day after, 09:30 both ends — a one-day rental, the most common booking. */
 function blankValues(): BookingFormValues {
-  const today = new Date()
   return {
     pickupLocation: '',
     returnLocation: '',
-    pickupDate: toDateInput(addDays(today, 1)),
-    pickupTime: '09:30',
-    returnDate: toDateInput(addDays(today, 2)),
-    returnTime: '09:30',
+    ...defaultTripWindow(new Date()),
     vehicleId: '',
     customerId: '',
     customerName: '',
@@ -138,7 +121,6 @@ function blankValues(): BookingFormValues {
     insuranceDocument: null,
     verifications: [],
     additionalDrivers: [],
-    rateOptionId: '',
     fees: [],
   }
 }
@@ -226,6 +208,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const { t: tValidation } = useTranslation('validation')
+  const { t: tVehicles } = useTranslation('vehicles')
   const format = useFormatters()
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
@@ -414,7 +397,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
 
   const freeVehicles = options.filter((o) => !o.bookedUntil).map((o) => o.vehicle)
   const selectedVehicle = freeVehicles.find((v) => v.id === values.vehicleId)
-  const selectedOption = selectedVehicle?.rateOptions.find((o) => o.id === values.rateOptionId)
 
   // Changing the branch or the dates can strand the chosen vehicle — drop the selection rather
   // than silently booking a car from the wrong location, or one that's now double-booked.
@@ -422,20 +404,18 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   useEffect(() => {
     if (!selectionStranded) return
     setValue('vehicleId', '', { shouldValidate: false })
-    setValue('rateOptionId', '', { shouldValidate: false })
   }, [selectionStranded, setValue])
 
-  const pricing =
-    selectedVehicle && selectedOption
-      ? priceBooking({
-          vehicle: selectedVehicle,
-          option: selectedOption,
-          pickupAt,
-          returnAt,
-          additionalDrivers: values.additionalDrivers,
-          fees: values.fees,
-        })
-      : null
+  // The cost engine picks the rates; the API re-prices on create with the same rules.
+  const pricing = selectedVehicle
+    ? priceBooking({
+        vehicle: selectedVehicle,
+        pickupAt,
+        returnAt,
+        additionalDrivers: values.additionalDrivers,
+        fees: values.fees,
+      })
+    : null
 
   /**
    * Documents this booking will have, for the chips on the Review step: the ones just picked,
@@ -454,6 +434,8 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
     const fields = BOOKING_STEP_FIELDS[stepKey]
     const valid = fields.length === 0 ? true : await trigger(fields as (keyof BookingFormValues)[])
     if (!valid) return
+    // A vehicle with no rates has no price; the rate card already says why.
+    if (stepKey === 'pricing' && !pricing) return
     const next = Math.min(stepIndex + 1, STEP_KEYS.length - 1)
     setStepIndex(next)
     setFurthestIndex((f) => Math.max(f, next))
@@ -491,13 +473,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
 
   function handleSelectVehicle(vehicle: Vehicle) {
     setValue('vehicleId', vehicle.id, { shouldValidate: true })
-    // Default to the daily rate when there is one — the option most bookings use.
-    const preferred = vehicle.rateOptions.find((o) => o.basis === 'day') ?? vehicle.rateOptions[0]
-    setValue('rateOptionId', preferred?.id ?? '', { shouldValidate: true })
-  }
-
-  function handleSelectRate(option: RateOption) {
-    setValue('rateOptionId', option.id, { shouldValidate: true })
   }
 
   function handlePickCustomer(label: string) {
@@ -575,7 +550,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
 
   const onSubmit = (submitted: BookingFormValues) =>
     new Promise<void>((settle) => {
-      if (!selectedVehicle || !selectedOption || !pricing) return settle()
+      if (!selectedVehicle || !pricing) return settle()
 
       const input: BookingInput = {
         customerId: submitted.customerId || undefined,
@@ -589,7 +564,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
           licenceExpiry: submitted.licenceExpiry || undefined,
         },
         vehicleId: selectedVehicle.id,
-        rateOptionId: selectedOption.id,
         pickupLocation: submitted.pickupLocation,
         returnLocation: submitted.returnLocation,
         pickupAt: combineDateTime(submitted.pickupDate, submitted.pickupTime).toISOString(),
@@ -816,6 +790,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                               aria-label={t('form.fields.pickupTimeLong')}
                               value={field.value}
                               onChange={field.onChange}
+                              minuteStep={BOOKING_TIME_STEP_MINUTES}
                               invalid={invalid}
                             />
                           )}
@@ -864,6 +839,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                               aria-label={t('form.fields.returnTimeLong')}
                               value={field.value}
                               onChange={field.onChange}
+                              minuteStep={BOOKING_TIME_STEP_MINUTES}
                               invalid={invalid}
                             />
                           )}
@@ -1189,20 +1165,9 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   <PanelHeading title={t('form.sections.rate')} description={t('form.rate.hint')} />
                   <div className="mt-4">
                     {selectedVehicle ? (
-                      <BookingRateOptions
-                        options={selectedVehicle.rateOptions}
-                        selectedId={values.rateOptionId}
-                        onSelect={handleSelectRate}
-                        hours={hours}
-                        invalid={Boolean(errors.rateOptionId)}
-                      />
+                      <BookingRatePlan plan={pricing?.plan ?? null} />
                     ) : (
                       <p className="text-fg-4 text-[14px]">{t('form.review.noVehicle')}</p>
-                    )}
-                    {errors.rateOptionId && (
-                      <p role="alert" className="text-caption text-error mt-2">
-                        {errors.rateOptionId.message}
-                      </p>
                     )}
                   </div>
                 </Card>
@@ -1246,13 +1211,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                 </Card>
               </div>
 
-              {pricing && selectedOption && (
-                <BookingPriceSummary
-                  pricing={pricing}
-                  option={selectedOption}
-                  className="xl:sticky xl:top-4"
-                />
-              )}
+              {pricing && <BookingPriceSummary pricing={pricing} className="xl:sticky xl:top-4" />}
             </div>
           )}
 
@@ -1287,16 +1246,12 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                         value={vehicleDisplayName(selectedVehicle)}
                       />
                       <ReviewRow label={t('form.review.plate')} value={selectedVehicle.plate} />
-                      {/* The label alone ("Daily") never said what it costs — the rate rides along
-                          with it. The run-out total lives in the breakdown panel, not here. */}
+                      {/* The rates the engine chose; what they cost lives in the breakdown panel. */}
                       <ReviewRow
                         label={t('form.review.rate')}
                         value={
-                          selectedOption
-                            ? t('form.review.rateValue', {
-                                label: selectedOption.label,
-                                rate: formatRateOptionPrice(selectedOption),
-                              })
+                          pricing
+                            ? formatPlanLines(planLineNames(pricing.plan.lines), tVehicles)
                             : '—'
                         }
                       />
@@ -1409,12 +1364,8 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
               </div>
 
               <div className="flex flex-col gap-3.5">
-                {pricing && selectedOption ? (
-                  <BookingPriceSummary
-                    pricing={pricing}
-                    option={selectedOption}
-                    className="xl:sticky xl:top-4"
-                  />
+                {pricing ? (
+                  <BookingPriceSummary pricing={pricing} className="xl:sticky xl:top-4" />
                 ) : (
                   <ReviewSection title={t('form.summary.title')} onEdit={() => setStepIndex(2)}>
                     <p className="text-fg-4 text-[14px]">{t('form.review.noVehicle')}</p>

@@ -12,6 +12,7 @@
     "emptyTitle": "No bookings match your filters",
     "emptyDescription": "Try adjusting the search or filters.",
     "tabs": {
+      "All": "All",
       "Upcoming": "Upcoming",
       "Today": "Today",
       "Recent activity": "Recent activity",
@@ -161,7 +162,10 @@
       "additionalDriverDetail_other": "{{count}} drivers · {{rate}}/day",
       "taxes": "Taxes & fees",
       "taxesDetail": "Branch surcharge + {{pct}}% sales tax",
-      "total": "Total"
+      "total": "Total",
+      "baseRateUnits": "{{rate}} × {{count}}",
+      "discount": "Length-of-rental discount",
+      "discountDetail": "{{days}}+ days · −{{pct}}%"
     },
     "payment": {
       "title": "Payment",
@@ -300,7 +304,7 @@
       "trip": "Trip",
       "tripHint": "When and where the rental starts and ends. Availability is checked as you change dates.",
       "renter": "Renter",
-      "rate": "Rate option",
+      "rate": "Rates",
       "documents": "Licence & documents",
       "verification": "Verification",
       "drivers": "Additional drivers",
@@ -342,12 +346,10 @@
       "loadError": "We couldn't load the fleet.",
       "noneTitle": "No vehicles at this branch",
       "noneDescription": "Nothing is on the forecourt here. Try another pickup location.",
-      "forUnits_one": "{{price}} for {{count}} {{unit}}",
-      "forUnits_other": "{{price}} for {{count}} {{unit}}s"
+      "forTrip": "{{price}} for this trip"
     },
     "rate": {
-      "hint": "Priced for the trip length you entered.",
-      "pick": "Pick a rate option",
+      "hint": "Chosen for the trip length: a rate that fits it exactly wins, otherwise the cheapest combination, less any length-of-rental discount.",
       "none": "This vehicle has no rate options yet.",
       "unitBreakdown_one": "{{count}} × {{price}}",
       "unitBreakdown_other": "{{count}} × {{price}}"
@@ -383,15 +385,14 @@
       "vehicle": "Vehicle",
       "vehicleName": "Vehicle",
       "plate": "Plate",
-      "rate": "Rate option",
+      "rate": "Rates",
       "noVehicle": "No vehicle selected yet.",
       "customer": "Customer",
       "verification": "Verification",
       "noVerification": "No check run.",
       "drivers": "Additional drivers",
       "noDrivers": "No additional drivers.",
-      "fees": "Additional fees",
-      "rateValue": "{{label}} · {{rate}}"
+      "fees": "Additional fees"
     },
     "draft": {
       "save": "Save draft",

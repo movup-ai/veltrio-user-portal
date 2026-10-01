@@ -6,6 +6,8 @@ export default mergeConfig(
   defineConfig({
     test: {
       environment: 'jsdom',
+      // One jsdom per worker instead of per file: environment setup was ~70% of the run.
+      pool: 'vmThreads',
       setupFiles: './src/test/setup.ts',
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
       globals: true,

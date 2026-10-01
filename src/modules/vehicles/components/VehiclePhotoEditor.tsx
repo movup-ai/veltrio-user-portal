@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { GripVertical, ImagePlus, Loader2, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, moveItem } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import {
@@ -111,9 +111,7 @@ export function VehiclePhotoEditor({ target, photos }: Props) {
 
   const handleReorder = async (from: number, to: number) => {
     if (from === to) return
-    const next = [...photos]
-    const [moved] = next.splice(from, 1)
-    next.splice(to, 0, moved)
+    const next = moveItem(photos, from, to)
 
     // Optimistic: dragging has to feel immediate, and the server returns the same order.
     // Drafts render from the prop, which the parent already updated, so only vehicles need this.

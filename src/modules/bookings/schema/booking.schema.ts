@@ -1,6 +1,9 @@
 import type { TFunction } from 'i18next'
 import { z } from 'zod'
+import { MAX_RENTAL_DAYS } from '@/modules/vehicles/constants/rate-plan.constants'
 import { VERIFICATION_KINDS } from '../types/booking.types'
+
+const MS_PER_DAY = 86_400_000
 
 type ValidationT = TFunction<'validation'>
 
@@ -107,7 +110,6 @@ export function bookingFormSchema(t: ValidationT) {
       additionalDrivers: z.array(additionalDriverSchema(t)),
 
       // Step 3 — Price
-      rateOptionId: z.string().min(1, t('booking.rateOptionRequired')),
       fees: z.array(bookingFeeSchema(t)),
     })
     .superRefine((values, ctx) => {
@@ -120,6 +122,12 @@ export function bookingFormSchema(t: ValidationT) {
       // Anchored on the return date: that's the field the user adjusts to resolve the conflict.
       if (dropoff <= pickup) {
         ctx.addIssue({ code: 'custom', path: ['returnDate'], message: t('booking.returnBeforePickup') })
+      } else if (dropoff.getTime() - pickup.getTime() > MAX_RENTAL_DAYS * MS_PER_DAY) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['returnDate'],
+          message: t('booking.rentalTooLong', { days: MAX_RENTAL_DAYS }),
+        })
       }
     })
 }
@@ -147,6 +155,6 @@ export const BOOKING_STEP_FIELDS = {
     'licenceNumber',
     'licenceExpiry',
   ],
-  pricing: ['rateOptionId', 'additionalDrivers', 'fees'],
+  pricing: ['additionalDrivers', 'fees'],
   review: [],
 } as const satisfies Record<string, (keyof BookingFormValues)[]>

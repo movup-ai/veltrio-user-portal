@@ -6,6 +6,7 @@ import {
   toBookingLists,
   toBookingPayload,
   toInterval,
+  toTabCounts,
   toVerification,
   type BookingWire,
   type VerificationWire,
@@ -33,7 +34,15 @@ const wire: BookingWire = {
   vehicleId: 'v1',
   vehicleName: 'Toyota Camry',
   vehiclePlate: 'ABC1234',
-  rate: { optionId: 'r1', label: 'Daily', basis: 'day', rateCents: 5500, units: 4, includedMiles: 800 },
+  rate: {
+    optionId: 'r1',
+    label: 'Daily',
+    basis: 'day',
+    rateCents: 5500,
+    units: 4,
+    includedMiles: 800,
+    lines: [{ optionId: 'r1', label: 'Daily', basis: 'day', rateCents: 5500, count: 4, cappedHours: null }],
+  },
   pickupLocation: 'Downtown',
   returnLocation: 'Downtown',
   pickupAt: '2026-10-01T13:30:00Z',
@@ -43,6 +52,7 @@ const wire: BookingWire = {
   verifications: ['identity'],
   pricing: {
     rentalSubtotalCents: 22000,
+    discount: null,
     driversCents: 4800,
     feesCents: 2500,
     subtotalCents: 29300,
@@ -86,6 +96,7 @@ describe('toBooking', () => {
     expect(booking.fees[0].amount).toBe(25)
     expect(booking.pricing).toEqual({
       rentalSubtotal: 220,
+      discount: null,
       drivers: 48,
       fees: 25,
       subtotal: 293,
@@ -94,6 +105,26 @@ describe('toBooking', () => {
       total: 313.51,
       deposit: 350,
     })
+  })
+
+  it('carries every combined rate and the discount tier, in dollars', () => {
+    const combined = toBooking({
+      ...wire,
+      rate: {
+        ...wire.rate,
+        lines: [
+          { optionId: 'w', label: 'Weekly', basis: 'week', rateCents: 220000, count: 1, cappedHours: null },
+          { optionId: 'd', label: 'Daily', basis: 'day', rateCents: 40000, count: 3, cappedHours: null },
+        ],
+      },
+      pricing: { ...wire.pricing, discount: { minDays: 7, percentOff: 15, amountCents: 51000 } },
+    })
+
+    expect(combined.rate.lines.map((l) => [l.label, l.rate, l.count])).toEqual([
+      ['Weekly', 2200, 1],
+      ['Daily', 400, 3],
+    ])
+    expect(combined.pricing.discount).toEqual({ minDays: 7, percentOff: 15, amount: 510 })
   })
 
   it('drops a deleted vehicle to undefined', () => {
@@ -182,7 +213,6 @@ describe('toBookingPayload', () => {
       licenceExpiry: undefined,
     },
     vehicleId: 'v1',
-    rateOptionId: 'r1',
     pickupLocation: 'Downtown',
     returnLocation: 'Downtown',
     pickupAt: '2026-10-01T13:30:00Z',
@@ -282,6 +312,22 @@ describe('toBookingListQuery', () => {
 
     expect(from.pickupFrom).toBe('2026-10-01')
     expect(from).not.toHaveProperty('pickupTo')
+  })
+
+  it('sends no tab for All, which the API reads as the whole book', () => {
+    expect(toBookingListQuery({ ...base, tab: 'All', filters: NO_FILTERS })).toStrictEqual({
+      limit: 25,
+      offset: 0,
+      sort: 'newest',
+    })
+  })
+})
+
+describe('toTabCounts', () => {
+  it('counts All as upcoming plus recent, which split the book between them', () => {
+    const counts = toTabCounts({ upcoming: 2, today: 1, recent: 5, overdue: 1 })
+
+    expect(counts.All).toBe(7)
   })
 })
 

@@ -77,7 +77,7 @@ describe('LocationDialog without a Maps key', () => {
   })
 
   it('starts collapsed and expands on click', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     const toggle = screen.getByRole('button', { name: 'Add address details (optional)' })
@@ -91,7 +91,7 @@ describe('LocationDialog without a Maps key', () => {
   })
 
   it('keeps the fields reachable while collapsed, so a validation error can be seen', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     // Collapsed hides them visually; removing them from the DOM would strand an error on a
@@ -109,7 +109,7 @@ describe('LocationDialog without a Maps key', () => {
   })
 
   it('saves the parts that were typed', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/Branch name/), 'Depot')
@@ -127,7 +127,7 @@ describe('LocationDialog without a Maps key', () => {
   })
 
   it('will not let a longer country name be entered', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/^Country/), 'USA')
@@ -137,7 +137,7 @@ describe('LocationDialog without a Maps key', () => {
   })
 
   it('leaves the parts unset when none were typed', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/Branch name/), 'Depot')
@@ -162,7 +162,7 @@ describe('LocationDialog original address', () => {
 
   it('records the full address behind a picked suggestion', async () => {
     configured = true
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/Branch name/), 'Miami Beach')
@@ -177,7 +177,7 @@ describe('LocationDialog original address', () => {
 
   it('records a typed address too, not only a picked one', async () => {
     configured = true
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     // No suggestion chosen — the address is whatever was typed, and that is still what this
@@ -192,7 +192,7 @@ describe('LocationDialog original address', () => {
 
   it('records it with no Maps key at all', async () => {
     configured = false
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/Branch name/), 'Depot')
@@ -205,7 +205,7 @@ describe('LocationDialog original address', () => {
 
   it('stays unset when no address was given', async () => {
     configured = true
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/Branch name/), 'Miami Beach')
@@ -217,7 +217,7 @@ describe('LocationDialog original address', () => {
 
   it('keeps what an existing branch already recorded', async () => {
     configured = true
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open({ ...BRANCH, originalAddress: 'Depot 4, north yard' })
 
     // Re-picking changes the displayed address; the original is what it was first identified
@@ -234,7 +234,7 @@ describe('LocationDialog original address', () => {
 
 describe('LocationDialog default toggle', () => {
   it('sends isDefault when the toggle is turned on', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/Branch name/), 'Depot')
@@ -256,7 +256,7 @@ describe('LocationDialog default toggle', () => {
   })
 
   it('lets a non-default branch be promoted', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open(BRANCH)
 
     const toggle = screen.getByRole('switch', { name: 'Make default' })
@@ -282,7 +282,7 @@ describe('LocationDialog opening hours', () => {
   })
 
   it('submits the time chosen from the picker as minutes from midnight', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     open()
 
     await user.type(screen.getByLabelText(/Branch name/), 'Depot')

@@ -3,6 +3,7 @@ import i18n from '@/i18n'
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
 import { formatCurrency, formatNumberIn, currentLanguage } from '@/i18n/formatters'
 import { translateDomain, translateDurationUnit } from '@/i18n/domain'
+import { DEFAULT_BILLABLE_HOURS_PER_DAY } from '../constants/rate-plan.constants'
 import type { VehicleFormValues } from '../schema/vehicle.schema'
 import type { VehicleDraft } from '../types/vehicle-draft.types'
 import type { RateOption, Vehicle, VehicleInput, VehiclePhoto } from '../types/vehicle.types'
@@ -52,6 +53,8 @@ export function draftAsVehicle(draft: VehicleDraft): Vehicle {
     // payload deliberately carries none (it is JSON with a 64 KB cap).
     photos: draft.photos,
     rateOptions: values.rateOptions ?? [],
+    discountTiers: (values.discountTiers ?? []).map(({ minDays, percentOff }) => ({ minDays, percentOff })),
+    billableHoursPerDay: values.billableHoursPerDay ?? DEFAULT_BILLABLE_HOURS_PER_DAY,
     fees: {
       deposit: values.deposit,
       overageRatePerMile: values.overageRatePerMile,
@@ -93,6 +96,9 @@ export function valuesFromVehicle(vehicle: Vehicle): VehicleFormValues {
     description: vehicle.description ?? '',
     photos: vehicle.photos,
     rateOptions: vehicle.rateOptions,
+    // Thresholds are unique on a saved vehicle, so they key the editor's rows.
+    discountTiers: vehicle.discountTiers.map((tier) => ({ id: `tier-${tier.minDays}`, ...tier })),
+    billableHoursPerDay: vehicle.billableHoursPerDay,
     deposit: vehicle.fees.deposit ?? 0,
     overageRatePerMile: vehicle.fees.overageRatePerMile ?? 0,
     fuelChargeRate: vehicle.fees.fuelChargeRate,
@@ -119,7 +125,7 @@ export function vehicleDisplayName(v: Vehicle): string {
 }
 
 /** Two-letter avatar initials, blank-safe for the same reason as vehicleDisplayName. */
-export function vehicleInitials(v: Vehicle): string {
+function vehicleInitials(v: Vehicle): string {
   const letters = `${v.make?.[0] ?? ''}${v.model?.[0] ?? ''}`.trim()
   return letters ? letters.toUpperCase() : '—'
 }
@@ -166,6 +172,33 @@ export function formatRateOptionBasis(option: RateOption, t: TFunction<'vehicles
     return t('rateOptions.fixedBasis', { count, unit: translateDurationUnit(unit, count) })
   }
   return translateDomain('billingBasis', option.basis)
+}
+
+interface PlanLineName {
+  label: string
+  count: number
+  /** Set on an automatic capped day of an hourly rate. */
+  cappedHours?: number
+}
+
+/** "Hourly (8 h/day cap)" for an automatic capped day; the option's own label otherwise. */
+export function rateLineLabel(line: Omit<PlanLineName, 'count'>, t: TFunction<'vehicles'>): string {
+  return line.cappedHours ? t('ratePlan.cappedLabel', { label: line.label, hours: line.cappedHours }) : line.label
+}
+
+/** "Weekly + Daily × 3" — the rates a plan combines, longest unit first. */
+export function formatPlanLines(lines: PlanLineName[], t: TFunction<'vehicles'>): string {
+  return lines
+    .map((line) => {
+      const label = rateLineLabel(line, t)
+      return line.count > 1 ? t('ratePlan.lineTimes', { label, count: line.count }) : label
+    })
+    .join(' + ')
+}
+
+/** Plan lines in the shape the formatters take. */
+export function planLineNames(lines: { option: RateOption; count: number; cappedHours?: number }[]): PlanLineName[] {
+  return lines.map((l) => ({ label: l.option.label, count: l.count, cappedHours: l.cappedHours }))
 }
 
 export function formatRateOptionMileage(option: RateOption, t: TFunction<'vehicles'>): string {
