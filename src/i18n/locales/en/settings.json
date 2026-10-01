@@ -44,5 +44,86 @@
   "toggle": {
     "enabled": "Enabled",
     "disabled": "Disabled"
+  },
+  "tabs": {
+    "label": "Settings sections",
+    "general": "General",
+    "payments": "Payments"
+  },
+  "payments": {
+    "section": "Payments",
+    "sectionHelp": "How renters pay you, and where the money goes.",
+    "title": "Payment processor",
+    "description": "Renters pay into your own Stripe account and Stripe pays out to your bank. Refunds, disputes and payouts are managed in your Stripe Dashboard.",
+    "stripe": "Stripe",
+    "state": {
+      "unavailable": "Unavailable",
+      "notConnected": "Not connected",
+      "needsInfo": "Action needed",
+      "inReview": "In review",
+      "active": "Active",
+      "rejected": "Not approved",
+      "disconnected": "Disconnected"
+    },
+    "summary": "Connect a Stripe account to take card payments and deposits from renters.",
+    "connectedOn": "Connected {{date}}",
+    "currency": "Payouts in {{currency}}",
+    "accepts": "Accepts",
+    "methods": {
+      "card": "Cards",
+      "apple_pay": "Apple Pay",
+      "google_pay": "Google Pay",
+      "link": "Link"
+    },
+    "methodOff": "(off)",
+    "capabilities": {
+      "cardPayments": "Card payments",
+      "payouts": "Payouts"
+    },
+    "capabilityStatus": {
+      "active": "Active",
+      "pending": "Pending",
+      "restricted": "Restricted",
+      "rejected": "Rejected",
+      "unsupported": "Unsupported"
+    },
+    "notice": {
+      "unavailable": "Stripe isn't configured on the server yet, so an account can't be connected. Add the Stripe keys to the API environment to switch this on.",
+      "needsInfo": "Stripe needs a few more details before it can turn on payments and payouts.",
+      "pastDue": "A deadline for some of Stripe's details has passed, so payments or payouts may be paused. Finish setup to restore them.",
+      "inReview": "Stripe is reviewing your details. Check back here, or use Check status.",
+      "rejected": "Stripe couldn't approve this account. Your Stripe Dashboard or Stripe support can tell you why.",
+      "disconnected": "Payments are off. Your Stripe account, balance and payouts are untouched; reconnect to take payments through it again."
+    },
+    "actions": {
+      "connect": "Connect Stripe",
+      "continue": "Continue setup",
+      "checkStatus": "Check status",
+      "dashboard": "Open Stripe Dashboard",
+      "disconnect": "Disconnect",
+      "reconnect": "Reconnect",
+      "turnOn": "Turn on",
+      "useDifferent": "Use a different account"
+    },
+    "ownerOnly": "Only the account owner can connect or finish setting up Stripe.",
+    "confirmDisconnect": {
+      "title": "Disconnect Stripe?",
+      "description": "Veltrio will stop taking payments through this Stripe account.\n\nThe account stays yours, with its balance and payouts, and you can reconnect it at any time."
+    },
+    "confirmNewAccount": {
+      "title": "Set up a different Stripe account?",
+      "description": "You'll go to Stripe to set up a new account for Veltrio.\n\nYour current account stays yours, with its balance and payouts, but Veltrio won't be able to reconnect it afterwards.",
+      "confirm": "Continue to Stripe"
+    },
+    "toast": {
+      "connectFailed": "Couldn't open Stripe",
+      "refreshFailed": "Couldn't check the Stripe account",
+      "disconnected": "Stripe disconnected",
+      "reconnected": "Stripe reconnected",
+      "disconnectFailed": "Couldn't disconnect Stripe",
+      "reconnectFailed": "Couldn't reconnect Stripe",
+      "methodEnabled": "{{method}} turned on",
+      "methodFailed": "Couldn't change the payment method"
+    }
   }
 }

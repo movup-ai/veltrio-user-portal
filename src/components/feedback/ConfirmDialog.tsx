@@ -42,7 +42,10 @@ export function ConfirmDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          {/* pre-line: a translation can split the description into paragraphs with a blank line. */}
+          {description && (
+            <DialogDescription className="whitespace-pre-line">{description}</DialogDescription>
+          )}
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
