@@ -59,16 +59,25 @@ export function useStartNewAccount() {
   return useOnboardingRedirect(paymentApi.newAccountLink)
 }
 
-/** Disconnect and reconnect both answer with the account, so the cache is set, not refetched. */
-function useAccountChange(change: () => Promise<PaymentAccount>, titles: { success: string; error: string }) {
+/**
+ * Refresh, disconnect and reconnect all answer with the account, so the cache is set from that
+ * answer. An account read still in flight is cancelled first: it may have read the row before
+ * this change, and landing after it would put the old status back.
+ */
+function useAccountChange(
+  change: () => Promise<PaymentAccount>,
+  titles: { success?: string; error: string },
+) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: change,
-    onSuccess: (account) => {
+    onSuccess: async (account) => {
+      await queryClient.cancelQueries({ queryKey: paymentAccountKeys.account, exact: true })
       queryClient.setQueryData(paymentAccountKeys.account, account)
-      // A reconnected account may have changed its payment settings while it was unlinked.
-      queryClient.invalidateQueries({ queryKey: paymentAccountKeys.methods })
-      toast({ title: titles.success, variant: 'success' })
+      // Which methods are on can change with the account: capabilities, or settings edited
+      // while it was unlinked.
+      void queryClient.invalidateQueries({ queryKey: paymentAccountKeys.methods })
+      if (titles.success) toast({ title: titles.success, variant: 'success' })
     },
     onError: failed(titles.error),
   })
@@ -89,10 +98,7 @@ export function useReconnectPaymentAccount() {
 }
 
 export function useRefreshPaymentAccount() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: paymentApi.refreshAccount,
-    onSuccess: (account) => queryClient.setQueryData(paymentAccountKeys.account, account),
-    onError: failed(i18n.t('settings:payments.toast.refreshFailed')),
+  return useAccountChange(paymentApi.refreshAccount, {
+    error: i18n.t('settings:payments.toast.refreshFailed'),
   })
 }

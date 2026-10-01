@@ -6,15 +6,15 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { cn } from '@/lib/utils'
 import { StripeAccountCard } from '@/modules/payments/components/StripeAccountCard'
-import { PAYMENT_SETTINGS_PATH } from '@/modules/payments/utils/payment-account.utils'
 import { SETTINGS_SECTIONS } from '@/modules/settings/mock/settings.mock'
 import { SettingsSection } from '@/modules/settings/components/SettingsSection'
 import { SettingsTabs } from '@/modules/settings/components/SettingsTabs'
+import { settingsTab } from '@/modules/settings/utils/settings-tab'
 
 export function SettingsPage() {
   const { t } = useTranslation('settings')
   const { pathname } = useLocation()
-  const showingPayments = pathname.startsWith(PAYMENT_SETTINGS_PATH)
+  const showingPayments = settingsTab(pathname) === 'payments'
 
   return (
     <PageContainer>

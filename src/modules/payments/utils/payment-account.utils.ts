@@ -9,7 +9,9 @@ export function accountState(account: PaymentAccount): PaymentAccountState {
   if (!account.available) return 'unavailable'
   if (account.disconnected) return 'disconnected'
   if (!account.connected) return 'notConnected'
-  if (account.cardPayments === 'rejected' || account.cardPayments === 'unsupported') return 'rejected'
+  // Either one turned down ends it: an account that cannot pay out cannot take bookings either.
+  if ([account.cardPayments, account.payouts].some((s) => s === 'rejected' || s === 'unsupported'))
+    return 'rejected'
   if (account.requirements === 'currently_due' || account.requirements === 'past_due') return 'needsInfo'
   if (account.cardPayments === 'active' && account.payouts === 'active') return 'active'
   return 'inReview'

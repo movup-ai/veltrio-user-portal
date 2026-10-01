@@ -40,6 +40,12 @@ describe('accountState', () => {
     expect(accountState({ ...CONNECTED, requirements: 'eventually_due' })).toBe('active')
   })
 
+  it('says so when Stripe has turned down payouts, even with cards active', () => {
+    // Otherwise it read as still under review, offering Check status instead of the Dashboard.
+    expect(accountState({ ...CONNECTED, payouts: 'rejected' })).toBe('rejected')
+    expect(accountState({ ...CONNECTED, payouts: 'unsupported' })).toBe('rejected')
+  })
+
   it('says so when Stripe has turned the company down', () => {
     expect(accountState({ ...CONNECTED, cardPayments: 'rejected', requirements: 'currently_due' })).toBe(
       'rejected',
