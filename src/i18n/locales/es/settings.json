@@ -44,5 +44,86 @@
   "toggle": {
     "enabled": "Activado",
     "disabled": "Desactivado"
+  },
+  "tabs": {
+    "label": "Secciones de configuración",
+    "general": "General",
+    "payments": "Pagos"
+  },
+  "payments": {
+    "section": "Pagos",
+    "sectionHelp": "Cómo te pagan los clientes y adónde va el dinero.",
+    "title": "Procesador de pagos",
+    "description": "Los clientes pagan en tu propia cuenta de Stripe y Stripe transfiere los fondos a tu banco. Los reembolsos, disputas y transferencias se gestionan en tu panel de Stripe.",
+    "stripe": "Stripe",
+    "state": {
+      "unavailable": "No disponible",
+      "notConnected": "No conectado",
+      "needsInfo": "Acción necesaria",
+      "inReview": "En revisión",
+      "active": "Activo",
+      "rejected": "No aprobado",
+      "disconnected": "Desconectado"
+    },
+    "summary": "Conecta una cuenta de Stripe para cobrar pagos con tarjeta y depósitos a los clientes.",
+    "connectedOn": "Conectado el {{date}}",
+    "currency": "Transferencias en {{currency}}",
+    "accepts": "Acepta",
+    "methods": {
+      "card": "Tarjetas",
+      "apple_pay": "Apple Pay",
+      "google_pay": "Google Pay",
+      "link": "Link"
+    },
+    "methodOff": "(desactivado)",
+    "capabilities": {
+      "cardPayments": "Pagos con tarjeta",
+      "payouts": "Transferencias"
+    },
+    "capabilityStatus": {
+      "active": "Activo",
+      "pending": "Pendiente",
+      "restricted": "Restringido",
+      "rejected": "Rechazado",
+      "unsupported": "No compatible"
+    },
+    "notice": {
+      "unavailable": "Stripe aún no está configurado en el servidor, así que no se puede conectar una cuenta. Añade las claves de Stripe al entorno de la API para activarlo.",
+      "needsInfo": "Stripe necesita algunos datos más antes de activar los pagos y las transferencias.",
+      "pastDue": "Venció el plazo para algunos datos que pide Stripe, así que los pagos o las transferencias pueden estar en pausa. Completa la configuración para reanudarlos.",
+      "inReview": "Stripe está revisando tus datos. Vuelve a consultar aquí o usa Comprobar estado.",
+      "rejected": "Stripe no pudo aprobar esta cuenta. Tu panel de Stripe o el soporte de Stripe pueden explicarte el motivo.",
+      "disconnected": "Los pagos están desactivados. Tu cuenta de Stripe, su saldo y sus transferencias no cambian; reconéctala para volver a cobrar a través de ella."
+    },
+    "actions": {
+      "connect": "Conectar Stripe",
+      "continue": "Continuar configuración",
+      "checkStatus": "Comprobar estado",
+      "dashboard": "Abrir panel de Stripe",
+      "disconnect": "Desconectar",
+      "reconnect": "Reconectar",
+      "turnOn": "Activar",
+      "useDifferent": "Usar otra cuenta"
+    },
+    "ownerOnly": "Solo el propietario de la cuenta puede conectar Stripe o completar su configuración.",
+    "confirmDisconnect": {
+      "title": "¿Desconectar Stripe?",
+      "description": "Veltrio dejará de cobrar a través de esta cuenta de Stripe.\n\nLa cuenta sigue siendo tuya, con su saldo y sus transferencias, y puedes reconectarla cuando quieras."
+    },
+    "confirmNewAccount": {
+      "title": "¿Configurar otra cuenta de Stripe?",
+      "description": "Irás a Stripe para configurar una cuenta nueva para Veltrio.\n\nTu cuenta actual sigue siendo tuya, con su saldo y sus transferencias, pero Veltrio ya no podrá reconectarla.",
+      "confirm": "Continuar a Stripe"
+    },
+    "toast": {
+      "connectFailed": "No se pudo abrir Stripe",
+      "refreshFailed": "No se pudo comprobar la cuenta de Stripe",
+      "disconnected": "Stripe desconectado",
+      "reconnected": "Stripe reconectado",
+      "disconnectFailed": "No se pudo desconectar Stripe",
+      "reconnectFailed": "No se pudo reconectar Stripe",
+      "methodEnabled": "{{method}} activado",
+      "methodFailed": "No se pudo cambiar el método de pago"
+    }
   }
 }

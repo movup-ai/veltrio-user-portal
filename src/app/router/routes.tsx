@@ -95,6 +95,7 @@ export const router = createBrowserRouter([
               { path: 'settings/users', element: withSuspense(<SettingsPage />) },
               { path: 'settings/roles', element: withSuspense(<SettingsPage />) },
               { path: 'settings/billing', element: withSuspense(<SettingsPage />) },
+              { path: 'settings/payments', element: withSuspense(<SettingsPage />) },
             ],
           },
         ],
