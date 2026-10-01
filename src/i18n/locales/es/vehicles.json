@@ -324,7 +324,9 @@
     "remove": "Eliminar {{label}}",
     "removeFallback": "opción de tarifa",
     "reorder": "Reordenar {{label}}: arrastre o use las flechas",
-    "fixedBasis": "Fija · {{count}} {{unit}}"
+    "fixedBasis": "Fija · {{count}} {{unit}}",
+    "moveUp": "Subir {{label}}",
+    "moveDown": "Bajar {{label}}"
   },
   "photos": {
     "dropzone": "Arrastre y suelte fotos aquí, o haga clic para explorar",
@@ -565,7 +567,8 @@
     "remove": "Eliminar {{label}}",
     "tierName_one": "{{count}}+ día",
     "tierName_other": "{{count}}+ días",
-    "tierFallback": "tramo de descuento"
+    "tierFallback": "tramo de descuento",
+    "limit": "Hasta {{count}} tramos."
   },
   "effectiveRates": {
     "show": "Mostrar tarifas efectivas",

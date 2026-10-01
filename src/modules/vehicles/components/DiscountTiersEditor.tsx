@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { MAX_DISCOUNT_TIERS } from '../constants/rate-plan.constants'
 import type { DiscountTierValues, VehicleFormValues } from '../schema/vehicle.schema'
 
 const ROW_GRID = 'grid grid-cols-[112px_minmax(0,1fr)_96px_40px] items-start gap-x-3'
@@ -23,6 +24,7 @@ export function DiscountTiersEditor({ value, onChange, errors, showAllErrors }: 
   const [touched, setTouched] = useState<Set<string>>(new Set())
   // A new row opens with its threshold focused, so adding a tier is type-and-tab.
   const focusOnMount = useRef<string | null>(null)
+  const atLimit = value.length >= MAX_DISCOUNT_TIERS
 
   const update = (id: string, patch: Partial<DiscountTierValues>) => {
     onChange(value.map((tier) => (tier.id === id ? { ...tier, ...patch } : tier)))
@@ -86,11 +88,18 @@ export function DiscountTiersEditor({ value, onChange, errors, showAllErrors }: 
               {daysError && <p className="text-error text-[12px]">{daysError}</p>}
             </div>
 
-            <p className={cn('text-[13px] lg:leading-9', daysKnown ? 'text-fg-2' : 'text-fg-4 italic')}>
-              {daysKnown
-                ? t('discounts.describe', { count: tier.minDays })
-                : t('discounts.describePlaceholder')}
-            </p>
+            {/* The percent's error takes the description's place: under its narrow input it wrapped. */}
+            {percentError ? (
+              <p role="alert" className="text-error text-[13px] lg:leading-9">
+                {percentError}
+              </p>
+            ) : (
+              <p className={cn('text-[13px] lg:leading-9', daysKnown ? 'text-fg-2' : 'text-fg-4 italic')}>
+                {daysKnown
+                  ? t('discounts.describe', { count: tier.minDays })
+                  : t('discounts.describePlaceholder')}
+              </p>
+            )}
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5">
@@ -127,10 +136,19 @@ export function DiscountTiersEditor({ value, onChange, errors, showAllErrors }: 
         )
       })}
 
-      <Button type="button" variant="outline" className="gap-1.5 self-start" onClick={add}>
-        <Plus className="size-4" />
-        {t('discounts.add')}
-      </Button>
+      {/* Capped here rather than by the schema alone: that error belongs to the whole list, which no
+          row shows, so an eleventh tier would block the step without saying why. */}
+      <div className="flex items-center gap-3">
+        <Button type="button" variant="outline" className="gap-1.5" onClick={add} disabled={atLimit}>
+          <Plus className="size-4" />
+          {t('discounts.add')}
+        </Button>
+        {atLimit && (
+          <span className="text-fg-4 text-[12.5px]">
+            {t('discounts.limit', { count: MAX_DISCOUNT_TIERS })}
+          </span>
+        )}
+      </div>
     </div>
   )
 }

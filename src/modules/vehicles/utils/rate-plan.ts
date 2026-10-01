@@ -2,6 +2,7 @@ import { fromCents, percentOfCents, toCents } from '@/lib/money'
 import {
   DEFAULT_BILLABLE_HOURS_PER_DAY,
   MAX_PREVIEW_ROWS,
+  MAX_RENTAL_DAYS,
   PREVIEW_DAYS,
 } from '../constants/rate-plan.constants'
 import type { BillingBasis, DiscountTier, RateOption } from '../types/vehicle.types'
@@ -149,13 +150,14 @@ function includedMiles(lines: CentsLine[]): number | null {
   return lines.reduce((sum, line) => sum + (line.option.includedMiles ?? 0) * line.count, 0)
 }
 
-/** The rates a rental of `hours` is billed at, or null when the vehicle has no options. */
+/** The rates a rental of `hours` is billed at; null with no options, or past MAX_RENTAL_DAYS. */
 export function planRental(
   options: RateOption[],
   tiers: DiscountTier[],
   hours: number,
   hoursPerDay: number = DEFAULT_BILLABLE_HOURS_PER_DAY,
 ): RatePlan | null {
+  if (hours > MAX_RENTAL_DAYS * 24 + EPSILON) return null
   const exact = options.filter((o) => Math.abs(optionHours(o) - hours) < EPSILON)
   const perUnit = options.filter((o) => o.basis !== 'fixed')
 
@@ -200,8 +202,14 @@ export function previewDays(options: RateOption[], tiers: DiscountTier[]): numbe
     .map(optionHours)
     .filter((h) => h % 24 === 0)
     .map((h) => h / 24)
-  const days = new Set<number>([...PREVIEW_DAYS, ...exactDays, ...tiers.map((t) => t.minDays)])
-  return [...days].sort((a, b) => a - b).slice(0, MAX_PREVIEW_ROWS)
+  // Every tier threshold first: a discount the operator set must be checkable here, and there are
+  // never more tiers than rows. The other lengths fill what is left, shortest first.
+  const days = new Set<number>(tiers.map((t) => t.minDays))
+  for (const day of [...PREVIEW_DAYS, ...exactDays].sort((a, b) => a - b)) {
+    if (days.size >= MAX_PREVIEW_ROWS) break
+    days.add(day)
+  }
+  return [...days].sort((a, b) => a - b)
 }
 
 /**

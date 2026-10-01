@@ -40,4 +40,17 @@ describe('RateOptionsEditor reordering', () => {
     await user.keyboard('{ArrowUp}')
     expect(onChange).toHaveBeenCalledTimes(1)
   })
+
+  it('offers move buttons where dragging is unavailable, disabled at the ends', async () => {
+    // Below lg the drag handle is hidden and touch has no native drag, so order needs buttons.
+    const user = userEvent.setup({ delay: null })
+    const onChange = vi.fn()
+    render(<RateOptionsEditor value={OPTIONS} onChange={onChange} />)
+
+    await user.click(screen.getByRole('button', { name: 'Move weekend up' }))
+    expect(ids(onChange.mock.calls[0][0])).toEqual(['daily', 'weekend', 'weekly'])
+
+    expect(screen.getByRole('button', { name: 'Move daily up' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Move weekend down' })).toBeDisabled()
+  })
 })

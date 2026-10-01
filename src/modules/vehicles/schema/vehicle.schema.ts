@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next'
 import { z } from 'zod'
 import { translateDurationUnit } from '@/i18n/domain'
+import { MAX_DISCOUNT_TIERS } from '../constants/rate-plan.constants'
 import {
   BILLING_BASES,
   DURATION_UNITS,
@@ -85,7 +86,7 @@ function discountTierSchema(t: ValidationT) {
 function discountTiersSchema(t: ValidationT) {
   return z
     .array(discountTierSchema(t))
-    .max(10)
+    .max(MAX_DISCOUNT_TIERS)
     .superRefine((tiers, ctx) => {
       tiers.forEach((tier, index) => {
         if (tiers.findIndex((other) => other.minDays === tier.minDays) === index) return

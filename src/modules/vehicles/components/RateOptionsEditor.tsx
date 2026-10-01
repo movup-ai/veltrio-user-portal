@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { GripVertical, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, GripVertical, Plus, Trash2 } from 'lucide-react'
 import type { FieldErrors } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -141,7 +141,26 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
               overId === option.id && dragId !== option.id && 'outline-primary outline-2 -outline-offset-2',
             )}
           >
-            <div className="hidden lg:flex lg:h-9 lg:items-center">
+            <div className="flex items-center gap-1 lg:h-9">
+              {/* Narrow screens stack the row and touch has no native drag, so order moves by button. */}
+              <div className="flex gap-1 lg:hidden">
+                {(['up', 'down'] as const).map((direction) => (
+                  <Button
+                    key={direction}
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-fg-4 size-8"
+                    disabled={direction === 'up' ? index === 0 : index === value.length - 1}
+                    aria-label={t(direction === 'up' ? 'rateOptions.moveUp' : 'rateOptions.moveDown', {
+                      label: option.label || t('rateOptions.removeFallback'),
+                    })}
+                    onClick={() => move(option.id, index + (direction === 'up' ? -1 : 1))}
+                  >
+                    {direction === 'up' ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                  </Button>
+                ))}
+              </div>
               <button
                 ref={(el) => {
                   if (el) handles.current.set(option.id, el)
@@ -150,7 +169,7 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                 type="button"
                 draggable
                 aria-label={t('rateOptions.reorder', { label: option.label || t('rateOptions.removeFallback') })}
-                className="text-fg-4 hover:text-foreground flex size-6 cursor-grab items-center justify-center rounded active:cursor-grabbing"
+                className="text-fg-4 hover:text-foreground hidden size-6 cursor-grab items-center justify-center rounded active:cursor-grabbing lg:flex"
                 onDragStart={(e) => {
                   // Firefox starts no drag without data; the image shows the whole row, not the icon.
                   e.dataTransfer.setData('text/plain', option.id)

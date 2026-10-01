@@ -30,4 +30,23 @@ describe('DiscountTiersEditor', () => {
 
     expect(screen.getByText('If the renter books 7 or more days, apply the discount')).toBeInTheDocument()
   })
+
+  it('stops at the tier limit and says why, rather than letting Next fail silently', () => {
+    const full = Array.from({ length: 10 }, (_, i) => ({ id: `t${i}`, minDays: i + 1, percentOff: 5 }))
+    render(<Harness initial={full} />)
+
+    expect(screen.getByRole('button', { name: 'Add discount tier' })).toBeDisabled()
+    expect(screen.getByText('Up to 10 tiers.')).toBeInTheDocument()
+  })
+
+  it('explains a bad percent in the wide description column, not under the narrow input', () => {
+    const tier = { id: 't1', minDays: 3, percentOff: Number.NaN }
+    const errors = [{ percentOff: { type: 'custom', message: 'Whole percent, 1–99' } }]
+    render(<DiscountTiersEditor value={[tier]} onChange={() => {}} errors={errors as never} showAllErrors />)
+
+    expect(screen.getByText('Whole percent, 1–99')).toBeInTheDocument()
+    expect(
+      screen.queryByText('If the renter books 3 or more days, apply the discount'),
+    ).not.toBeInTheDocument()
+  })
 })

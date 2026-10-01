@@ -45,7 +45,8 @@
     "feeAmountInvalid": "Enter a valid amount",
     "customerDobRequired": "Date of birth is required",
     "customerDobImplausible": "The renter must be at least 18",
-    "customerAddressRequired": "Address is required"
+    "customerAddressRequired": "Address is required",
+    "rentalTooLong": "A rental can be at most {{days}} days"
   },
   "rateOption": {
     "labelRequired": "Label is required",

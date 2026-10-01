@@ -324,7 +324,9 @@
     "remove": "Remove {{label}}",
     "removeFallback": "rate option",
     "reorder": "Reorder {{label}}: drag, or use the arrow keys",
-    "fixedBasis": "Fixed · {{count}} {{unit}}"
+    "fixedBasis": "Fixed · {{count}} {{unit}}",
+    "moveUp": "Move {{label}} up",
+    "moveDown": "Move {{label}} down"
   },
   "photos": {
     "dropzone": "Drag & drop photos here, or click to browse",
@@ -565,7 +567,8 @@
     "remove": "Remove {{label}}",
     "tierName_one": "{{count}}+ day",
     "tierName_other": "{{count}}+ days",
-    "tierFallback": "discount tier"
+    "tierFallback": "discount tier",
+    "limit": "Up to {{count}} tiers."
   },
   "effectiveRates": {
     "show": "Show effective rates",

@@ -159,6 +159,15 @@ describe('previewDays', () => {
     ])
   })
 
+  it('always keeps a tier threshold, however many shorter lengths compete for the rows', () => {
+    const packages = [2, 5, 6, 8, 9].map((d) =>
+      option({ id: `p${d}`, basis: 'fixed', blockDuration: d, blockDurationUnit: 'days' }),
+    )
+    const days = previewDays([DAILY, ...packages], [{ minDays: 30, percentOff: 50 }])
+    expect(days).toContain(30)
+    expect(days).toHaveLength(10)
+  })
+
   it('leaves out a package shorter than a day, which no whole-day row can match', () => {
     const block = option({ basis: 'fixed', blockDuration: 4, blockDurationUnit: 'hours' })
     expect(previewDays([block], [])).toEqual([1, 3, 4, 7, 10, 14])
@@ -221,5 +230,13 @@ describe('the daily cap on hourly billing', () => {
 
   it('still treats one hour as an exact match', () => {
     expect(planRental([HOURLY], [], 1, 8)!.kind).toBe('exact')
+  })
+})
+
+describe('the longest rental priced', () => {
+  // The work grows with every hour, so the engine stops where booking validation does.
+  it('prices a year but not an hour more', () => {
+    expect(planRental([DAILY], [], 365 * 24)).not.toBeNull()
+    expect(planRental([DAILY], [], 365 * 24 + 1)).toBeNull()
   })
 })

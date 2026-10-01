@@ -45,7 +45,8 @@
     "feeAmountInvalid": "Introduzca un importe válido",
     "customerDobRequired": "La fecha de nacimiento es obligatoria",
     "customerDobImplausible": "El conductor debe tener al menos 18 años",
-    "customerAddressRequired": "La dirección es obligatoria"
+    "customerAddressRequired": "La dirección es obligatoria",
+    "rentalTooLong": "Un alquiler puede durar como máximo {{days}} días"
   },
   "rateOption": {
     "labelRequired": "La etiqueta es obligatoria",
