@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import i18n from '@/i18n'
 import { normalizeApiError } from '@/services/api/errors'
-import {
-  describeFile,
-  vehiclePhotoApi,
-  MAX_PHOTOS_PER_VEHICLE,
-  MAX_PHOTO_BYTES,
-  ACCEPTED_PHOTO_TYPES,
-  type PhotoTarget,
-} from '../api/vehicle-photo.api'
+import { vehiclePhotoApi, MAX_PHOTOS_PER_VEHICLE, type PhotoTarget } from '../api/vehicle-photo.api'
+import { describeFile, screenPhotos } from '../utils/photo-files'
 
 /**
  * Drives presign → upload → complete for a set of files, a few at a time — twenty parallel
@@ -33,24 +26,8 @@ export interface PhotoUpload {
 export interface StartUploadsResult {
   uploaded: number
   failed: number
-}
-
-function rejectedFiles(files: File[], remaining: number) {
-  const accepted: File[] = []
-  const problems: string[] = []
-
-  for (const file of files) {
-    if (!(ACCEPTED_PHOTO_TYPES as readonly string[]).includes(file.type)) {
-      problems.push(i18n.t('vehicles:photos.unsupportedType', { name: file.name }))
-    } else if (file.size > MAX_PHOTO_BYTES) {
-      problems.push(i18n.t('vehicles:photos.tooLarge', { name: file.name }))
-    } else if (accepted.length >= remaining) {
-      problems.push(i18n.t('vehicles:photos.overLimit', { name: file.name, max: MAX_PHOTOS_PER_VEHICLE }))
-    } else {
-      accepted.push(file)
-    }
-  }
-  return { accepted, problems }
+  /** Why each refused file was refused, naming it; uploads that fail in flight are counted only. */
+  problems: string[]
 }
 
 /**
@@ -63,8 +40,8 @@ export async function uploadPhotos(
   files: File[],
   existingCount = 0,
 ): Promise<StartUploadsResult> {
-  const { accepted, problems } = rejectedFiles(files, MAX_PHOTOS_PER_VEHICLE - existingCount)
-  if (accepted.length === 0) return { uploaded: 0, failed: problems.length }
+  const { accepted, problems } = screenPhotos(files, MAX_PHOTOS_PER_VEHICLE - existingCount)
+  if (accepted.length === 0) return { uploaded: 0, failed: problems.length, problems }
 
   const slots = await vehiclePhotoApi.requestUploads(target, accepted.map(describeFile))
   let uploaded = 0
@@ -88,7 +65,7 @@ export async function uploadPhotos(
     while (next < slots.length) await runOne(next++)
   }
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, slots.length) }, worker))
-  return { uploaded, failed }
+  return { uploaded, failed, problems }
 }
 
 export function useVehiclePhotoUpload(target: PhotoTarget | undefined) {
@@ -111,9 +88,9 @@ export function useVehiclePhotoUpload(target: PhotoTarget | undefined) {
 
   const start = useCallback(
     async (files: File[], existingCount: number): Promise<StartUploadsResult> => {
-      if (!target || files.length === 0) return { uploaded: 0, failed: 0 }
+      if (!target || files.length === 0) return { uploaded: 0, failed: 0, problems: [] }
 
-      const { accepted, problems } = rejectedFiles(files, MAX_PHOTOS_PER_VEHICLE - existingCount)
+      const { accepted, problems } = screenPhotos(files, MAX_PHOTOS_PER_VEHICLE - existingCount)
       if (problems.length > 0) {
         // Surfaced by the caller — the hook stays UI-free so it can be tested on its own.
         setUploads((current) => [
@@ -128,7 +105,7 @@ export function useVehiclePhotoUpload(target: PhotoTarget | undefined) {
           })),
         ])
       }
-      if (accepted.length === 0) return { uploaded: 0, failed: problems.length }
+      if (accepted.length === 0) return { uploaded: 0, failed: problems.length, problems }
 
       const queued: PhotoUpload[] = accepted.map((file, index) => {
         const previewUrl = URL.createObjectURL(file)
@@ -150,7 +127,7 @@ export function useVehiclePhotoUpload(target: PhotoTarget | undefined) {
       } catch (error) {
         const message = normalizeApiError(error).message
         queued.forEach((u) => patch(u.key, { phase: 'failed', error: message }))
-        return { uploaded: 0, failed: accepted.length + problems.length }
+        return { uploaded: 0, failed: accepted.length + problems.length, problems }
       }
 
       let uploaded = 0
@@ -186,7 +163,7 @@ export function useVehiclePhotoUpload(target: PhotoTarget | undefined) {
       }
       await Promise.all(Array.from({ length: Math.min(CONCURRENCY, slots.length) }, worker))
 
-      return { uploaded, failed }
+      return { uploaded, failed, problems }
     },
     // Identity, not the object: a caller building the target inline would otherwise rebuild
     // `start` on every render. The two fields are the whole of what `target` contributes.
