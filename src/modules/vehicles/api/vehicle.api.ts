@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api/client'
-import { MAX_LIST_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
+import { MAX_FLEET_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { Vehicle, VehicleInput, VehicleListParams } from '../types/vehicle.types'
 import {
   toListQuery,
@@ -32,7 +32,7 @@ export const vehicleApi = {
    */
   listAll: async (): Promise<Vehicle[]> => {
     const vehicles: Vehicle[] = []
-    for (let page = 1; page <= MAX_LIST_PAGES; page++) {
+    for (let page = 1; page <= MAX_FLEET_PAGES; page++) {
       const result = await vehicleApi.list({ page, pageSize: MAX_PAGE_SIZE })
       vehicles.push(...result.items)
       if (vehicles.length >= result.total) break

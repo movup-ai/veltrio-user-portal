@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/api/client'
 import { locationApi } from '@/modules/locations/api/location.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
-import { MAX_LIST_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
+import { MAX_BOOKING_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { BookingFilters, BookingInput, BookingTuple } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
@@ -51,7 +51,7 @@ export const bookingApi = {
     })
     const wires = [...first.data.items]
 
-    const pages = Math.min(Math.ceil(first.data.total / MAX_PAGE_SIZE), MAX_LIST_PAGES)
+    const pages = Math.min(Math.ceil(first.data.total / MAX_PAGE_SIZE), MAX_BOOKING_PAGES)
     for (let page = 1; page < pages; page++) {
       const next = await apiClient.get<ListEnvelope<BookingWire>>('/bookings', {
         params: { limit: MAX_PAGE_SIZE, offset: page * MAX_PAGE_SIZE },
@@ -112,10 +112,10 @@ export const bookingApi = {
    * the endpoint caps at 100; capped in turn so a huge book cannot hang the browser.
    */
   exportAll: async (params: Omit<BookingListParams, 'page' | 'pageSize'>) => {
-    const limit = MAX_LIST_PAGES * MAX_PAGE_SIZE
+    const limit = MAX_BOOKING_PAGES * MAX_PAGE_SIZE
     const rows: BookingTuple[] = []
     let total = 0
-    for (let page = 1; page <= MAX_LIST_PAGES; page++) {
+    for (let page = 1; page <= MAX_BOOKING_PAGES; page++) {
       const result = await bookingApi.page({ ...params, page, pageSize: MAX_PAGE_SIZE })
       total = result.total
       // The first response already says whether this can finish, so an oversized export costs
