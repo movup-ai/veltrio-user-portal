@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  AlertTriangle,
-  CircleDollarSign,
-  CircleSlash,
-  Clock,
-  ExternalLink,
-  Info,
-  type LucideIcon,
-} from 'lucide-react'
+import { CircleDollarSign, ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -20,7 +12,13 @@ import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
 import { cn } from '@/lib/utils'
 import { hasAnyPermission } from '@/utils/permissions'
-import { STRIPE_DASHBOARD_URL } from '../constants/payment.constants'
+import {
+  CAPABILITY_DOT,
+  NOTICE_ICON,
+  STATE_TONE,
+  STRIPE_DASHBOARD_URL,
+  TONE_CLASS,
+} from '../constants/payment.constants'
 import {
   useDisconnectPaymentAccount,
   useEnablePaymentMethod,
@@ -33,43 +31,6 @@ import {
 } from '../hooks/use-payment-account'
 import type { PaymentAccount, PaymentAccountState } from '../types/payment-account.types'
 import { accountState } from '../utils/payment-account.utils'
-
-type Tone = 'neutral' | 'success' | 'warning' | 'info' | 'error'
-
-const TONE_CLASS: Record<Tone, string> = {
-  neutral: 'bg-surface-3 text-fg-3',
-  success: 'bg-success-tint text-success',
-  warning: 'bg-warning-tint text-warning',
-  info: 'bg-info-tint text-info',
-  error: 'bg-error-tint text-error',
-}
-
-const STATE_TONE: Record<PaymentAccountState, Tone> = {
-  unavailable: 'neutral',
-  disconnected: 'neutral',
-  notConnected: 'neutral',
-  needsInfo: 'warning',
-  inReview: 'info',
-  active: 'success',
-  rejected: 'error',
-}
-
-const NOTICE_ICON: Record<Tone, LucideIcon> = {
-  neutral: Info,
-  success: Info,
-  warning: AlertTriangle,
-  info: Clock,
-  error: CircleSlash,
-}
-
-/** Stripe capability statuses by how good they are; anything newer reads as neutral. */
-const CAPABILITY_DOT: Record<string, string> = {
-  active: 'bg-success',
-  pending: 'bg-warning',
-  restricted: 'bg-warning',
-  rejected: 'bg-error',
-  unsupported: 'bg-error',
-}
 
 /**
  * The company's Stripe account: connect it, finish Stripe's form, and see whether cards and
