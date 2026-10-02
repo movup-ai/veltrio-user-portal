@@ -64,7 +64,7 @@ export function DashboardPage() {
               icon={Plus}
               label={t('newBooking')}
               variant="solid"
-              onClick={() => navigate('/app/bookings/new')}
+              onClick={() => navigate('/bookings/new')}
             />
           </>
         }

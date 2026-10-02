@@ -171,7 +171,6 @@
       "title": "Payment",
       "dueNote": "{{amount}} still to collect from the renter.",
       "capturedNote": "Captured {{when}} · {{method}}",
-      "captured": "Captured",
       "refunded": "Refunded",
       "balance": "Balance",
       "sendLink": "Send payment link",
@@ -180,14 +179,33 @@
       "sendReceipt": "Receipt",
       "deposit": "Security deposit",
       "depositState": {
-        "pending": "not held yet",
-        "held": "on hold",
-        "released": "released",
-        "captured": "drawn on"
+        "pending": "Not held",
+        "held": "On hold",
+        "released": "Released",
+        "captured": "Captured",
+        "requested": "Awaiting renter"
       },
-      "holdDeposit": "Place hold",
       "releaseDeposit": "Release",
-      "captureDeposit": "Capture"
+      "captureDeposit": "Capture",
+      "refund": "Refund",
+      "paid": "Paid",
+      "history": "Payments",
+      "heldUntil": "Held until {{date}}",
+      "capturedAmount": "{{amount}} captured",
+      "state": {
+        "unpaid": "Unpaid",
+        "deposit_held": "Deposit held",
+        "rental_paid": "Rental paid",
+        "paid": "Fully paid",
+        "refunded": "Refunded",
+        "awaiting": "Awaiting payment"
+      },
+      "sendLinkWithDeposit": "Send payment & deposit link",
+      "requestDeposit": "Request deposit",
+      "resendLink": "Resend payment link",
+      "resendDeposit": "Resend deposit link",
+      "holdTiming": "A card hold lasts about 7 days, so request it close to pickup to cover the whole rental.",
+      "holdStarts": "The hold lasts about 7 days from when the renter authorises it."
     },
     "manage": {
       "title": "Manage booking",
@@ -264,7 +282,8 @@
       "checkIn": "Check in",
       "printAgreement": "Print agreement",
       "messageRenter": "Message renter",
-      "pendingApi": "This needs the bookings API, which isn't live yet."
+      "pendingApi": "This needs the bookings API, which isn't live yet.",
+      "returnVehicle": "Return vehicle"
     },
     "cancelDialog": {
       "title": "Cancel this booking?",
@@ -275,7 +294,11 @@
   "toast": {
     "created": "Booking created",
     "createdDescription": "{{reference}} for {{name}} is on the schedule.",
-    "createFailed": "Could not create booking"
+    "createFailed": "Could not create booking",
+    "pickedUp": "Vehicle handed over",
+    "pickUpFailed": "Couldn't hand the vehicle over",
+    "returned": "Vehicle returned",
+    "returnFailed": "Couldn't return the vehicle"
   },
   "form": {
     "title": "New booking",

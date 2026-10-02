@@ -56,8 +56,8 @@ describe('accountState', () => {
 describe('onboardingLinks', () => {
   it('brings the owner back to the payments settings on this origin', () => {
     expect(onboardingLinks('https://portal.veltrio.test')).toEqual({
-      returnUrl: 'https://portal.veltrio.test/app/settings/payments?stripe=return',
-      refreshUrl: 'https://portal.veltrio.test/app/settings/payments?stripe=refresh',
+      returnUrl: 'https://portal.veltrio.test/settings/payments?stripe=return',
+      refreshUrl: 'https://portal.veltrio.test/settings/payments?stripe=refresh',
     })
   })
 })

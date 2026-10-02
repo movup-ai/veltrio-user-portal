@@ -44,7 +44,7 @@ export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; bu
           icon={CalendarDays}
           label={t('availability.openCalendar')}
           className="!text-[11.5px]"
-          onClick={() => navigate('/app/bookings', { state: { vehicleId: vehicle.id } })}
+          onClick={() => navigate('/bookings', { state: { vehicleId: vehicle.id } })}
         />
       </div>
 

@@ -12,13 +12,23 @@ function intlLocale(language: Language): string {
   return INTL_LOCALES[language]
 }
 
-/** USD everywhere for now — the org currency setting isn't wired to a backend yet. */
-export function formatCurrencyIn(language: Language, amount: number): string {
+/** USD unless told otherwise: payments carry the currency their Stripe account settles in. */
+export function formatCurrencyIn(language: Language, amount: number, currency = 'USD'): string {
   return new Intl.NumberFormat(intlLocale(language), {
     style: 'currency',
-    currency: 'USD',
+    currency,
     maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
   }).format(amount)
+}
+
+/** "$" for USD, "€" for EUR: the narrow symbol, for an amount field's prefix. */
+export function currencySymbolIn(language: Language, currency = 'USD'): string {
+  const parts = new Intl.NumberFormat(intlLocale(language), {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'narrowSymbol',
+  }).formatToParts(0)
+  return parts.find((part) => part.type === 'currency')?.value ?? currency
 }
 
 export function formatNumberIn(language: Language, value: number): string {
@@ -42,7 +52,8 @@ export function useFormatters() {
     () => ({
       language,
       locale: intlLocale(language),
-      currency: (amount: number) => formatCurrencyIn(language, amount),
+      currency: (amount: number, currency?: string) => formatCurrencyIn(language, amount, currency),
+      currencySymbol: (currency?: string) => currencySymbolIn(language, currency),
       number: (value: number) => formatNumberIn(language, value),
       percent: (value: number) => `${formatNumberIn(language, value)}%`,
       date: (date: Date | string, options: Intl.DateTimeFormatOptions) =>

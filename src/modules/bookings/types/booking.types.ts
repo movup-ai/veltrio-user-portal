@@ -38,8 +38,11 @@ export const BOOKING_STATUSES = [
 ] as const
 export type BookingStatus = (typeof BOOKING_STATUSES)[number]
 
-/** What has actually been taken, as opposed to the quote in `pricing`. */
-export const PAYMENT_STATES = ['unpaid', 'deposit_held', 'paid', 'refunded'] as const
+/**
+ * What has actually been taken, as opposed to the quote in `pricing`. `paid` is fully paid,
+ * the rental and the deposit held: pickup waits for it.
+ */
+export const PAYMENT_STATES = ['unpaid', 'deposit_held', 'rental_paid', 'paid', 'refunded'] as const
 export type PaymentState = (typeof PAYMENT_STATES)[number]
 
 export interface BookingPayment {
@@ -418,27 +421,6 @@ export interface BookingEventEntry {
   meta?: Record<string, string | number>
 }
 
-/**
- * Where the deposit stands. `pending` means no hold has been placed yet; `held` is authorized
- * and reversible; `released` and `captured` are both terminal, one in the renter's favour.
- */
-export type BookingDepositState = 'pending' | 'held' | 'released' | 'captured'
-
-export interface BookingPaymentState {
-  /** The booking total. The itemization behind it belongs to the charges card, not here. */
-  total: number
-  captured: number
-  refunded: number
-  balance: number
-  depositHold: number
-  depositState: BookingDepositState
-  /** "Visa · 4223" — how the money was taken. Absent until something is captured. */
-  method?: string
-  capturedAt?: string
-  /** Nothing left to collect. Drives the badge and which actions are offered. */
-  settled: boolean
-}
-
 export interface BookingRenter {
   id?: string
   name: string
@@ -484,7 +466,6 @@ export interface BookingDetails {
 
   charges: BookingChargeLine[]
   total: number
-  payment: BookingPaymentState
   agreement: BookingAgreement
   checks: BookingCheckStep[]
   events: BookingEventEntry[]

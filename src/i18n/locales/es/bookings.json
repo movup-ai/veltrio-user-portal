@@ -171,7 +171,6 @@
       "title": "Pago",
       "dueNote": "Quedan {{amount}} por cobrar al arrendatario.",
       "capturedNote": "Cobrado el {{when}} · {{method}}",
-      "captured": "Cobrado",
       "refunded": "Reembolsado",
       "balance": "Saldo",
       "sendLink": "Enviar enlace de pago",
@@ -180,14 +179,33 @@
       "sendReceipt": "Recibo",
       "deposit": "Depósito de garantía",
       "depositState": {
-        "pending": "sin retener",
-        "held": "retenido",
-        "released": "liberado",
-        "captured": "ejecutado"
+        "pending": "Sin retener",
+        "held": "Retenido",
+        "released": "Liberado",
+        "captured": "Ejecutado",
+        "requested": "Esperando al cliente"
       },
-      "holdDeposit": "Retener",
       "releaseDeposit": "Liberar",
-      "captureDeposit": "Cobrar"
+      "captureDeposit": "Cobrar",
+      "refund": "Reembolsar",
+      "paid": "Pagado",
+      "history": "Pagos",
+      "heldUntil": "Retenido hasta el {{date}}",
+      "capturedAmount": "{{amount}} cobrados",
+      "state": {
+        "unpaid": "Sin pagar",
+        "deposit_held": "Depósito retenido",
+        "rental_paid": "Alquiler pagado",
+        "paid": "Pagado del todo",
+        "refunded": "Reembolsado",
+        "awaiting": "Esperando pago"
+      },
+      "sendLinkWithDeposit": "Enviar enlace de pago y depósito",
+      "requestDeposit": "Pedir depósito",
+      "resendLink": "Reenviar enlace de pago",
+      "resendDeposit": "Reenviar enlace del depósito",
+      "holdTiming": "Una retención en tarjeta dura unos 7 días: pídela cerca de la recogida para cubrir todo el alquiler.",
+      "holdStarts": "La retención dura unos 7 días desde que el cliente la autoriza."
     },
     "manage": {
       "title": "Gestionar reserva",
@@ -264,7 +282,8 @@
       "checkIn": "Registrar entrada",
       "printAgreement": "Imprimir contrato",
       "messageRenter": "Escribir al arrendatario",
-      "pendingApi": "Esto necesita la API de reservas, que aún no está disponible."
+      "pendingApi": "Esto necesita la API de reservas, que aún no está disponible.",
+      "returnVehicle": "Devolver vehículo"
     },
     "cancelDialog": {
       "title": "¿Cancelar esta reserva?",
@@ -275,7 +294,11 @@
   "toast": {
     "created": "Reserva creada",
     "createdDescription": "{{reference}} para {{name}} ya está en la agenda.",
-    "createFailed": "No se pudo crear la reserva"
+    "createFailed": "No se pudo crear la reserva",
+    "pickedUp": "Vehículo entregado",
+    "pickUpFailed": "No se pudo registrar la entrega",
+    "returned": "Vehículo devuelto",
+    "returnFailed": "No se pudo registrar la devolución"
   },
   "form": {
     "title": "Nueva reserva",

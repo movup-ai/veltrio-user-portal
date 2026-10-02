@@ -15,7 +15,7 @@ export function NotFoundPage() {
         description={t('notFound.description')}
         action={
           <Button asChild>
-            <Link to="/app/dashboard">{t('notFound.backToDashboard')}</Link>
+            <Link to="/dashboard">{t('notFound.backToDashboard')}</Link>
           </Button>
         }
       />

@@ -255,8 +255,8 @@ export function BookingsPage() {
   // at map time — the bookings list and the fleet load independently.
   const rows = rowsData.map((b) =>
     bookingRow(withVehicleImage(b, thumbnails), [
-      { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/bookings/${b[1]}`) },
-      { label: t('list.rowActions.editBooking'), onClick: () => navigate(`/app/bookings/${b[1]}`) },
+      { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/bookings/${b[1]}`) },
+      { label: t('list.rowActions.editBooking'), onClick: () => navigate(`/bookings/${b[1]}`) },
       { label: t('list.rowActions.exportBooking'), onClick: () => handleExport([b]) },
     ]),
   )
@@ -275,7 +275,7 @@ export function BookingsPage() {
       [
         {
           label: t('list.drafts.resume'),
-          onClick: () => navigate(`/app/bookings/new?draft=${draft.id}`),
+          onClick: () => navigate(`/bookings/new?draft=${draft.id}`),
         },
         { label: t('list.drafts.discard'), onClick: () => deleteDraft.mutate(draft.id) },
       ],
@@ -292,7 +292,7 @@ export function BookingsPage() {
             <PageActionButton
               icon={CalendarDays}
               label={t('list.calendarView')}
-              onClick={() => navigate('/app/calendar')}
+              onClick={() => navigate('/calendar')}
             />
             <PageActionButton
               icon={Download}
@@ -303,7 +303,7 @@ export function BookingsPage() {
               icon={Plus}
               label={t('list.newBooking')}
               variant="solid"
-              onClick={() => navigate('/app/bookings/new')}
+              onClick={() => navigate('/bookings/new')}
             />
           </>
         }
@@ -451,7 +451,7 @@ export function BookingsPage() {
           }
           minWidth="800px"
           onRowClick={(key) =>
-            showingDrafts ? navigate(`/app/bookings/new?draft=${key}`) : navigate(`/app/bookings/${key}`)
+            showingDrafts ? navigate(`/bookings/new?draft=${key}`) : navigate(`/bookings/${key}`)
           }
           emptyState={
             showingDrafts ? (

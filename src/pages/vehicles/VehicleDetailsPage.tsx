@@ -163,7 +163,7 @@ export function VehicleDetailsPage() {
             variant="outline"
             size="icon"
             // Always the fleet list: history could be a booking, a search result or another tab.
-            onClick={() => navigate('/app/vehicles')}
+            onClick={() => navigate('/vehicles')}
             aria-label={t('details.backToVehicles')}
           >
             <ArrowLeft className="size-4" />
@@ -181,7 +181,7 @@ export function VehicleDetailsPage() {
                   size="icon"
                   className="size-[30px]"
                   disabled={!prevVehicleId}
-                  onClick={() => prevVehicleId && navigate(`/app/vehicles/${prevVehicleId}`)}
+                  onClick={() => prevVehicleId && navigate(`/vehicles/${prevVehicleId}`)}
                   aria-label={t('details.previousVehicle')}
                 >
                   <ChevronLeft className="size-4" />
@@ -191,7 +191,7 @@ export function VehicleDetailsPage() {
                   size="icon"
                   className="size-[30px]"
                   disabled={!nextVehicleId}
-                  onClick={() => nextVehicleId && navigate(`/app/vehicles/${nextVehicleId}`)}
+                  onClick={() => nextVehicleId && navigate(`/vehicles/${nextVehicleId}`)}
                   aria-label={t('details.nextVehicle')}
                 >
                   <ChevronRight className="size-4" />
@@ -209,7 +209,7 @@ export function VehicleDetailsPage() {
               icon={SquarePen}
               label={t('details.editVehicle')}
               variant="solid"
-              onClick={() => navigate(`/app/vehicles/${vehicle.id}/edit`)}
+              onClick={() => navigate(`/vehicles/${vehicle.id}/edit`)}
             />
           </>
         }
@@ -349,7 +349,7 @@ export function VehicleDetailsPage() {
         confirmLabel={t('archiveDialog.confirm')}
         loading={archiveVehicle.isPending}
         onConfirm={() => {
-          archiveVehicle.mutate(vehicle, { onSuccess: () => navigate("/app/vehicles") })
+          archiveVehicle.mutate(vehicle, { onSuccess: () => navigate("/vehicles") })
         }}
       />
 

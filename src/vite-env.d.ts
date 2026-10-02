@@ -14,6 +14,8 @@ interface ImportMetaEnv {
   readonly VITE_GOOGLE_MAPS_API_KEY?: string
   /** `true` once the API can email or text a renter their insurance link. */
   readonly VITE_INSURANCE_LINK_DELIVERY?: string
+  /** The platform's Stripe publishable key; the renter's payment page loads Stripe.js with it. */
+  readonly VITE_STRIPE_PUBLISHABLE_KEY?: string
 }
 
 interface ImportMeta {

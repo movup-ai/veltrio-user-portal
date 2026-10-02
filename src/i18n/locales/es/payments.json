@@ -35,5 +35,197 @@
     "method": "Método",
     "status": "Estado",
     "amount": "Importe"
+  },
+  "booking": {
+    "toast": {
+      "linkFailed": "No se pudo crear el enlace de pago",
+      "recorded": "Pago registrado",
+      "recordFailed": "No se pudo registrar el pago",
+      "captured": "Depósito cobrado",
+      "captureFailed": "No se pudo cobrar el depósito",
+      "released": "Depósito liberado",
+      "releaseFailed": "No se pudo liberar el depósito",
+      "refunded": "Reembolso emitido",
+      "refundFailed": "No se pudo emitir el reembolso",
+      "requestFailed": "No se pudo crear el enlace del depósito",
+      "documentFailed": "No se pudo descargar el documento",
+      "receiptFailed": "No se pudo obtener el enlace del recibo"
+    },
+    "link": {
+      "title": {
+        "payment": "Enlace de pago",
+        "combined": "Enlace de pago y depósito",
+        "deposit": "Enlace del depósito"
+      },
+      "description": {
+        "payment": "Envía a {{name}} este enlace para pagar con tarjeta, Apple Pay, Google Pay o Link.",
+        "combined": "Envía a {{name}} este enlace para pagar y después autorizar la retención del depósito en la misma tarjeta.",
+        "deposit": "Envía a {{name}} este enlace para autorizar la retención del depósito. No se cobra nada salvo que lo ejecutes tras la devolución."
+      },
+      "label": "Enlace",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "copyFailed": "No se pudo copiar. Selecciona el enlace y cópialo.",
+      "email": "Correo",
+      "text": "SMS",
+      "subject": {
+        "payment": "Paga tu alquiler {{reference}} con {{company}}",
+        "combined": "Paga tu alquiler {{reference}} con {{company}}",
+        "deposit": "Depósito de tu alquiler {{reference}} con {{company}}"
+      },
+      "message": {
+        "payment": "Hola {{name}}, paga {{amount}} de tu alquiler {{reference}} aquí: {{url}}",
+        "combined": "Hola {{name}}, paga {{amount}} de tu alquiler {{reference}} y autoriza el depósito de {{deposit}} aquí: {{url}}",
+        "deposit": "Hola {{name}}, autoriza el depósito de {{deposit}} de tu alquiler {{reference}} aquí: {{url}}"
+      },
+      "depositLater": "El depósito de {{deposit}} se pide aparte, desde el día antes de la recogida.",
+      "rental": "Pago del alquiler",
+      "depositHold": "Retención del depósito",
+      "shareWith": "Enviar a {{name}}"
+    },
+    "manual": {
+      "title": "Registrar un pago",
+      "description": "Para dinero cobrado fuera de Stripe, como efectivo. No se cobra nada.",
+      "amount": "Importe",
+      "method": "Forma de pago",
+      "methods": {
+        "cash": "Efectivo",
+        "cardTerminal": "Terminal de tarjeta",
+        "bankTransfer": "Transferencia bancaria (wire / ACH)",
+        "zelle": "Zelle",
+        "venmo": "Venmo",
+        "cashApp": "Cash App",
+        "check": "Cheque",
+        "other": "Otro"
+      },
+      "submit": "Registrar pago",
+      "balance": "Saldo pendiente",
+      "hint": "Indica lo que pagó el cliente, hasta los {{max}} pendientes. Un pago parcial deja el resto pendiente."
+    },
+    "capture": {
+      "title": "Cobrar el depósito",
+      "description": "Cobra una parte o todo el depósito de {{held}}. Lo que no se cobre vuelve al cliente.",
+      "amount": "Importe a cobrar",
+      "submit": "Cobrar",
+      "held": "Depósito retenido",
+      "hint": "Ejecuta hasta los {{max}} retenidos. Lo que no ejecutes se devuelve al cliente al momento."
+    },
+    "refund": {
+      "title": "Reembolsar un pago",
+      "description": "Los pagos con tarjeta vuelven a la tarjeta. El efectivo se devuelve en mano y solo se registra aquí.",
+      "payment": "Pago",
+      "amount": "Importe a reembolsar",
+      "submit": "Reembolsar",
+      "left": "Por reembolsar",
+      "hint": "Reembolsa hasta los {{max}} que quedan de este pago. Un reembolso a tarjeta tarda de 5 a 10 días en llegar al cliente."
+    },
+    "amountInvalid": "Introduce un importe mayor que cero.",
+    "amountOver": "Es más de {{max}}.",
+    "kind": {
+      "charge": "Pago con tarjeta",
+      "deposit": "Depósito",
+      "manual": "Pago registrado"
+    },
+    "status": {
+      "requires_payment": "Pendiente de pago",
+      "processing": "Procesando",
+      "succeeded": "Pagado",
+      "held": "Retenido",
+      "captured": "Cobrado",
+      "released": "Liberado",
+      "failed": "Fallido",
+      "canceled": "Retirado"
+    },
+    "reasons": {
+      "payments_not_ready": "Conecta Stripe en Configuración → Pagos para enviar enlaces de pago.",
+      "booking_cancelled": "La reserva está cancelada.",
+      "nothing_to_collect": "No queda nada por cobrar.",
+      "no_deposit": "Esta reserva no tiene depósito.",
+      "deposit_already_held": "El depósito ya está retenido.",
+      "booking_returned": "El vehículo ya se devolvió.",
+      "no_deposit_held": "No hay ningún depósito retenido.",
+      "not_returned": "Ejecuta o libera el depósito cuando se devuelva el vehículo.",
+      "not_before_pickup": "El vehículo ya se recogió.",
+      "not_fully_paid": "Para la recogida, el alquiler debe estar pagado y el depósito retenido.",
+      "not_on_rental": "El vehículo no está fuera con esta reserva."
+    },
+    "receipt": {
+      "title": "Recibo",
+      "description": "Envía a {{name}} un enlace al recibo de la reserva {{reference}}. Puede verlo y descargar el PDF.",
+      "paid": "Pagado por el alquiler",
+      "depositCaptured": "Depósito ejecutado",
+      "balance": "Saldo pendiente",
+      "subject": "Tu recibo de {{company}} para {{reference}}",
+      "message": "Hola {{name}}, aquí tienes el recibo de tu alquiler {{reference}}: {{url}}",
+      "download": "Descargar PDF"
+    }
+  },
+  "pay": {
+    "title": "Paga tu alquiler",
+    "pickup": "Recogida",
+    "amountDue": "Importe a pagar",
+    "submit": "Pagar {{amount}}",
+    "paid": {
+      "title": "Pago recibido",
+      "body": "{{company}} ha recibido tu pago de {{amount}} de la reserva {{reference}}. Ya puedes cerrar esta página.",
+      "bodyDepositLater": "{{company}} ha recibido tu pago de {{amount}} de la reserva {{reference}}. Te enviará otro enlace para el depósito de {{deposit}} antes de la recogida.",
+      "bodyDepositIncomplete": "{{company}} ha recibido tu pago de {{amount}} de la reserva {{reference}}. La retención del depósito de {{deposit}} no se completó, así que {{company}} se pondrá en contacto contigo."
+    },
+    "processing": {
+      "title": "Pago en proceso",
+      "body": "Tu banco aún está confirmando el pago. Esta página se actualiza sola."
+    },
+    "closed": {
+      "title": "Este enlace ya no está activo",
+      "body": "Pide a {{company}} un nuevo enlace de pago."
+    },
+    "invalid": {
+      "title": "Este enlace de pago no es válido",
+      "body": "Puede que lo haya sustituido uno más reciente. Pide un nuevo enlace a la empresa de alquiler."
+    },
+    "unavailable": "Los pagos con tarjeta no están disponibles ahora. Contacta con la empresa de alquiler.",
+    "failed": "El pago no se completó.",
+    "depositTitle": "Depósito de seguridad",
+    "depositHold": "Retención del depósito",
+    "consentWithDeposit": "Al pagar, también autorizas a {{company}} a retener {{deposit}} en esta tarjeta como depósito. No se cobra nada salvo que tu contrato de alquiler lo prevea, y la retención se libera tras la devolución.",
+    "consentDeposit": "{{company}} retiene {{deposit}} en esta tarjeta como depósito. No se cobra nada salvo que tu contrato de alquiler lo prevea, y la retención se libera tras la devolución.",
+    "submitWithDeposit": "Pagar {{amount}} y retener {{deposit}}",
+    "submitDeposit": "Autorizar retención de {{deposit}}",
+    "held": {
+      "title": "Depósito retenido",
+      "body": "{{company}} retiene {{deposit}} en tu tarjeta para la reserva {{reference}}. Ya puedes cerrar esta página."
+    },
+    "done": {
+      "title": "Todo listo",
+      "body": "{{company}} ha recibido tu pago de {{amount}} y retiene {{deposit}} como depósito de la reserva {{reference}}. Ya puedes cerrar esta página."
+    },
+    "depositFailed": "La retención del depósito no se completó.",
+    "booking": "Reserva {{reference}}",
+    "greeting": "Hola {{name}}, revisa los detalles antes de pagar.",
+    "depositGreeting": "Hola {{name}}, revisa los detalles antes de autorizar la retención.",
+    "return": "Devolución",
+    "depositNotCharged": "Se retiene en tu tarjeta, no se cobra",
+    "secure": "Pago seguro con Stripe. Los datos de tu tarjeta van directamente a Stripe.",
+    "seats_one": "{{count}} plaza",
+    "seats_other": "{{count}} plazas",
+    "unreachable": {
+      "title": "No pudimos cargar tu pago",
+      "body": "Suele ser algo breve. Tu enlace es válido, así que inténtalo de nuevo en un momento.",
+      "retry": "Reintentar"
+    },
+    "viewReceipt": "Ver recibo"
+  },
+  "receipt": {
+    "title": "Recibo",
+    "rental": "Pago del alquiler",
+    "deposit": "Depósito ejecutado",
+    "refunded": "{{amount}} reembolsados",
+    "received": "Total recibido",
+    "balance": "Quedan {{amount}} pendientes",
+    "download": "Descargar PDF",
+    "invalid": {
+      "title": "Este enlace de recibo no es válido",
+      "body": "Pide a la empresa de alquiler un enlace nuevo."
+    }
   }
 }

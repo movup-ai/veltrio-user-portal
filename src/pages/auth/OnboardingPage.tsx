@@ -103,7 +103,7 @@ export function OnboardingPage() {
         website: values.website || undefined,
       })
       await queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY })
-      navigate('/app/dashboard', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (error) {
       if (error instanceof ApiError && error.code === 'subdomain_taken') {
         setFormError(t('errors.subdomainTaken'))
@@ -125,7 +125,7 @@ export function OnboardingPage() {
   if (!isLoaded) return <LoadingState />
   if (!isSignedIn) return <Navigate to="/login" replace />
   // Already has a company — nothing to onboard.
-  if (me.data) return <Navigate to="/app/dashboard" replace />
+  if (me.data) return <Navigate to="/dashboard" replace />
 
   return (
     <div className="w-full max-w-lg rounded-lg border border-border bg-card p-8 shadow-sm">

@@ -6,13 +6,15 @@ import type { BookingChargeLine } from '../types/booking.types'
 interface BookingChargeLinesProps {
   charges: BookingChargeLine[]
   days: number
+  /** The booking's currency, as its payments are taken in; USD when not given. */
+  currency?: string
 }
 
 /**
  * The itemized quote, as a bare list. Lives inside the payment card rather than a card of its
  * own — split across two panels, the total appeared twice and the two could drift apart.
  */
-export function BookingChargeLines({ charges, days }: BookingChargeLinesProps) {
+export function BookingChargeLines({ charges, days, currency }: BookingChargeLinesProps) {
   const { t } = useTranslation('bookings')
   const { t: tVehicles } = useTranslation('vehicles')
   const format = useFormatters()
@@ -31,11 +33,11 @@ export function BookingChargeLines({ charges, days }: BookingChargeLinesProps) {
         // A live booking's line counts the rate's own units (2 weeks), not days.
         return line.meta?.count != null
           ? t('details.charges.baseRateUnits', {
-              rate: format.currency(line.meta.rate ?? 0),
+              rate: format.currency(line.meta.rate ?? 0, currency),
               count: line.meta.count,
             })
           : t('details.charges.baseRateDetail', {
-              rate: format.currency(line.meta?.rate ?? 0),
+              rate: format.currency(line.meta?.rate ?? 0, currency),
               count: line.meta?.days ?? days,
             })
       case 'discount':
@@ -43,7 +45,7 @@ export function BookingChargeLines({ charges, days }: BookingChargeLinesProps) {
       case 'additionalDriver':
         return t('details.charges.additionalDriverDetail', {
           count: line.meta?.count ?? 1,
-          rate: format.currency(line.meta?.rate ?? 0),
+          rate: format.currency(line.meta?.rate ?? 0, currency),
         })
       case 'taxes':
         return t('details.charges.taxesDetail', { pct: line.meta?.pct ?? 0 })
@@ -64,7 +66,7 @@ export function BookingChargeLines({ charges, days }: BookingChargeLinesProps) {
               {caption && <span className="text-fg-4 block text-[11.5px]">{caption}</span>}
             </span>
             <span className="shrink-0 text-[13px] font-semibold tabular-nums">
-              {format.currency(line.amount)}
+              {format.currency(line.amount, currency)}
             </span>
           </div>
         )
