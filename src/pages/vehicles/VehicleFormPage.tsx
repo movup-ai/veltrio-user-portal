@@ -321,7 +321,7 @@ function VehicleForm({
   }
 
   const saveDraftAndExit = () => {
-    const onSaved = () => navigate('/app/vehicles')
+    const onSaved = () => navigate('/vehicles')
     if (isEdit && vehicleId) {
       // An already-published vehicle stays published — "Save & exit" just saves what's there.
       updateVehicle.mutate(formValuesToVehicleInput(watchedValues), { onSuccess: onSaved })
@@ -438,7 +438,7 @@ function VehicleForm({
     // the progress.
     const goToVehicle = (createdId: string) => {
       handOffPhotos(createdId, pickedFiles)
-      navigate(`/app/vehicles/${createdId}`)
+      navigate(`/vehicles/${createdId}`)
     }
 
     if (isEdit && vehicleId) {

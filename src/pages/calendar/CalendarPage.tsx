@@ -19,7 +19,7 @@ export function CalendarPage() {
         title={t('calendar.empty.title')}
         description={t('calendar.empty.description')}
         action={
-          <Button variant="outline" onClick={() => navigate('/app/bookings')}>
+          <Button variant="outline" onClick={() => navigate('/bookings')}>
             {t('calendar.empty.action')}
           </Button>
         }

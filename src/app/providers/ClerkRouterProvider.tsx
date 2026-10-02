@@ -70,7 +70,7 @@ export function ClerkRouterProvider() {
       routerReplace={(to) => navigate(to, { replace: true })}
       signInUrl="/login"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/app/dashboard"
+      signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/onboarding"
       afterSignOutUrl="/login"
     >

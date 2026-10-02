@@ -46,9 +46,9 @@ function WhatThePageSees() {
 function renderGate() {
   return render(
     <QueryClientProvider client={new QueryClient()}>
-      <MemoryRouter initialEntries={['/app']}>
+      <MemoryRouter initialEntries={['/']}>
         <Routes>
-          <Route path="/app" element={<ProtectedRoute />}>
+          <Route path="/" element={<ProtectedRoute />}>
             <Route index element={<WhatThePageSees />} />
           </Route>
         </Routes>

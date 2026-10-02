@@ -7,6 +7,7 @@ import { LoadingState } from '@/components/feedback/LoadingState'
 import { InsuranceReturnPage } from '@/pages/verification/InsuranceReturnPage'
 import { PaymentPage } from '@/pages/pay/PaymentPage.lazy'
 import { ReceiptPage } from '@/pages/receipt/ReceiptPage.lazy'
+import { LegacyAppRedirect } from './legacy-app-redirect'
 import { ProtectedRoute } from './protected-route'
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
@@ -47,8 +48,6 @@ export const router = createBrowserRouter([
   {
     element: <ClerkRouterProvider />,
     children: [
-      { path: '/', element: <Navigate to="/app/dashboard" replace /> },
-
       {
         element: <AuthLayout />,
         children: [
@@ -66,13 +65,12 @@ export const router = createBrowserRouter([
       },
 
       {
-        path: '/app',
         element: <ProtectedRoute />,
         children: [
           {
             element: <DashboardLayout />,
             children: [
-              { index: true, element: <Navigate to="dashboard" replace /> },
+              { index: true, element: <Navigate to="/dashboard" replace /> },
               { path: 'dashboard', element: withSuspense(<DashboardPage />) },
 
               { path: 'vehicles', element: withSuspense(<VehiclesPage />) },
@@ -105,6 +103,8 @@ export const router = createBrowserRouter([
           },
         ],
       },
+
+      { path: '/app/*', element: <LegacyAppRedirect /> },
 
       { path: '*', element: withSuspense(<NotFoundPage />) },
     ],

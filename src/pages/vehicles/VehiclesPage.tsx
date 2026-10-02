@@ -256,12 +256,12 @@ export function VehiclesPage() {
   const rows = orderedItems.map((v) =>
     v.isDraft
       ? vehicleRow(v, 0, [
-          { label: t('list.rowActions.continueDraft'), onClick: () => navigate(`/app/vehicles/new?draft=${v.id}`) },
+          { label: t('list.rowActions.continueDraft'), onClick: () => navigate(`/vehicles/new?draft=${v.id}`) },
           { label: t('list.rowActions.discardDraft'), onClick: () => deleteDraft.mutate(v.id), destructive: true },
         ])
       : vehicleRow(v, tripsForVehicle(v), [
-          { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/app/vehicles/${v.id}`) },
-          { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/app/vehicles/${v.id}/edit`) },
+          { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/vehicles/${v.id}`) },
+          { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/vehicles/${v.id}/edit`) },
           // An archived vehicle has no public page to share, so the link is offered only while live.
           ...(subdomain && v.status !== 'Archived'
             ? [{ label: t('publicLink.vehicleLink'), onClick: () => void handleCopyVehicleLink(v) }]
@@ -297,7 +297,7 @@ export function VehiclesPage() {
                 icon={Plus}
                 label={t('list.addVehicle')}
                 variant="solid"
-                onClick={() => navigate('/app/vehicles/new')}
+                onClick={() => navigate('/vehicles/new')}
                 className="!text-[13px]"
               />
             </Can>
@@ -481,7 +481,7 @@ export function VehiclesPage() {
           onRowClick={
             manualOrderMode
               ? undefined
-              : (id) => navigate(isDraftsTab ? `/app/vehicles/new?draft=${id}` : `/app/vehicles/${id}`)
+              : (id) => navigate(isDraftsTab ? `/vehicles/new?draft=${id}` : `/vehicles/${id}`)
           }
           pagination={
             // Drafts are capped well under one page, so they never paginate.

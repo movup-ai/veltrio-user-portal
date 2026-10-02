@@ -22,7 +22,7 @@ export function OpsRow() {
           <button
             key={op.key}
             type="button"
-            onClick={() => navigate(op.target === 'Payments' ? '/app/payments' : '/app/bookings')}
+            onClick={() => navigate(op.target === 'Payments' ? '/payments' : '/bookings')}
             className="bg-surface border-border shadow-xs hover:bg-surface-2 flex items-center gap-3 rounded-xl border px-4 py-[15px] text-left transition-colors"
           >
             <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px]" style={{ background: style.tint, color: style.color }}>

@@ -1,7 +1,7 @@
 import type { PaymentAccount, PaymentAccountState } from '../types/payment-account.types'
 
 /** Where the payments settings live; Stripe sends the owner back here. */
-export const PAYMENT_SETTINGS_PATH = '/app/settings/payments'
+export const PAYMENT_SETTINGS_PATH = '/settings/payments'
 
 /** What the owner can do next, from Stripe's statuses. Requirements outrank capabilities:
  *  while Stripe is waiting on the owner, "in review" would tell them there is nothing to do. */

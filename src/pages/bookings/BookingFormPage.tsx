@@ -179,7 +179,7 @@ export function BookingFormPage() {
           title={t('form.draft.missingTitle')}
           description={t('form.draft.missing')}
           actionLabel={t('form.draft.startFresh')}
-          onRetry={() => navigate('/app/bookings/new', { replace: true })}
+          onRetry={() => navigate('/bookings/new', { replace: true })}
         />
       </PageContainer>
     )
@@ -443,7 +443,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
 
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
-  const cancel = () => navigate('/app/bookings')
+  const cancel = () => navigate('/bookings')
 
   function handleSaveDraft() {
     // Attachments are left out: a File cannot be serialized, so the API would store `{}` and
@@ -465,7 +465,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
               : t('form.draft.savedDescription'),
             variant: 'success',
           })
-          navigate('/app/bookings')
+          navigate('/bookings')
         },
       },
     )
@@ -595,7 +595,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
           // discard a booking that was made: it is reported on its own and the booking stands.
           await uploadDocuments(booking.customer.id, submitted)
           settle()
-          navigate('/app/bookings')
+          navigate('/bookings')
         },
         onError: () => settle(),
       })

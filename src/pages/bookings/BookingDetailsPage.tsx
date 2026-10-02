@@ -179,7 +179,7 @@ export function BookingDetailsPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate('/app/bookings')}
+            onClick={() => navigate('/bookings')}
             aria-label={t('details.backToList')}
           >
             <ArrowLeft className="size-4" />
@@ -260,7 +260,7 @@ export function BookingDetailsPage() {
                 size="sm"
                 className="gap-1.5"
                 disabled={!booking.vehicleId}
-                onClick={() => booking.vehicleId && navigate(`/app/vehicles/${booking.vehicleId}`)}
+                onClick={() => booking.vehicleId && navigate(`/vehicles/${booking.vehicleId}`)}
               >
                 {t('details.vehicle.open')}
                 <ExternalLink className="size-3.5" aria-hidden />
@@ -287,7 +287,7 @@ export function BookingDetailsPage() {
 
           <BookingRenterCard
             renter={booking.renter}
-            onOpenProfile={() => navigate('/app/customers')}
+            onOpenProfile={() => navigate('/customers')}
             checklist={
               <BookingChecklist
                 checks={booking.checks}

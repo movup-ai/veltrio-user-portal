@@ -57,23 +57,23 @@ describe('returning from a session', () => {
   it('sends the renter to the return page, remembering where the session was opened', () => {
     const uri = insuranceReturnUri({
       origin: 'https://portal.test',
-      pathname: '/app/bookings/BK-1',
+      pathname: '/bookings/BK-1',
       search: '?tab=checks',
     })
 
     expect(uri).toBe(
-      'https://portal.test/insurance/return?returnTo=%2Fapp%2Fbookings%2FBK-1%3Ftab%3Dchecks',
+      'https://portal.test/insurance/return?returnTo=%2Fbookings%2FBK-1%3Ftab%3Dchecks',
     )
     expect(insuranceReturnTo(new URL(uri).search + AXLE_SAMPLE.replace('?', '&'))).toBe(
-      '/app/bookings/BK-1?tab=checks',
+      '/bookings/BK-1?tab=checks',
     )
   })
 
   it('goes back only to a page on this site', () => {
     // The value arrives in the URL; honouring a full address would make this an open redirect.
     for (const hostile of ['https://evil.test', '//evil.test/app', 'javascript:alert(1)']) {
-      expect(insuranceReturnTo(`?returnTo=${encodeURIComponent(hostile)}`)).toBe('/app/verification')
+      expect(insuranceReturnTo(`?returnTo=${encodeURIComponent(hostile)}`)).toBe('/verification')
     }
-    expect(insuranceReturnTo('')).toBe('/app/verification')
+    expect(insuranceReturnTo('')).toBe('/verification')
   })
 })

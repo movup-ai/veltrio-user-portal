@@ -41,5 +41,5 @@ export function insuranceReturnUri(location: Pick<Location, 'origin' | 'pathname
  */
 export function insuranceReturnTo(search: string): string {
   const returnTo = new URLSearchParams(search).get('returnTo') ?? ''
-  return returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/app/verification'
+  return returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/verification'
 }

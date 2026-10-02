@@ -39,7 +39,7 @@ export function FleetStatusCard() {
       <div className="mt-auto pt-4">
         <button
           type="button"
-          onClick={() => navigate('/app/vehicles')}
+          onClick={() => navigate('/vehicles')}
           className="border-border text-fg-2 hover:bg-surface-2 hover:text-foreground flex h-[34px] w-full items-center justify-center gap-1.5 rounded-[9px] border text-[12.5px] font-semibold transition-colors"
         >
           <span>{t('fleet.openFleet')}</span>

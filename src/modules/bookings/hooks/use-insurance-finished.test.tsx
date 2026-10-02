@@ -36,7 +36,7 @@ function check(overrides: Partial<BookingVerification> = {}): BookingVerificatio
 const CARD = verificationKeys.detail('BK-1', 'insurance')
 const DONE = { verificationId: 'v1' }
 const RETURN_URL =
-  '/insurance/return?returnTo=%2Fapp%2Fbookings%2FBK-1' +
+  '/insurance/return?returnTo=%2Fbookings%2FBK-1' +
   '&tenantId=t1&verificationId=v1&status=complete&authCode=cod_1'
 
 function setup() {
