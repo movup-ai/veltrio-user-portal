@@ -60,7 +60,7 @@ function useLinkAction(
 
 /**
  * A change to the booking's money that answers with the new summary. The booking itself is
- * refreshed too: its payment state is what lists and the badge read.
+ * refreshed too: its payment state is what lists, the badge and the dashboard counts read.
  */
 function useMoneyAction<TArgs>(
   reference: string,
@@ -72,8 +72,7 @@ function useMoneyAction<TArgs>(
     mutationFn: action,
     onSuccess: (payments) => {
       queryClient.setQueryData(bookingPaymentKeys.booking(reference), payments)
-      void queryClient.invalidateQueries({ queryKey: bookingKeys.detail(reference) })
-      void queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
+      void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
       toast({ title: titles.success, variant: 'success' })
     },
     onError: (error) =>

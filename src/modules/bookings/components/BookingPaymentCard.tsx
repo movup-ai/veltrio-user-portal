@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { useFormatters } from '@/i18n'
+import { cn } from '@/lib/utils'
 import { DEPOSIT_STATUS_BADGE, PAYMENT_STATE_BADGE } from '@/modules/payments/constants/payment.constants'
 import type {
   BookingPaymentRecord,
@@ -95,7 +96,7 @@ export function BookingPaymentCard({
       <p className="text-fg-4 m-0 mt-0.5 text-[12px]">{t('details.charges.quotedAt', { count: days })}</p>
 
       <div className="border-border-soft mt-3 border-t pt-1">
-        <BookingChargeLines charges={charges} days={days} />
+        <BookingChargeLines charges={charges} days={days} currency={payments.currency} />
       </div>
 
       <div className="border-border-soft mt-1 flex items-baseline justify-between gap-3 border-t pt-3">
@@ -126,7 +127,7 @@ export function BookingPaymentCard({
       {rental.length > 0 && <PaymentHistory payments={rental} currency={payments.currency} />}
 
       <div className="mt-3 flex flex-col gap-2">
-        {outstanding ? (
+        {outstanding && (
           <>
             <Button
               type="button"
@@ -154,18 +155,20 @@ export function BookingPaymentCard({
               {t('details.payment.markPaid')}
             </Button>
           </>
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onAction('downloadInvoice')}
-              loading={busy.downloadInvoice}
-              className="gap-1.5"
-            >
-              <FileDown className="size-4" aria-hidden />
-              {t('details.payment.downloadInvoice')}
-            </Button>
+        )}
+        {/* An invoice is often wanted before payment; a receipt as soon as anything is paid. */}
+        <div className={cn('grid gap-2', payments.paid > 0 ? 'grid-cols-2' : 'grid-cols-1')}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onAction('downloadInvoice')}
+            loading={busy.downloadInvoice}
+            className="gap-1.5"
+          >
+            <FileDown className="size-4" aria-hidden />
+            {t('details.payment.downloadInvoice')}
+          </Button>
+          {payments.paid > 0 && (
             <Button
               type="button"
               variant="outline"
@@ -176,8 +179,8 @@ export function BookingPaymentCard({
               <Mail className="size-4" aria-hidden />
               {t('details.payment.sendReceipt')}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
         {canRefund && refundablePayments(payments.payments).length > 0 && (
           <Button
             type="button"

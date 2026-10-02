@@ -330,8 +330,10 @@ export function buildBookingDetails(
     booking && booking.rate.basis === 'day'
       ? booking.rate.rate
       : (rateOption?.rate ?? Math.round(total / days))
-  // Fully paid means the deposit is held too; the seeded rows have no payment, so their status says.
-  const depositHeld = booking ? booking.payment.state === 'paid' : status === 'Completed'
+  // Held on its own, or with the rental paid; the seeded rows have no payment, so their status says.
+  const depositHeld = booking
+    ? booking.payment.state === 'deposit_held' || booking.payment.state === 'paid'
+    : status === 'Completed'
 
   const includedMiles = booking
     ? booking.rate.includedMiles

@@ -14,6 +14,7 @@ import {
   refundableAmount,
   refundablePayments,
   receiptLinkUrl,
+  refundAttempt,
   rentalHistory,
   smsHref,
 } from './booking-payment.utils'
@@ -186,5 +187,23 @@ describe('receiptLinkUrl', () => {
     expect(receiptLinkUrl('https://app.veltrio.test', { tenantId: 't1', bookingId: 'b1', token: 'x' })).toBe(
       'https://app.veltrio.test/receipt/t1/b1/x',
     )
+  })
+})
+
+describe('refundAttempt', () => {
+  const ids =
+    (...values: string[]) =>
+    () =>
+      values.shift() ?? 'spare'
+
+  it('keeps the id while the same refund is asked again', () => {
+    const first = refundAttempt(undefined, 'p1', 50, ids('a'))
+    expect(refundAttempt(first, 'p1', 50, ids('b')).requestId).toBe('a')
+  })
+
+  it('gives a different payment or amount a refund of its own', () => {
+    const first = refundAttempt(undefined, 'p1', 50, ids('a'))
+    expect(refundAttempt(first, 'p1', 40, ids('b')).requestId).toBe('b')
+    expect(refundAttempt(first, 'p2', 50, ids('c')).requestId).toBe('c')
   })
 })

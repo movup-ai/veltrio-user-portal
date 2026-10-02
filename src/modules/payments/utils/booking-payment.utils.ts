@@ -101,3 +101,25 @@ export function linkIsGone(error: unknown): boolean {
   const { kind } = normalizeApiError(error)
   return kind === 'not_found' || kind === 'validation'
 }
+
+/** A refund as last sent, under the id the API recognises a retry by. */
+export interface RefundAttempt {
+  paymentId: string
+  amount: number
+  requestId: string
+}
+
+/**
+ * The id to send a refund under. The same refund asked again keeps the last one, even after the
+ * dialog was closed, since its answer may have been lost on the way back; a different payment or
+ * amount is a different refund and gets a new one. Forgotten once a refund succeeds.
+ */
+export function refundAttempt(
+  last: RefundAttempt | undefined,
+  paymentId: string,
+  amount: number,
+  newId: () => string,
+): RefundAttempt {
+  if (last && last.paymentId === paymentId && last.amount === amount) return last
+  return { paymentId, amount, requestId: newId() }
+}

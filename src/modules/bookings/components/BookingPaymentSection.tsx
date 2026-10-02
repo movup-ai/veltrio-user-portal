@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
@@ -23,6 +23,7 @@ import {
   useRequestDeposit,
 } from '@/modules/payments/hooks/use-booking-payments'
 import type { PaymentLink, ReceiptLink } from '@/modules/payments/types/booking-payment.types'
+import { refundAttempt, type RefundAttempt } from '@/modules/payments/utils/booking-payment.utils'
 import { useOrganizationStore } from '@/state/organization.store'
 import { hasAnyPermission } from '@/utils/permissions'
 import type { BookingChargeLine } from '../types/booking.types'
@@ -54,7 +55,8 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
   // The latest link made, either kind: its token is shown once, so it is kept to show here.
   const [link, setLink] = useState<PaymentLink>()
   const [receipt, setReceipt] = useState<ReceiptLink>()
-  const [refundRequest, setRefundRequest] = useState('')
+  // Outlives the dialog: a refund whose answer never came is retried under the same id.
+  const lastRefund = useRef<RefundAttempt>(undefined)
   const close = () => setDialog(null)
 
   if (isLoading) {
@@ -91,8 +93,6 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
         setDialog('capture')
         return
       case 'refund':
-        // One id per refund asked for: pressing Refund again after a lost answer repeats it.
-        setRefundRequest(crypto.randomUUID())
         setDialog('refund')
         return
       case 'requestDeposit':
@@ -173,9 +173,19 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
         onOpenChange={(open) => !open && close()}
         payments={payments}
         loading={refund.isPending}
-        onSubmit={(payment, amount) =>
-          refund.mutate({ paymentId: payment.id, amount, requestId: refundRequest }, { onSuccess: close })
-        }
+        onSubmit={(payment, amount) => {
+          const attempt = refundAttempt(lastRefund.current, payment.id, amount, () => crypto.randomUUID())
+          lastRefund.current = attempt
+          refund.mutate(
+            { paymentId: payment.id, amount, requestId: attempt.requestId },
+            {
+              onSuccess: () => {
+                lastRefund.current = undefined
+                close()
+              },
+            },
+          )
+        }}
       />
     </>
   )

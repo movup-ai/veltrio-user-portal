@@ -11,6 +11,7 @@ import type {
   ReceiptLink,
 } from '@/modules/payments/types/booking-payment.types'
 import { useOrganizationStore } from '@/state/organization.store'
+import type { BookingChargeLine } from '../types/booking.types'
 import { BookingPaymentSection } from './BookingPaymentSection'
 
 const get = vi.fn<() => Promise<BookingPayments>>()
@@ -114,7 +115,7 @@ const HELD: BookingPayments = {
   },
 }
 
-function renderAs(permissions: string[]) {
+function renderAs(permissions: string[], charges: BookingChargeLine[] = []) {
   useOrganizationStore.setState({
     membership: {
       organizationId: 'org_1',
@@ -129,7 +130,7 @@ function renderAs(permissions: string[]) {
       <BookingPaymentSection
         reference="BK-10001"
         renter={{ name: 'Marisol Vega', email: 'marisol@example.com', phone: '+1 305 442 0118' }}
-        charges={[]}
+        charges={charges}
         days={1}
       />
     </QueryClientProvider>,
@@ -333,6 +334,28 @@ describe('BookingPaymentSection', () => {
     expect(screen.getByText('$219')).toBeInTheDocument()
   })
 
+  it('offers the invoice before anything is paid, and the receipt once something is', async () => {
+    get.mockResolvedValue(UNPAID)
+    renderAs([])
+
+    expect(await screen.findByRole('button', { name: 'Invoice' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Receipt' })).not.toBeInTheDocument()
+  })
+
+  it('lets a part payment have its receipt while the rest is still asked for', async () => {
+    get.mockResolvedValue({
+      ...UNPAID,
+      paid: 100,
+      balance: 219,
+      payments: [{ ...CHARGE, amount: 100, captured: 100 }],
+    })
+    renderAs([])
+
+    expect(await screen.findByRole('button', { name: 'Receipt' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Invoice' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Send payment link' })).toBeEnabled()
+  })
+
   it('downloads the invoice under its number', async () => {
     get.mockResolvedValue(RENTAL_PAID)
     const pdf = new Blob(['%PDF'], { type: 'application/pdf' })
@@ -427,6 +450,50 @@ describe('BookingPaymentSection', () => {
     await user.click(await screen.findByRole('option', { name: /^Cash/ }))
 
     expect(within(dialog).getByLabelText('Amount to refund')).toHaveValue(100)
+  })
+
+  it('keeps the refund id after the dialog was closed on an unclear answer', async () => {
+    // The refund may have gone through: asking for it again must not make a second one.
+    get.mockResolvedValue(RENTAL_PAID)
+    refund.mockRejectedValueOnce(new Error('Network error')).mockResolvedValue(RENTAL_PAID)
+    const user = userEvent.setup({ delay: null })
+    renderAs(['payments.refund'])
+
+    await user.click(await screen.findByRole('button', { name: 'Refund' }))
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Refund' }))
+    await waitFor(() => expect(refund).toHaveBeenCalledTimes(1))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
+    await user.click(await screen.findByRole('button', { name: 'Refund' }))
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Refund' }))
+
+    await waitFor(() => expect(refund).toHaveBeenCalledTimes(2))
+    expect(refund.mock.calls[1][3]).toBe(refund.mock.calls[0][3])
+  })
+
+  it('gives a changed refund an id of its own', async () => {
+    get.mockResolvedValue(RENTAL_PAID)
+    refund.mockRejectedValueOnce(new Error('Network error')).mockResolvedValue(RENTAL_PAID)
+    const user = userEvent.setup({ delay: null })
+    renderAs(['payments.refund'])
+
+    await user.click(await screen.findByRole('button', { name: 'Refund' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Refund' }))
+    await waitFor(() => expect(refund).toHaveBeenCalledTimes(1))
+    const amount = within(dialog).getByLabelText('Amount to refund')
+    await user.clear(amount)
+    await user.type(amount, '100')
+    await user.click(within(dialog).getByRole('button', { name: 'Refund' }))
+
+    await waitFor(() => expect(refund).toHaveBeenCalledTimes(2))
+    expect(refund.mock.calls[1][3]).not.toBe(refund.mock.calls[0][3])
+  })
+
+  it("prices the charges in the booking's own currency, like its total", async () => {
+    get.mockResolvedValue({ ...UNPAID, currency: 'EUR' })
+    renderAs([], [{ key: 'extraFee', label: 'Airport fee', amount: 25 }])
+
+    expect(await screen.findByText('€25')).toBeInTheDocument()
   })
 
   it('sends the same refund id when Refund is pressed again, and a new one next time', async () => {
