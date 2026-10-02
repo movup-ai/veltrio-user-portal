@@ -48,16 +48,10 @@ describe('buildBookingDetails', () => {
     }
   })
 
-  it('marks a completed rental as finished and an open one as unsettled', () => {
+  it('marks a completed rental as finished', () => {
     const completed = buildBookingDetails(BOOKINGS_RECENT.find((b) => b[7] === 'Completed')!)
-    const open = buildBookingDetails(BOOKINGS_UPCOMING.find((b) => b[7] === 'Confirmed')!)
 
     expect(completed.stages.every((s) => s.state === 'done')).toBe(true)
-    expect(completed.payment.settled).toBe(true)
-
-    // Seeded rows carry no payment row, so settlement is still inferred from the status.
-    expect(open.payment.settled).toBe(false)
-    expect(open.payment.balance).toBe(open.total)
   })
 })
 

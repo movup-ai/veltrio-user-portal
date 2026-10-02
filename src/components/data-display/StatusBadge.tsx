@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { statusColors } from './status-colors'
 
@@ -7,7 +8,15 @@ import { statusColors } from './status-colors'
  * localizes its badges without each module having to know about translations. `label` is for
  * a module whose own words are more exact, such as a check's "Needs review".
  */
-export function StatusBadge({ status, label }: { status: string; label?: string }) {
+export function StatusBadge({
+  status,
+  label,
+  icon: Icon,
+}: {
+  status: string
+  label?: string
+  icon?: LucideIcon
+}) {
   const domain = useDomainLabels()
   const { bg, fg } = statusColors(status)
 
@@ -16,7 +25,12 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
       className="inline-flex items-center gap-[5px] whitespace-nowrap rounded-full py-[3px] pr-[9px] pl-[7px] text-[11.5px] font-semibold"
       style={{ background: bg, color: fg }}
     >
-      <span className="size-[6px] rounded-full" style={{ background: fg }} />
+      {/* An icon in place of the dot, for a state that should not read like its colour twin. */}
+      {Icon ? (
+        <Icon className="size-3" aria-hidden />
+      ) : (
+        <span className="size-[6px] rounded-full" style={{ background: fg }} />
+      )}
       {label ?? domain.status(status)}
     </span>
   )

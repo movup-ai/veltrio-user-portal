@@ -93,6 +93,13 @@ export const bookingApi = {
   create: (input: BookingInput) =>
     apiClient.post<BookingWire>('/bookings', toBookingPayload(input)).then((r) => toBooking(r.data)),
 
+  /** Refused until the booking is fully paid: the rental settled and the deposit held. */
+  pickUp: (reference: string) =>
+    apiClient.post<BookingWire>(`/bookings/${reference}/pick-up`).then((r) => toBooking(r.data)),
+
+  returnVehicle: (reference: string) =>
+    apiClient.post<BookingWire>(`/bookings/${reference}/return`).then((r) => toBooking(r.data)),
+
   /**
    * One filtered, sorted page — what the bookings table renders. The server does the narrowing,
    * so the browser never holds more than the rows on screen.

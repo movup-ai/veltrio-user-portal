@@ -7,7 +7,6 @@ import {
   ArrowUpRight,
   CarFront,
   ExternalLink,
-  KeyRound,
   Mail,
   Printer,
 } from 'lucide-react'
@@ -27,8 +26,9 @@ import { useFormatters } from '@/i18n'
 import { BookingActivity } from '@/modules/bookings/components/BookingActivity'
 import { BookingAgreementCard } from '@/modules/bookings/components/BookingAgreementCard'
 import { BookingChecklist } from '@/modules/bookings/components/BookingChecklist'
+import { BookingHandoverAction } from '@/modules/bookings/components/BookingHandoverAction'
 import { BookingManagePanel } from '@/modules/bookings/components/BookingManagePanel'
-import { BookingPaymentCard } from '@/modules/bookings/components/BookingPaymentCard'
+import { BookingPaymentSection } from '@/modules/bookings/components/BookingPaymentSection'
 import { BookingRenterCard } from '@/modules/bookings/components/BookingRenterCard'
 import { BookingTripCard } from '@/modules/bookings/components/BookingTripCard'
 import { RentalProgress } from '@/modules/bookings/components/RentalProgress'
@@ -132,7 +132,7 @@ export function BookingDetailsPage() {
   }
 
   usePageBreadcrumb(bookingId)
-  // Checking in a rental that has already been returned and closed is meaningless.
+  // A rental that has been returned and closed takes no more changes.
   const stillOpen = booking != null && booking.stages.at(-1)?.state !== 'done'
   /**
    * Every write on this page needs an endpoint that doesn't exist yet, so the ones that can't be
@@ -203,14 +203,7 @@ export function BookingDetailsPage() {
                 window.location.href = `mailto:${booking.renter.email}?subject=${encodeURIComponent(booking.reference)}`
               }}
             />
-            {stillOpen && (
-              <PageActionButton
-                icon={KeyRound}
-                label={t('details.actions.checkIn')}
-                variant="solid"
-                onClick={() => pending(t('details.actions.checkIn'))}
-              />
-            )}
+            <BookingHandoverAction reference={booking.reference} />
           </>
         }
       />
@@ -317,11 +310,11 @@ export function BookingDetailsPage() {
         </div>
 
         <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-4">
-          <BookingPaymentCard
-            payment={booking.payment}
+          <BookingPaymentSection
+            reference={booking.reference}
+            renter={booking.renter}
             charges={booking.charges}
             days={booking.days}
-            onAction={(action) => pending(t(`details.payment.${action}`))}
           />
 
           <BookingAgreementCard

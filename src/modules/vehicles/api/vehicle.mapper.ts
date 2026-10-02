@@ -190,6 +190,33 @@ function decode<P extends string>(map: Record<string, P>, slug: string, fallback
   return map[slug] ?? fallback
 }
 
+export interface VehicleSpecsWire {
+  year: number
+  vehicleType: string
+  transmission: string
+  fuelType: string
+  seats: number
+}
+
+export interface VehicleSpecs {
+  year: number
+  type: VehicleType
+  transmission: Transmission
+  fuelType: FuelType
+  seats: number
+}
+
+/** The headline specs another module's wire carries, in the portal's values. */
+export function toVehicleSpecs(wire: VehicleSpecsWire): VehicleSpecs {
+  return {
+    year: wire.year,
+    type: decode(TYPE_FROM_API, wire.vehicleType, 'Sedan'),
+    transmission: decode(TRANSMISSION_FROM_API, wire.transmission, 'Automatic'),
+    fuelType: decode(FUEL_FROM_API, wire.fuelType, 'Petrol'),
+    seats: wire.seats,
+  }
+}
+
 // --- Money ---------------------------------------------------------------------------------
 
 /** The API stores integer cents; the portal edits dollars. */

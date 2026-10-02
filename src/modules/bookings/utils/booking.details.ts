@@ -7,12 +7,10 @@ import {
   type Booking,
   type BookingAgreement,
   type BookingContract,
-  type BookingPayment,
   type BookingChargeLine,
   type BookingCheckStep,
   type BookingDetails,
   type BookingEventEntry,
-  type BookingPaymentState,
   type BookingRenter,
   type BookingStage,
   type BookingStageStep,
@@ -132,42 +130,6 @@ export function buildCharges(
  * authorized up front, sits untouched through the rental, and is only ever released or drawn on
  * at the end, so it never counts towards the balance.
  */
-function buildPayment(
-  status: string,
-  total: number,
-  deposit: number,
-  card: string,
-  capturedAt: string,
-  finished: boolean,
-  actual?: BookingPayment,
-): BookingPaymentState {
-  // The booking's own payment row when there is one; the seeded dashboard rows have none, so
-  // they still fall back to inferring it from the status.
-  const settled = actual ? actual.state === 'paid' : status === 'Completed'
-  const refunded = actual ? actual.refunded : 0
-  const captured = actual ? actual.paid : settled ? total : 0
-
-  const depositState: BookingPaymentState['depositState'] = !settled
-    ? 'pending'
-    : status === 'Overdue'
-      ? 'captured'
-      : finished
-        ? 'released'
-        : 'held'
-
-  return {
-    total,
-    captured,
-    refunded,
-    balance: total - captured,
-    depositHold: deposit,
-    depositState,
-    method: captured > 0 ? card : undefined,
-    capturedAt: captured > 0 ? capturedAt : undefined,
-    settled,
-  }
-}
-
 /**
  * Identity is taken at booking and the background check runs before the branch will confirm;
  * insurance is only chased in the run-up to handover.
@@ -328,7 +290,7 @@ export function exactCharges(booking: Booking): BookingChargeLine[] {
  * `context` carries the real vehicle and branch when the caller has them, so a live booking
  * shows its actual photo, address and agent rather than whatever the seeds happen to hold.
  *
- * Mock scaffolding either way: the timeline, payment state, agreement and audit trail have no
+ * Mock scaffolding either way: the timeline, agreement and audit trail have no
  * endpoints yet, so they're derived from the status and the rental window.
  */
 /** The real records behind a live booking, where the caller has fetched them. */
@@ -368,16 +330,8 @@ export function buildBookingDetails(
     booking && booking.rate.basis === 'day'
       ? booking.rate.rate
       : (rateOption?.rate ?? Math.round(total / days))
-  const card = `Visa · ${4000 + (sequence(reference) % 1000)}`
-  const payment = buildPayment(
-    status,
-    total,
-    deposit,
-    card,
-    stages[1].at ?? pickup.toISOString(),
-    stages[4].state === 'done',
-    booking?.payment,
-  )
+  // Fully paid means the deposit is held too; the seeded rows have no payment, so their status says.
+  const depositHeld = booking ? booking.payment.state === 'paid' : status === 'Completed'
 
   const includedMiles = booking
     ? booking.rate.includedMiles
@@ -409,10 +363,9 @@ export function buildBookingDetails(
 
     charges: booking ? exactCharges(booking) : buildCharges(total, days, listDailyRate, taxRatePct, []),
     total,
-    payment,
     agreement: buildAgreement(stageIndex, stages[1].at, booking?.contract),
     checks: buildChecks(stageIndex),
-    events: buildEvents(reference, stages, renter, plate, agent, deposit, payment.depositState !== 'pending'),
+    events: buildEvents(reference, stages, renter, plate, agent, deposit, depositHeld),
     renter,
   }
 }

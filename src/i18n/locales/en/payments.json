@@ -35,5 +35,196 @@
     "method": "Method",
     "status": "Status",
     "amount": "Amount"
+  },
+  "booking": {
+    "toast": {
+      "linkFailed": "Couldn't create the payment link",
+      "recorded": "Payment recorded",
+      "recordFailed": "Couldn't record the payment",
+      "captured": "Deposit captured",
+      "captureFailed": "Couldn't capture the deposit",
+      "released": "Deposit released",
+      "releaseFailed": "Couldn't release the deposit",
+      "refunded": "Refund issued",
+      "refundFailed": "Couldn't issue the refund",
+      "requestFailed": "Couldn't create the deposit link",
+      "documentFailed": "Couldn't download the document",
+      "receiptFailed": "Couldn't get the receipt link"
+    },
+    "link": {
+      "title": {
+        "payment": "Payment link",
+        "combined": "Payment and deposit link",
+        "deposit": "Deposit link"
+      },
+      "description": {
+        "payment": "Send {{name}} this link to pay by card, Apple Pay, Google Pay or Link.",
+        "combined": "Send {{name}} this link to pay, then authorise the security deposit hold on the same card.",
+        "deposit": "Send {{name}} this link to authorise the security deposit hold. Nothing is charged unless you capture it after the return."
+      },
+      "label": "Link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy. Select the link and copy it instead.",
+      "email": "Email",
+      "text": "Text",
+      "subject": {
+        "payment": "Pay for your {{company}} rental {{reference}}",
+        "combined": "Pay for your {{company}} rental {{reference}}",
+        "deposit": "Security deposit for your {{company}} rental {{reference}}"
+      },
+      "message": {
+        "payment": "Hi {{name}}, please pay {{amount}} for your rental {{reference}} here: {{url}}",
+        "combined": "Hi {{name}}, please pay {{amount}} for your rental {{reference}} and authorise the {{deposit}} security deposit here: {{url}}",
+        "deposit": "Hi {{name}}, please authorise the {{deposit}} security deposit for your rental {{reference}} here: {{url}}"
+      },
+      "depositLater": "The {{deposit}} security deposit is asked for separately, from the day before pickup.",
+      "rental": "Rental payment",
+      "depositHold": "Security deposit hold",
+      "shareWith": "Send to {{name}}"
+    },
+    "manual": {
+      "title": "Record a payment",
+      "description": "For money taken outside Stripe, such as cash. Nothing is charged.",
+      "amount": "Amount",
+      "method": "How it was paid",
+      "methods": {
+        "cash": "Cash",
+        "cardTerminal": "Card terminal",
+        "bankTransfer": "Bank transfer (wire / ACH)",
+        "zelle": "Zelle",
+        "venmo": "Venmo",
+        "cashApp": "Cash App",
+        "check": "Check",
+        "other": "Other"
+      },
+      "submit": "Record payment",
+      "balance": "Balance due",
+      "hint": "Enter what the renter paid, up to the {{max}} still owed. A part payment leaves the rest due."
+    },
+    "capture": {
+      "title": "Capture the deposit",
+      "description": "Take part or all of the {{held}} on hold. Whatever isn't taken goes back to the renter.",
+      "amount": "Amount to capture",
+      "submit": "Capture",
+      "held": "Deposit held",
+      "hint": "Take up to the {{max}} held. Whatever you don't capture goes back to the renter straight away."
+    },
+    "refund": {
+      "title": "Refund a payment",
+      "description": "Card payments go back to the card. Cash is returned by hand and only recorded here.",
+      "payment": "Payment",
+      "amount": "Amount to refund",
+      "submit": "Refund",
+      "left": "Left to refund",
+      "hint": "Refund up to the {{max}} left on this payment. A card refund takes 5 to 10 days to reach the renter."
+    },
+    "amountInvalid": "Enter an amount above zero.",
+    "amountOver": "That's more than {{max}}.",
+    "kind": {
+      "charge": "Card payment",
+      "deposit": "Deposit",
+      "manual": "Recorded payment"
+    },
+    "status": {
+      "requires_payment": "Awaiting payment",
+      "processing": "Processing",
+      "succeeded": "Paid",
+      "held": "On hold",
+      "captured": "Captured",
+      "released": "Released",
+      "failed": "Failed",
+      "canceled": "Withdrawn"
+    },
+    "reasons": {
+      "payments_not_ready": "Connect Stripe in Settings → Payments to send payment links.",
+      "booking_cancelled": "The booking is cancelled.",
+      "nothing_to_collect": "Nothing is left to collect.",
+      "no_deposit": "This booking has no deposit.",
+      "deposit_already_held": "The deposit is already on hold.",
+      "booking_returned": "The vehicle is back.",
+      "no_deposit_held": "No deposit is on hold.",
+      "not_returned": "Capture or release the deposit once the vehicle is back.",
+      "not_before_pickup": "The vehicle has already been picked up.",
+      "not_fully_paid": "Pickup needs the rental paid and the deposit on hold.",
+      "not_on_rental": "The vehicle isn't out on this booking."
+    },
+    "receipt": {
+      "title": "Receipt",
+      "description": "Send {{name}} a link to the receipt for booking {{reference}}. They can view it and download the PDF.",
+      "paid": "Paid for the rental",
+      "depositCaptured": "Deposit captured",
+      "balance": "Balance due",
+      "subject": "Your receipt from {{company}} for {{reference}}",
+      "message": "Hi {{name}}, here is your receipt for rental {{reference}}: {{url}}",
+      "download": "Download PDF"
+    }
+  },
+  "pay": {
+    "title": "Pay for your rental",
+    "pickup": "Pickup",
+    "amountDue": "Amount due",
+    "submit": "Pay {{amount}}",
+    "paid": {
+      "title": "Payment received",
+      "body": "{{company}} has your payment of {{amount}} for booking {{reference}}. You can close this page.",
+      "bodyDepositLater": "{{company}} has your payment of {{amount}} for booking {{reference}}. They will send a separate link for the {{deposit}} security deposit before pickup."
+    },
+    "processing": {
+      "title": "Payment processing",
+      "body": "Your bank is still confirming the payment. This page updates on its own."
+    },
+    "closed": {
+      "title": "This link is no longer active",
+      "body": "Ask {{company}} for a new payment link."
+    },
+    "invalid": {
+      "title": "This payment link isn't valid",
+      "body": "It may have been replaced by a newer one. Ask the rental company for a new link."
+    },
+    "unavailable": "Card payments aren't available right now. Please contact the rental company.",
+    "failed": "The payment didn't go through.",
+    "depositTitle": "Security deposit",
+    "depositHold": "Security deposit hold",
+    "consentWithDeposit": "By paying, you also authorise {{company}} to hold {{deposit}} on this card as your security deposit. Nothing is taken unless your rental agreement calls for it, and the hold is released after the return.",
+    "consentDeposit": "{{company}} holds {{deposit}} on this card as your security deposit. Nothing is taken unless your rental agreement calls for it, and the hold is released after the return.",
+    "submitWithDeposit": "Pay {{amount}} & hold {{deposit}}",
+    "submitDeposit": "Authorise {{deposit}} hold",
+    "held": {
+      "title": "Deposit on hold",
+      "body": "{{company}} holds {{deposit}} on your card for booking {{reference}}. You can close this page."
+    },
+    "done": {
+      "title": "You're all set",
+      "body": "{{company}} has your payment of {{amount}} and holds {{deposit}} as your deposit for booking {{reference}}. You can close this page."
+    },
+    "depositFailed": "The deposit hold didn't go through.",
+    "booking": "Booking {{reference}}",
+    "greeting": "Hi {{name}}, check the details below before you pay.",
+    "depositGreeting": "Hi {{name}}, check the details below before you authorise the hold.",
+    "return": "Return",
+    "depositNotCharged": "Held on your card, not charged",
+    "secure": "Secure payment by Stripe. Card details go straight to Stripe.",
+    "seats_one": "{{count}} seat",
+    "seats_other": "{{count}} seats",
+    "unreachable": {
+      "title": "We couldn't load your payment",
+      "body": "This is usually brief. Your link is fine, so please try again in a moment.",
+      "retry": "Try again"
+    },
+    "viewReceipt": "View receipt"
+  },
+  "receipt": {
+    "title": "Receipt",
+    "rental": "Rental payment",
+    "deposit": "Deposit captured",
+    "refunded": "{{amount}} refunded",
+    "received": "Total received",
+    "balance": "{{amount}} still due",
+    "download": "Download PDF",
+    "invalid": {
+      "title": "This receipt link isn't valid",
+      "body": "Ask the rental company for a new link."
+    }
   }
 }

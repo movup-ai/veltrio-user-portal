@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import i18n from './index'
+import { currencySymbolIn } from './formatters'
 import { LANGUAGES } from './languages'
 import { NAMESPACES, resources } from './resources'
 
@@ -67,5 +68,12 @@ describe('language switching', () => {
     expect(i18n.t('common:actions.cancel')).toBe('Cancelar')
 
     await i18n.changeLanguage('en')
+  })
+})
+
+describe('currencySymbolIn', () => {
+  it('gives the narrow symbol for an amount field prefix', () => {
+    expect(currencySymbolIn('en', 'USD')).toBe('$')
+    expect(currencySymbolIn('en', 'EUR')).toBe('€')
   })
 })
