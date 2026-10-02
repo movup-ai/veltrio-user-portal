@@ -61,7 +61,7 @@ export function PaymentAmountDialog({
           </span>
         </div>
         {/* Mounted per opening, so the amount starts from the current figure each time. */}
-        {open && <AmountForm {...form} key={form.defaultAmount} onCancel={() => onOpenChange(false)} />}
+        {open && <AmountForm {...form} onCancel={() => onOpenChange(false)} />}
       </DialogContent>
     </Dialog>
   )
@@ -86,6 +86,14 @@ function AmountForm({
   const format = useFormatters()
   const [value, setValue] = useState(String(defaultAmount))
   const [touched, setTouched] = useState(false)
+  // Follows the figure, such as another payment's refundable amount, until the counter types their
+  // own; from then on it is theirs, and only checked against the new limit.
+  const [typed, setTyped] = useState(false)
+  const [shownDefault, setShownDefault] = useState(defaultAmount)
+  if (!typed && defaultAmount !== shownDefault) {
+    setShownDefault(defaultAmount)
+    setValue(String(defaultAmount))
+  }
   const check = checkAmount(value, max)
   const error =
     touched && 'error' in check
@@ -120,7 +128,10 @@ function AmountForm({
               step="0.01"
               min="0"
               value={value}
-              onChange={(event) => setValue(event.target.value)}
+              onChange={(event) => {
+                setTyped(true)
+                setValue(event.target.value)
+              }}
               onBlur={() => setTouched(true)}
               className="pl-7 tabular-nums"
             />

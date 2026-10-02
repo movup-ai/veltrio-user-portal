@@ -66,7 +66,13 @@ export function RenterCheckout({ stripeAccountId, clientSecret, ...form }: Rente
   if (!stripe) return <p className="text-error m-0 text-[13px]">{t('pay.unavailable')}</p>
 
   return (
-    <Elements stripe={stripe} options={{ clientSecret, appearance: appearance(), fonts: FONTS }}>
+    // Keyed by the intent: Stripe cannot move a mounted form to another one, so the deposit after
+    // a combined link's payment gets a form of its own rather than the paid rental's.
+    <Elements
+      key={clientSecret}
+      stripe={stripe}
+      options={{ clientSecret, appearance: appearance(), fonts: FONTS }}
+    >
       <CheckoutForm {...form} />
     </Elements>
   )

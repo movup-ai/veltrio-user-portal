@@ -168,7 +168,8 @@
     "paid": {
       "title": "Pago recibido",
       "body": "{{company}} ha recibido tu pago de {{amount}} de la reserva {{reference}}. Ya puedes cerrar esta página.",
-      "bodyDepositLater": "{{company}} ha recibido tu pago de {{amount}} de la reserva {{reference}}. Te enviará otro enlace para el depósito de {{deposit}} antes de la recogida."
+      "bodyDepositLater": "{{company}} ha recibido tu pago de {{amount}} de la reserva {{reference}}. Te enviará otro enlace para el depósito de {{deposit}} antes de la recogida.",
+      "bodyDepositIncomplete": "{{company}} ha recibido tu pago de {{amount}} de la reserva {{reference}}. La retención del depósito de {{deposit}} no se completó, así que {{company}} se pondrá en contacto contigo."
     },
     "processing": {
       "title": "Pago en proceso",

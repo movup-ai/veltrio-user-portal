@@ -110,8 +110,8 @@ export function useReleaseDeposit(reference: string) {
 export function useRefundPayment(reference: string) {
   return useMoneyAction(
     reference,
-    ({ paymentId, amount }: { paymentId: string; amount: number }) =>
-      bookingPaymentApi.refund(reference, paymentId, amount),
+    ({ paymentId, amount, requestId }: { paymentId: string; amount: number; requestId: string }) =>
+      bookingPaymentApi.refund(reference, paymentId, amount, requestId),
     {
       success: i18n.t('payments:booking.toast.refunded'),
       error: i18n.t('payments:booking.toast.refundFailed'),

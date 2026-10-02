@@ -168,7 +168,8 @@
     "paid": {
       "title": "Payment received",
       "body": "{{company}} has your payment of {{amount}} for booking {{reference}}. You can close this page.",
-      "bodyDepositLater": "{{company}} has your payment of {{amount}} for booking {{reference}}. They will send a separate link for the {{deposit}} security deposit before pickup."
+      "bodyDepositLater": "{{company}} has your payment of {{amount}} for booking {{reference}}. They will send a separate link for the {{deposit}} security deposit before pickup.",
+      "bodyDepositIncomplete": "{{company}} has your payment of {{amount}} for booking {{reference}}. The {{deposit}} security deposit hold did not go through, so {{company}} will be in touch about it."
     },
     "processing": {
       "title": "Payment processing",

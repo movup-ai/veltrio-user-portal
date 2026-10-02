@@ -188,9 +188,13 @@ function Status({
     )
   }
   if (paid) {
-    // A deposit the link did not ask for is asked for separately, nearer pickup.
-    const body =
-      payment.depositAmount > 0 ? t('pay.paid.bodyDepositLater', values) : t('pay.paid.body', values)
+    // A deposit this link asked for and did not get is said so; one it never asked for comes
+    // on a separate link nearer pickup.
+    const body = deposit
+      ? t('pay.paid.bodyDepositIncomplete', values)
+      : payment.depositAmount > 0
+        ? t('pay.paid.bodyDepositLater', values)
+        : t('pay.paid.body', values)
     return (
       <>
         <PublicNotice icon="check" title={t('pay.paid.title')} body={body} />

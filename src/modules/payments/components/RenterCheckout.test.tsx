@@ -14,17 +14,28 @@ vi.mock('@stripe/stripe-js', () => ({
   loadStripe: (key: string, options: { stripeAccount: string }) => loadStripe(key, options),
 }))
 
-vi.mock('@stripe/react-stripe-js', () => ({
-  Elements: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  PaymentElement: () => <div>payment element</div>,
-  useStripe: () => ({ confirmPayment }),
-  useElements: () => ({}),
-}))
+vi.mock('@stripe/react-stripe-js', async () => {
+  const { useState } = await import('react')
+  return {
+    // Like Stripe's: the intent it mounts with is the one it keeps.
+    Elements: ({ options, children }: { options: { clientSecret: string }; children: React.ReactNode }) => {
+      const [secret] = useState(options.clientSecret)
+      return (
+        <div data-testid="elements" data-secret={secret}>
+          {children}
+        </div>
+      )
+    },
+    PaymentElement: () => <div>payment element</div>,
+    useStripe: () => ({ confirmPayment }),
+    useElements: () => ({}),
+  }
+})
 
 const { RenterCheckout } = await import('./RenterCheckout')
 
 function renderCheckout(props: { depositSecret?: string; onSettled?: (error?: string) => void } = {}) {
-  render(
+  return render(
     <RenterCheckout
       stripeAccountId="acct_company"
       clientSecret="pi_1_secret"
@@ -39,6 +50,21 @@ function renderCheckout(props: { depositSecret?: string; onSettled?: (error?: st
 beforeEach(() => vi.clearAllMocks())
 
 describe('RenterCheckout', () => {
+  it('gives the deposit a Stripe form of its own once the rental is paid', () => {
+    // The page swaps the paid rental's secret for the deposit's in the same place.
+    const { rerender } = renderCheckout()
+    rerender(
+      <RenterCheckout
+        stripeAccountId="acct_company"
+        clientSecret="pi_2_secret"
+        submitLabel="Authorise $2,000 hold"
+        onSettled={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByTestId('elements')).toHaveAttribute('data-secret', 'pi_2_secret')
+  })
+
   it("loads Stripe.js on the company's own account, with the consent above the button", () => {
     renderCheckout()
 

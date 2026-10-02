@@ -59,11 +59,18 @@ export const bookingPaymentApi = {
   releaseDeposit: (reference: string): Promise<BookingPayments> =>
     summary(apiClient.post<BookingPaymentsWire>(`${base(reference)}/deposit/release`)),
 
-  refund: (reference: string, paymentId: string, amount: number): Promise<BookingPayments> =>
+  /** `requestId` stays the same if the same refund is sent again, so it is made only once. */
+  refund: (
+    reference: string,
+    paymentId: string,
+    amount: number,
+    requestId: string,
+  ): Promise<BookingPayments> =>
     summary(
       apiClient.post<BookingPaymentsWire>(`${base(reference)}/refunds`, {
         paymentId,
         amountCents: toCents(amount),
+        requestId,
       }),
     ),
 

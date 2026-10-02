@@ -119,6 +119,18 @@ describe('PaymentPage', () => {
     )
   })
 
+  it('says the deposit hold did not go through when this link asked for it', async () => {
+    publicPayment.mockResolvedValue({
+      ...PAYMENT,
+      charge: { status: 'paid', amount: 319 },
+      deposit: { status: 'closed', amount: 2000 },
+    })
+    renderPage()
+
+    expect(await screen.findByText(/\$2,000 security deposit hold did not go through/)).toBeInTheDocument()
+    expect(screen.queryByText(/separate link/)).not.toBeInTheDocument()
+  })
+
   it('says the deposit comes separately when the link did not ask for it', async () => {
     publicPayment.mockResolvedValue({ ...PAYMENT, charge: { status: 'paid', amount: 319 } })
     renderPage()

@@ -19,6 +19,7 @@ const requestDeposit = vi.fn<() => Promise<PaymentLink>>()
 const documentPdf = vi.fn<(kind: string) => Promise<Blob>>()
 const receiptLink = vi.fn<() => Promise<ReceiptLink>>()
 const saveBlob = vi.fn()
+const refund = vi.fn<(...args: unknown[]) => Promise<BookingPayments>>()
 
 vi.mock('@/lib/download', () => ({ saveBlob: (blob: Blob, name: string) => saveBlob(blob, name) }))
 
@@ -29,6 +30,7 @@ vi.mock('@/modules/payments/api/booking-payment.api', () => ({
     requestDeposit: () => requestDeposit(),
     document: (_reference: string, kind: string) => documentPdf(kind),
     receiptLink: () => receiptLink(),
+    refund: (...args: unknown[]) => refund(...args),
   },
 }))
 
@@ -390,5 +392,64 @@ describe('BookingPaymentSection', () => {
     renderAs(['payments.refund'])
 
     expect(await screen.findByRole('button', { name: 'Refund' })).toBeEnabled()
+  })
+
+  it('keeps a typed refund amount when another payment is picked', async () => {
+    // A partial refund must not quietly become the other payment's full amount.
+    const cash = { ...CHARGE, id: 'p2', kind: 'manual' as const, method: 'Cash', amount: 100, captured: 100 }
+    get.mockResolvedValue({ ...RENTAL_PAID, payments: [CHARGE, cash] })
+    const user = userEvent.setup({ delay: null })
+    renderAs(['payments.refund'])
+
+    await user.click(await screen.findByRole('button', { name: 'Refund' }))
+    const dialog = await screen.findByRole('dialog')
+    const amount = within(dialog).getByLabelText('Amount to refund')
+    expect(amount).toHaveValue(319)
+    await user.clear(amount)
+    await user.type(amount, '50')
+    await user.click(within(dialog).getByRole('combobox'))
+    await user.click(await screen.findByRole('option', { name: /^Cash/ }))
+
+    // Found again: a field rebuilt for the new payment would still be a fresh element.
+    expect(within(dialog).getByLabelText('Amount to refund')).toHaveValue(50)
+    expect(within(dialog).getByText('$100')).toBeInTheDocument()
+  })
+
+  it('follows the picked payment while nothing has been typed', async () => {
+    const cash = { ...CHARGE, id: 'p2', kind: 'manual' as const, method: 'Cash', amount: 100, captured: 100 }
+    get.mockResolvedValue({ ...RENTAL_PAID, payments: [CHARGE, cash] })
+    const user = userEvent.setup({ delay: null })
+    renderAs(['payments.refund'])
+
+    await user.click(await screen.findByRole('button', { name: 'Refund' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('combobox'))
+    await user.click(await screen.findByRole('option', { name: /^Cash/ }))
+
+    expect(within(dialog).getByLabelText('Amount to refund')).toHaveValue(100)
+  })
+
+  it('sends the same refund id when Refund is pressed again, and a new one next time', async () => {
+    // A lost answer must not become a second refund: Stripe sees the same request twice.
+    get.mockResolvedValue(RENTAL_PAID)
+    refund.mockRejectedValueOnce(new Error('Network error')).mockResolvedValue(RENTAL_PAID)
+    const user = userEvent.setup({ delay: null })
+    renderAs(['payments.refund'])
+
+    await user.click(await screen.findByRole('button', { name: 'Refund' }))
+    let dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Refund' }))
+    await waitFor(() => expect(refund).toHaveBeenCalledTimes(1))
+    await user.click(within(dialog).getByRole('button', { name: 'Refund' }))
+    await waitFor(() => expect(refund).toHaveBeenCalledTimes(2))
+    const [first, retry] = refund.mock.calls.map((call) => call[3])
+    expect(retry).toBe(first)
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Refund' }))
+    dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Refund' }))
+    await waitFor(() => expect(refund).toHaveBeenCalledTimes(3))
+    expect(refund.mock.calls[2][3]).not.toBe(first)
   })
 })

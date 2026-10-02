@@ -54,6 +54,7 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
   // The latest link made, either kind: its token is shown once, so it is kept to show here.
   const [link, setLink] = useState<PaymentLink>()
   const [receipt, setReceipt] = useState<ReceiptLink>()
+  const [refundRequest, setRefundRequest] = useState('')
   const close = () => setDialog(null)
 
   if (isLoading) {
@@ -90,6 +91,8 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
         setDialog('capture')
         return
       case 'refund':
+        // One id per refund asked for: pressing Refund again after a lost answer repeats it.
+        setRefundRequest(crypto.randomUUID())
         setDialog('refund')
         return
       case 'requestDeposit':
@@ -170,7 +173,9 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
         onOpenChange={(open) => !open && close()}
         payments={payments}
         loading={refund.isPending}
-        onSubmit={(payment, amount) => refund.mutate({ paymentId: payment.id, amount }, { onSuccess: close })}
+        onSubmit={(payment, amount) =>
+          refund.mutate({ paymentId: payment.id, amount, requestId: refundRequest }, { onSuccess: close })
+        }
       />
     </>
   )
