@@ -33,6 +33,8 @@ function renderAs(role: 'owner' | 'manager') {
       organizationId: 'org_1',
       organizationName: 'Test Org',
       subdomain: 'test-org',
+
+      currency: 'USD',
       role,
       permissions: role === 'owner' ? ['settings.manage'] : [],
     },

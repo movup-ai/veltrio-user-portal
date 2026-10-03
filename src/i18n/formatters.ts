@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useOrganizationStore } from '@/state/organization.store'
 import { INTL_LOCALES, isLanguage, type Language } from './languages'
 import i18n from './index'
 
@@ -12,8 +13,12 @@ function intlLocale(language: Language): string {
   return INTL_LOCALES[language]
 }
 
-/** USD unless told otherwise: payments carry the currency their Stripe account settles in. */
-export function formatCurrencyIn(language: Language, amount: number, currency = 'USD'): string {
+/** The company's currency, for amounts that carry none; payments carry their own. */
+function companyCurrency(): string {
+  return useOrganizationStore.getState().membership?.currency ?? 'USD'
+}
+
+export function formatCurrencyIn(language: Language, amount: number, currency = companyCurrency()): string {
   return new Intl.NumberFormat(intlLocale(language), {
     style: 'currency',
     currency,
@@ -22,7 +27,7 @@ export function formatCurrencyIn(language: Language, amount: number, currency = 
 }
 
 /** "$" for USD, "€" for EUR: the narrow symbol, for an amount field's prefix. */
-export function currencySymbolIn(language: Language, currency = 'USD'): string {
+export function currencySymbolIn(language: Language, currency = companyCurrency()): string {
   const parts = new Intl.NumberFormat(intlLocale(language), {
     style: 'currency',
     currency,
@@ -47,13 +52,16 @@ export function formatDateIn(language: Language, date: Date, options: Intl.DateT
 export function useFormatters() {
   const { i18n: instance } = useTranslation()
   const language: Language = isLanguage(instance.resolvedLanguage) ? instance.resolvedLanguage : 'en'
+  // Subscribed rather than read at call time, so a currency change in settings re-renders prices.
+  const currencyCode = useOrganizationStore((state) => state.membership?.currency ?? 'USD')
 
   return useMemo(
     () => ({
       language,
       locale: intlLocale(language),
-      currency: (amount: number, currency?: string) => formatCurrencyIn(language, amount, currency),
-      currencySymbol: (currency?: string) => currencySymbolIn(language, currency),
+      currencyCode,
+      currency: (amount: number, currency = currencyCode) => formatCurrencyIn(language, amount, currency),
+      currencySymbol: (currency = currencyCode) => currencySymbolIn(language, currency),
       number: (value: number) => formatNumberIn(language, value),
       percent: (value: number) => `${formatNumberIn(language, value)}%`,
       date: (date: Date | string, options: Intl.DateTimeFormatOptions) =>
@@ -65,7 +73,7 @@ export function useFormatters() {
       monthYear: (date: Date | string) =>
         formatDateIn(language, typeof date === 'string' ? new Date(date) : date, { month: 'short', year: 'numeric' }),
     }),
-    [language],
+    [language, currencyCode],
   )
 }
 

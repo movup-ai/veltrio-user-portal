@@ -1,53 +1,117 @@
 {
   "page": {
     "title": "Settings",
-    "description": "Organization profile, rental policy and team access",
+    "description": "Company profile, localization and contact details",
     "auditLog": "View audit log"
   },
-  "sections": {
-    "organization": {
-      "title": "Organization",
-      "description": "Appears on invoices, rental agreements and customer emails.",
-      "fields": {
-        "legalName": "Legal name",
-        "tradingName": "Trading name",
-        "taxId": "Tax ID",
-        "currency": "Currency",
-        "currencyHelp": "Applies to all rates and invoices.",
-        "currencyValue": "USD — US Dollar",
-        "timezone": "Timezone",
-        "timezoneHelp": "Pickup and return times are shown in this zone."
-      }
+  "company": {
+    "profile": {
+      "title": "Company",
+      "description": "Your business details, shown to renters and on invoices.",
+      "name": "Company name",
+      "legalName": "Legal name",
+      "legalNamePlaceholder": "Sunstate Car Company LLC",
+      "legalNameHelp": "Your registered business name, if it differs. Shown on invoices.",
+      "taxId": "Tax ID",
+      "taxIdHelp": "VAT, EIN or other tax number. Shown on invoices.",
+      "fleetSize": "Fleet size",
+      "fleetSizeHelp": "An estimate is fine.",
+      "subdomain": "Company subdomain",
+      "subdomainHelp": "Your fleet site's address. It can't change, because links you've shared use it.",
+      "openSite": "Open your fleet site",
+      "about": "About",
+      "aboutPlaceholder": "Family-run rentals in Miami since 1998, with free airport pickup.",
+      "aboutHelp": "Shown on your fleet site. Up to {{max}} characters."
     },
-    "rentalPolicy": {
-      "title": "Rental policy",
-      "description": "Defaults applied to new bookings unless overridden per location.",
-      "fields": {
-        "minimumAge": "Minimum driver age",
-        "minimumAgeValue": "{{count}} years",
-        "minimumAgeHelp": "Under-25 fee is set in Pricing.",
-        "securityDeposit": "Security deposit",
-        "securityDepositHelp": "Held on the card at pickup.",
-        "gracePeriod": "Grace period",
-        "gracePeriodValue": "{{count}} minutes",
-        "gracePeriodHelp": "Before a late-return fee applies.",
-        "fuelPolicy": "Fuel policy",
-        "fuelPolicyValue": "Same-to-same",
-        "requireId": "Require ID verification",
-        "requireIdValue": "Required before pickup",
-        "requireIdHelp": "Blocks counter handover until documents clear.",
-        "autoChargeLateFees": "Auto-charge late fees",
-        "autoChargeLateFeesValue": "Enabled"
-      }
+    "localization": {
+      "title": "Localization",
+      "description": "Where you operate, your local time, and the currency renters pay in.",
+      "country": "Country",
+      "timezone": "Timezone",
+      "currency": "Currency",
+      "currencyLocked": "Can't be changed once you have bookings, so their prices keep their currency."
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "How renters reach you. Shown on invoices and receipts.",
+      "email": "Email",
+      "emailPlaceholder": "hello@yourcompany.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+1 305 555 0100",
+      "website": "Website",
+      "websitePlaceholder": "yourcompany.com",
+      "address": "Address",
+      "addressPlaceholder": "1440 Collins Ave, Miami Beach, FL 33139"
+    },
+    "social": {
+      "title": "Social links",
+      "description": "Links to your social profiles. Leave any you don’t use blank.",
+      "placeholder": "{{domain}}/yourcompany",
+      "instagramUrl": "Instagram",
+      "facebookUrl": "Facebook",
+      "xUrl": "X (Twitter)",
+      "tiktokUrl": "TikTok"
+    },
+    "ownerOnly": {
+      "title": "Only the owner can change company settings",
+      "description": "Ask the account owner to update the company profile, contact details or social links."
+    },
+    "toast": {
+      "saved": "Settings saved",
+      "saveFailed": "Couldn't save settings"
     }
   },
-  "toggle": {
-    "enabled": "Enabled",
-    "disabled": "Disabled"
+  "brand": {
+    "images": {
+      "title": "Logo and banner",
+      "description": "Shown at the top of your fleet site.",
+      "logo": "Logo",
+      "logoHelp": "Transparent PNG works best",
+      "banner": "Banner",
+      "bannerHelp": "A wide photo, 1600 px or more",
+      "drop": "Drop an image here, or click to choose one",
+      "logoRemove": "Remove logo",
+      "bannerRemove": "Remove banner",
+      "replaceHint": "Click or drop an image to replace",
+      "uploading": "Uploading…",
+      "invalidType": "Use a JPG, PNG, WebP, HEIC or AVIF image.",
+      "tooLarge": "Use an image under {{max}} MB."
+    },
+    "style": {
+      "title": "Colors and headline",
+      "description": "Your fleet site's colors, and the line over your banner.",
+      "primaryColor": "Primary color",
+      "primaryColorHelp": "Buttons, links and prices.",
+      "backgroundColor": "Background color",
+      "textColor": "Text color",
+      "pick": "Pick a color",
+      "headline": "Headline",
+      "headlinePlaceholder": "Drive Miami your way",
+      "headlineHelp": "Shown over your banner. Leave it blank to show your company name."
+    },
+    "preview": {
+      "title": "Live preview",
+      "note": "Updates as you edit. This is how your fleet site will look to renters.",
+      "nav": {
+        "vehicles": "Vehicles",
+        "about": "About",
+        "contact": "Contact"
+      },
+      "book": "Book now",
+      "fleet": "Our fleet",
+      "from": "From {{price}}",
+      "noRate": "Price on request",
+      "sampleVehicle": "Your vehicle",
+      "follow": "Follow us"
+    },
+    "toast": {
+      "failed": "Couldn't update your brand"
+    }
   },
   "tabs": {
     "label": "Settings sections",
     "general": "General",
+    "brand": "Brand",
     "payments": "Payments"
   },
   "payments": {

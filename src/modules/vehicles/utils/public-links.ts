@@ -6,8 +6,13 @@ import type { Vehicle } from '../types/vehicle.types'
  */
 const DOMAIN = import.meta.env.VITE_CUSTOMER_PORTAL_DOMAIN ?? 'veltrio.com'
 
+/** The company's own site, where renters land. */
+export function siteUrl(subdomain: string): string {
+  return `https://${subdomain}.${DOMAIN}`
+}
+
 export function fleetUrl(subdomain: string): string {
-  return `https://${subdomain}.${DOMAIN}/vehicles`
+  return `${siteUrl(subdomain)}/vehicles`
 }
 
 export function vehicleUrl(subdomain: string, vehicle: Pick<Vehicle, 'uri'>): string {

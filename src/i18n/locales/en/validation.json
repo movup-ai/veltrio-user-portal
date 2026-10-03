@@ -76,5 +76,23 @@
     "addressIncomplete": "Fill in all four address fields, or leave them all blank.",
     "stateInvalid": "Use the two-letter state code, e.g. TX.",
     "zipInvalid": "Use a 5-digit ZIP, e.g. 73301."
+  },
+  "company": {
+    "nameRequired": "Company name is required",
+    "nameTooLong": "Use 200 characters or fewer",
+    "websiteInvalid": "Enter a valid URL, e.g. yourcompany.com",
+    "countryRequired": "Select a country",
+    "timezoneRequired": "Select a timezone",
+    "emailInvalid": "Enter a valid email address",
+    "phoneInvalid": "Enter a phone number of 6 to 25 characters",
+    "socialInvalid": "Enter a profile link on {{domain}}",
+    "taxIdTooLong": "Use 50 characters or fewer",
+    "descriptionTooLong": "Use 500 characters or fewer",
+    "currencyRequired": "Select a currency",
+    "addressTooLong": "Use 160 characters or fewer"
+  },
+  "brand": {
+    "colorInvalid": "Use a hex color like #0F766E",
+    "headlineTooLong": "Use 80 characters or fewer"
   }
 }

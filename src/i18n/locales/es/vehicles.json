@@ -51,12 +51,8 @@
     "transmission": "Transmisión",
     "fuelType": "Combustible",
     "dailyPrice": "Precio diario",
-    "priceBand": {
-      "0-50": "$0 – $50 / día",
-      "50-100": "$50 – $100 / día",
-      "100-200": "$100 – $200 / día",
-      "200+": "$200+ / día"
-    }
+    "priceRange": "{{min}} – {{max}} / día",
+    "priceFrom": "{{min}}+ / día"
   },
   "sort": {
     "manual": "Orden personalizado",
@@ -261,7 +257,7 @@
       "doors": "Puertas",
       "description": "Descripción",
       "descriptionHint": "Resumen que ve el cliente en el anuncio del vehículo.",
-      "deposit": "Depósito de garantía (USD)",
+      "deposit": "Depósito de garantía ({{currency}})",
       "depositPlaceholder": "p. ej. 500",
       "overageRate": "Tarifa por exceso (por milla)",
       "overageRatePlaceholder": "p. ej. 0.35",
@@ -314,7 +310,7 @@
     "billingBasis": "Base de cobro",
     "blockDuration": "Duración del bloque",
     "durationUnit": "Unidad de duración",
-    "rate": "Tarifa (USD)",
+    "rate": "Tarifa ({{currency}})",
     "includedMiles": "Millas incluidas",
     "includedMilesTotal": "Millas incluidas (en total)",
     "includedMilesPer": "Millas incluidas (por {{unit}})",

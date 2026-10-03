@@ -6,15 +6,17 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { cn } from '@/lib/utils'
 import { StripeAccountCard } from '@/modules/payments/components/StripeAccountCard'
-import { SETTINGS_SECTIONS } from '@/modules/settings/mock/settings.mock'
-import { SettingsSection } from '@/modules/settings/components/SettingsSection'
+import { BrandSettings } from '@/modules/settings/components/BrandSettings'
+import { CompanySettings } from '@/modules/settings/components/CompanySettings'
 import { SettingsTabs } from '@/modules/settings/components/SettingsTabs'
 import { settingsTab } from '@/modules/settings/utils/settings-tab'
+
+const TAB_WIDTH = { general: 'max-w-[960px]', payments: 'max-w-[1120px]', brand: 'max-w-[1240px]' } as const
 
 export function SettingsPage() {
   const { t } = useTranslation('settings')
   const { pathname } = useLocation()
-  const showingPayments = settingsTab(pathname) === 'payments'
+  const tab = settingsTab(pathname)
 
   return (
     <PageContainer>
@@ -24,14 +26,12 @@ export function SettingsPage() {
         actions={<PageActionButton icon={ScrollText} label={t('page.auditLog')} />}
       />
 
-      {/* Payments sits beside a section rail, so it needs more room than the field grids. */}
-      <div className={cn('flex flex-col gap-4', showingPayments ? 'max-w-[1120px]' : 'max-w-[880px]')}>
+      {/* Payments sits beside a section rail and Brand beside its preview, so both need more room. */}
+      <div className={cn('flex flex-col gap-4', TAB_WIDTH[tab])}>
         <SettingsTabs />
-        {showingPayments ? (
-          <StripeAccountCard />
-        ) : (
-          SETTINGS_SECTIONS.map((section) => <SettingsSection key={section.key} section={section} />)
-        )}
+        {tab === 'payments' && <StripeAccountCard />}
+        {tab === 'brand' && <BrandSettings />}
+        {tab === 'general' && <CompanySettings />}
       </div>
     </PageContainer>
   )

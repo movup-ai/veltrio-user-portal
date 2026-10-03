@@ -385,7 +385,12 @@ export function VehiclesPage() {
           {
             kind: 'checkboxGroup',
             label: t('filters.dailyPrice'),
-            options: VEHICLE_PRICE_BANDS.map((b) => ({ label: t(`filters.priceBand.${b.value}`), value: b.value })),
+            options: VEHICLE_PRICE_BANDS.map((b) => ({
+              label: Number.isFinite(b.max)
+                ? t('filters.priceRange', { min: format.currency(b.min), max: format.currency(b.max) })
+                : t('filters.priceFrom', { min: format.currency(b.min) }),
+              value: b.value,
+            })),
             selected: draftPriceBands,
             onToggle: toggleDraftPriceBand,
           },

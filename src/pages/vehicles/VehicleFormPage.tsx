@@ -241,6 +241,7 @@ function VehicleForm({
   existingPhotos: VehiclePhoto[]
 }) {
   const { t } = useTranslation('vehicles')
+  const { currencyCode } = useFormatters()
   const { t: tCommon } = useTranslation('common')
   const locations = useLocationNames()
   const { t: tValidation } = useTranslation('validation')
@@ -967,7 +968,7 @@ function VehicleForm({
                 <p className="text-meta text-fg-3 mb-1">{t('form.sections.fees')}</p>
                 <p className="text-fg-4 mb-3.5 text-[12.5px]">{t('form.sections.feesHint')}</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <FormField label={t('form.fields.deposit')} error={errors.deposit?.message} required>
+                  <FormField label={t('form.fields.deposit', { currency: currencyCode })} error={errors.deposit?.message} required>
                     {(fieldProps) => (
                       <Input
                         type="number"

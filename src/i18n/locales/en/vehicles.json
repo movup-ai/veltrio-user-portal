@@ -51,12 +51,8 @@
     "transmission": "Transmission",
     "fuelType": "Fuel type",
     "dailyPrice": "Daily price",
-    "priceBand": {
-      "0-50": "$0 – $50 / day",
-      "50-100": "$50 – $100 / day",
-      "100-200": "$100 – $200 / day",
-      "200+": "$200+ / day"
-    }
+    "priceRange": "{{min}} – {{max}} / day",
+    "priceFrom": "{{min}}+ / day"
   },
   "sort": {
     "manual": "Custom order",
@@ -261,7 +257,7 @@
       "doors": "Doors",
       "description": "Description",
       "descriptionHint": "Customer-facing summary shown on the vehicle listing.",
-      "deposit": "Security deposit (USD)",
+      "deposit": "Security deposit ({{currency}})",
       "depositPlaceholder": "e.g. 500",
       "overageRate": "Overage rate (per mile)",
       "overageRatePlaceholder": "e.g. 0.35",
@@ -314,7 +310,7 @@
     "billingBasis": "Billing basis",
     "blockDuration": "Block duration",
     "durationUnit": "Duration unit",
-    "rate": "Rate (USD)",
+    "rate": "Rate ({{currency}})",
     "includedMiles": "Included miles",
     "includedMilesTotal": "Included miles (total)",
     "includedMilesPer": "Included miles (per {{unit}})",

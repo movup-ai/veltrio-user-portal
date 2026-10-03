@@ -17,9 +17,9 @@ import { authApi, FLEET_SIZES } from '@/services/auth/auth.api'
 import { ME_QUERY_KEY, useMe } from '@/services/auth/use-me'
 import { ApiError } from '@/types/api'
 import { countryOptions, isCountryCode } from '@/utils/countries'
+import { TIMEZONES } from '@/utils/dates'
 import { isReservedSubdomain, isValidSubdomain, isValidWebsite, slugify } from '@/utils/slug'
 
-const TIMEZONES = Intl.supportedValuesOf('timeZone')
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 function onboardingSchema(t: TFunction<'auth'>) {
