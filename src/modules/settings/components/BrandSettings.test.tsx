@@ -103,6 +103,15 @@ describe('BrandSettings', () => {
     expect(preview().getByText('Book now')).toHaveStyle({ backgroundColor: '#0F766E' })
   })
 
+  it('names each colour swatch after its field, so a screen reader can tell them apart', async () => {
+    getBrand.mockResolvedValue(BRAND)
+    renderAs('owner')
+
+    expect(await screen.findByLabelText('Pick primary color')).toHaveAttribute('type', 'color')
+    expect(screen.getByLabelText('Pick background color')).toHaveAttribute('type', 'color')
+    expect(screen.getByLabelText('Pick text color')).toHaveAttribute('type', 'color')
+  })
+
   it('saves only the fields that changed', async () => {
     getBrand.mockResolvedValue(BRAND)
     update.mockImplementation(async (patch) => ({ ...BRAND, ...patch }))

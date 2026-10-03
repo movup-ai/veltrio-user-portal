@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { useVehicles } from '@/modules/vehicles/hooks/use-vehicles'
 import { hasAnyPermission } from '@/utils/permissions'
 import { toBrandValues } from '../api/settings.mapper'
+import { HEADLINE_MAX } from '../constants/brand.constants'
 import { useBrand, useUpdateBrand } from '../hooks/use-brand'
 import { useCompany } from '../hooks/use-company'
 import { brandSchema } from '../schema/brand.schema'
@@ -82,7 +83,15 @@ function BrandEditor({ brand, company }: { brand: Brand; company: Company }) {
         <Controller
           control={control}
           name={key}
-          render={({ field }) => <ColorField value={field.value} onChange={field.onChange} onBlur={field.onBlur} {...fieldProps} />}
+          render={({ field }) => (
+            <ColorField
+              name={t(`brand.style.${key}`)}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              {...fieldProps}
+            />
+          )}
         />
       )}
     </FormField>
@@ -111,7 +120,7 @@ function BrandEditor({ brand, company }: { brand: Brand; company: Company }) {
           {colorField('textColor')}
           <FormField label={t('brand.style.headline')} description={t('brand.style.headlineHelp')} error={errors.headline?.message}>
             {(fieldProps) => (
-              <Input maxLength={80} placeholder={t('brand.style.headlinePlaceholder')} {...register('headline')} {...fieldProps} />
+              <Input maxLength={HEADLINE_MAX} placeholder={t('brand.style.headlinePlaceholder')} {...register('headline')} {...fieldProps} />
             )}
           </FormField>
         </SettingsCard>

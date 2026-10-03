@@ -1,5 +1,4 @@
-export const BRAND_ASSETS = ['logo', 'banner'] as const
-export type BrandAsset = (typeof BRAND_ASSETS)[number]
+export type BrandAsset = 'logo' | 'banner'
 
 /** How the company's booking site looks. */
 export interface Brand {

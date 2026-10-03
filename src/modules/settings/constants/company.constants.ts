@@ -1,5 +1,8 @@
 import type { SocialField } from '../types/company.types'
 
+/** Mirrors the API's Description limit. */
+export const DESCRIPTION_MAX = 500
+
 /**
  * Mirrors SUPPORTED_CURRENCIES in the API (app/modules/tenants/schemas.py): two-decimal currencies
  * only, since amounts are stored in hundredths and Stripe reads JPY or KWD in other units.

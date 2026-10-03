@@ -4,14 +4,11 @@ import { useLocation } from 'react-router-dom'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { cn } from '@/lib/utils'
 import { StripeAccountCard } from '@/modules/payments/components/StripeAccountCard'
 import { BrandSettings } from '@/modules/settings/components/BrandSettings'
 import { CompanySettings } from '@/modules/settings/components/CompanySettings'
 import { SettingsTabs } from '@/modules/settings/components/SettingsTabs'
 import { settingsTab } from '@/modules/settings/utils/settings-tab'
-
-const TAB_WIDTH = { general: 'max-w-[960px]', payments: 'max-w-[1120px]', brand: 'max-w-[1240px]' } as const
 
 export function SettingsPage() {
   const { t } = useTranslation('settings')
@@ -26,8 +23,8 @@ export function SettingsPage() {
         actions={<PageActionButton icon={ScrollText} label={t('page.auditLog')} />}
       />
 
-      {/* Payments sits beside a section rail and Brand beside its preview, so both need more room. */}
-      <div className={cn('flex flex-col gap-4', TAB_WIDTH[tab])}>
+      {/* One width for every tab, set by Brand's form and preview side by side, so switching tabs doesn't jump. */}
+      <div className="flex max-w-[1240px] flex-col gap-4">
         <SettingsTabs />
         {tab === 'payments' && <StripeAccountCard />}
         {tab === 'brand' && <BrandSettings />}

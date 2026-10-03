@@ -84,7 +84,7 @@
       "primaryColorHelp": "Buttons, links and prices.",
       "backgroundColor": "Background color",
       "textColor": "Text color",
-      "pick": "Pick a color",
+      "pick": "Pick {{name}}",
       "headline": "Headline",
       "headlinePlaceholder": "Drive Miami your way",
       "headlineHelp": "Shown over your banner. Leave it blank to show your company name."

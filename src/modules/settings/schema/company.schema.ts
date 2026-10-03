@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { FLEET_SIZES } from '@/services/auth/auth.api'
 import { isCountryCode } from '@/utils/countries'
 import { isValidWebsite } from '@/utils/slug'
-import { SOCIAL_DOMAINS, SUPPORTED_CURRENCIES } from '../constants/company.constants'
+import { DESCRIPTION_MAX, SOCIAL_DOMAINS, SUPPORTED_CURRENCIES } from '../constants/company.constants'
 import type { SocialField } from '../types/company.types'
 import { isSocialUrl } from '../utils/company.utils'
 
@@ -16,7 +16,7 @@ export function companySchema(t: TFunction<'validation'>) {
     name: z.string().trim().min(1, t('company.nameRequired')).max(200, t('company.nameTooLong')),
     legalName: z.string().trim().max(200, t('company.nameTooLong')),
     taxId: z.string().trim().max(50, t('company.taxIdTooLong')),
-    description: z.string().trim().max(500, t('company.descriptionTooLong')),
+    description: z.string().trim().max(DESCRIPTION_MAX, t('company.descriptionTooLong')),
     website: z.string().refine(isValidWebsite, t('company.websiteInvalid')),
     fleetSize: z.enum(FLEET_SIZES),
     country: z.string().refine(isCountryCode, t('company.countryRequired')),
@@ -38,5 +38,3 @@ export function companySchema(t: TFunction<'validation'>) {
     tiktokUrl: social('tiktokUrl'),
   })
 }
-
-export type CompanySchema = ReturnType<typeof companySchema>

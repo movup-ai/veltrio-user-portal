@@ -10,11 +10,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { siteUrl as companySiteUrl } from '@/modules/vehicles/utils/public-links'
 import { FLEET_SIZES } from '@/services/auth/auth.api'
 import { useCompanySection } from '../hooks/use-company-section'
+import { DESCRIPTION_MAX } from '../constants/company.constants'
 import { companySchema } from '../schema/company.schema'
 import type { Company } from '../types/company.types'
 import { SettingsCard } from './SettingsCard'
-
-const DESCRIPTION_MAX = 500
 
 export function CompanyProfileCard({ company }: { company: Company }) {
   const { t } = useTranslation('settings')

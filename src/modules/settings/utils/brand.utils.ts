@@ -10,8 +10,8 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
-/** WCAG contrast ratio, 1 to 21. Body text needs 4.5 to be readable (AA). */
-export function contrastRatio(a: string, b: string): number {
+/** WCAG contrast ratio, 1 to 21. */
+function contrastRatio(a: string, b: string): number {
   const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x)
   return (light + 0.05) / (dark + 0.05)
 }

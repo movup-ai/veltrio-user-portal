@@ -84,7 +84,7 @@
       "primaryColorHelp": "Botones, enlaces y precios.",
       "backgroundColor": "Color de fondo",
       "textColor": "Color del texto",
-      "pick": "Elegir un color",
+      "pick": "Elegir {{name}}",
       "headline": "Titular",
       "headlinePlaceholder": "Recorre Miami a tu manera",
       "headlineHelp": "Se muestra sobre tu banner. Déjalo en blanco para mostrar el nombre de tu empresa."
