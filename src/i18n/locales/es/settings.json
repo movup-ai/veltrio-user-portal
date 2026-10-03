@@ -1,53 +1,117 @@
 {
   "page": {
     "title": "Ajustes",
-    "description": "Perfil de la organización, política de alquiler y acceso del equipo",
+    "description": "Perfil de la empresa, localización y datos de contacto",
     "auditLog": "Ver registro de auditoría"
   },
-  "sections": {
-    "organization": {
-      "title": "Organización",
-      "description": "Aparece en facturas, contratos de alquiler y correos a clientes.",
-      "fields": {
-        "legalName": "Razón social",
-        "tradingName": "Nombre comercial",
-        "taxId": "Identificación fiscal",
-        "currency": "Moneda",
-        "currencyHelp": "Se aplica a todas las tarifas y facturas.",
-        "currencyValue": "USD — dólar estadounidense",
-        "timezone": "Zona horaria",
-        "timezoneHelp": "Las horas de recogida y devolución se muestran en esta zona."
-      }
+  "company": {
+    "profile": {
+      "title": "Empresa",
+      "description": "Los datos de tu empresa, visibles para los clientes y en las facturas.",
+      "name": "Nombre de la empresa",
+      "legalName": "Razón social",
+      "legalNamePlaceholder": "Sunstate Car Company S.L.",
+      "legalNameHelp": "Tu razón social registrada, si es distinta. Aparece en las facturas.",
+      "taxId": "Identificación fiscal",
+      "taxIdHelp": "NIF, RFC, EIN u otro número fiscal. Aparece en las facturas.",
+      "fleetSize": "Tamaño de la flota",
+      "fleetSizeHelp": "Basta con una estimación.",
+      "subdomain": "Subdominio de la empresa",
+      "subdomainHelp": "La dirección de tu sitio de reservas. No puede cambiar, porque los enlaces que has compartido la usan.",
+      "openSite": "Abrir tu sitio de reservas",
+      "about": "Acerca de",
+      "aboutPlaceholder": "Alquiler familiar en Miami desde 1998, con recogida gratuita en el aeropuerto.",
+      "aboutHelp": "Se muestra en tu sitio de reservas. Hasta {{max}} caracteres."
     },
-    "rentalPolicy": {
-      "title": "Política de alquiler",
-      "description": "Valores predeterminados para nuevas reservas, salvo que se anulen por sucursal.",
-      "fields": {
-        "minimumAge": "Edad mínima del conductor",
-        "minimumAgeValue": "{{count}} años",
-        "minimumAgeHelp": "El cargo para menores de 25 se configura en Tarifas.",
-        "securityDeposit": "Depósito de garantía",
-        "securityDepositHelp": "Se retiene en la tarjeta al recoger el vehículo.",
-        "gracePeriod": "Periodo de gracia",
-        "gracePeriodValue": "{{count}} minutos",
-        "gracePeriodHelp": "Antes de aplicar un cargo por devolución tardía.",
-        "fuelPolicy": "Política de combustible",
-        "fuelPolicyValue": "Mismo nivel al devolver",
-        "requireId": "Exigir verificación de identidad",
-        "requireIdValue": "Obligatoria antes de la recogida",
-        "requireIdHelp": "Bloquea la entrega en mostrador hasta validar los documentos.",
-        "autoChargeLateFees": "Cobrar recargos por retraso automáticamente",
-        "autoChargeLateFeesValue": "Activado"
-      }
+    "localization": {
+      "title": "Localización",
+      "description": "Dónde operas, tu hora local y la moneda en la que pagan los clientes.",
+      "country": "País",
+      "timezone": "Zona horaria",
+      "currency": "Moneda",
+      "currencyLocked": "No se puede cambiar cuando ya hay reservas, para que sus precios conserven su moneda."
+    },
+    "contact": {
+      "title": "Contacto",
+      "description": "Cómo te contactan los clientes. Aparece en facturas y recibos.",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "hola@tuempresa.com",
+      "phone": "Teléfono",
+      "phonePlaceholder": "+34 600 000 000",
+      "website": "Sitio web",
+      "websitePlaceholder": "tuempresa.com",
+      "address": "Dirección",
+      "addressPlaceholder": "Calle Mayor 12, 28013 Madrid"
+    },
+    "social": {
+      "title": "Redes sociales",
+      "description": "Enlaces a tus perfiles sociales. Deja en blanco los que no uses.",
+      "placeholder": "{{domain}}/tuempresa",
+      "instagramUrl": "Instagram",
+      "facebookUrl": "Facebook",
+      "xUrl": "X (Twitter)",
+      "tiktokUrl": "TikTok"
+    },
+    "ownerOnly": {
+      "title": "Solo el propietario puede cambiar los ajustes de la empresa",
+      "description": "Pide al propietario de la cuenta que actualice el perfil, el contacto o las redes sociales."
+    },
+    "toast": {
+      "saved": "Ajustes guardados",
+      "saveFailed": "No se pudieron guardar los ajustes"
     }
   },
-  "toggle": {
-    "enabled": "Activado",
-    "disabled": "Desactivado"
+  "brand": {
+    "images": {
+      "title": "Logotipo y banner",
+      "description": "Se muestran en la parte superior de tu sitio de reservas.",
+      "logo": "Logotipo",
+      "logoHelp": "Mejor un PNG con fondo transparente",
+      "banner": "Banner",
+      "bannerHelp": "Una foto panorámica, de 1600 px o más",
+      "drop": "Suelta una imagen aquí o haz clic para elegirla",
+      "logoRemove": "Quitar logotipo",
+      "bannerRemove": "Quitar banner",
+      "replaceHint": "Haz clic o suelta una imagen para reemplazarla",
+      "uploading": "Subiendo…",
+      "invalidType": "Usa una imagen JPG, PNG, WebP, HEIC o AVIF.",
+      "tooLarge": "Usa una imagen de menos de {{max}} MB."
+    },
+    "style": {
+      "title": "Colores y titular",
+      "description": "Los colores de tu sitio de reservas y la frase sobre tu banner.",
+      "primaryColor": "Color principal",
+      "primaryColorHelp": "Botones, enlaces y precios.",
+      "backgroundColor": "Color de fondo",
+      "textColor": "Color del texto",
+      "pick": "Elegir {{name}}",
+      "headline": "Titular",
+      "headlinePlaceholder": "Recorre Miami a tu manera",
+      "headlineHelp": "Se muestra sobre tu banner. Déjalo en blanco para mostrar el nombre de tu empresa."
+    },
+    "preview": {
+      "title": "Vista previa",
+      "note": "Se actualiza mientras editas. Así verán los clientes tu sitio de reservas.",
+      "nav": {
+        "vehicles": "Vehículos",
+        "about": "Nosotros",
+        "contact": "Contacto"
+      },
+      "book": "Reservar",
+      "fleet": "Nuestra flota",
+      "from": "Desde {{price}}",
+      "noRate": "Precio a consultar",
+      "sampleVehicle": "Tu vehículo",
+      "follow": "Síguenos"
+    },
+    "toast": {
+      "failed": "No se pudo actualizar tu marca"
+    }
   },
   "tabs": {
     "label": "Secciones de configuración",
     "general": "General",
+    "brand": "Marca",
     "payments": "Pagos"
   },
   "payments": {

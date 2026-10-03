@@ -121,6 +121,8 @@ function renderAs(permissions: string[], charges: BookingChargeLine[] = []) {
       organizationId: 'org_1',
       organizationName: 'Sunstate Car Co.',
       subdomain: 'sunstate',
+
+      currency: 'USD',
       role: 'owner',
       permissions: permissions as never,
     },

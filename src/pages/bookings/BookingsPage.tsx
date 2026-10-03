@@ -375,7 +375,9 @@ export function BookingsPage() {
             label: t('filters.bookingValue'),
             options: BOOKING_VALUE_BANDS.map((v) => ({
               value: v.value,
-              label: t(`filters.valueBand.${v.value}`),
+              label: Number.isFinite(v.max)
+                ? t('filters.valueRange', { min: format.currency(v.min), max: format.currency(v.max) })
+                : t('filters.valueFrom', { min: format.currency(v.min) }),
             })),
             selected: draftValueBands,
             onToggle: toggleDraftValueBand,

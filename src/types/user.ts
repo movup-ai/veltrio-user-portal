@@ -46,6 +46,8 @@ export interface OrganizationMembership {
   organizationName: string
   /** Tenant subdomain, used to build public customer-portal links. */
   subdomain: string
+  /** What the company prices and charges in; money without its own currency is shown in it. */
+  currency: string
   role: MembershipRole
   permissions: Permission[]
 }

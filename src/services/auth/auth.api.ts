@@ -12,6 +12,7 @@ export interface TenantMembership {
   tenantId: ID
   tenantName: string
   subdomain: string
+  currency: string
   role: MembershipRole
 }
 
@@ -43,6 +44,7 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
     organizationId: membership.tenantId,
     organizationName: membership.tenantName,
     subdomain: membership.subdomain,
+    currency: membership.currency,
     role: membership.role,
     permissions: ROLE_PERMISSIONS[membership.role],
   }
