@@ -33,7 +33,9 @@ export function BrandImageField({ asset, url, onPreview }: BrandImageFieldProps)
   }, [local])
 
   const pick = (file: File | undefined) => {
-    if (!file) return
+    // One at a time: a second pick's preview would be cleared when the first upload settles, and
+    // whichever upload the server finished last would be the one saved.
+    if (!file || busy) return
     if (!photoContentType(file)) {
       toast({ title: t('brand.images.invalidType'), variant: 'error' })
       return
@@ -93,7 +95,8 @@ export function BrandImageField({ asset, url, onPreview }: BrandImageFieldProps)
           pick(event.dataTransfer.files[0])
         }}
         className={cn(
-          'group border-border bg-surface-2 relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed transition-colors',
+          'group border-border bg-surface-2 relative flex items-center justify-center overflow-hidden rounded-lg border border-dashed transition-colors',
+          busy ? 'cursor-progress' : 'cursor-pointer',
           asset === 'logo' ? 'h-24' : 'aspect-[2/1]',
           dragging && 'border-primary bg-tint',
         )}
@@ -110,7 +113,7 @@ export function BrandImageField({ asset, url, onPreview }: BrandImageFieldProps)
             {t('brand.images.drop')}
           </span>
         )}
-        {shown && !upload.isPending && (
+        {shown && !busy && (
           <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-[12.5px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
             {t('brand.images.replaceHint')}
           </span>
@@ -127,6 +130,7 @@ export function BrandImageField({ asset, url, onPreview }: BrandImageFieldProps)
       <input
         id={inputId}
         type="file"
+        disabled={busy}
         accept={PHOTO_ACCEPT}
         className="sr-only"
         onChange={(event) => {

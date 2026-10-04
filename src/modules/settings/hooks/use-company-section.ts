@@ -7,6 +7,7 @@ import { normalizeApiError } from '@/services/api/errors'
 import { toCompanyValues } from '../api/settings.mapper'
 import type { Company, CompanyValues } from '../types/company.types'
 import { changedValues } from '../utils/company.utils'
+import { resetKeepingEdits } from '../utils/form.utils'
 import { useUpdateCompany } from './use-company'
 
 function pick<V>(company: Company, keys: string[]): V {
@@ -30,12 +31,13 @@ export function useCompanySection<S extends z.ZodObject>(company: Company, schem
   })
 
   const submit = form.handleSubmit(async (values) => {
+    const atSubmit = form.getValues()
     const initial = form.formState.defaultValues as unknown as CompanyValues
     const patch = changedValues(values as unknown as CompanyValues, initial)
     if (Object.keys(patch).length === 0) return form.reset(values)
     try {
       const saved = await update.mutateAsync(patch)
-      form.reset(pick<Values>(saved, keys))
+      resetKeepingEdits(form, atSubmit, pick<Values>(saved, keys))
     } catch (error) {
       const apiError = normalizeApiError(error)
       const placed = (apiError.fieldErrors ?? []).filter(({ field }) => keys.includes(field))

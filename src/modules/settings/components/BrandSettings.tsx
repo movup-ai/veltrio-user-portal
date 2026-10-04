@@ -22,6 +22,7 @@ import type { Brand, BrandAsset, BrandValues } from '../types/brand.types'
 import type { Company } from '../types/company.types'
 import { isHexColor } from '../utils/brand.utils'
 import { changedValues } from '../utils/company.utils'
+import { resetKeepingEdits } from '../utils/form.utils'
 import { BrandImageField } from './BrandImageField'
 import { BrandPreview } from './BrandPreview'
 import { ColorField } from './ColorField'
@@ -71,10 +72,11 @@ function BrandEditor({ brand, company }: { brand: Brand; company: Company }) {
   const text = color('textColor')
 
   const submit = form.handleSubmit(async (values) => {
+    const atSubmit = form.getValues()
     const patch = changedValues(values, form.formState.defaultValues as BrandValues)
     if (Object.keys(patch).length === 0) return form.reset(values)
     const saved = await update.mutateAsync(patch).catch(() => undefined)
-    if (saved) form.reset(toBrandValues(saved))
+    if (saved) resetKeepingEdits(form, atSubmit, toBrandValues(saved))
   })
 
   const colorField = (key: 'primaryColor' | 'backgroundColor' | 'textColor', help?: string) => (

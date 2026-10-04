@@ -82,6 +82,26 @@ describe('CompanySettings', () => {
     await waitFor(() => expect(save).toBeDisabled())
   })
 
+  it('keeps what is typed while a save is in flight', async () => {
+    get.mockResolvedValue(COMPANY)
+    let finishSave: (company: Company) => void = () => {}
+    update.mockImplementation(() => new Promise((resolve) => (finishSave = resolve)))
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const taxId = await screen.findByLabelText('Tax ID')
+    const save = within(card('Company')).getByRole('button', { name: 'Save changes' })
+    await user.type(taxId, '47-88')
+    await user.click(save)
+    await user.type(taxId, '29104')
+    finishSave({ ...COMPANY, taxId: '47-88' })
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ taxId: '47-88' }))
+    // Still there, and still unsaved, so Save is offered again.
+    await waitFor(() => expect(save).toBeEnabled())
+    expect(taxId).toHaveValue('47-8829104')
+  })
+
   it('discards edits back to the saved values', async () => {
     get.mockResolvedValue(COMPANY)
     const user = userEvent.setup({ delay: null })

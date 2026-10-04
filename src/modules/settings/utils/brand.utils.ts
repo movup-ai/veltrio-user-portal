@@ -1,3 +1,15 @@
+import type { Brand } from '../types/brand.types'
+
+/**
+ * The cached brand after a mutation answers, taking only the fields that mutation changed. Every
+ * response is the whole brand as the server saw it then, so writing one back wholesale lets a
+ * slow upload's answer undo a colour saved while it ran.
+ */
+export function mergeBrand(current: Brand | undefined, response: Brand, changed: (keyof Brand)[]): Brand {
+  if (!current) return response
+  return { ...current, ...Object.fromEntries(changed.map((key) => [key, response[key]])) }
+}
+
 /** `#RRGGBB`, either case, as the API takes it. */
 export function isHexColor(value: string): boolean {
   return /^#[0-9a-f]{6}$/i.test(value.trim())

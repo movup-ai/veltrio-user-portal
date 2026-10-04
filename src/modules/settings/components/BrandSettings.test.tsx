@@ -158,6 +158,64 @@ describe('BrandSettings', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Remove banner' })).not.toBeInTheDocument())
   })
 
+  it('keeps a just-uploaded logo when an older colour save answers after it', async () => {
+    getBrand.mockResolvedValue(BRAND)
+    let finishSave: (brand: Brand) => void = () => {}
+    update.mockImplementation(() => new Promise((resolve) => (finishSave = resolve)))
+    upload.mockResolvedValue({ ...BRAND, logoUrl: 'https://media.example/logo.webp' })
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const background = await screen.findByLabelText('Background color')
+    await user.clear(background)
+    await user.type(background, '#F8FAFC')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    await user.upload(screen.getByLabelText(/^Logo$/), new File(['png'], 'logo.png', { type: 'image/png' }))
+    await waitFor(() =>
+      expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute('src', 'https://media.example/logo.webp'),
+    )
+
+    // The save was handled before the upload, so its answer has no logo in it.
+    finishSave({ ...BRAND, backgroundColor: '#F8FAFC' })
+
+    // The toast fires once that answer has been applied to the cache.
+    await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'success' })))
+    expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute('src', 'https://media.example/logo.webp')
+  })
+
+  it('takes one image at a time, so a second pick cannot be clobbered by the first', async () => {
+    getBrand.mockResolvedValue(BRAND)
+    upload.mockImplementation(() => new Promise(() => {}))
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const input = await screen.findByLabelText(/^Logo$/)
+    await user.upload(input, new File(['a'], 'first.png', { type: 'image/png' }))
+    await user.upload(input, new File(['b'], 'second.png', { type: 'image/png' }))
+
+    expect(input).toBeDisabled()
+    expect(upload).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps what is typed while a save is in flight', async () => {
+    getBrand.mockResolvedValue(BRAND)
+    let finishSave: (brand: Brand) => void = () => {}
+    update.mockImplementation(() => new Promise((resolve) => (finishSave = resolve)))
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const headline = await screen.findByLabelText('Headline')
+    await user.type(headline, 'Drive Miami')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    await user.type(headline, ' your way')
+    finishSave({ ...BRAND, headline: 'Drive Miami' })
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ headline: 'Drive Miami' }))
+    // Still there, and still unsaved, so Save is offered again.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled())
+    expect(headline).toHaveValue('Drive Miami your way')
+  })
+
   it('refuses a file that is not an image, without uploading it', async () => {
     getBrand.mockResolvedValue(BRAND)
     const user = userEvent.setup({ delay: null, applyAccept: false })
