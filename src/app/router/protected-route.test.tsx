@@ -25,7 +25,7 @@ function meFor(tenantId: string, subdomain: string): MeResponse {
       isActive: true,
       createdAt: '2026-01-01T00:00:00Z',
     } as MeResponse['user'],
-    membership: { tenantId, tenantName: 'Their Company', subdomain, role: 'owner' },
+    membership: { tenantId, tenantName: 'Their Company', subdomain, currency: 'USD', role: 'owner' },
   }
 }
 
@@ -82,6 +82,8 @@ describe('ProtectedRoute', () => {
         organizationId: 'tenant_a',
         organizationName: 'First Company',
         subdomain: 'first-co',
+
+        currency: 'USD',
         role: 'owner',
         permissions: [],
       },

@@ -14,6 +14,11 @@ describe('settingsTab', () => {
     }
   })
 
+  it('selects Brand on the brand page only', () => {
+    expect(settingsTab('/settings/brand')).toBe('brand')
+    expect(settingsTab('/settings/brandish')).toBe('general')
+  })
+
   it('selects Payments on the payments page only', () => {
     expect(settingsTab('/settings/payments')).toBe('payments')
     expect(settingsTab('/settings/paymentsish')).toBe('general')

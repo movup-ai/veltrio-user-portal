@@ -79,7 +79,7 @@ export const BOOKING_DURATION_BANDS = [
 ] as const
 export type BookingDurationBand = (typeof BOOKING_DURATION_BANDS)[number]['value']
 
-/** Booking total in USD — bounds only; the label lives in `bookings:filters.valueBand.<value>`. */
+/** Booking total, in the company's currency. Bounds only: the label is formatted from them. */
 export const BOOKING_VALUE_BANDS = [
   { value: '0-250', min: 0, max: 250 },
   { value: '250-500', min: 250, max: 500 },

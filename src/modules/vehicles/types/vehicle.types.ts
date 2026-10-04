@@ -179,7 +179,7 @@ export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization' | 'u
 export const VEHICLE_SORTS = ['manual', 'newest', 'dailyRate', 'name'] as const
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
 
-/** Bounds only — the display label lives in `vehicles:filters.priceBand.<value>`. */
+/** Bounds only: the label is formatted from them, in the company's currency. */
 export const VEHICLE_PRICE_BANDS = [
   { value: '0-50', min: 0, max: 50 },
   { value: '50-100', min: 50, max: 100 },

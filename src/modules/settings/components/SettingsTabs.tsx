@@ -2,10 +2,11 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { PAYMENT_SETTINGS_PATH } from '@/modules/payments/utils/payment-account.utils'
-import { settingsTab, type SettingsTab } from '../utils/settings-tab'
+import { BRAND_SETTINGS_PATH, settingsTab, type SettingsTab } from '../utils/settings-tab'
 
 const TABS: { key: SettingsTab; to: string }[] = [
   { key: 'general', to: '/settings' },
+  { key: 'brand', to: BRAND_SETTINGS_PATH },
   { key: 'payments', to: PAYMENT_SETTINGS_PATH },
 ]
 

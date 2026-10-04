@@ -11,6 +11,8 @@ function setPermissions(permissions: string[]) {
       organizationId: 'org_1',
       organizationName: 'Test Org',
       subdomain: 'test-org',
+
+      currency: 'USD',
       role: 'owner',
       permissions: permissions as never,
     },

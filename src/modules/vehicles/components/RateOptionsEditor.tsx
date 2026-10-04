@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { ChevronDown, ChevronUp, GripVertical, Plus, Trash2 } from 'lucide-react'
 import type { FieldErrors } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { useFormatters } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -36,6 +37,7 @@ interface RateOptionsEditorProps {
 
 export function RateOptionsEditor({ value, onChange, errors, rootError, showAllErrors }: RateOptionsEditorProps) {
   const { t } = useTranslation('vehicles')
+  const { currencyCode } = useFormatters()
   const domain = useDomainLabels()
   // A freshly-added row shouldn't flash "required" errors before the user has touched it —
   // only surface a field's error once it's been blurred, or once showAllErrors kicks in.
@@ -107,7 +109,7 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
         <span />
         <span>{t('rateOptions.label')}</span>
         <span>{t('rateOptions.billingBasis')}</span>
-        <span>{t('rateOptions.rate')}</span>
+        <span>{t('rateOptions.rate', { currency: currencyCode })}</span>
         <span className="bg-border h-3.5 justify-self-center" aria-hidden />
         <span>{t('rateOptions.includedMiles')}</span>
         <span>{t('rateOptions.unlimited')}</span>
@@ -269,9 +271,9 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-meta text-fg-3 lg:hidden">{t('rateOptions.rate')}</span>
+              <span className="text-meta text-fg-3 lg:hidden">{t('rateOptions.rate', { currency: currencyCode })}</span>
               <Input
-                aria-label={t('rateOptions.rate')}
+                aria-label={t('rateOptions.rate', { currency: currencyCode })}
                 type="number"
                 step="0.01"
                 placeholder="0.00"
