@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { useFormatters } from '@/i18n'
-import { cn } from '@/lib/utils'
 import { DEPOSIT_STATUS_BADGE, PAYMENT_STATE_BADGE } from '@/modules/payments/constants/payment.constants'
 import type {
   BookingPaymentRecord,
@@ -156,19 +155,19 @@ export function BookingPaymentCard({
             </Button>
           </>
         )}
-        {/* An invoice is often wanted before payment; a receipt as soon as anything is paid. */}
-        <div className={cn('grid gap-2', payments.paid > 0 ? 'grid-cols-2' : 'grid-cols-1')}>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onAction('downloadInvoice')}
-            loading={busy.downloadInvoice}
-            className="gap-1.5"
-          >
-            <FileDown className="size-4" aria-hidden />
-            {t('details.payment.downloadInvoice')}
-          </Button>
-          {payments.paid > 0 && (
+        {/* Both wait for money: until something is paid, the payment link is what the renter gets. */}
+        {payments.paid > 0 && (
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onAction('downloadInvoice')}
+              loading={busy.downloadInvoice}
+              className="gap-1.5"
+            >
+              <FileDown className="size-4" aria-hidden />
+              {t('details.payment.downloadInvoice')}
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -179,8 +178,8 @@ export function BookingPaymentCard({
               <Mail className="size-4" aria-hidden />
               {t('details.payment.sendReceipt')}
             </Button>
-          )}
-        </div>
+          </div>
+        )}
         {canRefund && refundablePayments(payments.payments).length > 0 && (
           <Button
             type="button"

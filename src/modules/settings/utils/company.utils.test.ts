@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { SocialField } from '../types/company.types'
 import { changedValues, currencyLabel, isPhoneNumber, isSocialHandle, toSocialHandle } from './company.utils'
 
 describe('isPhoneNumber', () => {
@@ -91,5 +92,40 @@ describe('currencyLabel', () => {
     // An API that predates the field sends none; Intl throws a RangeError for that.
     expect(currencyLabel(undefined, 'en')).toBe('')
     expect(currencyLabel('US Dollar', 'en')).toBe('US DOLLAR')
+  })
+})
+
+describe('social usernames, from the review findings', () => {
+  it('drops tracking from a pasted link, but keeps the id that is a Facebook profile', () => {
+    expect(toSocialHandle('instagramHandle', 'https://instagram.com/sunstate/?ref=x')).toBe('sunstate')
+    expect(toSocialHandle('xHandle', 'https://x.com/sunstate#about')).toBe('sunstate')
+    expect(toSocialHandle('facebookHandle', 'https://www.facebook.com/profile.php?id=100&ref=x')).toBe(
+      'profile.php?id=100',
+    )
+  })
+
+  it('refuses a link with no profile rather than reading it as blank, which would clear the saved name', () => {
+    expect(toSocialHandle('instagramHandle', 'https://instagram.com/')).not.toBe('')
+    expect(isSocialHandle('instagramHandle', 'https://instagram.com/')).toBe(false)
+  })
+
+  it.each<[SocialField, string, string]>([
+    ['instagramHandle', 'facebook.com', 'another network’s bare host'],
+    ['instagramHandle', 'www.instagram.com', 'its own bare host'],
+    ['instagramHandle', 'sunstate?ref=x', 'a typed query string'],
+    ['xHandle', 'sun.state', 'a dot, which X usernames cannot have'],
+    ['facebookHandle', 'sunstate?ref=x', 'tracking on a Facebook name'],
+  ])('rejects %s %j (%s)', (field, value) => {
+    expect(isSocialHandle(field, value)).toBe(false)
+  })
+
+  it.each<[SocialField, string]>([
+    ['instagramHandle', 'sun.state_1'],
+    ['xHandle', 'sun_state'],
+    ['tiktokHandle', 'sun.state'],
+    ['facebookHandle', 'profile.php?id=100012345'],
+    ['facebookHandle', 'pages/Sunstate/123'],
+  ])('accepts %s %j, in the network’s own format', (field, value) => {
+    expect(isSocialHandle(field, value)).toBe(true)
   })
 })

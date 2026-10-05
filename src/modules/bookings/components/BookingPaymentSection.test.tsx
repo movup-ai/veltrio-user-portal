@@ -336,11 +336,12 @@ describe('BookingPaymentSection', () => {
     expect(screen.getByText('$219')).toBeInTheDocument()
   })
 
-  it('offers the invoice before anything is paid, and the receipt once something is', async () => {
+  it('offers neither the invoice nor the receipt until something is paid', async () => {
     get.mockResolvedValue(UNPAID)
     renderAs([])
 
-    expect(await screen.findByRole('button', { name: 'Invoice' })).toBeEnabled()
+    expect(await screen.findByRole('button', { name: 'Mark as paid' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Invoice' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Receipt' })).not.toBeInTheDocument()
   })
 

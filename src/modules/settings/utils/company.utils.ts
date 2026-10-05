@@ -1,4 +1,4 @@
-import { SOCIAL_DOMAINS, SOCIAL_HANDLE_MAX } from '../constants/company.constants'
+import { SOCIAL_DOMAINS, SOCIAL_HANDLE_MAX, SOCIAL_HANDLE_PATTERN } from '../constants/company.constants'
 import type { SocialField } from '../types/company.types'
 
 /**
@@ -23,26 +23,42 @@ function isLink(value: string): boolean {
   return /^https?:\/\//.test(value) || /^[^/]*\.[^/]*\//.test(value)
 }
 
+/** A network's own host typed as a username would be doubled in the link: instagram.com/facebook.com. */
+function isNetworkHost(value: string): boolean {
+  const host = value.toLowerCase()
+  return Object.values(SOCIAL_DOMAINS).flat().some((d) => host === d || host.endsWith(`.${d}`))
+}
+
 /**
  * The username to store for whatever was typed: a username, an @handle, or a pasted link to
- * the field's own network. A link to anywhere else comes back as typed, for validation to refuse.
+ * the field's own network. Anything else comes back as typed, for validation to refuse.
  */
 export function toSocialHandle(field: SocialField, input: string): string {
   const typed = input.trim()
   if (!isLink(typed)) return typed.replace(/^@+|\/+$/g, '')
   try {
-    const { hostname, pathname, search } = new URL(/^https?:\/\//.test(typed) ? typed : `https://${typed}`)
-    const ownNetwork = SOCIAL_DOMAINS[field].some((d) => hostname === d || hostname.endsWith(`.${d}`))
-    return ownNetwork ? (pathname + search).replace(/^[/@]+|\/+$/g, '') : typed
+    const { hostname, pathname, searchParams } = new URL(/^https?:\/\//.test(typed) ? typed : `https://${typed}`)
+    if (!SOCIAL_DOMAINS[field].some((d) => hostname === d || hostname.endsWith(`.${d}`))) return typed
+    const path = pathname.replace(/^[/@]+|\/+$/g, '')
+    // The query string is tracking, except on the one link where it is the profile itself.
+    const profileId = path === 'profile.php' ? searchParams.get('id') : null
+    // A link with no profile stays a link: read as blank, it would clear the saved username.
+    return (profileId ? `profile.php?id=${profileId}` : path) || typed
   } catch {
     return typed
   }
 }
 
-/** Mirrors the API's SocialHandle: blank is fine; otherwise a username, never a link. */
+/** Mirrors the API: blank is fine; otherwise a username in the network's format, never a link or host. */
 export function isSocialHandle(field: SocialField, input: string): boolean {
   const handle = toSocialHandle(field, input)
-  return !/\s/.test(handle) && !isLink(handle) && handle.length <= SOCIAL_HANDLE_MAX
+  if (!handle) return true
+  return (
+    !isLink(handle) &&
+    !isNetworkHost(handle) &&
+    handle.length <= SOCIAL_HANDLE_MAX &&
+    SOCIAL_HANDLE_PATTERN[field].test(handle)
+  )
 }
 
 /** `USD — US Dollar`. Display-only, so an absent or unknown code must not throw and take the page down. */

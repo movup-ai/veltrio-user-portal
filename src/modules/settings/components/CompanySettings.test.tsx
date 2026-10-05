@@ -127,6 +127,21 @@ describe('CompanySettings', () => {
     expect(update).not.toHaveBeenCalled()
   })
 
+  it('refuses a pasted link with no profile instead of clearing the saved username', async () => {
+    get.mockResolvedValue({ ...COMPANY, instagramHandle: 'sunstate' })
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const instagram = await screen.findByLabelText('Instagram')
+    expect(instagram).toHaveValue('sunstate')
+    await user.clear(instagram)
+    await user.type(instagram, 'https://instagram.com/')
+    await user.click(within(card('Social links')).getByRole('button', { name: 'Save changes' }))
+
+    expect(await screen.findByText('Enter your username, or a link to your profile on instagram.com')).toBeInTheDocument()
+    expect(update).not.toHaveBeenCalled()
+  })
+
   it('takes a social username on its own, after the network shown as a prefix', async () => {
     get.mockResolvedValue(COMPANY)
     update.mockImplementation(async (patch) => ({ ...COMPANY, ...patch }))
