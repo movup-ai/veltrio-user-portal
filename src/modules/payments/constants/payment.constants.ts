@@ -69,6 +69,7 @@ export const PAYMENT_REFUSALS = [
   'not_returned',
   'not_before_pickup',
   'not_fully_paid',
+  'contract_unsigned',
   'not_on_rental',
 ] as const
 

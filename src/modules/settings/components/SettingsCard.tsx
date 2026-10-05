@@ -12,11 +12,25 @@ interface SettingsCardProps {
   dirty: boolean
   saving: boolean
   columns?: 1 | 2
+  /** Shown ahead of Discard and Save, for something the card does besides saving. */
+  actions?: React.ReactNode
+  submitLabel?: string
   children: React.ReactNode
 }
 
 /** A settings section that saves on its own: heading, a field grid, Discard and Save. */
-export function SettingsCard({ title, description, onSubmit, onDiscard, dirty, saving, columns = 2, children }: SettingsCardProps) {
+export function SettingsCard({
+  title,
+  description,
+  onSubmit,
+  onDiscard,
+  dirty,
+  saving,
+  columns = 2,
+  actions,
+  submitLabel,
+  children,
+}: SettingsCardProps) {
   const { t } = useTranslation('common')
 
   return (
@@ -29,11 +43,12 @@ export function SettingsCard({ title, description, onSubmit, onDiscard, dirty, s
         <div className={cn('grid gap-4 p-[18px]', columns === 2 && 'sm:grid-cols-2')}>{children}</div>
 
         <div className="border-border-soft bg-surface-2 flex justify-end gap-2 border-t px-[18px] py-[13px]">
+          {actions && <div className="mr-auto flex gap-2">{actions}</div>}
           <Button type="button" variant="outline" size="sm" onClick={onDiscard} disabled={!dirty || saving}>
             {t('actions.discard')}
           </Button>
           <Button type="submit" size="sm" loading={saving} disabled={!dirty}>
-            {t('actions.saveChanges')}
+            {submitLabel ?? t('actions.saveChanges')}
           </Button>
         </div>
       </form>

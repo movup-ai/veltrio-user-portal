@@ -1,0 +1,171 @@
+{
+  "agreements": {
+    "title": "Agreement templates",
+    "description": "The rental terms your renters sign. A booking uses the template picked for it, or the default.",
+    "new": "New template",
+    "default": "Default",
+    "defaultHint": "Used for a booking when no other template is picked",
+    "meta": "Revision {{revision}} · Edited {{date}}",
+    "actions": "Actions for {{name}}",
+    "edit": "Edit",
+    "makeDefault": "Make default",
+    "delete": "Delete",
+    "legalNote": "The starter template is a general starting point, not legal advice. Have a lawyer review your terms before renters sign them.",
+    "ownerOnly": {
+      "title": "Only the owner can change agreement templates",
+      "description": "Ask the account owner to add or edit the terms renters sign."
+    },
+    "confirmDelete": {
+      "title": "Delete “{{name}}”?",
+      "description": "Agreements already issued with this template keep their text.\n\nBookings set to use it will use the default template instead.",
+      "confirm": "Delete template"
+    },
+    "editor": {
+      "newTitle": "New template",
+      "editTitle": "Edit template",
+      "description": "Changes apply to agreements issued from now on. Agreements already issued keep the text they were issued with.",
+      "back": "All templates",
+      "name": "Template name",
+      "namePlaceholder": "Standard rental agreement",
+      "nameHelp": "Shown to your team when they pick the terms for a booking.",
+      "body": "Terms",
+      "bodyHelp": "Leave a blank line between paragraphs. Start a line with # and a space to make it a section heading. The renter, vehicle, dates and charges are added above your terms automatically.",
+      "preview": "Preview PDF",
+      "create": "Create template",
+      "notFound": {
+        "title": "Template not found",
+        "description": "It may have been deleted. Go back to the list to pick another."
+      }
+    },
+    "toast": {
+      "created": "Template created",
+      "saved": "Template saved",
+      "saveFailed": "Couldn't save the template",
+      "deleted": "Template deleted",
+      "deleteFailed": "Couldn't delete the template",
+      "defaultChanged": "Default template changed",
+      "defaultFailed": "Couldn't change the default template",
+      "previewFailed": "Couldn't open the preview"
+    }
+  },
+  "signatory": {
+    "title": "Company signature",
+    "description": "Who signs rental agreements for your company. It is put on every agreement as it is issued, so the renter signs one you have already signed.",
+    "unset": "Until you set one, each agreement is signed for your company in the typed name of the team member who issues it.",
+    "name": "Signatory name",
+    "nameRequired": "Enter the signatory's full name.",
+    "jobTitle": "Title",
+    "jobTitlePlaceholder": "Owner",
+    "signature": "Signature",
+    "signatureOf": "Signature of {{name}}",
+    "redraw": "Draw a new one",
+    "typeInstead": "Sign with the typed name instead of a drawn signature",
+    "typedNote": "The typed name will appear as the signature.",
+    "remove": "Remove",
+    "toast": {
+      "saved": "Company signature saved",
+      "removed": "Company signature removed",
+      "failed": "Couldn't update the company signature"
+    }
+  },
+  "document": {
+    "charges": "Charges",
+    "terms": "Terms and conditions",
+    "signatures": "Signatures",
+    "forCompany": "For the company",
+    "signedOn": "Signed {{date}}",
+    "appliedBy": "Applied when issued by {{name}}",
+    "signatureOf": "Signature of {{name}}"
+  },
+  "sign": {
+    "heading": "Sign the agreement",
+    "consent": "I have read this rental agreement and agree to be bound by it, and I agree to sign it electronically.",
+    "consentRequired": "Tick the box to confirm you agree before signing.",
+    "name": "Full name",
+    "namePlaceholder": "As it appears on your licence",
+    "nameRequired": "Type your full name.",
+    "signature": "Signature",
+    "draw": "Draw your signature in the box",
+    "clear": "Clear",
+    "typeInstead": "Use my typed name as my signature instead",
+    "typedNote": "Your typed name will be recorded as your signature.",
+    "signatureRequired": "Draw your signature, or choose to use your typed name.",
+    "signatureUnreadable": "We couldn't read that signature. Clear it and try again.",
+    "submit": "Sign agreement",
+    "failed": "We couldn't record the signature. Please try again."
+  },
+  "link": {
+    "title": "Send the agreement for signature",
+    "description": "{{name}} reads and signs it on their own phone or computer.",
+    "summary": "Agreement",
+    "subject": "{{company}}: your rental agreement for booking {{reference}}",
+    "message": "Hi {{name}}, please read and sign the rental agreement for booking {{reference}} before pickup: {{url}}",
+    "copyTitle": "The renter's copy",
+    "copyDescription": "{{name}} can open and download the signed agreement from this link.",
+    "copySubject": "{{company}}: your signed rental agreement for booking {{reference}}",
+    "copyMessage": "Hi {{name}}, here is your signed rental agreement for booking {{reference}}: {{url}}"
+  },
+  "counter": {
+    "title": "Sign at the counter",
+    "description": "Hand the device to {{name}} to read and sign. It is recorded as signed in front of you."
+  },
+  "void": {
+    "title": "Void this agreement?",
+    "signedDescription": "The booking goes back to unsigned and pickup waits for a new agreement. The renter's link stops working.",
+    "unsignedDescription": "The renter's link stops working. A new agreement is issued the next time it is sent or signed.",
+    "reason": "Reason",
+    "reasonPlaceholder": "The renter's name was misspelt",
+    "reasonRequired": "Say why it is being voided.",
+    "confirm": "Void agreement"
+  },
+  "template": {
+    "title": "Change the terms",
+    "description": "Pick the template this booking's agreement uses. An agreement already sent is replaced, and its link stops working.",
+    "label": "Template",
+    "default": "{{name}} (default)",
+    "save": "Use this template"
+  },
+  "reasons": {
+    "booking_cancelled": "The booking is cancelled.",
+    "not_before_pickup": "The vehicle has already been picked up.",
+    "already_signed": "The agreement is already signed.",
+    "not_issued": "No agreement has been issued yet."
+  },
+  "toast": {
+    "issueFailed": "Couldn't prepare the agreement",
+    "signed": "Agreement signed",
+    "voided": "Agreement voided",
+    "voidFailed": "Couldn't void the agreement",
+    "templateChanged": "Terms changed",
+    "templateChangeFailed": "Couldn't change the terms",
+    "pdfFailed": "Couldn't open the agreement"
+  },
+  "page": {
+    "title": "Rental agreement",
+    "greeting": "Hi {{name}}, please read the agreement below and sign at the end.",
+    "secure": "Your signature is recorded with the date, time and device.",
+    "download": "Download PDF",
+    "downloadCopy": "Download your copy",
+    "signed": {
+      "title": "Agreement signed",
+      "body": "Signed by {{name}} on {{date}}. Keep a copy for your records."
+    },
+    "replaced": {
+      "title": "This agreement was replaced",
+      "body": "{{company}} issued a newer agreement for booking {{reference}}. Ask them for the new link."
+    },
+    "closed": {
+      "title": "This agreement can no longer be signed",
+      "body": "Booking {{reference}} is not waiting for a signature any more. Contact {{company}} if you think this is a mistake."
+    },
+    "invalid": {
+      "title": "This link is not valid",
+      "body": "Check the link you were sent, or ask the rental company for a new one."
+    },
+    "unreachable": {
+      "title": "We couldn't load your agreement",
+      "body": "Check your connection and try again.",
+      "retry": "Try again"
+    }
+  }
+}

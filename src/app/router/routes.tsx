@@ -4,9 +4,11 @@ import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { DashboardLayout } from '@/app/layouts/DashboardLayout'
 import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
+import { AgreementsPage } from '@/pages/agreements/AgreementsPage.lazy'
 import { InsuranceReturnPage } from '@/pages/verification/InsuranceReturnPage'
 import { PaymentPage } from '@/pages/pay/PaymentPage.lazy'
 import { ReceiptPage } from '@/pages/receipt/ReceiptPage.lazy'
+import { SignPage } from '@/pages/sign/SignPage.lazy'
 import { LegacyAppRedirect } from './legacy-app-redirect'
 import { ProtectedRoute } from './protected-route'
 
@@ -61,6 +63,8 @@ export const router = createBrowserRouter([
           { path: '/pay/:tenantId/:token', element: withSuspense(<PaymentPage />) },
           // Public: the renter's receipt, from the counter's link or the payment page.
           { path: '/receipt/:tenantId/:bookingId/:token', element: withSuspense(<ReceiptPage />) },
+          // Public: the renter reads and signs their rental agreement here, then keeps it as their copy.
+          { path: '/sign/:tenantId/:contractId/:token', element: withSuspense(<SignPage />) },
         ],
       },
 
@@ -92,6 +96,9 @@ export const router = createBrowserRouter([
               { path: 'payments', element: withSuspense(<PaymentsPage />) },
               { path: 'locations', element: withSuspense(<LocationsPage />) },
               { path: 'pricing', element: withSuspense(<PricingPage />) },
+
+              { path: 'agreements', element: withSuspense(<AgreementsPage />) },
+              { path: 'agreements/:templateId', element: withSuspense(<AgreementsPage />) },
 
               { path: 'settings', element: withSuspense(<SettingsPage />) },
               { path: 'settings/organization', element: withSuspense(<SettingsPage />) },

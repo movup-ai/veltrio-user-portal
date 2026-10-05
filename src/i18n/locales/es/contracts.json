@@ -1,0 +1,171 @@
+{
+  "agreements": {
+    "title": "Plantillas de contrato",
+    "description": "Las condiciones de alquiler que firman tus clientes. Cada reserva usa la plantilla elegida para ella, o la predeterminada.",
+    "new": "Nueva plantilla",
+    "default": "Predeterminada",
+    "defaultHint": "Se usa en una reserva cuando no se elige otra plantilla",
+    "meta": "Revisión {{revision}} · Editada el {{date}}",
+    "actions": "Acciones para {{name}}",
+    "edit": "Editar",
+    "makeDefault": "Hacer predeterminada",
+    "delete": "Eliminar",
+    "legalNote": "La plantilla inicial es un punto de partida general, no asesoramiento legal. Pide a un abogado que revise tus condiciones antes de que los clientes las firmen.",
+    "ownerOnly": {
+      "title": "Solo el propietario puede cambiar las plantillas de contrato",
+      "description": "Pide al propietario de la cuenta que añada o edite las condiciones que firman los clientes."
+    },
+    "confirmDelete": {
+      "title": "¿Eliminar «{{name}}»?",
+      "description": "Los contratos ya emitidos con esta plantilla conservan su texto.\n\nLas reservas que la tenían asignada usarán la plantilla predeterminada.",
+      "confirm": "Eliminar plantilla"
+    },
+    "editor": {
+      "newTitle": "Nueva plantilla",
+      "editTitle": "Editar plantilla",
+      "description": "Los cambios se aplican a los contratos emitidos a partir de ahora. Los contratos ya emitidos conservan el texto con el que se emitieron.",
+      "back": "Todas las plantillas",
+      "name": "Nombre de la plantilla",
+      "namePlaceholder": "Contrato de alquiler estándar",
+      "nameHelp": "Lo ve tu equipo al elegir las condiciones de una reserva.",
+      "body": "Condiciones",
+      "bodyHelp": "Deja una línea en blanco entre párrafos. Empieza una línea con # y un espacio para convertirla en título de sección. El cliente, el vehículo, las fechas y los cargos se añaden automáticamente sobre tus condiciones.",
+      "preview": "Vista previa en PDF",
+      "create": "Crear plantilla",
+      "notFound": {
+        "title": "Plantilla no encontrada",
+        "description": "Puede que se haya eliminado. Vuelve a la lista para elegir otra."
+      }
+    },
+    "toast": {
+      "created": "Plantilla creada",
+      "saved": "Plantilla guardada",
+      "saveFailed": "No se pudo guardar la plantilla",
+      "deleted": "Plantilla eliminada",
+      "deleteFailed": "No se pudo eliminar la plantilla",
+      "defaultChanged": "Plantilla predeterminada cambiada",
+      "defaultFailed": "No se pudo cambiar la plantilla predeterminada",
+      "previewFailed": "No se pudo abrir la vista previa"
+    }
+  },
+  "signatory": {
+    "title": "Firma de la empresa",
+    "description": "Quién firma los contratos de alquiler por tu empresa. Se añade a cada contrato al emitirlo, así el cliente firma uno que ya has firmado.",
+    "unset": "Hasta que definas una, cada contrato se firma por tu empresa con el nombre escrito del miembro del equipo que lo emite.",
+    "name": "Nombre del firmante",
+    "nameRequired": "Escribe el nombre completo del firmante.",
+    "jobTitle": "Cargo",
+    "jobTitlePlaceholder": "Propietario",
+    "signature": "Firma",
+    "signatureOf": "Firma de {{name}}",
+    "redraw": "Dibujar una nueva",
+    "typeInstead": "Firmar con el nombre escrito en lugar de una firma dibujada",
+    "typedNote": "El nombre escrito aparecerá como firma.",
+    "remove": "Quitar",
+    "toast": {
+      "saved": "Firma de la empresa guardada",
+      "removed": "Firma de la empresa quitada",
+      "failed": "No se pudo actualizar la firma de la empresa"
+    }
+  },
+  "document": {
+    "charges": "Cargos",
+    "terms": "Términos y condiciones",
+    "signatures": "Firmas",
+    "forCompany": "Por la empresa",
+    "signedOn": "Firmado el {{date}}",
+    "appliedBy": "Aplicada al emitirlo {{name}}",
+    "signatureOf": "Firma de {{name}}"
+  },
+  "sign": {
+    "heading": "Firma el contrato",
+    "consent": "He leído este contrato de alquiler y acepto quedar obligado por él, y acepto firmarlo electrónicamente.",
+    "consentRequired": "Marca la casilla para confirmar que aceptas antes de firmar.",
+    "name": "Nombre completo",
+    "namePlaceholder": "Como aparece en tu licencia",
+    "nameRequired": "Escribe tu nombre completo.",
+    "signature": "Firma",
+    "draw": "Dibuja tu firma en el recuadro",
+    "clear": "Borrar",
+    "typeInstead": "Usar mi nombre escrito como firma",
+    "typedNote": "Tu nombre escrito quedará registrado como tu firma.",
+    "signatureRequired": "Dibuja tu firma o elige usar tu nombre escrito.",
+    "signatureUnreadable": "No pudimos leer esa firma. Bórrala e inténtalo de nuevo.",
+    "submit": "Firmar contrato",
+    "failed": "No pudimos registrar la firma. Inténtalo de nuevo."
+  },
+  "link": {
+    "title": "Enviar el contrato para firmar",
+    "description": "{{name}} lo lee y lo firma en su propio teléfono u ordenador.",
+    "summary": "Contrato",
+    "subject": "{{company}}: tu contrato de alquiler de la reserva {{reference}}",
+    "message": "Hola {{name}}, lee y firma el contrato de alquiler de la reserva {{reference}} antes de la recogida: {{url}}",
+    "copyTitle": "La copia del cliente",
+    "copyDescription": "{{name}} puede abrir y descargar el contrato firmado desde este enlace.",
+    "copySubject": "{{company}}: tu contrato de alquiler firmado de la reserva {{reference}}",
+    "copyMessage": "Hola {{name}}, aquí tienes tu contrato de alquiler firmado de la reserva {{reference}}: {{url}}"
+  },
+  "counter": {
+    "title": "Firmar en el mostrador",
+    "description": "Entrega el dispositivo a {{name}} para que lo lea y lo firme. Queda registrado como firmado en tu presencia."
+  },
+  "void": {
+    "title": "¿Anular este contrato?",
+    "signedDescription": "La reserva vuelve a estar sin firmar y la recogida espera un contrato nuevo. El enlace del cliente deja de funcionar.",
+    "unsignedDescription": "El enlace del cliente deja de funcionar. Se emite un contrato nuevo la próxima vez que se envíe o se firme.",
+    "reason": "Motivo",
+    "reasonPlaceholder": "El nombre del cliente estaba mal escrito",
+    "reasonRequired": "Indica por qué se anula.",
+    "confirm": "Anular contrato"
+  },
+  "template": {
+    "title": "Cambiar las condiciones",
+    "description": "Elige la plantilla que usa el contrato de esta reserva. Un contrato ya enviado se reemplaza y su enlace deja de funcionar.",
+    "label": "Plantilla",
+    "default": "{{name}} (predeterminada)",
+    "save": "Usar esta plantilla"
+  },
+  "reasons": {
+    "booking_cancelled": "La reserva está cancelada.",
+    "not_before_pickup": "El vehículo ya se recogió.",
+    "already_signed": "El contrato ya está firmado.",
+    "not_issued": "Aún no se ha emitido ningún contrato."
+  },
+  "toast": {
+    "issueFailed": "No se pudo preparar el contrato",
+    "signed": "Contrato firmado",
+    "voided": "Contrato anulado",
+    "voidFailed": "No se pudo anular el contrato",
+    "templateChanged": "Condiciones cambiadas",
+    "templateChangeFailed": "No se pudieron cambiar las condiciones",
+    "pdfFailed": "No se pudo abrir el contrato"
+  },
+  "page": {
+    "title": "Contrato de alquiler",
+    "greeting": "Hola {{name}}, lee el contrato a continuación y fírmalo al final.",
+    "secure": "Tu firma se registra con la fecha, la hora y el dispositivo.",
+    "download": "Descargar PDF",
+    "downloadCopy": "Descargar tu copia",
+    "signed": {
+      "title": "Contrato firmado",
+      "body": "Firmado por {{name}} el {{date}}. Guarda una copia para tus registros."
+    },
+    "replaced": {
+      "title": "Este contrato fue reemplazado",
+      "body": "{{company}} emitió un contrato más reciente para la reserva {{reference}}. Pídeles el nuevo enlace."
+    },
+    "closed": {
+      "title": "Este contrato ya no se puede firmar",
+      "body": "La reserva {{reference}} ya no espera una firma. Contacta con {{company}} si crees que es un error."
+    },
+    "invalid": {
+      "title": "Este enlace no es válido",
+      "body": "Revisa el enlace que recibiste o pide uno nuevo a la empresa de alquiler."
+    },
+    "unreachable": {
+      "title": "No pudimos cargar tu contrato",
+      "body": "Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar"
+    }
+  }
+}

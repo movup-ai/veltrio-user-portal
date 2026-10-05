@@ -94,5 +94,12 @@
   "brand": {
     "colorInvalid": "Usa un color hexadecimal como #0F766E",
     "headlineTooLong": "Usa 80 caracteres o menos"
+  },
+  "agreements": {
+    "nameRequired": "Ponle un nombre a la plantilla",
+    "nameTooLong": "Usa 80 caracteres o menos",
+    "nameTaken": "Otra plantilla ya tiene este nombre",
+    "bodyRequired": "Añade las condiciones que firmarán los clientes",
+    "bodyTooLong": "Usa 50.000 caracteres o menos"
   }
 }

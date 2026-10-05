@@ -147,6 +147,7 @@
       "not_returned": "Ejecuta o libera el depósito cuando se devuelva el vehículo.",
       "not_before_pickup": "El vehículo ya se recogió.",
       "not_fully_paid": "Para la recogida, el alquiler debe estar pagado y el depósito retenido.",
+      "contract_unsigned": "Para la recogida, el contrato de alquiler debe estar firmado.",
       "not_on_rental": "El vehículo no está fuera con esta reserva."
     },
     "receipt": {

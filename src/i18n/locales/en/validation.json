@@ -94,5 +94,12 @@
   "brand": {
     "colorInvalid": "Use a hex color like #0F766E",
     "headlineTooLong": "Use 80 characters or fewer"
+  },
+  "agreements": {
+    "nameRequired": "Give the template a name",
+    "nameTooLong": "Use 80 characters or fewer",
+    "nameTaken": "Another template already has this name",
+    "bodyRequired": "Add the terms renters will sign",
+    "bodyTooLong": "Use 50,000 characters or fewer"
   }
 }

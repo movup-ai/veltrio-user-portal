@@ -111,6 +111,9 @@ export function bookingFormSchema(t: ValidationT) {
 
       // Step 3 — Price
       fees: z.array(bookingFeeSchema(t)),
+
+      // Step 4 — Review. Empty or absent (a draft saved before this field) means the default terms.
+      agreementTemplateId: z.string().optional(),
     })
     .superRefine((values, ctx) => {
       if (!values.pickupDate || !values.returnDate || !TIME_PATTERN.test(values.returnTime)) return

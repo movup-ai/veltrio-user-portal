@@ -1,6 +1,7 @@
 import enAuth from './locales/en/auth.json'
 import enBookings from './locales/en/bookings.json'
 import enCommon from './locales/en/common.json'
+import enContracts from './locales/en/contracts.json'
 import enCustomers from './locales/en/customers.json'
 import enDashboard from './locales/en/dashboard.json'
 import enDomain from './locales/en/domain.json'
@@ -15,6 +16,7 @@ import enVehicles from './locales/en/vehicles.json'
 import esAuth from './locales/es/auth.json'
 import esBookings from './locales/es/bookings.json'
 import esCommon from './locales/es/common.json'
+import esContracts from './locales/es/contracts.json'
 import esCustomers from './locales/es/customers.json'
 import esDashboard from './locales/es/dashboard.json'
 import esDomain from './locales/es/domain.json'
@@ -36,6 +38,7 @@ export const resources = {
     auth: enAuth,
     bookings: enBookings,
     common: enCommon,
+    contracts: enContracts,
     customers: enCustomers,
     dashboard: enDashboard,
     domain: enDomain,
@@ -51,6 +54,7 @@ export const resources = {
     auth: esAuth,
     bookings: esBookings,
     common: esCommon,
+    contracts: esContracts,
     customers: esCustomers,
     dashboard: esDashboard,
     domain: esDomain,
