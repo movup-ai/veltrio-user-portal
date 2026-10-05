@@ -1,6 +1,6 @@
 import type { FleetSize } from '@/services/auth/auth.api'
 
-export const SOCIAL_FIELDS = ['instagramUrl', 'facebookUrl', 'xUrl', 'tiktokUrl'] as const
+export const SOCIAL_FIELDS = ['instagramHandle', 'facebookHandle', 'xHandle', 'tiktokHandle'] as const
 export type SocialField = (typeof SOCIAL_FIELDS)[number]
 
 /** The signed-in user's company, as the settings page edits it. */

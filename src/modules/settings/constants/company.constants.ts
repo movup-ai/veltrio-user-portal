@@ -1,5 +1,11 @@
 import type { SocialField } from '../types/company.types'
 
+/** What a username is written after on a network's profile link; TikTok's carry the @. */
+export const SOCIAL_HANDLE_PREFIX: Partial<Record<SocialField, string>> = { tiktokHandle: '@' }
+
+/** Mirrors the API's SocialHandle limit. */
+export const SOCIAL_HANDLE_MAX = 100
+
 /** Mirrors the API's Description limit. */
 export const DESCRIPTION_MAX = 500
 
@@ -14,10 +20,10 @@ export const SUPPORTED_CURRENCIES = [
   'AED', 'SAR', 'QAR', 'ILS', 'ZAR',
 ] as const
 
-/** Mirrors the API's per-network host check (app/modules/tenants/schemas.py); the first is shown. */
+/** Each network's domains, to recognise a pasted link as its own; the first is shown as the prefix. */
 export const SOCIAL_DOMAINS: Record<SocialField, readonly string[]> = {
-  instagramUrl: ['instagram.com'],
-  facebookUrl: ['facebook.com', 'fb.com'],
-  xUrl: ['x.com', 'twitter.com'],
-  tiktokUrl: ['tiktok.com'],
+  instagramHandle: ['instagram.com'],
+  facebookHandle: ['facebook.com', 'fb.com'],
+  xHandle: ['x.com', 'twitter.com'],
+  tiktokHandle: ['tiktok.com'],
 }

@@ -1,6 +1,7 @@
 import type { FleetSize } from '@/services/auth/auth.api'
 import type { Brand, BrandValues } from '../types/brand.types'
-import type { Company, CompanyPatch, CompanyValues } from '../types/company.types'
+import { SOCIAL_FIELDS, type Company, type CompanyPatch, type CompanyValues, type SocialField } from '../types/company.types'
+import { toSocialHandle } from '../utils/company.utils'
 
 // --- Company ---
 
@@ -20,10 +21,10 @@ export interface CompanyWire {
   contactEmail: string | null
   contactPhone: string | null
   address: string | null
-  instagramUrl: string | null
-  facebookUrl: string | null
-  xUrl: string | null
-  tiktokUrl: string | null
+  instagramHandle: string | null
+  facebookHandle: string | null
+  xHandle: string | null
+  tiktokHandle: string | null
 }
 
 type CompanyPayload = { [K in keyof CompanyValues]?: CompanyValues[K] | null }
@@ -52,10 +53,10 @@ export function toCompany(wire: CompanyWire): Company {
     contactEmail: optional(wire.contactEmail),
     contactPhone: optional(wire.contactPhone),
     address: optional(wire.address),
-    instagramUrl: optional(wire.instagramUrl),
-    facebookUrl: optional(wire.facebookUrl),
-    xUrl: optional(wire.xUrl),
-    tiktokUrl: optional(wire.tiktokUrl),
+    instagramHandle: optional(wire.instagramHandle),
+    facebookHandle: optional(wire.facebookHandle),
+    xHandle: optional(wire.xHandle),
+    tiktokHandle: optional(wire.tiktokHandle),
   }
 }
 
@@ -73,17 +74,22 @@ export function toCompanyValues(company: Company): CompanyValues {
     contactEmail: company.contactEmail ?? '',
     contactPhone: company.contactPhone ?? '',
     address: company.address ?? '',
-    instagramUrl: company.instagramUrl ?? '',
-    facebookUrl: company.facebookUrl ?? '',
-    xUrl: company.xUrl ?? '',
-    tiktokUrl: company.tiktokUrl ?? '',
+    instagramHandle: company.instagramHandle ?? '',
+    facebookHandle: company.facebookHandle ?? '',
+    xHandle: company.xHandle ?? '',
+    tiktokHandle: company.tiktokHandle ?? '',
   }
+}
+
+function isSocialField(key: keyof CompanyValues): key is SocialField {
+  return (SOCIAL_FIELDS as readonly string[]).includes(key)
 }
 
 export function toCompanyPayload(patch: CompanyPatch): CompanyPayload {
   const payload: Record<string, string | null> = {}
   for (const [key, value] of Object.entries(patch) as [keyof CompanyValues, string][]) {
-    const trimmed = value.trim()
+    // A pasted profile link is cut down to the username the API stores.
+    const trimmed = isSocialField(key) ? toSocialHandle(key, value) : value.trim()
     payload[key] = (trimmed || REQUIRED.has(key)) ? trimmed : null
   }
   return payload as CompanyPayload

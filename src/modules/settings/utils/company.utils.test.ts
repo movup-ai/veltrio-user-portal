@@ -1,5 +1,68 @@
 import { describe, expect, it } from 'vitest'
-import { changedValues, currencyLabel, isSocialUrl } from './company.utils'
+import { changedValues, currencyLabel, isPhoneNumber, isSocialHandle, toSocialHandle } from './company.utils'
+
+describe('isPhoneNumber', () => {
+  it.each(['+1 305 555 0100', '(305) 555-0100', '305.555.0100', '+34 600 000 000', '3055550'])('accepts %j', (value) => {
+    expect(isPhoneNumber(value)).toBe(true)
+  })
+
+  it.each([
+    ['+1 917920626e', 'a letter'],
+    ['123456', 'too few digits'],
+    ['+1 305 555 0100 0100 99', 'more than 15 digits'],
+    ['call me', 'no digits'],
+    ['-305 555 0100', 'a leading separator'],
+  ])('rejects %j (%s)', (value) => {
+    expect(isPhoneNumber(value)).toBe(false)
+  })
+})
+
+describe('toSocialHandle', () => {
+  it.each([
+    ['sunstate', 'a username'],
+    ['@sunstate', 'an @handle'],
+    [' sunstate/ ', 'padding and a trailing slash'],
+    ['instagram.com/sunstate', 'a bare link'],
+    ['https://www.instagram.com/sunstate/', 'a pasted link'],
+  ])('reduces %j (%s) to the username', (typed) => {
+    expect(toSocialHandle('instagramHandle', typed)).toBe('sunstate')
+  })
+
+  it('drops the @ a TikTok link carries, and reads any of a network’s domains', () => {
+    expect(toSocialHandle('tiktokHandle', 'https://www.tiktok.com/@sunstate')).toBe('sunstate')
+    expect(toSocialHandle('xHandle', 'https://twitter.com/sunstate')).toBe('sunstate')
+  })
+
+  it('keeps a username with a dot, and a longer Facebook path, as typed', () => {
+    expect(toSocialHandle('instagramHandle', 'sun.state')).toBe('sun.state')
+    expect(toSocialHandle('facebookHandle', 'profile.php?id=100')).toBe('profile.php?id=100')
+    expect(toSocialHandle('facebookHandle', 'https://facebook.com/pages/Sunstate/123/')).toBe('pages/Sunstate/123')
+  })
+
+  it('leaves a link to another site as typed, for validation to refuse', () => {
+    expect(toSocialHandle('instagramHandle', 'facebook.com/sunstate')).toBe('facebook.com/sunstate')
+  })
+})
+
+describe('isSocialHandle', () => {
+  it.each([
+    ['', 'blank'],
+    ['@', 'only an @, which is blank once stripped'],
+    ['sunstate', 'a username'],
+    ['https://www.instagram.com/sunstate/', 'a link to its own network'],
+  ])('accepts %j (%s)', (value) => {
+    expect(isSocialHandle('instagramHandle', value)).toBe(true)
+  })
+
+  it.each([
+    ['https://facebook.com/sunstate', 'a link to another network'],
+    ['instagram.com.evil.io/sunstate', 'a lookalike host'],
+    ['sun state', 'a space'],
+    ['x'.repeat(101), 'over the length limit'],
+  ])('rejects %j (%s)', (value) => {
+    expect(isSocialHandle('instagramHandle', value)).toBe(false)
+  })
+})
 
 describe('changedValues', () => {
   it('keeps only the fields that changed', () => {
@@ -15,30 +78,6 @@ describe('changedValues', () => {
 
   it('reports a cleared field, so it can be sent as null', () => {
     expect(changedValues({ website: '' }, { website: 'https://sunstate.com' })).toEqual({ website: '' })
-  })
-})
-
-describe('isSocialUrl', () => {
-  it.each([
-    ['', 'blank'],
-    ['instagram.com/sunstate', 'bare host'],
-    ['https://www.instagram.com/sunstate/', 'www and trailing slash'],
-  ])('accepts %j (%s)', (value) => {
-    expect(isSocialUrl('instagramUrl', value)).toBe(true)
-  })
-
-  it('accepts any of a network’s domains', () => {
-    expect(isSocialUrl('xUrl', 'https://twitter.com/sunstate')).toBe(true)
-    expect(isSocialUrl('facebookUrl', 'https://fb.com/sunstate')).toBe(true)
-  })
-
-  it.each([
-    ['https://facebook.com/sunstate', 'another network'],
-    ['https://instagram.com.evil.io/sunstate', 'a lookalike host'],
-    ['https://instagram.com/', 'the homepage'],
-    ['not a url', 'free text'],
-  ])('rejects %j (%s)', (value) => {
-    expect(isSocialUrl('instagramUrl', value)).toBe(false)
   })
 })
 
