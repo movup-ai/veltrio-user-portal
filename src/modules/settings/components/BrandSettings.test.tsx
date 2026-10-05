@@ -216,6 +216,26 @@ describe('BrandSettings', () => {
     expect(headline).toHaveValue('Drive Miami your way')
   })
 
+  it('allows a banner up to 15 MB but a logo only up to 10', async () => {
+    getBrand.mockResolvedValue(BRAND)
+    upload.mockResolvedValue(BRAND)
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+    const photo = (name: string) => {
+      const file = new File(['x'], name, { type: 'image/jpeg' })
+      Object.defineProperty(file, 'size', { value: 12 * 1024 * 1024 })
+      return file
+    }
+
+    await user.upload(await screen.findByLabelText(/^Logo$/), photo('logo.jpg'))
+    expect(upload).not.toHaveBeenCalled()
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Use an image under 10 MB.' }))
+
+    const banner = photo('banner.jpg')
+    await user.upload(screen.getByLabelText(/^Banner$/), banner)
+    expect(upload).toHaveBeenCalledWith('banner', banner)
+  })
+
   it('refuses a file that is not an image, without uploading it', async () => {
     getBrand.mockResolvedValue(BRAND)
     const user = userEvent.setup({ delay: null, applyAccept: false })

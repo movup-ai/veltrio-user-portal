@@ -45,12 +45,12 @@
     },
     "social": {
       "title": "Social links",
-      "description": "Links to your social profiles. Leave any you don’t use blank.",
-      "placeholder": "{{domain}}/yourcompany",
-      "instagramUrl": "Instagram",
-      "facebookUrl": "Facebook",
-      "xUrl": "X (Twitter)",
-      "tiktokUrl": "TikTok"
+      "description": "Your username on each network. Leave any you don't use blank.",
+      "placeholder": "yourcompany",
+      "instagramHandle": "Instagram",
+      "facebookHandle": "Meta (Facebook)",
+      "xHandle": "X (Twitter)",
+      "tiktokHandle": "TikTok"
     },
     "ownerOnly": {
       "title": "Only the owner can change company settings",

@@ -123,7 +123,47 @@ describe('CompanySettings', () => {
     await user.type(await screen.findByLabelText('Instagram'), 'facebook.com/sunstate')
     await user.click(within(card('Social links')).getByRole('button', { name: 'Save changes' }))
 
-    expect(await screen.findByText('Enter a profile link on instagram.com')).toBeInTheDocument()
+    expect(await screen.findByText('Enter your username, or a link to your profile on instagram.com')).toBeInTheDocument()
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('refuses a pasted link with no profile instead of clearing the saved username', async () => {
+    get.mockResolvedValue({ ...COMPANY, instagramHandle: 'sunstate' })
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const instagram = await screen.findByLabelText('Instagram')
+    expect(instagram).toHaveValue('sunstate')
+    await user.clear(instagram)
+    await user.type(instagram, 'https://instagram.com/')
+    await user.click(within(card('Social links')).getByRole('button', { name: 'Save changes' }))
+
+    expect(await screen.findByText('Enter your username, or a link to your profile on instagram.com')).toBeInTheDocument()
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('takes a social username on its own, after the network shown as a prefix', async () => {
+    get.mockResolvedValue(COMPANY)
+    update.mockImplementation(async (patch) => ({ ...COMPANY, ...patch }))
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    await user.type(await screen.findByLabelText('TikTok'), 'sunstate')
+    expect(within(card('Social links')).getByText('tiktok.com/@')).toBeInTheDocument()
+    await user.click(within(card('Social links')).getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ tiktokHandle: 'sunstate' }))
+  })
+
+  it('refuses a phone number with a letter in it', async () => {
+    get.mockResolvedValue(COMPANY)
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    await user.type(await screen.findByLabelText('Phone'), '+1 917920626e')
+    await user.click(within(card('Contact')).getByRole('button', { name: 'Save changes' }))
+
+    expect(await screen.findByText('Enter a valid phone number, e.g. +1 305 555 0100')).toBeInTheDocument()
     expect(update).not.toHaveBeenCalled()
   })
 

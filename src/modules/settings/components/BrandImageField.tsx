@@ -40,8 +40,8 @@ export function BrandImageField({ asset, url, onPreview }: BrandImageFieldProps)
       toast({ title: t('brand.images.invalidType'), variant: 'error' })
       return
     }
-    if (file.size > MAX_BRAND_IMAGE_BYTES) {
-      toast({ title: t('brand.images.tooLarge', { max: MAX_BRAND_IMAGE_BYTES / (1024 * 1024) }), variant: 'error' })
+    if (file.size > MAX_BRAND_IMAGE_BYTES[asset]) {
+      toast({ title: t('brand.images.tooLarge', { max: MAX_BRAND_IMAGE_BYTES[asset] / (1024 * 1024) }), variant: 'error' })
       return
     }
     const objectUrl = URL.createObjectURL(file)
