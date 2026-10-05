@@ -431,7 +431,7 @@
       "agreementTemplate": "Condiciones",
       "agreementHint": "Las condiciones que firmará el cliente. Se pueden cambiar hasta que el contrato esté firmado.",
       "agreementDefault": "Se usarán las condiciones predeterminadas de tu empresa.",
-      "agreementKept": "Se usarán las condiciones ya elegidas para esta reserva."
+      "agreementUnchecked": "No pudimos cargar tus plantillas de contrato, así que no se pueden confirmar las condiciones guardadas en este borrador. Vuelve a intentarlo para continuar."
     },
     "draft": {
       "save": "Guardar borrador",

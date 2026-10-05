@@ -27,7 +27,11 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
 import { useAgreementTemplates } from '@/modules/contracts/hooks/use-agreement-templates'
-import { shownTemplateId, templateChoice } from '@/modules/contracts/utils/agreement-template.utils'
+import {
+  isChoiceUnchecked,
+  shownTemplateId,
+  templateChoice,
+} from '@/modules/contracts/utils/agreement-template.utils'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import {
   customerKeys,
@@ -220,7 +224,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const deleteDraft = useDeleteBookingDraft({ silent: true })
   const queryClient = useQueryClient()
   const locations = useLocationNames()
-  const { data: templates } = useAgreementTemplates()
+  const { data: templates, isError: templatesFailed, refetch: refetchTemplates } = useAgreementTemplates()
 
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
@@ -556,6 +560,8 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const onSubmit = (submitted: BookingFormValues) =>
     new Promise<void>((settle) => {
       if (!selectedVehicle || !pricing) return settle()
+      // Also the form's own submit handler, which a disabled Create button does not stop.
+      if (isChoiceUnchecked(submitted.agreementTemplateId, templates)) return settle()
 
       const input: BookingInput = {
         customerId: submitted.customerId || undefined,
@@ -576,7 +582,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
         additionalDrivers: submitted.additionalDrivers,
         fees: submitted.fees,
         verifications: submitted.verifications,
-        agreementTemplateId: templateChoice(submitted.agreementTemplateId, templates),
+        agreementTemplateId: templateChoice(submitted.agreementTemplateId, templates ?? []),
       }
 
       // Wrapped in a promise so the button stays busy through the uploads too — RHF keeps
@@ -1394,10 +1400,16 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                         </Select>
                       )}
                     </FormField>
+                  ) : !isChoiceUnchecked(values.agreementTemplateId, templates) ? (
+                    <p className="text-fg-4 text-[14px]">{t('form.review.agreementDefault')}</p>
+                  ) : templatesFailed ? (
+                    <ErrorState
+                      description={t('form.review.agreementUnchecked')}
+                      onRetry={() => refetchTemplates()}
+                      className="py-6"
+                    />
                   ) : (
-                    <p className="text-fg-4 text-[14px]">
-                      {t(values.agreementTemplateId ? 'form.review.agreementKept' : 'form.review.agreementDefault')}
-                    </p>
+                    <LoadingState className="py-6" />
                   )}
                 </ReviewSection>
               </div>
@@ -1452,7 +1464,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
               <Button
                 type="button"
                 loading={isSubmitting || createBooking.isPending}
-                disabled={!pricing}
+                disabled={!pricing || isChoiceUnchecked(values.agreementTemplateId, templates)}
                 onClick={handleSubmit(onSubmit)}
                 className="gap-1.5"
               >

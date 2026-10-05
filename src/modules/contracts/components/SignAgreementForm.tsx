@@ -28,19 +28,18 @@ export function SignAgreementForm({ defaultName, submitting, error, onSubmit }: 
   const typedId = useId()
   const [draft, setDraft] = useState<SignatureDraft>({ name: defaultName, consent: false, typed: false })
   const [attempted, setAttempted] = useState(false)
-  // The drawing last sent: the API's refusal of a drawing is of that one, not of what replaced it.
-  const [sent, setSent] = useState<string>()
+  // The error the renter has since changed their signature in answer to, so no longer shown.
+  // Starts as the one already there: on a reopened form that is an earlier attempt's.
+  const [answered, setAnswered] = useState(error)
 
   const problems = attempted ? signatureProblems(draft) : {}
   const refused = error ? (drawingProblem(error) ?? 'failed') : undefined
-  const stillShown = Boolean(draft.drawing) && draft.drawing === sent
-  const signatureError = problems.signature ?? (refused && refused !== 'failed' && stillShown ? refused : undefined)
+  const signatureError = problems.signature ?? (refused !== 'failed' && error !== answered ? refused : undefined)
 
   function submit(event: React.FormEvent) {
     event.preventDefault()
     setAttempted(true)
     if (Object.keys(signatureProblems(draft)).length > 0) return
-    setSent(draft.drawing)
     onSubmit({ signerName: draft.name, signature: draft.drawing })
   }
 
@@ -72,7 +71,10 @@ export function SignAgreementForm({ defaultName, submitting, error, onSubmit }: 
             label={t('sign.draw')}
             clearLabel={t('sign.clear')}
             invalid={Boolean(signatureError)}
-            onChange={(drawing) => setDraft((d) => ({ ...d, drawing }))}
+            onChange={(drawing) => {
+              setAnswered(error)
+              setDraft((d) => ({ ...d, drawing }))
+            }}
           />
         )}
         {signatureError && (
@@ -85,7 +87,10 @@ export function SignAgreementForm({ defaultName, submitting, error, onSubmit }: 
             id={typedId}
             checked={draft.typed}
             // The pad unmounts with its drawing, so the drawing is dropped here too.
-            onCheckedChange={(checked) => setDraft((d) => ({ ...d, typed: checked === true, drawing: undefined }))}
+            onCheckedChange={(checked) => {
+              setAnswered(error)
+              setDraft((d) => ({ ...d, typed: checked === true, drawing: undefined }))
+            }}
           />
           <Label htmlFor={typedId} className="text-fg-2 text-[13px] font-normal">
             {t('sign.typeInstead')}

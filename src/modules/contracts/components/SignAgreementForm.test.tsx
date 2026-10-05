@@ -7,13 +7,21 @@ import type { SignatureInput } from '../types/booking-contract.types'
 import { SignAgreementForm } from './SignAgreementForm'
 
 const DRAWING = 'data:image/png;base64,AAAA'
+const LONGER = 'data:image/png;base64,AAAABBBB'
+const UNREADABLE = new ApiError('validation', 'no', { status: 422, code: 'signature_invalid' })
+const REFUSAL = "We couldn't read that signature. Clear it and try again."
 
-// jsdom has no canvas; a button stands in for drawing a stroke on the pad.
+// jsdom has no canvas; buttons stand in for a first stroke on the pad, and for one more.
 vi.mock('./SignaturePad', () => ({
   SignaturePad: ({ onChange }: { onChange: (drawing: string | undefined) => void }) => (
-    <button type="button" onClick={() => onChange(DRAWING)}>
-      draw
-    </button>
+    <>
+      <button type="button" onClick={() => onChange(DRAWING)}>
+        draw
+      </button>
+      <button type="button" onClick={() => onChange(LONGER)}>
+        draw more
+      </button>
+    </>
   ),
 }))
 
@@ -21,6 +29,25 @@ function renderForm(error: unknown = null) {
   const onSubmit = vi.fn<(input: SignatureInput) => void>()
   render(<SignAgreementForm defaultName="Marisol Vega" submitting={false} error={error} onSubmit={onSubmit} />)
   return onSubmit
+}
+
+/** The form as its page holds it: an attempt goes out, and its failure comes back as a prop. */
+function renderAttempt() {
+  const form = (error: unknown, submitting = false) => (
+    <SignAgreementForm defaultName="Marisol Vega" submitting={submitting} error={error} onSubmit={vi.fn()} />
+  )
+  const { rerender, unmount } = render(form(null))
+  return {
+    unmount,
+    sending: () => rerender(form(null, true)),
+    refuse: (error: unknown) => rerender(form(error)),
+  }
+}
+
+async function signWithDrawing(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'draw' }))
+  await user.click(consent())
+  await user.click(submit())
 }
 
 const consent = () => screen.getByRole('checkbox', { name: /I have read this rental agreement/ })
@@ -67,18 +94,11 @@ describe('SignAgreementForm', () => {
 
   it("shows the API's refusal of a drawing under the pad, and anything else beside the button", async () => {
     const user = userEvent.setup({ delay: null })
-    const { unmount } = render(
-      <SignAgreementForm
-        defaultName="Marisol Vega"
-        submitting={false}
-        error={new ApiError('validation', 'no', { status: 422, code: 'signature_invalid' })}
-        onSubmit={vi.fn()}
-      />,
-    )
-    await user.click(screen.getByRole('button', { name: 'draw' }))
-    await user.click(consent())
-    await user.click(submit())
-    expect(screen.getByText("We couldn't read that signature. Clear it and try again.")).toBeInTheDocument()
+    const { refuse, unmount } = renderAttempt()
+
+    await signWithDrawing(user)
+    refuse(UNREADABLE)
+    expect(screen.getByText(REFUSAL)).toBeInTheDocument()
     unmount()
 
     renderForm(new ApiError('conflict', 'The booking is cancelled', { status: 409, code: 'booking_cancelled' }))
@@ -87,23 +107,41 @@ describe('SignAgreementForm', () => {
 
   it('drops a refusal of the drawing once the renter signs another way', async () => {
     const user = userEvent.setup({ delay: null })
-    const refusal = "We couldn't read that signature. Clear it and try again."
-    renderForm(new ApiError('validation', 'no', { status: 422, code: 'signature_invalid' }))
+    const { refuse } = renderAttempt()
     const typed = screen.getByRole('checkbox', { name: 'Use my typed name as my signature instead' })
 
-    // Before anything is sent from this form, the refusal is of an earlier attempt's drawing.
-    expect(screen.queryByText(refusal)).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'draw' }))
-    await user.click(consent())
-    await user.click(submit())
-    expect(screen.getByText(refusal)).toBeInTheDocument()
+    await signWithDrawing(user)
+    refuse(UNREADABLE)
+    expect(screen.getByText(REFUSAL)).toBeInTheDocument()
 
     await user.click(typed)
     expect(screen.getByText('Your typed name will be recorded as your signature.')).toBeInTheDocument()
-    expect(screen.queryByText(refusal)).not.toBeInTheDocument()
+    expect(screen.queryByText(REFUSAL)).not.toBeInTheDocument()
 
     // Back to an empty pad: the drawing that was refused is gone, and so is its refusal.
     await user.click(typed)
-    expect(screen.queryByText(refusal)).not.toBeInTheDocument()
+    expect(screen.queryByText(REFUSAL)).not.toBeInTheDocument()
+  })
+
+  it('still says why signing failed when the renter drew on while it was being sent', async () => {
+    const user = userEvent.setup({ delay: null })
+    const { sending, refuse } = renderAttempt()
+
+    await signWithDrawing(user)
+    sending()
+    await user.click(screen.getByRole('button', { name: 'draw more' }))
+    refuse(UNREADABLE)
+    // The pad no longer holds what was sent, but the renter has not seen this refusal yet.
+    expect(screen.getByText(REFUSAL)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'draw' }))
+    expect(screen.queryByText(REFUSAL)).not.toBeInTheDocument()
+  })
+
+  it("does not greet a reopened form with the last one's refusal", () => {
+    // The counter's dialog keeps its last error while closed; the pad it reopens with is empty.
+    renderForm(UNREADABLE)
+
+    expect(screen.queryByText(REFUSAL)).not.toBeInTheDocument()
   })
 })

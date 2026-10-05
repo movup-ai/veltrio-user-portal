@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError } from '@/types/api'
-import { shownTemplateId, templateChoice } from './agreement-template.utils'
+import { isChoiceUnchecked, shownTemplateId, templateChoice } from './agreement-template.utils'
 import {
   contractFileName,
   contractLinkUrl,
@@ -69,10 +69,11 @@ describe('picking a template for a booking', () => {
     expect(templateChoice('deleted', templates)).toBeUndefined()
   })
 
-  it('sends a choice as it stands while the list is unavailable, rather than drop it for the default', () => {
-    // A resumed draft's choice, submitted before the list loaded or after it failed to.
-    expect(templateChoice('vans', undefined)).toBe('vans')
-    expect(templateChoice('', undefined)).toBeUndefined()
-    expect(templateChoice(undefined, undefined)).toBeUndefined()
+  it("holds a draft's choice until the list can check it, rather than send or drop it unseen", () => {
+    // Sent unchecked it could pin the booking to today's default; dropped, it changes the terms.
+    expect(isChoiceUnchecked('vans', undefined)).toBe(true)
+    expect(isChoiceUnchecked('vans', templates)).toBe(false)
+    expect(isChoiceUnchecked('', undefined)).toBe(false)
+    expect(isChoiceUnchecked(undefined, undefined)).toBe(false)
   })
 })
