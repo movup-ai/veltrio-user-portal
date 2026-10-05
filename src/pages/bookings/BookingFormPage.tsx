@@ -576,7 +576,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
         additionalDrivers: submitted.additionalDrivers,
         fees: submitted.fees,
         verifications: submitted.verifications,
-        agreementTemplateId: templateChoice(submitted.agreementTemplateId, templates ?? []),
+        agreementTemplateId: templateChoice(submitted.agreementTemplateId, templates),
       }
 
       // Wrapped in a promise so the button stays busy through the uploads too — RHF keeps
@@ -1395,7 +1395,9 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                       )}
                     </FormField>
                   ) : (
-                    <p className="text-fg-4 text-[14px]">{t('form.review.agreementDefault')}</p>
+                    <p className="text-fg-4 text-[14px]">
+                      {t(values.agreementTemplateId ? 'form.review.agreementKept' : 'form.review.agreementDefault')}
+                    </p>
                   )}
                 </ReviewSection>
               </div>

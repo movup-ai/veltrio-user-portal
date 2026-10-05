@@ -68,4 +68,11 @@ describe('picking a template for a booking', () => {
     // A draft can outlive the template it named; the API would refuse the dead id.
     expect(templateChoice('deleted', templates)).toBeUndefined()
   })
+
+  it('sends a choice as it stands while the list is unavailable, rather than drop it for the default', () => {
+    // A resumed draft's choice, submitted before the list loaded or after it failed to.
+    expect(templateChoice('vans', undefined)).toBe('vans')
+    expect(templateChoice('', undefined)).toBeUndefined()
+    expect(templateChoice(undefined, undefined)).toBeUndefined()
+  })
 })

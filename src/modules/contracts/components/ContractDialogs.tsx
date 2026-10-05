@@ -178,8 +178,14 @@ export function ChangeTemplateDialog({ reference, currentId, open, onOpenChange 
   const [picked, setPicked] = useState<string>()
   const templateId = picked ?? currentId
 
+  // Closing clears it, saved or not: a cancelled pick must not be one click from saving next time.
+  function close() {
+    setPicked(undefined)
+    onOpenChange(false)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('template.title')}</DialogTitle>
@@ -208,13 +214,13 @@ export function ChangeTemplateDialog({ reference, currentId, open, onOpenChange 
           </FormField>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={change.isPending}>
+          <Button variant="outline" onClick={close} disabled={change.isPending}>
             {tCommon('actions.cancel')}
           </Button>
           <Button
             disabled={!templateId || templateId === currentId}
             loading={change.isPending}
-            onClick={() => templateId && change.mutate(templateId, { onSuccess: () => onOpenChange(false) })}
+            onClick={() => templateId && change.mutate(templateId, { onSuccess: close })}
           >
             {t('template.save')}
           </Button>

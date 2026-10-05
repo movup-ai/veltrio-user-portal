@@ -28,15 +28,19 @@ export function SignAgreementForm({ defaultName, submitting, error, onSubmit }: 
   const typedId = useId()
   const [draft, setDraft] = useState<SignatureDraft>({ name: defaultName, consent: false, typed: false })
   const [attempted, setAttempted] = useState(false)
+  // The drawing last sent: the API's refusal of a drawing is of that one, not of what replaced it.
+  const [sent, setSent] = useState<string>()
 
   const problems = attempted ? signatureProblems(draft) : {}
   const refused = error ? (drawingProblem(error) ?? 'failed') : undefined
-  const signatureError = problems.signature ?? (refused && refused !== 'failed' ? refused : undefined)
+  const stillShown = Boolean(draft.drawing) && draft.drawing === sent
+  const signatureError = problems.signature ?? (refused && refused !== 'failed' && stillShown ? refused : undefined)
 
   function submit(event: React.FormEvent) {
     event.preventDefault()
     setAttempted(true)
     if (Object.keys(signatureProblems(draft)).length > 0) return
+    setSent(draft.drawing)
     onSubmit({ signerName: draft.name, signature: draft.drawing })
   }
 

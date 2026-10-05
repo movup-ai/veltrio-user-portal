@@ -430,7 +430,8 @@
       "agreement": "Rental agreement",
       "agreementTemplate": "Terms",
       "agreementHint": "The terms the renter will sign. They can be changed until the agreement is signed.",
-      "agreementDefault": "Your company's default terms will be used."
+      "agreementDefault": "Your company's default terms will be used.",
+      "agreementKept": "The terms already chosen for this booking will be used."
     },
     "draft": {
       "save": "Save draft",
