@@ -252,17 +252,32 @@
     },
     "agreement": {
       "title": "Rental agreement",
-      "signedNote": "Signed {{when}} · {{method}}",
+      "rows": {
+        "renter": "Renter",
+        "company": "Company",
+        "terms": "Terms"
+      },
+      "renterSigned": "{{name}} · {{when}} · {{method}}",
       "unsignedNote": "Not signed yet",
       "method": {
-        "eSignature": "e-signature",
-        "counter": "signed at the counter"
+        "e_signature": "e-signature",
+        "counter": "at the counter"
       },
-      "terms": "Terms {{version}}",
+      "template": "{{name}} · revision {{revision}}",
       "blockingHandover": "The keys can't be handed over until this is signed.",
       "view": "View",
       "download": "Download",
-      "send": "Send for signature"
+      "send": "Send for signature",
+      "signAtCounter": "Sign at the counter",
+      "more": "More agreement actions",
+      "changeTemplate": "Change the terms",
+      "shareCopy": "Share the renter's copy",
+      "void": "Void agreement",
+      "badge": {
+        "none": "Not sent",
+        "issued": "Awaiting signature",
+        "signed": "Signed"
+      }
     },
     "activity": {
       "title": "Activity"
@@ -276,7 +291,7 @@
     },
     "actions": {
       "checkIn": "Check in",
-      "printAgreement": "Print agreement",
+      "openAgreement": "Open agreement",
       "messageRenter": "Message renter",
       "pendingApi": "This needs the bookings API, which isn't live yet.",
       "returnVehicle": "Return vehicle"
@@ -411,7 +426,12 @@
       "noVerification": "No check run.",
       "drivers": "Additional drivers",
       "noDrivers": "No additional drivers.",
-      "fees": "Additional fees"
+      "fees": "Additional fees",
+      "agreement": "Rental agreement",
+      "agreementTemplate": "Terms",
+      "agreementHint": "The terms the renter will sign. They can be changed until the agreement is signed.",
+      "agreementDefault": "Your company's default terms will be used.",
+      "agreementUnchecked": "We couldn't load your agreement templates, so the terms saved with this draft can't be confirmed. Try again to continue."
     },
     "draft": {
       "save": "Save draft",

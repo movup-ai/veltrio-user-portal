@@ -5,8 +5,6 @@ import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
 import {
   BOOKING_STAGES,
   type Booking,
-  type BookingAgreement,
-  type BookingContract,
   type BookingChargeLine,
   type BookingCheckStep,
   type BookingDetails,
@@ -27,7 +25,6 @@ const DEFAULT_MILES_PER_DAY = 150
 const RESERVED_DAYS_BEFORE = 5
 
 /** Terms revision in force. Stamped on the booking so an old one reads against its own terms. */
-const AGREEMENT_VERSION = 'v3.2'
 
 /**
  * How far along the rental is, by status. Index into BOOKING_STAGES: 1 means Reserved is behind
@@ -140,24 +137,6 @@ function buildChecks(stageIndex: number): BookingCheckStep[] {
     { key: 'identity', done: stageIndex >= 1 },
     { key: 'insurance', done: stageIndex >= 3 },
   ]
-}
-
-/** The contract goes out for signature when the booking is confirmed. */
-function buildAgreement(
-  stageIndex: number,
-  confirmedAt: string | undefined,
-  contract?: BookingContract,
-): BookingAgreement {
-  // The booking's own contract row when there is one; seeded rows have none and still infer it.
-  const signedAt = contract ? contract.signedAt : stageIndex >= 2 ? confirmedAt : undefined
-  const signed = Boolean(signedAt)
-
-  return {
-    signed,
-    signedAt,
-    method: signed ? 'eSignature' : undefined,
-    version: AGREEMENT_VERSION,
-  }
 }
 
 function buildEvents(
@@ -290,8 +269,8 @@ export function exactCharges(booking: Booking): BookingChargeLine[] {
  * `context` carries the real vehicle and branch when the caller has them, so a live booking
  * shows its actual photo, address and agent rather than whatever the seeds happen to hold.
  *
- * Mock scaffolding either way: the timeline, agreement and audit trail have no
- * endpoints yet, so they're derived from the status and the rental window.
+ * Mock scaffolding either way: the timeline and audit trail have no endpoints yet, so
+ * they're derived from the status and the rental window.
  */
 /** The real records behind a live booking, where the caller has fetched them. */
 export interface BookingDetailsContext {
@@ -365,7 +344,6 @@ export function buildBookingDetails(
 
     charges: booking ? exactCharges(booking) : buildCharges(total, days, listDailyRate, taxRatePct, []),
     total,
-    agreement: buildAgreement(stageIndex, stages[1].at, booking?.contract),
     checks: buildChecks(stageIndex),
     events: buildEvents(reference, stages, renter, plate, agent, deposit, depositHeld),
     renter,

@@ -14,6 +14,7 @@ export type Permission =
   | 'bookings.create'
   | 'bookings.update'
   | 'bookings.cancel'
+  | 'contracts.void'
   | 'customers.read'
   | 'customers.create'
   | 'customers.update'

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { CarFront, CircleAlert, CircleCheck, Clock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useFormatters } from '@/i18n'
+import { cn } from '@/lib/utils'
 import { useDomainLabels } from '@/i18n/domain'
 import type { PublicPayment } from '../types/booking-payment.types'
 
@@ -11,10 +12,15 @@ export type TripDetails = Pick<
   'vehicleName' | 'vehiclePhotoUrl' | 'vehicleSpecs' | 'pickupAt' | 'returnAt' | 'pickupLocation'
 >
 
-/** The card a renter's public page sits in: payment, deposit or receipt. */
-export function PublicPanel({ children }: { children: ReactNode }) {
+/** The card a renter's public page sits in: payment, deposit, receipt or agreement. */
+export function PublicPanel({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="border-border bg-card flex w-full max-w-[480px] flex-col gap-5 rounded-[14px] border p-6 shadow-sm sm:p-7">
+    <div
+      className={cn(
+        'border-border bg-card flex w-full max-w-[480px] flex-col gap-5 rounded-[14px] border p-6 shadow-sm sm:p-7',
+        className,
+      )}
+    >
       {children}
     </div>
   )

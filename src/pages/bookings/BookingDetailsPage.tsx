@@ -7,8 +7,8 @@ import {
   ArrowUpRight,
   CarFront,
   ExternalLink,
+  FileText,
   Mail,
-  Printer,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
 import { useFormatters } from '@/i18n'
 import { BookingActivity } from '@/modules/bookings/components/BookingActivity'
-import { BookingAgreementCard } from '@/modules/bookings/components/BookingAgreementCard'
+import { BookingAgreementSection } from '@/modules/bookings/components/BookingAgreementSection'
 import { BookingChecklist } from '@/modules/bookings/components/BookingChecklist'
 import { BookingHandoverAction } from '@/modules/bookings/components/BookingHandoverAction'
 import { BookingManagePanel } from '@/modules/bookings/components/BookingManagePanel'
@@ -42,6 +42,7 @@ import {
 } from '@/modules/bookings/hooks/use-verification'
 import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
+import { useContractPdfOpener } from '@/modules/contracts/hooks/use-booking-contract'
 import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
 import {
   PROVIDER_KINDS,
@@ -95,6 +96,7 @@ export function BookingDetailsPage() {
   // Still heard when a sent link is finished in this browser, such as one the desk opened.
   useInsuranceResults()
   const insuranceLink = useInsuranceLinkDialog()
+  const agreementPdf = useContractPdfOpener(bookingId ?? '')
 
   const verifications: Partial<Record<ProviderKind, BookingVerification>> = { background, insurance }
 
@@ -191,9 +193,10 @@ export function BookingDetailsPage() {
         actions={
           <>
             <PageActionButton
-              icon={Printer}
-              label={t('details.actions.printAgreement')}
-              onClick={() => window.print()}
+              icon={FileText}
+              label={t('details.actions.openAgreement')}
+              disabled={agreementPdf.isPending}
+              onClick={() => agreementPdf.open()}
             />
             <PageActionButton
               icon={Mail}
@@ -317,11 +320,7 @@ export function BookingDetailsPage() {
             days={booking.days}
           />
 
-          <BookingAgreementCard
-            agreement={booking.agreement}
-            reference={booking.reference}
-            onAction={(action) => pending(t(`details.agreement.${action}`))}
-          />
+          <BookingAgreementSection reference={booking.reference} renter={booking.renter} />
 
           {/* Nothing here applies once the car is back and the paperwork is closed — you can't
               extend or cancel a rental that has already finished. */}

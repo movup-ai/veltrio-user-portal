@@ -5,14 +5,17 @@ export interface HandoverButton {
   rule: PaymentActionRule
 }
 
-/** Still waiting for the keys to change hands, whether or not it is paid for yet. */
+/** What pickup can still be waiting for; any other refusal means the car has already gone out. */
+const WAITING_FOR = ['not_fully_paid', 'contract_unsigned']
+
+/** Still waiting for the keys to change hands, whether or not it is paid for and signed yet. */
 export function isBeforePickup(actions: Pick<PaymentActions, 'pickUp'>): boolean {
-  return actions.pickUp.allowed || actions.pickUp.reason === 'not_fully_paid'
+  return actions.pickUp.allowed || WAITING_FOR.includes(actions.pickUp.reason ?? '')
 }
 
 /**
  * Check in before pickup, Return while the car is out, nothing after. Check in shows before the
- * booking is fully paid too, switched off, so the counter sees what it waits for.
+ * booking is fully paid and signed too, switched off, so the counter sees what it waits for.
  */
 export function handoverButton(
   actions: Pick<PaymentActions, 'pickUp' | 'returnVehicle'>,

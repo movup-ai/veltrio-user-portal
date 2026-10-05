@@ -400,6 +400,7 @@ export function toBookingPayload(input: BookingInput) {
     })),
     fees: input.fees.map((f) => ({ id: f.id, label: f.label.trim(), amountCents: toCents(f.amount) })),
     verifications: input.verifications,
+    ...(input.agreementTemplateId && { agreementTemplateId: input.agreementTemplateId }),
   }
 }
 

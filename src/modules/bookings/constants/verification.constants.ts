@@ -13,9 +13,6 @@ export type StandaloneCheck = (typeof STANDALONE_CHECKS)[number]['kind']
 /** How often to re-ask while a provider is still working — the same shape as the photo poll. */
 export const VERIFICATION_POLL_MS = 15_000
 
-/** Long enough for the new tab to have loaded a report's blob before its URL is released. */
-export const REVOKE_AFTER_MS = 60_000
-
 /** The status label beside a check, on the checklist tile and the booking-form card alike. */
 export const TONE_LABEL: Record<VerificationTone, string> = {
   success: 'text-success',

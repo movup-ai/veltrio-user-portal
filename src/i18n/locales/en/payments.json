@@ -147,6 +147,7 @@
       "not_returned": "Capture or release the deposit once the vehicle is back.",
       "not_before_pickup": "The vehicle has already been picked up.",
       "not_fully_paid": "Pickup needs the rental paid and the deposit on hold.",
+      "contract_unsigned": "Pickup waits until the rental agreement is signed.",
       "not_on_rental": "The vehicle isn't out on this booking."
     },
     "receipt": {

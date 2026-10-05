@@ -9,6 +9,7 @@ import {
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { useDebounced } from '@/lib/use-debounced'
+import { usePdfOpener } from '@/lib/use-pdf-opener'
 import { normalizeApiError } from '@/services/api/errors'
 import type { PaginationParams } from '@/types/common'
 import type {
@@ -19,7 +20,7 @@ import type {
   VerificationOrder,
 } from '../api/booking.mapper'
 import { verificationApi, type CoverWindow } from '../api/verification.api'
-import { REVOKE_AFTER_MS, VERIFICATION_POLL_MS } from '../constants/verification.constants'
+import { VERIFICATION_POLL_MS } from '../constants/verification.constants'
 import {
   TERMINAL_VERIFICATION_STATUSES,
   type ProviderKind,
@@ -138,63 +139,23 @@ export function useOrderVerification(reference: string) {
 }
 
 
-/**
- * Opens a report PDF in a new tab. A mutation rather than a query: it is an action the
- * counter takes, and the blob is not worth caching.
- *
- * Call `open` straight from the click: the tab opens there, before the mutation's own awaits,
- * since some browsers block a tab opened a tick after the click. The object URL is revoked on
- * a timer rather than immediately - revoking it synchronously can race the new tab.
- */
-function useReportOpener<TArg = void>(fetchPdf: (arg: TArg) => Promise<Blob>) {
-  const mutation = useMutation({
-    mutationFn: async ({ arg, tab }: { arg: TArg; tab: Window | null }) => {
-      try {
-        const pdf = await fetchPdf(arg)
-        const url = URL.createObjectURL(pdf)
-        if (tab) {
-          // Severed here rather than by `noopener` above, which costs us the handle.
-          tab.opener = null
-          tab.location.href = url
-        } else {
-          const link = document.createElement('a')
-          link.href = url
-          link.download = 'background-check.pdf'
-          link.click()
-        }
-        setTimeout(() => URL.revokeObjectURL(url), REVOKE_AFTER_MS)
-      } catch (error) {
-        tab?.close()
-        throw error
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: i18n.t('bookings:verification.toast.reportFailed'),
-        description: normalizeApiError(error).message,
-        variant: 'error',
-      })
-    },
-  })
-
-  return {
-    open: (arg: TArg) => mutation.mutate({ arg, tab: window.open('', '_blank') }),
-    isPending: mutation.isPending,
-  }
+const REPORT_PDF = {
+  fallbackName: 'background-check.pdf',
+  errorTitle: () => i18n.t('bookings:verification.toast.reportFailed'),
 }
 
 export function useVerificationReport(reference: string) {
-  return useReportOpener(() => verificationApi.report(reference))
+  return usePdfOpener(() => verificationApi.report(reference), REPORT_PDF)
 }
 
 /** The renter's report, opened from the booking form before a booking exists. */
 export function useVerificationReportByEmail(email: string | undefined) {
-  return useReportOpener(() => {
+  return usePdfOpener(() => {
     // Interpolating an empty value would request a plausible-looking URL that only 404s,
     // which reads as a broken button rather than a missing renter.
     if (!email) throw new Error('No renter to fetch a report for')
     return verificationApi.reportForEmail(email)
-  })
+  }, REPORT_PDF)
 }
 
 /** The verification log, one page at a time. */
@@ -263,7 +224,10 @@ export function useDeleteVerification() {
 
 /** Opens a report from the log, where a standalone check has no renter to key on. */
 export function useVerificationReportById() {
-  return useReportOpener((verificationId: string) => verificationApi.reportById(verificationId))
+  return usePdfOpener(
+    (verificationId: string) => verificationApi.reportById(verificationId),
+    REPORT_PDF,
+  )
 }
 
 /** What the return tab tells the tab the counter started from, which is the one left open. */

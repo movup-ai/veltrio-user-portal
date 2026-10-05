@@ -478,3 +478,22 @@ describe('booking details renter', () => {
     expect(buildBookingDetails(bookingToTuple(booking), booking).renter.dateOfBirth).toBe('1991-04-17')
   })
 })
+
+describe('toBookingPayload agreement template', () => {
+  const input: BookingInput = {
+    customer: { name: 'Marisol Vega', email: 'marisol@example.com', phone: '+1 305 442 0118', licenceNumber: 'X' },
+    vehicleId: 'v1',
+    pickupLocation: 'Downtown',
+    returnLocation: 'Downtown',
+    pickupAt: '2026-10-01T13:30:00Z',
+    returnAt: '2026-10-05T13:30:00Z',
+    additionalDrivers: [],
+    fees: [],
+    verifications: [],
+  }
+
+  it('names the template only when one was picked, so other bookings follow the default', () => {
+    expect('agreementTemplateId' in toBookingPayload(input)).toBe(false)
+    expect(toBookingPayload({ ...input, agreementTemplateId: 'tpl_2' }).agreementTemplateId).toBe('tpl_2')
+  })
+})

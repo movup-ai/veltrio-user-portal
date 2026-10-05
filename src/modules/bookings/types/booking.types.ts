@@ -212,6 +212,8 @@ export interface BookingInput {
   additionalDrivers: AdditionalDriver[]
   fees: BookingFee[]
   verifications: VerificationKind[]
+  /** The terms the renter will sign. Absent, the booking follows the company's default. */
+  agreementTemplateId?: string
 }
 
 /** One rate the rental was billed at, as it was when booked: "Daily × 3". */
@@ -381,16 +383,6 @@ export interface BookingVerification {
   updatedAt: string
 }
 
-/** The contract itself, which is a document to chase rather than a check to tick. */
-export interface BookingAgreement {
-  signed: boolean
-  signedAt?: string
-  /** How it was signed — only set once it has been. */
-  method?: 'eSignature' | 'counter'
-  /** Terms revision the renter agreed to, so an old booking can be read against its own terms. */
-  version: string
-}
-
 /**
  * One line of the charges breakdown. `extraFee` carries the label the counter typed, and a live
  * booking's `baseRate` lines the rate's own name; everything else is named by
@@ -466,7 +458,6 @@ export interface BookingDetails {
 
   charges: BookingChargeLine[]
   total: number
-  agreement: BookingAgreement
   checks: BookingCheckStep[]
   events: BookingEventEntry[]
   renter: BookingRenter

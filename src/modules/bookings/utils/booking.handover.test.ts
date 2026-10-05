@@ -12,6 +12,16 @@ describe('handoverButton', () => {
     })
   })
 
+  it('keeps Check in on show, switched off, while only the signature is missing', () => {
+    // Paid but unsigned: dropping the button here would hide what the counter is waiting for.
+    const unsigned = { allowed: false, reason: 'contract_unsigned' } as const
+    expect(handoverButton({ pickUp: unsigned, returnVehicle: NOT_OUT })).toEqual({
+      action: 'pickUp',
+      rule: unsigned,
+    })
+    expect(isBeforePickup({ pickUp: unsigned })).toBe(true)
+  })
+
   it('offers Check in once fully paid', () => {
     expect(handoverButton({ pickUp: { allowed: true }, returnVehicle: NOT_OUT })?.action).toBe('pickUp')
   })
