@@ -42,6 +42,8 @@ export interface PaymentActions {
   releaseDeposit: PaymentActionRule
   pickUp: PaymentActionRule
   returnVehicle: PaymentActionRule
+  /** Closing the booking off after return, which waits for the deposit to be settled. */
+  close: PaymentActionRule
 }
 
 /** Where a booking's money stands. */

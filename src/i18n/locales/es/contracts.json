@@ -129,7 +129,8 @@
     "booking_cancelled": "La reserva está cancelada.",
     "not_before_pickup": "El vehículo ya se recogió.",
     "already_signed": "El contrato ya está firmado.",
-    "not_issued": "Aún no se ha emitido ningún contrato."
+    "not_issued": "Aún no se ha emitido ningún contrato.",
+    "not_confirmed": "El contrato se podrá enviar cuando se confirme la reserva."
   },
   "toast": {
     "issueFailed": "No se pudo preparar el contrato",

@@ -137,6 +137,20 @@ describe('BookingAgreementSection', () => {
     expect(screen.queryByText("The keys can't be handed over until this is signed.")).not.toBeInTheDocument()
   })
 
+  it('offers nothing to send, sign or open on a reservation still waiting to be confirmed', async () => {
+    const waiting = { allowed: false, reason: 'not_confirmed' } as const
+    get.mockResolvedValue({ ...NONE, actions: { ...NONE.actions, sign: waiting, changeTemplate: waiting } })
+    renderSection()
+
+    expect(
+      await screen.findByText('The agreement can be sent once the reservation is confirmed.'),
+    ).toBeInTheDocument()
+    for (const name of ['View', 'Send for signature', 'Sign at the counter']) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
+    }
+    expect(await row('Terms')).toHaveTextContent('Standard rental agreement · revision 3')
+  })
+
   it('shows who signed and how, and offers the download in place of sending', async () => {
     get.mockResolvedValue(SIGNED)
     renderSection()

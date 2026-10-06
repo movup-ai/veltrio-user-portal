@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { useFormatters } from '@/i18n'
 import type { BookingContract } from '@/modules/contracts/types/booking-contract.types'
 import { contractFileName } from '@/modules/contracts/utils/booking-contract.utils'
+import { awaitsConfirmation } from '../utils/booking.handover'
 
 export type AgreementAction = 'view' | 'download' | 'send' | 'signAtCounter' | 'changeTemplate' | 'shareCopy' | 'void'
 
@@ -38,6 +39,7 @@ export function BookingAgreementCard({ contract, reference, canVoid, busy, onAct
   const signed = contract.status === 'signed'
   const { sign, changeTemplate } = contract.actions
   const signHint = sign.reason ? tContracts(`reasons.${sign.reason}`) : undefined
+  const unconfirmed = awaitsConfirmation(sign)
 
   const renter = signed
     ? t('details.agreement.renterSigned', {
@@ -112,62 +114,65 @@ export function BookingAgreementCard({ contract, reference, canVoid, busy, onAct
           ))}
         </dl>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            loading={busy === 'view'}
-            onClick={() => onAction('view')}
-            className="gap-1.5"
-          >
-            <FileText className="size-3.5" aria-hidden />
-            {t('details.agreement.view')}
-          </Button>
-          {signed ? (
+        {!unconfirmed && (
+          <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              loading={busy === 'download'}
-              onClick={() => onAction('download')}
+              loading={busy === 'view'}
+              onClick={() => onAction('view')}
               className="gap-1.5"
             >
-              <FileDown className="size-3.5" aria-hidden />
-              {t('details.agreement.download')}
+              <FileText className="size-3.5" aria-hidden />
+              {t('details.agreement.view')}
             </Button>
-          ) : (
-            <Button
-              type="button"
-              size="sm"
-              disabled={!sign.allowed}
-              title={signHint}
-              loading={busy === 'send'}
-              onClick={() => onAction('send')}
-              className="gap-1.5"
-            >
-              <Send className="size-3.5" aria-hidden />
-              {t('details.agreement.send')}
-            </Button>
-          )}
-          {!signed && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!sign.allowed}
-              title={signHint}
-              loading={busy === 'signAtCounter'}
-              onClick={() => onAction('signAtCounter')}
-              className="col-span-2 gap-1.5"
-            >
-              <Tablet className="size-3.5" aria-hidden />
-              {t('details.agreement.signAtCounter')}
-            </Button>
-          )}
-        </div>
+            {signed ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                loading={busy === 'download'}
+                onClick={() => onAction('download')}
+                className="gap-1.5"
+              >
+                <FileDown className="size-3.5" aria-hidden />
+                {t('details.agreement.download')}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                disabled={!sign.allowed}
+                title={signHint}
+                loading={busy === 'send'}
+                onClick={() => onAction('send')}
+                className="gap-1.5"
+              >
+                <Send className="size-3.5" aria-hidden />
+                {t('details.agreement.send')}
+              </Button>
+            )}
+            {!signed && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!sign.allowed}
+                title={signHint}
+                loading={busy === 'signAtCounter'}
+                onClick={() => onAction('signAtCounter')}
+                className="col-span-2 gap-1.5"
+              >
+                <Tablet className="size-3.5" aria-hidden />
+                {t('details.agreement.signAtCounter')}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
+      {unconfirmed && <p className="text-fg-4 m-0 mt-2.5 text-[12px]">{signHint}</p>}
       {!signed && sign.allowed && (
         <p className="text-fg-4 m-0 mt-2.5 flex items-center gap-1.5 text-[12px]">
           <PenLine className="size-3.5 shrink-0" aria-hidden />

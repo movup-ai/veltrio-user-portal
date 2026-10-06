@@ -15,7 +15,6 @@
       "All": "Todas",
       "Upcoming": "Próximas",
       "Today": "Hoy",
-      "Recent activity": "Actividad reciente",
       "Overdue": "Vencidas",
       "Drafts": "Borradores"
     },
@@ -113,30 +112,33 @@
     "progress": {
       "title": "Progreso del alquiler",
       "stageOf": "Etapa {{current}} de {{total}}",
+      "endedAt": "Terminó en {{stage}}",
       "scheduled": "Programada {{when}}",
       "due": "Vence {{when}}",
+      "done": "Hecho",
+      "notReached": "No se alcanzó",
       "waiting": {
         "reserved": "Aún sin reservar",
         "confirmed": "Pendiente de confirmación",
         "pickedUp": "Aún sin recoger",
         "returned": "Aún sin devolver",
-        "closed": "Pendiente de devolución"
+        "closed": "Aún sin cerrar"
       }
     },
     "pickup": {
       "title": "Recogida",
-      "counter": "Mostrador",
-      "desk": "Puesto {{number}} · {{agent}}",
-      "fuelOut": "Combustible de salida",
-      "fuelPolicy": "Lleno · mismo nivel"
+      "handedOver": "Entregado",
+      "notYet": "Aún no"
     },
     "return": {
       "title": "Devolución",
       "sameBranch": "misma sucursal",
       "oneWay": "devolución en otra sucursal",
+      "returned": "Devuelto",
       "duration": "Duración",
       "days_one": "{{count}} día",
       "days_other": "{{count}} días",
+      "hours": "{{count}} h",
       "mileageCap": "Límite de millas",
       "milesIncluded": "{{count}} mi incluidas"
     },
@@ -290,26 +292,86 @@
       "vehicleAssigned": "Vehículo asignado"
     },
     "actions": {
-      "checkIn": "Registrar entrada",
+      "handOver": "Entregar vehículo",
+      "closeBooking": "Cerrar reserva",
+      "waitingFor": "En espera de",
+      "needs": {
+        "payment": "Pago",
+        "deposit": "Retención del depósito",
+        "signature": "Contrato firmado",
+        "settlement": "Liberar o ejecutar el depósito"
+      },
+      "confirm": "Confirmar reserva",
+      "decline": "Rechazar",
       "openAgreement": "Abrir contrato",
       "messageRenter": "Escribir al arrendatario",
       "pendingApi": "Esto necesita la API de reservas, que aún no está disponible.",
+      "restore": "Restaurar reserva",
       "returnVehicle": "Devolver vehículo"
     },
     "cancelDialog": {
       "title": "¿Cancelar esta reserva?",
       "description": "{{reference}} de {{name}} se liberará y el vehículo quedará disponible para otros alquileres.",
       "confirm": "Cancelar reserva"
+    },
+    "request": {
+      "title": "Solicitud del arrendatario",
+      "subtitle": "Lo que pidió el arrendatario al reservar en línea.",
+      "paymentPreference": "Prefiere pagar",
+      "notes": "Nota",
+      "preference": {
+        "online_rental_and_deposit": "En línea, alquiler y depósito",
+        "online_rental_only": "Alquiler en línea, depósito en el mostrador",
+        "cash": "En el mostrador"
+      }
+    },
+    "declineDialog": {
+      "title": "¿Rechazar esta reserva?",
+      "description": "{{reference}} de {{name}} se cancelará. Puedes restaurarla hasta su hora de recogida.",
+      "withdrawsLink": "El enlace de pago que ya se le envió dejará de funcionar.",
+      "reason": "Motivo",
+      "reasonRequired": "Elige un motivo.",
+      "message": "Mensaje para el arrendatario",
+      "messageHint": "Opcional. Se envía por correo al arrendatario junto con el motivo.",
+      "confirm": "Rechazar reserva"
+    },
+    "restoreDialog": {
+      "title": "¿Restaurar esta reserva?",
+      "description": "{{reference}} vuelve a Pendiente para que la confirmes o la rechaces de nuevo, y se avisa a {{name}} por correo de que está en revisión. Un enlace de pago retirado al rechazarla sigue cancelado.",
+      "confirm": "Restaurar reserva"
+    },
+    "declined": {
+      "title": "Reserva rechazada",
+      "subtitle": "Rechazada el {{date}}.",
+      "reason": "Motivo",
+      "message": "Mensaje para el arrendatario",
+      "reasons": {
+        "dates_unavailable": "Fechas ya no disponibles",
+        "vehicle_unavailable": "Vehículo no disponible",
+        "renter_not_verified": "No se pudo verificar al arrendatario",
+        "other": "Otro"
+      }
     }
   },
   "toast": {
     "created": "Reserva creada",
     "createdDescription": "{{reference}} para {{name}} ya está en la agenda.",
     "createFailed": "No se pudo crear la reserva",
+    "confirmed": "Reserva confirmada",
+    "confirmFailed": "No se pudo confirmar la reserva",
+    "declined": "Reserva rechazada",
+    "declinedNotified": "Se envió el motivo a {{name}} por correo.",
+    "renterNotNotified": "El correo no está configurado, así que {{name}} no fue avisado. Escríbele tú.",
+    "declineFailed": "No se pudo rechazar la reserva",
+    "restored": "Reserva restaurada",
+    "restoredNotified": "Se avisó a {{name}} por correo de que vuelve a estar en revisión.",
+    "restoreFailed": "No se pudo restaurar la reserva",
     "pickedUp": "Vehículo entregado",
     "pickUpFailed": "No se pudo registrar la entrega",
     "returned": "Vehículo devuelto",
-    "returnFailed": "No se pudo registrar la devolución"
+    "returnFailed": "No se pudo registrar la devolución",
+    "closed": "Reserva cerrada",
+    "closeFailed": "No se pudo cerrar la reserva"
   },
   "form": {
     "title": "Nueva reserva",

@@ -48,6 +48,7 @@ const ACTIONS: PaymentActions = {
   releaseDeposit: { allowed: false, reason: 'no_deposit_held' },
   pickUp: { allowed: false, reason: 'not_fully_paid' },
   returnVehicle: { allowed: false, reason: 'not_on_rental' },
+  close: { allowed: false, reason: 'not_awaiting_close' },
 }
 
 const LINK: PaymentLink = { tenantId: 't1', token: 'secret-token', amount: 319, deposit: 0, currency: 'USD' }
@@ -143,6 +144,24 @@ beforeEach(() => vi.clearAllMocks())
 afterEach(() => useOrganizationStore.setState({ membership: null }))
 
 describe('BookingPaymentSection', () => {
+  it('asks for no money on a reservation still waiting to be confirmed', async () => {
+    const waiting = { allowed: false, reason: 'not_confirmed' } as const
+    get.mockResolvedValue({
+      ...UNPAID,
+      actions: { ...ACTIONS, sendLink: waiting, markPaid: waiting, requestDeposit: waiting },
+    })
+    renderAs([])
+
+    expect(
+      await screen.findByText('Payment and the deposit can be requested once the reservation is confirmed.'),
+    ).toBeInTheDocument()
+    for (const name of ['Send payment link', 'Mark as paid', 'Request deposit']) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
+    }
+    // The quote stays: the price is part of deciding whether to confirm.
+    expect(screen.getByText('Security deposit')).toBeInTheDocument()
+  })
+
   it('opens a payment link the counter can copy, email or text', async () => {
     get.mockResolvedValue(UNPAID)
     createLink.mockResolvedValue(LINK)

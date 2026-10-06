@@ -3,6 +3,9 @@ import type { BookingTab } from '../types/booking.types'
 /** Spacing of the pickup and return time slots, and what a new booking's default rounds up to. */
 export const BOOKING_TIME_STEP_MINUTES = 30
 
+/** Mirrors DECLINE_MESSAGE_LENGTH in the API (app/modules/bookings/models.py). */
+export const DECLINE_MESSAGE_MAX = 500
+
 /** The Drafts tab sits beside the booking tabs but draws from its own resource. */
 export const DRAFTS_TAB = 'Drafts'
 
@@ -11,6 +14,5 @@ export const EMPTY_TAB_COUNTS: Record<BookingTab, number> = {
   All: 0,
   Upcoming: 0,
   Today: 0,
-  'Recent activity': 0,
   Overdue: 0,
 }

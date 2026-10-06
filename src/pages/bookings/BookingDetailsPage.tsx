@@ -26,10 +26,14 @@ import { useFormatters } from '@/i18n'
 import { BookingActivity } from '@/modules/bookings/components/BookingActivity'
 import { BookingAgreementSection } from '@/modules/bookings/components/BookingAgreementSection'
 import { BookingChecklist } from '@/modules/bookings/components/BookingChecklist'
+import { BookingDeclinedBanner } from '@/modules/bookings/components/BookingDeclinedBanner'
 import { BookingHandoverAction } from '@/modules/bookings/components/BookingHandoverAction'
 import { BookingManagePanel } from '@/modules/bookings/components/BookingManagePanel'
 import { BookingPaymentSection } from '@/modules/bookings/components/BookingPaymentSection'
 import { BookingRenterCard } from '@/modules/bookings/components/BookingRenterCard'
+import { BookingRequestActions } from '@/modules/bookings/components/BookingRequestActions'
+import { BookingRequestBanner } from '@/modules/bookings/components/BookingRequestBanner'
+import { BookingRestoreAction } from '@/modules/bookings/components/BookingRestoreAction'
 import { BookingTripCard } from '@/modules/bookings/components/BookingTripCard'
 import { RentalProgress } from '@/modules/bookings/components/RentalProgress'
 import { useBookingDetails } from '@/modules/bookings/hooks/use-bookings'
@@ -41,8 +45,10 @@ import {
   useVerificationReport,
 } from '@/modules/bookings/hooks/use-verification'
 import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
+import { isOver, shownStatus } from '@/modules/bookings/utils/booking.utils'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
-import { useContractPdfOpener } from '@/modules/contracts/hooks/use-booking-contract'
+import { useBookingContract, useContractPdfOpener } from '@/modules/contracts/hooks/use-booking-contract'
+import { agreementIssued } from '@/modules/contracts/utils/booking-contract.utils'
 import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
 import {
   PROVIDER_KINDS,
@@ -97,6 +103,8 @@ export function BookingDetailsPage() {
   useInsuranceResults()
   const insuranceLink = useInsuranceLinkDialog()
   const agreementPdf = useContractPdfOpener(bookingId ?? '')
+  // The agreement card's own query, so the header button costs no second request.
+  const { data: contract } = useBookingContract(bookingId ?? '')
 
   const verifications: Partial<Record<ProviderKind, BookingVerification>> = { background, insurance }
 
@@ -135,7 +143,7 @@ export function BookingDetailsPage() {
 
   usePageBreadcrumb(bookingId)
   // A rental that has been returned and closed takes no more changes.
-  const stillOpen = booking != null && booking.stages.at(-1)?.state !== 'done'
+  const stillOpen = booking != null && !isOver(booking.status)
   /**
    * Every write on this page needs an endpoint that doesn't exist yet, so the ones that can't be
    * faked honestly say so rather than pretending to have worked. See booking.api.ts.
@@ -165,14 +173,19 @@ export function BookingDetailsPage() {
     )
   }
 
-  const dateTime = {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  } as const
   const closed = !stillOpen
+  const awaitingAnswer = booking.status === 'Pending'
+
+  // The trip cards show only what is on record: a handover that has not happened says so, and
+  // one that never will (a cancelled booking) is a dash rather than "not yet".
+  const happened = (at?: string) =>
+    at ? format.dateTime(at) : closed ? '—' : t('details.pickup.notYet')
+  const duration = [
+    booking.duration.days > 0 && t('details.return.days', { count: booking.duration.days }),
+    booking.duration.hours > 0 && t('details.return.hours', { count: booking.duration.hours }),
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <PageContainer>
@@ -188,16 +201,18 @@ export function BookingDetailsPage() {
           </Button>
         }
         title={booking.reference}
-        badge={<StatusBadge status={booking.status} />}
+        badge={<StatusBadge status={shownStatus(booking.status, Boolean(booking.declined))} />}
         description={`${booking.renter.name} · ${booking.vehicleName} · ${booking.pickupLocation}`}
         actions={
           <>
-            <PageActionButton
-              icon={FileText}
-              label={t('details.actions.openAgreement')}
-              disabled={agreementPdf.isPending}
-              onClick={() => agreementPdf.open()}
-            />
+            {agreementIssued(contract) && (
+              <PageActionButton
+                icon={FileText}
+                label={t('details.actions.openAgreement')}
+                disabled={agreementPdf.isPending}
+                onClick={() => agreementPdf.open()}
+              />
+            )}
             <PageActionButton
               icon={Mail}
               label={t('details.actions.messageRenter')}
@@ -206,10 +221,30 @@ export function BookingDetailsPage() {
                 window.location.href = `mailto:${booking.renter.email}?subject=${encodeURIComponent(booking.reference)}`
               }}
             />
-            <BookingHandoverAction reference={booking.reference} />
+            {/* A pending reservation holds no dates yet, so there is nothing to hand over. */}
+            {!awaitingAnswer && <BookingHandoverAction reference={booking.reference} />}
           </>
         }
       />
+
+      {awaitingAnswer && (
+        <BookingRequestBanner
+          request={booking.request}
+          actions={
+            <BookingRequestActions reference={booking.reference} renterName={booking.renter.name} />
+          }
+        />
+      )}
+      {booking.declined && (
+        <BookingDeclinedBanner
+          declined={booking.declined}
+          actions={
+            booking.declined.restorable && (
+              <BookingRestoreAction reference={booking.reference} renterName={booking.renter.name} />
+            )
+          }
+        />
+      )}
 
       <RentalProgress stages={booking.stages} />
 
@@ -219,30 +254,24 @@ export function BookingDetailsPage() {
             <BookingTripCard
               icon={ArrowUpRight}
               label={t('details.pickup.title')}
-              when={format.date(booking.pickupAt, dateTime)}
+              when={format.dateTime(booking.pickupAt)}
               place={[booking.pickupLocation, booking.pickupAddress].filter(Boolean).join(' · ')}
               rows={[
-                {
-                  label: t('details.pickup.counter'),
-                  value: t('details.pickup.desk', { number: booking.counter, agent: booking.agent }),
-                },
-                { label: t('details.pickup.fuelOut'), value: t('details.pickup.fuelPolicy') },
+                { label: t('details.pickup.handedOver'), value: happened(booking.pickedUpAt) },
+                { label: t('details.return.duration'), value: duration },
               ]}
             />
             <BookingTripCard
               icon={ArrowDownLeft}
               label={t('details.return.title')}
-              when={format.shortDate(booking.returnAt)}
+              when={format.dateTime(booking.returnAt)}
               place={
                 booking.returnSameBranch
                   ? `${booking.returnLocation} · ${t('details.return.sameBranch')}`
                   : `${booking.returnLocation} · ${t('details.return.oneWay')}`
               }
               rows={[
-                {
-                  label: t('details.return.duration'),
-                  value: t('details.return.days', { count: booking.days }),
-                },
+                { label: t('details.return.returned'), value: happened(booking.returnedAt) },
                 {
                   label: t('details.return.mileageCap'),
                   value:

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ApiError } from '@/types/api'
 import { isChoiceUnchecked, shownTemplateId, templateChoice } from './agreement-template.utils'
 import {
+  agreementIssued,
   contractFileName,
   contractLinkUrl,
   drawingProblem,
@@ -16,6 +17,14 @@ describe('contract links and files', () => {
 
   it('names the file as the API numbers the agreement', () => {
     expect(contractFileName('BK-10001')).toBe('AGR-BK-10001.pdf')
+  })
+
+  it('has a document to open only once an agreement is issued', () => {
+    expect(agreementIssued({ status: 'issued' })).toBe(true)
+    expect(agreementIssued({ status: 'signed' })).toBe(true)
+    // Before that there is only a preview, and nothing at all while the card is loading.
+    expect(agreementIssued({ status: 'none' })).toBe(false)
+    expect(agreementIssued(undefined)).toBe(false)
   })
 })
 

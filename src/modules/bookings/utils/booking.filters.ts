@@ -73,8 +73,6 @@ export function bookingsForTab(tab: BookingTab, lists: BookingLists): BookingTup
       return allBookings(lists)
     case 'Today':
       return lists.upcoming.filter((b) => bookingPickupOrdinal(b) === todayOrdinal())
-    case 'Recent activity':
-      return lists.recent
     case 'Overdue':
       return allBookings(lists).filter((b) => BOOKING_OVERDUE_STATUSES.includes(b[7]))
     case 'Upcoming':

@@ -5,6 +5,8 @@ import {
   toBookingListQuery,
   toBookingLists,
   toBookingPayload,
+  toBookingStats,
+  toDeclinePayload,
   toInterval,
   toTabCounts,
   toVerification,
@@ -68,10 +70,15 @@ const wire: BookingWire = {
     method: null,
     paidAt: null,
   },
+  paymentPreference: null,
+  notes: null,
+  declined: null,
   contract: { signedAt: null, version: null },
   verification: null,
+  confirmedAt: null,
   pickedUpAt: null,
   returnedAt: null,
+  completedAt: null,
   createdAt: '2026-09-22T10:00:00Z',
   updatedAt: '2026-09-22T10:00:00Z',
 }
@@ -183,6 +190,8 @@ describe('toBookingLists', () => {
       'v1',
       // Unpaid and unsigned in the fixture, so not ready for the keys.
       false,
+      // Nobody turned it down.
+      false,
     ])
   })
 })
@@ -268,7 +277,7 @@ describe('toBookingListQuery', () => {
   it('translates each control to its query param', () => {
     const query = toBookingListQuery({
       ...base,
-      tab: 'Recent activity',
+      tab: 'Today',
       sort: 'totalDesc',
       page: 3,
       filters: {
@@ -285,7 +294,7 @@ describe('toBookingListQuery', () => {
     expect(query).toStrictEqual({
       limit: 25,
       offset: 50,
-      tab: 'recent',
+      tab: 'today',
       sort: 'totalDesc',
       search: 'marisol',
       status: 'confirmed',
@@ -328,6 +337,24 @@ describe('toTabCounts', () => {
     const counts = toTabCounts({ upcoming: 2, today: 1, recent: 5, overdue: 1 })
 
     expect(counts.All).toBe(7)
+    // The API still splits the book in two to count it; the portal has no tab for the second half.
+    expect(Object.keys(counts)).toEqual(['All', 'Upcoming', 'Today', 'Overdue'])
+  })
+
+  it('carries how many reservations are waiting for an answer, for the sidebar', () => {
+    const stats = toBookingStats({
+      openBookings: 4,
+      startingSoon: 1,
+      expectedRevenueCents: 120_000,
+      needsAttention: 2,
+      unpaid: 1,
+      unsigned: 1,
+      ready: 1,
+      pending: 3,
+      tabCounts: { upcoming: 4, today: 0, recent: 2, overdue: 0 },
+    })
+
+    expect(stats.pending).toBe(3)
   })
 })
 
@@ -467,6 +494,99 @@ describe('isReadyForPickup', () => {
       payment: { ...wire.payment, state: 'paid' },
       contract: { signedAt: '2026-09-22T10:00:00Z', version: 'v3' },
       verification: null }))).toBe(true)
+  })
+})
+
+describe("a renter's own request", () => {
+  it('carries how they asked to pay and their note through to the details page', () => {
+    const booking = toBooking({
+      ...wire,
+      status: 'pending',
+      paymentPreference: 'cash',
+      notes: 'Arriving on a late flight.',
+    })
+
+    expect(buildBookingDetails(bookingToTuple(booking), booking).request).toEqual({
+      paymentPreference: 'cash',
+      notes: 'Arriving on a late flight.',
+    })
+  })
+
+  it('has none on a booking taken at the counter', () => {
+    // The API sends both as null there; mapped to a request, every booking would show the banner.
+    const booking = toBooking(wire)
+
+    expect(buildBookingDetails(bookingToTuple(booking), booking).request).toBeUndefined()
+  })
+
+  it('is dropped once the reservation is answered', () => {
+    // The banner is a prompt to decide; the API still returns both fields after that.
+    for (const status of ['confirmed', 'cancelled']) {
+      const booking = toBooking({ ...wire, status, paymentPreference: 'cash', notes: 'Late flight.' })
+
+      expect(buildBookingDetails(bookingToTuple(booking), booking).request).toBeUndefined()
+    }
+  })
+})
+
+describe('a declined reservation', () => {
+  const declined = {
+    reason: 'dates_unavailable' as const,
+    message: 'It is free again from the 20th.',
+    at: '2026-10-06T15:00:00Z',
+    // The API's answer on whether the decline can still be undone; the Restore button follows it.
+    restorable: true,
+  }
+
+  it('carries why it was turned down to the list row and the details page', () => {
+    const booking = toBooking({ ...wire, status: 'cancelled', declined })
+
+    expect(booking.declined).toEqual(declined)
+    expect(bookingToTuple(booking)[14]).toBe(true)
+    expect(buildBookingDetails(bookingToTuple(booking), booking).declined).toEqual(declined)
+  })
+
+  it('leaves a cancelled rental, and a decline with no message, without one', () => {
+    expect(toBooking({ ...wire, status: 'cancelled' }).declined).toBeUndefined()
+    expect(bookingToTuple(toBooking({ ...wire, status: 'cancelled' }))[14]).toBe(false)
+    const silent = toBooking({ ...wire, declined: { ...declined, message: null } })
+    expect(silent.declined).toEqual({ reason: 'dates_unavailable', at: declined.at, restorable: true })
+  })
+
+  it('sends a blank message as none, so the renter is not emailed an empty paragraph', () => {
+    expect(toDeclinePayload({ reason: 'other', message: '   ' })).toEqual({ reason: 'other', message: null })
+    expect(toDeclinePayload({ reason: 'other', message: ' Sorry. ' })).toEqual({
+      reason: 'other',
+      message: 'Sorry.',
+    })
+  })
+})
+
+describe('the pickup and return cards', () => {
+  const detailsOf = (changes: Partial<BookingWire> = {}) => {
+    const booking = toBooking({ ...wire, ...changes })
+    return buildBookingDetails(bookingToTuple(booking), booking)
+  }
+
+  it('carry when the car really changed hands, and nothing until it has', () => {
+    expect(detailsOf()).toMatchObject({ pickedUpAt: undefined, returnedAt: undefined })
+
+    const moved = { pickedUpAt: '2026-10-01T15:42:00Z', returnedAt: '2026-10-05T12:10:00Z' }
+    expect(detailsOf({ status: 'returned', ...moved })).toMatchObject(moved)
+  })
+
+  it('give the rental its real length, hours included', () => {
+    expect(detailsOf().duration).toEqual({ days: 4, hours: 0 })
+    // Rounded to whole days this read "4 days", hiding the hours a late return is billed for.
+    expect(detailsOf({ returnAt: '2026-10-05T17:30:00Z' }).duration).toEqual({ days: 4, hours: 4 })
+    expect(detailsOf({ returnAt: '2026-10-01T19:30:00Z' }).duration).toEqual({ days: 0, hours: 6 })
+  })
+
+  it('invent no desk or agent', () => {
+    // There is neither on record: the desk number used to be derived from the booking reference.
+    const details = detailsOf()
+    expect(details).not.toHaveProperty('counter')
+    expect(details).not.toHaveProperty('agent')
   })
 })
 

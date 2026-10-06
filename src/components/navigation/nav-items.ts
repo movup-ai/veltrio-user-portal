@@ -24,7 +24,7 @@ export type NavEntry =
 export const NAV_ITEMS: NavEntry[] = [
   { type: 'group', key: 'Operations' },
   { type: 'link', key: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-  { type: 'link', key: 'Bookings', to: '/bookings', icon: CalendarCheck, badge: '12' },
+  { type: 'link', key: 'Bookings', to: '/bookings', icon: CalendarCheck },
   { type: 'link', key: 'Calendar', to: '/calendar', icon: CalendarDays },
   { type: 'link', key: 'Vehicles', to: '/vehicles', icon: Car },
   { type: 'link', key: 'Customers', to: '/customers', icon: Users },

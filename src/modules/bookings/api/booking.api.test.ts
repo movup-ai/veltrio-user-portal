@@ -71,10 +71,15 @@ function wire(reference: string): BookingWire {
       depositCents: 0,
     },
     payment: { state: 'unpaid', paidCents: 0, refundedCents: 0, method: null, paidAt: null },
+    paymentPreference: null,
+    notes: null,
+    declined: null,
     contract: { signedAt: null, version: null },
     verification: null,
+    confirmedAt: null,
     pickedUpAt: null,
     returnedAt: null,
+    completedAt: null,
     createdAt: '2026-09-22T10:00:00Z',
     updatedAt: '2026-09-22T10:00:00Z',
   }
@@ -120,6 +125,55 @@ describe('bookingApi.list', () => {
 
     expect(get).toHaveBeenCalledOnce()
     expect(lists.upcoming).toEqual([])
+  })
+})
+
+describe('bookingApi.confirm and decline', () => {
+  const post = vi.mocked(apiClient.post)
+
+  beforeEach(() => post.mockReset())
+
+  it('confirm posts to the booking and returns it confirmed', async () => {
+    post.mockResolvedValue({ data: { ...wire('BK-10001'), status: 'confirmed' } })
+
+    const booking = await bookingApi.confirm('BK-10001')
+
+    expect(post).toHaveBeenCalledWith('/bookings/BK-10001/confirm')
+    expect(booking.status).toBe('Confirmed')
+  })
+
+  it('decline sends why, and says whether the renter was emailed', async () => {
+    const declined = {
+      reason: 'vehicle_unavailable' as const,
+      message: null,
+      at: '2026-10-06T15:00:00Z',
+      restorable: true,
+    }
+    post.mockResolvedValue({
+      data: { ...wire('BK-10001'), status: 'cancelled', declined, renterNotified: false },
+    })
+
+    const result = await bookingApi.decline('BK-10001', { reason: 'vehicle_unavailable', message: '' })
+
+    expect(post).toHaveBeenCalledWith('/bookings/BK-10001/decline', {
+      reason: 'vehicle_unavailable',
+      message: null,
+    })
+    expect(result.booking.status).toBe('Cancelled')
+    expect(result.booking.declined?.reason).toBe('vehicle_unavailable')
+    // Email is optional on the API; the counter has to know to tell the renter another way.
+    expect(result.renterNotified).toBe(false)
+  })
+
+  it('restore posts to the booking and returns it waiting again', async () => {
+    post.mockResolvedValue({ data: { ...wire('BK-10001'), status: 'pending', renterNotified: true } })
+
+    const result = await bookingApi.restore('BK-10001')
+
+    expect(post).toHaveBeenCalledWith('/bookings/BK-10001/restore')
+    expect(result.booking.status).toBe('Pending')
+    expect(result.booking.declined).toBeUndefined()
+    expect(result.renterNotified).toBe(true)
   })
 })
 

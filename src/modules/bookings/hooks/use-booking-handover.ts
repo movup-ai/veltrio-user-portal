@@ -6,14 +6,15 @@ import { normalizeApiError } from '@/services/api/errors'
 import { bookingApi } from '../api/booking.api'
 import { bookingKeys } from './use-bookings'
 
-type Handover = 'pickUp' | 'returnVehicle'
+type Handover = 'pickUp' | 'returnVehicle' | 'close'
 
 const TOASTS = {
   pickUp: { success: 'bookings:toast.pickedUp', error: 'bookings:toast.pickUpFailed' },
   returnVehicle: { success: 'bookings:toast.returned', error: 'bookings:toast.returnFailed' },
+  close: { success: 'bookings:toast.closed', error: 'bookings:toast.closeFailed' },
 } as const
 
-/** The keys changing hands. The payment card is refreshed too: its buttons follow the status. */
+/** A rental moving on a step. The payment card is refreshed too: its buttons follow the status. */
 export function useBookingHandover(reference: string, handover: Handover) {
   const queryClient = useQueryClient()
   return useMutation({

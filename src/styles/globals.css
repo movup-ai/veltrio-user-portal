@@ -27,6 +27,15 @@
     background: var(--color-tint);
   }
 
+  /*
+   * Tailwind 4 leaves buttons on the default arrow. In the base layer, so a cursor utility on
+   * one button (`disabled:cursor-not-allowed`) still wins.
+   */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: var(--color-fg-4);
