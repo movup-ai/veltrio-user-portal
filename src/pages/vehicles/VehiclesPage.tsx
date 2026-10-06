@@ -21,7 +21,8 @@ import { LoadingState } from '@/components/feedback/LoadingState'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/use-toast'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
-import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
+import { useBookings } from '@/modules/bookings/hooks/use-bookings'
+import { bookingsForVehicle } from '@/modules/bookings/utils/booking.utils'
 import {
   FUEL_TYPES,
   TRANSMISSIONS,
@@ -45,12 +46,6 @@ import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImport
 import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
 import { copyToClipboard, fleetUrl, vehicleUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
-
-/** No bookings API yet — mock data, matched to a vehicle by plate. See VehicleDetailsPage for the same temporary pattern. */
-const ALL_BOOKINGS = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]
-function tripsForVehicle(v: Vehicle): number {
-  return ALL_BOOKINGS.filter((b) => b[3] === v.plate).length
-}
 
 /** Canonical values — `All` means "no status filter", `Drafts` filters on isDraft instead of status, the rest map 1:1 to VehicleStatus. */
 const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts', 'Archived'] as const
@@ -127,6 +122,8 @@ export function VehiclesPage() {
   const tabCountParams = useMemo(() => ({ ...listParams, status: 'Any' as const }), [listParams])
 
   const { data, isLoading, isError, refetch } = useVehicles(listParams)
+  const { data: bookingLists } = useBookings()
+  const allBookings = [...(bookingLists?.upcoming ?? []), ...(bookingLists?.recent ?? [])]
   const { data: tabStats } = useVehicleStats(tabCountParams)
   // Unfiltered: the stat cards describe the whole fleet, not the current view.
   const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: DEFAULT_PAGE_SIZE })
@@ -259,7 +256,7 @@ export function VehiclesPage() {
           { label: t('list.rowActions.continueDraft'), onClick: () => navigate(`/vehicles/new?draft=${v.id}`) },
           { label: t('list.rowActions.discardDraft'), onClick: () => deleteDraft.mutate(v.id), destructive: true },
         ])
-      : vehicleRow(v, tripsForVehicle(v), [
+      : vehicleRow(v, bookingsForVehicle(allBookings, v.id).length, [
           { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/vehicles/${v.id}`) },
           { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/vehicles/${v.id}/edit`) },
           // An archived vehicle has no public page to share, so the link is offered only while live.

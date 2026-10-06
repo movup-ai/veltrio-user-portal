@@ -22,8 +22,8 @@ import { vehicleUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { BookingTuple } from '@/modules/bookings/types/booking.types'
 import { useBookings } from '@/modules/bookings/hooks/use-bookings'
-import { intervalsForPlate } from '@/modules/bookings/utils/booking.schedule'
-import { downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils/booking.utils'
+import { intervalsForVehicle } from '@/modules/bookings/utils/booking.schedule'
+import { bookingsForVehicle, downloadBookingsCsv, parseBookingTotal } from '@/modules/bookings/utils/booking.utils'
 import { AvailabilityStrip } from '@/modules/vehicles/components/AvailabilityStrip'
 import { HourlyCapNote } from '@/modules/vehicles/components/HourlyCapNote'
 import { VehiclePerformance } from '@/modules/vehicles/components/VehiclePerformance'
@@ -130,14 +130,14 @@ export function VehicleDetailsPage() {
   // Bookings come from the same query as the availability strip rather than straight from the
   // mock arrays, so a booking made this session shows up in both.
   const upcoming = bookingLists?.upcoming ?? []
-  const bookings = [...upcoming, ...(bookingLists?.recent ?? [])].filter((b) => b[3] === vehicle.plate)
+  const bookings = bookingsForVehicle([...upcoming, ...(bookingLists?.recent ?? [])], vehicle.id)
   const revenue = bookings
     .filter((b) => !NON_EARNING_STATUSES.includes(b[7]))
     .reduce((sum, b) => sum + parseBookingTotal(b[8]), 0)
-  const activeBooking = vehicle.status === 'On rent' ? upcoming.find((b) => b[3] === vehicle.plate) : undefined
+  const activeBooking = vehicle.status === 'On rent' ? bookingsForVehicle(upcoming, vehicle.id)[0] : undefined
   const currentRental = activeBooking ? { customer: activeBooking[0], reference: activeBooking[1], window: activeBooking[4] } : undefined
 
-  const busy = intervalsForPlate(schedule, vehicle.plate)
+  const busy = intervalsForVehicle(schedule, vehicle.id)
   const daysOnRent = availabilityForVehicle(vehicle, busy).filter((d) => d.state === 'booked').length
   const fleetItems = fleet?.items ?? []
   const fleetUtilization = fleetItems.length

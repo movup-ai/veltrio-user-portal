@@ -136,6 +136,11 @@ export function withVehicleImage(b: BookingTuple, byVehicleId: Map<string, strin
   return next
 }
 
+/** A vehicle's own bookings. By id, never plate: two cars can share a plate and would share a history. */
+export function bookingsForVehicle(bookings: BookingTuple[], vehicleId: string): BookingTuple[] {
+  return bookings.filter((b) => b[12] === vehicleId)
+}
+
 /** Only meaningful before the keys change hands; after that the status says enough. */
 const PRE_PICKUP: readonly string[] = ['Pending', 'Confirmed']
 
