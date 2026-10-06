@@ -10,6 +10,7 @@ import type {
   PaymentLink,
   ReceiptLink,
 } from '@/modules/payments/types/booking-payment.types'
+import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { BookingChargeLine } from '../types/booking.types'
 import { BookingPaymentSection } from './BookingPaymentSection'
@@ -152,7 +153,7 @@ describe('BookingPaymentSection', () => {
     await user.click(await screen.findByRole('button', { name: 'Send payment link' }))
 
     const dialog = await screen.findByRole('dialog')
-    const url = `${window.location.origin}/pay/t1/secret-token`
+    const url = `${siteUrl('sunstate')}/pay/secret-token`
     const field = await within(dialog).findByDisplayValue(url)
     // Focus lands on the dialog, not the field, which would read as already selected.
     expect(dialog).toHaveFocus()
@@ -188,7 +189,7 @@ describe('BookingPaymentSection', () => {
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByText('Rental payment')).toBeInTheDocument()
     expect(within(dialog).getByText('$319')).toBeInTheDocument()
-    expect(within(dialog).getByDisplayValue(/\/pay\/t1\/secret-token$/)).toBeInTheDocument()
+    expect(within(dialog).getByDisplayValue(/\/pay\/secret-token$/)).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Copy' })).toBeEnabled()
   })
 

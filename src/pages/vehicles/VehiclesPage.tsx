@@ -18,10 +18,16 @@ import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/use-toast'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
-import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '@/modules/bookings/mock/booking.mock'
+import { useBookings } from '@/modules/bookings/hooks/use-bookings'
+import { tripCount } from '@/modules/bookings/utils/booking.utils'
 import {
   FUEL_TYPES,
   TRANSMISSIONS,
@@ -37,7 +43,14 @@ import {
   type VehicleSort,
   type VehicleStatus,
 } from '@/modules/vehicles/types/vehicle.types'
-import { useArchiveVehicle, useRestoreVehicle, useReorderVehicles, useVehicles, useVehicleStats, vehicleKeys } from '@/modules/vehicles/hooks/use-vehicles'
+import {
+  useArchiveVehicle,
+  useRestoreVehicle,
+  useReorderVehicles,
+  useVehicles,
+  useVehicleStats,
+  vehicleKeys,
+} from '@/modules/vehicles/hooks/use-vehicles'
 import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import { hasPermission } from '@/utils/permissions'
 import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
@@ -45,12 +58,6 @@ import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImport
 import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
 import { copyToClipboard, fleetUrl, vehicleUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
-
-/** No bookings API yet — mock data, matched to a vehicle by plate. See VehicleDetailsPage for the same temporary pattern. */
-const ALL_BOOKINGS = [...BOOKINGS_UPCOMING, ...BOOKINGS_RECENT]
-function tripsForVehicle(v: Vehicle): number {
-  return ALL_BOOKINGS.filter((b) => b[3] === v.plate).length
-}
 
 /** Canonical values — `All` means "no status filter", `Drafts` filters on isDraft instead of status, the rest map 1:1 to VehicleStatus. */
 const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts', 'Archived'] as const
@@ -100,7 +107,8 @@ export function VehiclesPage() {
   const [importOpen, setImportOpen] = useState(false)
 
   const isDraftsTab = tab === 'Drafts'
-  const effectiveStatus: VehicleStatus | 'Any' = tab === 'All' || isDraftsTab ? statusFilter : (tab as VehicleStatus)
+  const effectiveStatus: VehicleStatus | 'Any' =
+    tab === 'All' || isDraftsTab ? statusFilter : (tab as VehicleStatus)
 
   const listParams = useMemo(
     () =>
@@ -120,13 +128,26 @@ export function VehiclesPage() {
             page,
             pageSize,
           },
-    [search, effectiveStatus, locationFilter, typeFilter, transmissionFilter, fuelTypeFilter, priceBands, sortBy, manualOrderMode, page, pageSize],
+    [
+      search,
+      effectiveStatus,
+      locationFilter,
+      typeFilter,
+      transmissionFilter,
+      fuelTypeFilter,
+      priceBands,
+      sortBy,
+      manualOrderMode,
+      page,
+      pageSize,
+    ],
   )
 
   // Same filters minus the status each tab pins, so a tab's count reflects what it would reveal.
   const tabCountParams = useMemo(() => ({ ...listParams, status: 'Any' as const }), [listParams])
 
   const { data, isLoading, isError, refetch } = useVehicles(listParams)
+  const { data: bookingLists } = useBookings()
   const { data: tabStats } = useVehicleStats(tabCountParams)
   // Unfiltered: the stat cards describe the whole fleet, not the current view.
   const { data: fleetStats } = useVehicleStats({ page: 1, pageSize: DEFAULT_PAGE_SIZE })
@@ -163,7 +184,11 @@ export function VehiclesPage() {
   const resetToFirstPage = () => setPage(1)
 
   function toggleDraftPriceBand(value: string) {
-    setDraftPriceBands((prev) => (prev.includes(value as VehiclePriceBand) ? prev.filter((b) => b !== value) : [...prev, value as VehiclePriceBand]))
+    setDraftPriceBands((prev) =>
+      prev.includes(value as VehiclePriceBand)
+        ? prev.filter((b) => b !== value)
+        : [...prev, value as VehiclePriceBand],
+    )
   }
 
   /** Popover just opened — discard any unapplied edits from last time by resetting drafts to what's actually applied. */
@@ -178,11 +203,16 @@ export function VehiclesPage() {
     setFuelTypeFilter(draftFuelType)
     setPriceBands(draftPriceBands)
     resetToFirstPage()
-    const activeCount = (draftTransmission !== 'Any' ? 1 : 0) + (draftFuelType !== 'Any' ? 1 : 0) + (draftPriceBands.length > 0 ? 1 : 0)
+    const activeCount =
+      (draftTransmission !== 'Any' ? 1 : 0) +
+      (draftFuelType !== 'Any' ? 1 : 0) +
+      (draftPriceBands.length > 0 ? 1 : 0)
     toast({
       title: tCommon('filters.applied'),
       description:
-        activeCount > 0 ? tCommon('filters.appliedCount', { count: activeCount }) : tCommon('filters.appliedNone'),
+        activeCount > 0
+          ? tCommon('filters.appliedCount', { count: activeCount })
+          : tCommon('filters.appliedNone'),
       variant: 'success',
     })
   }
@@ -256,10 +286,17 @@ export function VehiclesPage() {
   const rows = orderedItems.map((v) =>
     v.isDraft
       ? vehicleRow(v, 0, [
-          { label: t('list.rowActions.continueDraft'), onClick: () => navigate(`/vehicles/new?draft=${v.id}`) },
-          { label: t('list.rowActions.discardDraft'), onClick: () => deleteDraft.mutate(v.id), destructive: true },
+          {
+            label: t('list.rowActions.continueDraft'),
+            onClick: () => navigate(`/vehicles/new?draft=${v.id}`),
+          },
+          {
+            label: t('list.rowActions.discardDraft'),
+            onClick: () => deleteDraft.mutate(v.id),
+            destructive: true,
+          },
         ])
-      : vehicleRow(v, tripsForVehicle(v), [
+      : vehicleRow(v, tripCount(bookingLists, v.id), [
           { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/vehicles/${v.id}`) },
           { label: t('list.rowActions.editVehicle'), onClick: () => navigate(`/vehicles/${v.id}/edit`) },
           // An archived vehicle has no public page to share, so the link is offered only while live.
@@ -268,7 +305,11 @@ export function VehiclesPage() {
             : []),
           v.status === 'Archived'
             ? { label: t('list.rowActions.restoreVehicle'), onClick: () => restoreVehicle.mutate(v) }
-            : { label: t('list.rowActions.archiveVehicle'), onClick: () => setDeleteTarget(v), destructive: true },
+            : {
+                label: t('list.rowActions.archiveVehicle'),
+                onClick: () => setDeleteTarget(v),
+                destructive: true,
+              },
         ]),
   )
 
@@ -365,7 +406,10 @@ export function VehiclesPage() {
           {
             kind: 'select',
             label: t('filters.transmission'),
-            value: draftTransmission === 'Any' ? tCommon('filters.any') : domain.label('transmission', draftTransmission),
+            value:
+              draftTransmission === 'Any'
+                ? tCommon('filters.any')
+                : domain.label('transmission', draftTransmission),
             options: [
               { value: 'Any', label: tCommon('filters.any') },
               ...TRANSMISSIONS.map((tr) => ({ value: tr, label: domain.label('transmission', tr) })),
@@ -395,7 +439,11 @@ export function VehiclesPage() {
             onToggle: toggleDraftPriceBand,
           },
         ]}
-        moreFiltersActiveCount={(transmissionFilter !== 'Any' ? 1 : 0) + (fuelTypeFilter !== 'Any' ? 1 : 0) + (priceBands.length > 0 ? 1 : 0)}
+        moreFiltersActiveCount={
+          (transmissionFilter !== 'Any' ? 1 : 0) +
+          (fuelTypeFilter !== 'Any' ? 1 : 0) +
+          (priceBands.length > 0 ? 1 : 0)
+        }
         onClearMoreFilters={() => {
           setTransmissionFilter('Any')
           setFuelTypeFilter('Any')
@@ -502,7 +550,9 @@ export function VehiclesPage() {
           }
           reorderable={manualOrderMode && !isDraftsTab}
           onReorder={handleReorder}
-          emptyState={<EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />}
+          emptyState={
+            <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
+          }
         />
       )}
 

@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { BookingTuple } from '../types/booking.types'
-import { parseRentalWindow } from './booking.schedule'
-import { bookingRow, formatRentalDuration, formatRentalWindow, withVehicleImage } from './booking.utils'
+import { intervalsForVehicle, parseRentalWindow } from './booking.schedule'
+import {
+  bookingRow,
+  bookingsForVehicle,
+  formatRentalDuration,
+  formatRentalWindow,
+  tripCount,
+  withVehicleImage,
+} from './booking.utils'
 
 /** Noon UTC either end, so the formatted clock is the same day in any plausible run-time zone. */
 const at = (day: number, hour = 12, minute = 0) =>
@@ -129,5 +136,80 @@ describe('bookingRow readiness badge', () => {
   it('drops Ready once the car is out — the status already says so', () => {
     expect(badges(row('On rental', true))).toEqual(['On rental'])
     expect(badges(row('Completed', true))).toEqual(['Completed'])
+  })
+})
+
+describe('bookingsForVehicle', () => {
+  const booking = (reference: string, vehicleId?: string): BookingTuple => [
+    'Test Renter',
+    reference,
+    'BMW 4 Series',
+    'D',
+    'Mar 9 → Mar 12',
+    '3 days',
+    'Miami Beach',
+    'Pending',
+    '$1,036.80',
+    undefined,
+    undefined,
+    undefined,
+    vehicleId,
+  ]
+
+  it('keeps two cars with the same plate apart', () => {
+    const all = [booking('BK-10000', 'porsche'), booking('BK-10001', 'bmw')]
+
+    expect(bookingsForVehicle(all, 'bmw').map((b) => b[1])).toEqual(['BK-10001'])
+    expect(bookingsForVehicle(all, 'porsche').map((b) => b[1])).toEqual(['BK-10000'])
+    expect(bookingsForVehicle(all, 'audi')).toEqual([])
+  })
+
+  it('gives a booking whose vehicle was deleted to no car', () => {
+    expect(bookingsForVehicle([booking('BK-10002')], 'bmw')).toEqual([])
+  })
+})
+
+describe('tripCount', () => {
+  const booking = (vehicleId: string): BookingTuple => [
+    'Test Renter',
+    'BK-10001',
+    'BMW 4 Series',
+    'D',
+    'Mar 9 → Mar 12',
+    '3 days',
+    'Miami Beach',
+    'Pending',
+    '$1,036.80',
+    undefined,
+    undefined,
+    undefined,
+    vehicleId,
+  ]
+
+  it('is unknown, not zero, until the bookings have arrived', () => {
+    expect(tripCount(undefined, 'bmw')).toBeUndefined()
+  })
+
+  it('counts upcoming and past bookings once they have', () => {
+    const lists = { upcoming: [booking('bmw')], recent: [booking('bmw'), booking('porsche')], schedule: [] }
+
+    expect(tripCount(lists, 'bmw')).toBe(2)
+    expect(tripCount(lists, 'audi')).toBe(0)
+  })
+})
+
+describe('intervalsForVehicle', () => {
+  it('shades only the days this car is out, not those of another with its plate', () => {
+    const interval = (reference: string, vehicleId: string) => ({
+      reference,
+      vehicleId,
+      plate: 'D',
+      from: at(9),
+      to: at(12),
+    })
+    const schedule = [interval('BK-10000', 'porsche'), interval('BK-10001', 'bmw')]
+
+    expect(intervalsForVehicle(schedule, 'bmw').map((i) => i.reference)).toEqual(['BK-10001'])
+    expect(intervalsForVehicle(schedule, 'audi')).toEqual([])
   })
 })
