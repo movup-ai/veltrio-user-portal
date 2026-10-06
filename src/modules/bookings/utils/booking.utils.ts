@@ -3,7 +3,13 @@ import type { TFunction } from 'i18next'
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
 import { formatCurrencyIn, formatDateIn } from '@/i18n/formatters'
 import { durationHours } from './booking.pricing'
-import { isReadyForPickup, type Booking, type BookingDraft, type BookingTuple } from '../types/booking.types'
+import {
+  isReadyForPickup,
+  type Booking,
+  type BookingDraft,
+  type BookingLists,
+  type BookingTuple,
+} from '../types/booking.types'
 
 export function bookingColumns(t: TFunction<'bookings'>) {
   return [
@@ -139,6 +145,12 @@ export function withVehicleImage(b: BookingTuple, byVehicleId: Map<string, strin
 /** A vehicle's own bookings. By id, never plate: two cars can share a plate and would share a history. */
 export function bookingsForVehicle(bookings: BookingTuple[], vehicleId: string): BookingTuple[] {
   return bookings.filter((b) => b[12] === vehicleId)
+}
+
+/** Undefined until the bookings arrive: a zero shown meanwhile would read as "never booked". */
+export function tripCount(lists: BookingLists | undefined, vehicleId: string): number | undefined {
+  if (!lists) return undefined
+  return bookingsForVehicle([...lists.upcoming, ...lists.recent], vehicleId).length
 }
 
 /** Only meaningful before the keys change hands; after that the status says enough. */

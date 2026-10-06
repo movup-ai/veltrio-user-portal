@@ -6,6 +6,7 @@ import {
   bookingsForVehicle,
   formatRentalDuration,
   formatRentalWindow,
+  tripCount,
   withVehicleImage,
 } from './booking.utils'
 
@@ -139,8 +140,21 @@ describe('bookingRow readiness badge', () => {
 })
 
 describe('bookingsForVehicle', () => {
-  const booking = (reference: string, vehicleId?: string): BookingTuple =>
-    ['Test Renter', reference, 'BMW 4 Series', 'D', 'Mar 9 → Mar 12', '3 days', 'Miami Beach', 'Pending', '$1,036.80', undefined, undefined, undefined, vehicleId]
+  const booking = (reference: string, vehicleId?: string): BookingTuple => [
+    'Test Renter',
+    reference,
+    'BMW 4 Series',
+    'D',
+    'Mar 9 → Mar 12',
+    '3 days',
+    'Miami Beach',
+    'Pending',
+    '$1,036.80',
+    undefined,
+    undefined,
+    undefined,
+    vehicleId,
+  ]
 
   it('keeps two cars with the same plate apart', () => {
     const all = [booking('BK-10000', 'porsche'), booking('BK-10001', 'bmw')]
@@ -152,6 +166,35 @@ describe('bookingsForVehicle', () => {
 
   it('gives a booking whose vehicle was deleted to no car', () => {
     expect(bookingsForVehicle([booking('BK-10002')], 'bmw')).toEqual([])
+  })
+})
+
+describe('tripCount', () => {
+  const booking = (vehicleId: string): BookingTuple => [
+    'Test Renter',
+    'BK-10001',
+    'BMW 4 Series',
+    'D',
+    'Mar 9 → Mar 12',
+    '3 days',
+    'Miami Beach',
+    'Pending',
+    '$1,036.80',
+    undefined,
+    undefined,
+    undefined,
+    vehicleId,
+  ]
+
+  it('is unknown, not zero, until the bookings have arrived', () => {
+    expect(tripCount(undefined, 'bmw')).toBeUndefined()
+  })
+
+  it('counts upcoming and past bookings once they have', () => {
+    const lists = { upcoming: [booking('bmw')], recent: [booking('bmw'), booking('porsche')], schedule: [] }
+
+    expect(tripCount(lists, 'bmw')).toBe(2)
+    expect(tripCount(lists, 'audi')).toBe(0)
   })
 })
 

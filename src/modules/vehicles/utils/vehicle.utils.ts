@@ -132,7 +132,10 @@ function vehicleInitials(v: Vehicle): string {
 
 /** "Sedan · 2024" — the vehicle type is translated, the year is not. Either part may be missing on a draft. */
 export function vehicleSubtitle(v: Vehicle): string {
-  return [v.vehicleType ? translateDomain('vehicleType', v.vehicleType) : '', Number.isFinite(v.year) ? String(v.year) : '']
+  return [
+    v.vehicleType ? translateDomain('vehicleType', v.vehicleType) : '',
+    Number.isFinite(v.year) ? String(v.year) : '',
+  ]
     .filter(Boolean)
     .join(' · ')
 }
@@ -183,7 +186,9 @@ interface PlanLineName {
 
 /** "Hourly (8 h/day cap)" for an automatic capped day; the option's own label otherwise. */
 export function rateLineLabel(line: Omit<PlanLineName, 'count'>, t: TFunction<'vehicles'>): string {
-  return line.cappedHours ? t('ratePlan.cappedLabel', { label: line.label, hours: line.cappedHours }) : line.label
+  return line.cappedHours
+    ? t('ratePlan.cappedLabel', { label: line.label, hours: line.cappedHours })
+    : line.label
 }
 
 /** "Weekly + Daily × 3" — the rates a plan combines, longest unit first. */
@@ -197,7 +202,9 @@ export function formatPlanLines(lines: PlanLineName[], t: TFunction<'vehicles'>)
 }
 
 /** Plan lines in the shape the formatters take. */
-export function planLineNames(lines: { option: RateOption; count: number; cappedHours?: number }[]): PlanLineName[] {
+export function planLineNames(
+  lines: { option: RateOption; count: number; cappedHours?: number }[],
+): PlanLineName[] {
   return lines.map((l) => ({ label: l.option.label, count: l.count, cappedHours: l.cappedHours }))
 }
 
@@ -214,7 +221,7 @@ function meterTone(utilization: number): string {
   return 'var(--color-error)'
 }
 
-export function vehicleRow(v: Vehicle, tripsCount: number, actions: RowActionItem[]): Row {
+export function vehicleRow(v: Vehicle, tripsCount: number | undefined, actions: RowActionItem[]): Row {
   const pct = Math.round(v.utilization * 100)
   const daily = dailyRateOption(v)
 
@@ -238,7 +245,7 @@ export function vehicleRow(v: Vehicle, tripsCount: number, actions: RowActionIte
       { kind: 'text', primary: v.location },
       { kind: 'badge', status: v.isDraft ? 'Draft' : v.status },
       { kind: 'meter', primary: `${pct}%`, pct: `${pct}%`, tone: meterTone(v.utilization) },
-      { kind: 'text', primary: String(tripsCount), align: 'right' },
+      { kind: 'text', primary: tripsCount === undefined ? '—' : String(tripsCount), align: 'right' },
       {
         kind: 'amount',
         primary: daily ? formatCurrency(daily.rate) : '—',
