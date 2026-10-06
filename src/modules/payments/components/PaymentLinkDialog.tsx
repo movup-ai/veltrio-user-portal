@@ -10,6 +10,7 @@ interface PaymentLinkDialogProps {
   link: PaymentLink
   renter: LinkRecipient
   companyName: string
+  subdomain: string
   reference: string
   /** A deposit the link does not ask for yet, mentioned so the counter can say it is coming. */
   depositLater: number
@@ -22,6 +23,7 @@ export function PaymentLinkDialog({
   link,
   renter,
   companyName,
+  subdomain,
   reference,
   depositLater,
 }: PaymentLinkDialogProps) {
@@ -30,7 +32,7 @@ export function PaymentLinkDialog({
   const purpose = linkPurpose(link)
   const amount = format.currency(link.amount, link.currency)
   const deposit = format.currency(link.deposit, link.currency)
-  const url = paymentLinkUrl(window.location.origin, link)
+  const url = paymentLinkUrl(subdomain, link)
 
   return (
     <ShareLinkDialog

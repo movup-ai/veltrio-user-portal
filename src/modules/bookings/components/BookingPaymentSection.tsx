@@ -42,6 +42,7 @@ interface BookingPaymentSectionProps {
 export function BookingPaymentSection({ reference, renter, charges, days }: BookingPaymentSectionProps) {
   const { data: payments, isLoading, isError, refetch } = useBookingPayments(reference)
   const companyName = useOrganizationStore((state) => state.membership?.organizationName ?? '')
+  const subdomain = useOrganizationStore((state) => state.membership?.subdomain ?? '')
   const canRefund = hasAnyPermission(usePermissions(), ['payments.refund'])
   const createLink = useCreatePaymentLink(reference)
   const recordManual = useRecordManualPayment(reference)
@@ -137,6 +138,7 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
           link={link}
           renter={renter}
           companyName={companyName}
+          subdomain={subdomain}
           reference={reference}
           depositLater={payments.deposit ? 0 : payments.depositAmount}
         />

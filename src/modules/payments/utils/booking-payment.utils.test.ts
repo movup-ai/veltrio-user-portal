@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { ApiError } from '@/types/api'
 import { DEPOSIT_STATUS_BADGE, PAYMENT_STATE_BADGE } from '../constants/payment.constants'
 import type { BookingPaymentRecord } from '../types/booking-payment.types'
@@ -34,10 +35,9 @@ function payment(overrides: Partial<BookingPaymentRecord>): BookingPaymentRecord
 }
 
 describe('paymentLinkUrl', () => {
-  it('points at the public payment page on this origin', () => {
-    expect(paymentLinkUrl('https://portal.veltrio.test', { tenantId: 't1', token: 'abc_123' })).toBe(
-      'https://portal.veltrio.test/pay/t1/abc_123',
-    )
+  it("points at the payment page on the company's own site", () => {
+    expect(paymentLinkUrl('sunstate', { token: 'abc_123' })).toBe(`${siteUrl('sunstate')}/pay/abc_123`)
+    expect(siteUrl('sunstate')).toMatch(/^https:\/\/sunstate\./)
   })
 })
 
