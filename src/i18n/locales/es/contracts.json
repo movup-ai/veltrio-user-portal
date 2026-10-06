@@ -139,33 +139,5 @@
     "templateChanged": "Condiciones cambiadas",
     "templateChangeFailed": "No se pudieron cambiar las condiciones",
     "pdfFailed": "No se pudo abrir el contrato"
-  },
-  "page": {
-    "title": "Contrato de alquiler",
-    "greeting": "Hola {{name}}, lee el contrato a continuación y fírmalo al final.",
-    "secure": "Tu firma se registra con la fecha, la hora y el dispositivo.",
-    "download": "Descargar PDF",
-    "downloadCopy": "Descargar tu copia",
-    "signed": {
-      "title": "Contrato firmado",
-      "body": "Firmado por {{name}} el {{date}}. Guarda una copia para tus registros."
-    },
-    "replaced": {
-      "title": "Este contrato fue reemplazado",
-      "body": "{{company}} emitió un contrato más reciente para la reserva {{reference}}. Pídeles el nuevo enlace."
-    },
-    "closed": {
-      "title": "Este contrato ya no se puede firmar",
-      "body": "La reserva {{reference}} ya no espera una firma. Contacta con {{company}} si crees que es un error."
-    },
-    "invalid": {
-      "title": "Este enlace no es válido",
-      "body": "Revisa el enlace que recibiste o pide uno nuevo a la empresa de alquiler."
-    },
-    "unreachable": {
-      "title": "No pudimos cargar tu contrato",
-      "body": "Revisa tu conexión e inténtalo de nuevo.",
-      "retry": "Reintentar"
-    }
   }
 }

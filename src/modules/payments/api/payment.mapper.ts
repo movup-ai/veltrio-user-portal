@@ -11,10 +11,6 @@ import type {
   PaymentActionRule,
   PaymentActions,
   PaymentLink,
-  PublicChargeStatus,
-  PublicDepositStatus,
-  PublicPayment,
-  PublicPaymentPart,
   PublicReceipt,
   ReceiptLink,
 } from '../types/booking-payment.types'
@@ -120,30 +116,6 @@ export interface PaymentLinkWire {
   amountCents: number
   depositCents: number
   currency: string
-}
-
-export interface PublicPaymentPartWire<Status extends string> {
-  status: Status
-  amountCents: number
-  clientSecret: string | null
-}
-
-export interface PublicPaymentWire {
-  companyName: string
-  reference: string
-  renterName: string
-  vehicleName: string
-  vehiclePhotoUrl: string | null
-  vehicleSpecs: VehicleSpecsWire | null
-  pickupAt: string
-  returnAt: string
-  pickupLocation: string
-  currency: string
-  depositCents: number
-  stripeAccountId: string | null
-  charge: PublicPaymentPartWire<PublicChargeStatus> | null
-  deposit: PublicPaymentPartWire<PublicDepositStatus> | null
-  receipt: ReceiptLinkWire | null
 }
 
 export interface ReceiptLinkWire {
@@ -267,36 +239,5 @@ export function toPaymentLink(wire: PaymentLinkWire): PaymentLink {
     amount: fromCents(wire.amountCents),
     deposit: fromCents(wire.depositCents),
     currency: wire.currency,
-  }
-}
-
-function toPublicPart<Status extends string>(
-  wire: PublicPaymentPartWire<Status> | null,
-): PublicPaymentPart<Status> | undefined {
-  if (!wire) return undefined
-  return {
-    status: wire.status,
-    amount: fromCents(wire.amountCents),
-    clientSecret: wire.clientSecret ?? undefined,
-  }
-}
-
-export function toPublicPayment(wire: PublicPaymentWire): PublicPayment {
-  return {
-    companyName: wire.companyName,
-    reference: wire.reference,
-    renterName: wire.renterName,
-    vehicleName: wire.vehicleName,
-    vehiclePhotoUrl: wire.vehiclePhotoUrl ?? undefined,
-    vehicleSpecs: wire.vehicleSpecs ? toVehicleSpecs(wire.vehicleSpecs) : undefined,
-    pickupAt: wire.pickupAt,
-    returnAt: wire.returnAt,
-    pickupLocation: wire.pickupLocation,
-    currency: wire.currency,
-    depositAmount: fromCents(wire.depositCents),
-    stripeAccountId: wire.stripeAccountId ?? undefined,
-    charge: toPublicPart(wire.charge),
-    deposit: toPublicPart(wire.deposit),
-    receipt: wire.receipt ? toReceiptLink(wire.receipt) : undefined,
   }
 }

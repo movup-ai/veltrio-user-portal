@@ -26,6 +26,7 @@ type AgreementDialog = 'link' | 'counter' | 'template' | 'void'
 export function BookingAgreementSection({ reference, renter }: { reference: string; renter: LinkRecipient }) {
   const { data: contract, isLoading, isError, refetch } = useBookingContract(reference)
   const companyName = useOrganizationStore((state) => state.membership?.organizationName ?? '')
+  const subdomain = useOrganizationStore((state) => state.membership?.subdomain ?? '')
   const canVoid = hasAnyPermission(usePermissions(), ['contracts.void'])
   const issue = useIssueContract(reference)
   const view = useContractPdfOpener(reference)
@@ -86,6 +87,7 @@ export function BookingAgreementSection({ reference, renter }: { reference: stri
             contract={{ ...contract, link }}
             renter={renter}
             companyName={companyName}
+            subdomain={subdomain}
             reference={reference}
           />
           <CounterSignDialog

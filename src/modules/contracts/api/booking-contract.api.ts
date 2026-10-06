@@ -24,7 +24,8 @@ const publicContract = (request: Promise<{ data: PublicContractWire }>) =>
 
 /** A booking's rental agreement: issue it, get it signed, keep the PDF. */
 export const bookingContractApi = {
-  get: (reference: string): Promise<BookingContract> => contract(apiClient.get<BookingContractWire>(base(reference))),
+  get: (reference: string): Promise<BookingContract> =>
+    contract(apiClient.get<BookingContractWire>(base(reference))),
 
   /** The agreement in force, issued now if there is none; asking again gives the same one. */
   issue: (reference: string): Promise<BookingContract> =>
@@ -47,10 +48,4 @@ export const bookingContractApi = {
   /** The renter's page; needs no login. */
   public: (link: ContractLink): Promise<PublicContract> =>
     publicContract(apiClient.get<PublicContractWire>(publicBase(link))),
-
-  publicSign: (link: ContractLink, input: SignatureInput): Promise<PublicContract> =>
-    publicContract(apiClient.post<PublicContractWire>(`${publicBase(link)}/sign`, toSignaturePayload(input))),
-
-  /** Opened straight from the renter's page: public, so a plain link downloads it. */
-  publicPdfUrl: (link: ContractLink): string => `${apiClient.defaults.baseURL ?? ''}${publicBase(link)}/pdf`,
 }

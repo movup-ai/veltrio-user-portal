@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { ApiError } from '@/types/api'
 import { isChoiceUnchecked, shownTemplateId, templateChoice } from './agreement-template.utils'
 import {
@@ -9,9 +10,10 @@ import {
 } from './booking-contract.utils'
 
 describe('contract links and files', () => {
-  it("builds the renter's page on the portal's own origin", () => {
+  it("builds the renter's page on the company's own site, with no tenant id in the path", () => {
     const link = { tenantId: 't1', contractId: 'c1', token: 'tok' }
-    expect(contractLinkUrl('https://portal.test', link)).toBe('https://portal.test/sign/t1/c1/tok')
+    expect(contractLinkUrl('sunstate', link)).toBe(`${siteUrl('sunstate')}/sign/c1/tok`)
+    expect(siteUrl('sunstate')).toMatch(/^https:\/\/sunstate\./)
   })
 
   it('names the file as the API numbers the agreement', () => {

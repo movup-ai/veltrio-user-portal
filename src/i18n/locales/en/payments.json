@@ -162,59 +162,16 @@
     }
   },
   "pay": {
-    "title": "Pay for your rental",
     "pickup": "Pickup",
-    "amountDue": "Amount due",
-    "submit": "Pay {{amount}}",
-    "paid": {
-      "title": "Payment received",
-      "body": "{{company}} has your payment of {{amount}} for booking {{reference}}. You can close this page.",
-      "bodyDepositLater": "{{company}} has your payment of {{amount}} for booking {{reference}}. They will send a separate link for the {{deposit}} security deposit before pickup.",
-      "bodyDepositIncomplete": "{{company}} has your payment of {{amount}} for booking {{reference}}. The {{deposit}} security deposit hold did not go through, so {{company}} will be in touch about it."
-    },
-    "processing": {
-      "title": "Payment processing",
-      "body": "Your bank is still confirming the payment. This page updates on its own."
-    },
-    "closed": {
-      "title": "This link is no longer active",
-      "body": "Ask {{company}} for a new payment link."
-    },
-    "invalid": {
-      "title": "This payment link isn't valid",
-      "body": "It may have been replaced by a newer one. Ask the rental company for a new link."
-    },
-    "unavailable": "Card payments aren't available right now. Please contact the rental company.",
-    "failed": "The payment didn't go through.",
-    "depositTitle": "Security deposit",
-    "depositHold": "Security deposit hold",
-    "consentWithDeposit": "By paying, you also authorise {{company}} to hold {{deposit}} on this card as your security deposit. Nothing is taken unless your rental agreement calls for it, and the hold is released after the return.",
-    "consentDeposit": "{{company}} holds {{deposit}} on this card as your security deposit. Nothing is taken unless your rental agreement calls for it, and the hold is released after the return.",
-    "submitWithDeposit": "Pay {{amount}} & hold {{deposit}}",
-    "submitDeposit": "Authorise {{deposit}} hold",
-    "held": {
-      "title": "Deposit on hold",
-      "body": "{{company}} holds {{deposit}} on your card for booking {{reference}}. You can close this page."
-    },
-    "done": {
-      "title": "You're all set",
-      "body": "{{company}} has your payment of {{amount}} and holds {{deposit}} as your deposit for booking {{reference}}. You can close this page."
-    },
-    "depositFailed": "The deposit hold didn't go through.",
     "booking": "Booking {{reference}}",
-    "greeting": "Hi {{name}}, check the details below before you pay.",
-    "depositGreeting": "Hi {{name}}, check the details below before you authorise the hold.",
     "return": "Return",
-    "depositNotCharged": "Held on your card, not charged",
-    "secure": "Secure payment by Stripe. Card details go straight to Stripe.",
     "seats_one": "{{count}} seat",
     "seats_other": "{{count}} seats",
     "unreachable": {
       "title": "We couldn't load your payment",
       "body": "This is usually brief. Your link is fine, so please try again in a moment.",
       "retry": "Try again"
-    },
-    "viewReceipt": "View receipt"
+    }
   },
   "receipt": {
     "title": "Receipt",

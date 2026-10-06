@@ -114,12 +114,3 @@ export function usePublicContract(link: ContractLink | undefined) {
     retry: (failures, error) => !linkIsGone(error) && failures < 1,
   })
 }
-
-/** No error toast: the signing form shows what was wrong beside the signature. */
-export function usePublicSign(link: ContractLink) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (input: SignatureInput) => bookingContractApi.publicSign(link, input),
-    onSuccess: (contract) => queryClient.setQueryData(bookingContractKeys.public(link), contract),
-  })
-}

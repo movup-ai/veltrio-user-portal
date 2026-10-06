@@ -8,13 +8,9 @@ import { documentFileName, linkIsGone } from '../utils/booking-payment.utils'
 import type { BookingPayments, PaymentLink, ReceiptLink } from '../types/booking-payment.types'
 import { saveBlob } from '@/lib/download'
 
-/** How often the renter's page re-asks while their bank is still deciding. */
-const PROCESSING_POLL_MS = 3_000
-
 export const bookingPaymentKeys = {
   all: ['booking-payments'] as const,
   booking: (reference: string) => ['booking-payments', reference] as const,
-  public: (tenantId: string, token: string) => ['public-payment', tenantId, token] as const,
   publicReceipt: (link: ReceiptLink) =>
     ['public-receipt', link.tenantId, link.bookingId, link.token] as const,
 }
@@ -116,21 +112,6 @@ export function useRefundPayment(reference: string) {
       error: i18n.t('payments:booking.toast.refundFailed'),
     },
   )
-}
-
-/** The renter's page. Polls only while the bank is deciding; every read also syncs from Stripe. */
-export function usePublicPayment(tenantId: string, token: string) {
-  return useQuery({
-    queryKey: bookingPaymentKeys.public(tenantId, token),
-    queryFn: () => bookingPaymentApi.publicPayment(tenantId, token),
-    // Each read goes to Stripe, which can blip; only a link that is truly gone fails at once.
-    retry: (failures, error) => !linkIsGone(error) && failures < 2,
-    refetchInterval: (query) => {
-      const data = query.state.data
-      const processing = data?.charge?.status === 'processing' || data?.deposit?.status === 'processing'
-      return processing ? PROCESSING_POLL_MS : false
-    },
-  })
 }
 
 /** Downloads the invoice or receipt PDF under the number the API gives it. */

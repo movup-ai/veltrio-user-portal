@@ -1,21 +1,13 @@
 import { toCents } from '@/lib/money'
 import { apiClient } from '@/services/api/client'
-import type {
-  BookingPayments,
-  PaymentLink,
-  PublicPayment,
-  PublicReceipt,
-  ReceiptLink,
-} from '../types/booking-payment.types'
+import type { BookingPayments, PaymentLink, PublicReceipt, ReceiptLink } from '../types/booking-payment.types'
 import {
   toBookingPayments,
   toPaymentLink,
-  toPublicPayment,
   toPublicReceipt,
   toReceiptLink,
   type BookingPaymentsWire,
   type PaymentLinkWire,
-  type PublicPaymentWire,
   type PublicReceiptWire,
   type ReceiptLinkWire,
 } from './payment.mapper'
@@ -91,10 +83,4 @@ export const bookingPaymentApi = {
   /** Opened straight from the renter's page: public, so a plain link downloads it. */
   receiptPdfUrl: ({ tenantId, bookingId, token }: ReceiptLink): string =>
     `${apiClient.defaults.baseURL ?? ''}/public/receipts/${tenantId}/${bookingId}/${token}/pdf`,
-
-  /** The renter's page; needs no login. */
-  publicPayment: (tenantId: string, token: string): Promise<PublicPayment> =>
-    apiClient
-      .get<PublicPaymentWire>(`/public/payments/${tenantId}/${token}`)
-      .then((r) => toPublicPayment(r.data)),
 }
