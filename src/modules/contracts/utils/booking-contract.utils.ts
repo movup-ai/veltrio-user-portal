@@ -1,5 +1,5 @@
 import { normalizeApiError } from '@/services/api/errors'
-import type { ContractLink } from '../types/booking-contract.types'
+import type { BookingContract, ContractLink } from '../types/booking-contract.types'
 
 /** What the signing form holds before it is sent. */
 export interface SignatureDraft {
@@ -36,6 +36,11 @@ export function drawingProblem(error: unknown): DrawingProblem | undefined {
 /** The renter's agreement page, on this portal's own origin. */
 export function contractLinkUrl(origin: string, link: ContractLink): string {
   return `${origin}/sign/${link.tenantId}/${link.contractId}/${link.token}`
+}
+
+/** Whether there is a document to open: until one is issued there is only a preview. */
+export function agreementIssued(contract: Pick<BookingContract, 'status'> | undefined): boolean {
+  return contract != null && contract.status !== 'none'
 }
 
 /** Numbered from the booking, as the API names its agreement (AGR-). */

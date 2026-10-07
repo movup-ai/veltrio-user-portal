@@ -4,6 +4,7 @@ export const CONTRACT_REFUSALS = [
   'not_before_pickup',
   'already_signed',
   'not_issued',
+  'not_confirmed',
 ] as const
 
 export type ContractRefusal = (typeof CONTRACT_REFUSALS)[number]

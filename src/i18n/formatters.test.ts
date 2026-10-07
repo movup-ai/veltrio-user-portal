@@ -19,6 +19,19 @@ function setCurrency(currency: string) {
 
 afterEach(() => useOrganizationStore.setState({ membership: null }))
 
+describe('dateTime', () => {
+  it('shows a moment on the 12-hour clock, with am or pm', () => {
+    const { result } = renderHook(() => useFormatters())
+    // Built from local parts, so the assertion holds in whichever zone the tests run.
+    const evening = new Date(2026, 9, 2, 23, 21)
+    const morning = new Date(2026, 9, 14, 9, 5)
+
+    // 23:21 was being read as a 24-hour time by people used to 11:21 PM.
+    expect(result.current.dateTime(evening)).toBe('Oct 2, 11:21 PM')
+    expect(result.current.dateTime(morning.toISOString())).toBe('Oct 14, 9:05 AM')
+  })
+})
+
 describe('company currency', () => {
   it('prices an amount without its own currency in the company’s', () => {
     setCurrency('EUR')

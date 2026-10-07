@@ -3,15 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { CarFront, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/state/ui.store'
-import { NAV_ITEMS } from './nav-items'
+import { NAV_ITEMS, type NavLinkKey } from './nav-items'
 
 interface SidebarProps {
   /** Renders as an overlay drawer on mobile; hidden until opened. */
   mobileOpen?: boolean
   onMobileClose?: () => void
+  /** Live counts beside a link, such as reservations waiting for an answer. */
+  badges?: Partial<Record<NavLinkKey, string>>
 }
 
-export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
+export function Sidebar({ mobileOpen = false, onMobileClose, badges }: SidebarProps) {
   const { t } = useTranslation(['nav', 'common'])
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
@@ -54,6 +56,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               ) : null
             }
 
+            const badge = badges?.[item.key] ?? item.badge
             return (
               <NavLink
                 key={item.to}
@@ -70,7 +73,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               >
                 <item.icon className="size-[17px] shrink-0" />
                 {expanded && <span className="flex-1 overflow-hidden whitespace-nowrap">{t(`nav:links.${item.key}`)}</span>}
-                {item.badge && expanded && (
+                {badge && expanded && (
                   <span
                     className="min-w-5 shrink-0 rounded-full px-1.5 py-px text-center font-mono text-[11px] font-semibold"
                     style={{
@@ -78,7 +81,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                       color: item.urgent ? 'var(--color-error)' : 'var(--color-fg-3)',
                     }}
                   >
-                    {item.badge}
+                    {badge}
                   </span>
                 )}
               </NavLink>

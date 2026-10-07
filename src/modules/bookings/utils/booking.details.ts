@@ -21,25 +21,7 @@ import { rentalWindowDates } from './booking.schedule'
 const DEFAULT_TAX_PCT = 7
 const DEFAULT_MILES_PER_DAY = 150
 
-/** How far ahead of pickup a booking is taken, in the seeded data. */
-const RESERVED_DAYS_BEFORE = 5
-
 /** Terms revision in force. Stamped on the booking so an old one reads against its own terms. */
-
-/**
- * How far along the rental is, by status. Index into BOOKING_STAGES: 1 means Reserved is behind
- * us and Confirmed is where things stand. Money problems hold a booking at Reserved — the branch
- * won't confirm a car it hasn't been paid a deposit for.
- */
-const STAGE_INDEX: Record<string, number> = {
-  Pending: 1,
-  Confirmed: 2,
-  'On rental': 3,
-  Overdue: 4,
-  Returned: 4,
-  Completed: 5,
-  Cancelled: 5,
-}
 
 function addDays(date: Date, days: number): Date {
   const next = new Date(date)
@@ -61,34 +43,78 @@ function findVehicle(plate: string): Vehicle | undefined {
 }
 
 /**
- * The five progress steps, dated. Stages behind the current one carry when they happened;
- * the ones ahead carry when they fall due, so the strip reads the same whether you're looking
- * back at a finished rental or forward at one that hasn't started.
+ * How long the rental ran once the car is back, from the recorded handovers; until then, how
+ * long it is booked for. To the minute: rounded to hours, 4h 30m read as five.
  */
-function buildStages(status: string, pickup: Date, dropoff: Date): BookingStageStep[] {
-  const reached = STAGE_INDEX[status] ?? 1
-  const reservedAt = addDays(pickup, -RESERVED_DAYS_BEFORE)
+export function rentalDuration(
+  booked: { from: Date; to: Date },
+  pickedUpAt?: string,
+  returnedAt?: string,
+): BookingDetails['duration'] {
+  const ran = pickedUpAt && returnedAt
+  const from = ran ? new Date(pickedUpAt) : booked.from
+  const to = ran ? new Date(returnedAt) : booked.to
+  const minutes = Math.max(0, Math.floor((to.getTime() - from.getTime()) / 60_000))
+  return { days: Math.floor(minutes / 1440), hours: Math.floor((minutes % 1440) / 60), minutes: minutes % 60 }
+}
 
-  const at: Record<BookingStage, Date | undefined> = {
-    reserved: reservedAt,
-    confirmed: addMinutes(reservedAt, 2),
-    pickedUp: pickup,
-    returned: dropoff,
-    // Closing happens whenever the paperwork is finished — there is nothing to promise in advance.
-    closed: reached >= BOOKING_STAGES.length ? addMinutes(dropoff, 45) : undefined,
+/** What is recorded about how far a rental got. Only the status and the schedule are always known. */
+export interface StageFacts {
+  status: string
+  /** The schedule: when pickup and return fall due, whether or not they have happened. */
+  pickupAt: string
+  returnAt: string
+  createdAt?: string
+  confirmedAt?: string
+  pickedUpAt?: string
+  returnedAt?: string
+  completedAt?: string
+  channel?: BookingStageStep['channel']
+}
+
+/** Stages a status says are behind it, for a row with no timestamps to say so itself. */
+const STAGES_BEHIND: Record<string, number> = {
+  Pending: 1,
+  Confirmed: 2,
+  'On rental': 3,
+  // Still out: the car is late, not back.
+  Overdue: 3,
+  Returned: 4,
+  Completed: 5,
+}
+
+/**
+ * The five progress steps, from what actually happened. A finished step carries when it
+ * happened, if that was recorded; pickup and return still ahead carry when they fall due.
+ * Nothing is dated from a guess, and a booking that ended early skips the rest.
+ */
+export function bookingStages(facts: StageFacts): BookingStageStep[] {
+  const cancelled = facts.status === 'Cancelled'
+  // A cancelled booking's status no longer says how far it got; only its timestamps do.
+  const behind = cancelled ? 1 : (STAGES_BEHIND[facts.status] ?? 1)
+  const done: Record<BookingStage, boolean> = {
+    reserved: true,
+    confirmed: facts.confirmedAt != null || behind >= 2,
+    pickedUp: facts.pickedUpAt != null || behind >= 3,
+    returned: facts.returnedAt != null || behind >= 4,
+    closed: behind >= 5,
   }
-
-  const channel: Partial<Record<BookingStage, BookingStageStep['channel']>> = {
-    reserved: 'web',
-    confirmed: 'auto',
-    pickedUp: 'counter',
-    returned: 'counter',
-    closed: 'auto',
+  const happened: Record<BookingStage, string | undefined> = {
+    reserved: facts.createdAt,
+    confirmed: facts.confirmedAt,
+    pickedUp: facts.pickedUpAt,
+    returned: facts.returnedAt,
+    closed: facts.completedAt,
   }
+  const due: Partial<Record<BookingStage, string>> = { pickedUp: facts.pickupAt, returned: facts.returnAt }
+  const current = cancelled ? undefined : BOOKING_STAGES.find((key) => !done[key])
 
-  return BOOKING_STAGES.map((key, index): BookingStageStep => {
-    const state = index < reached ? 'done' : index === reached ? 'current' : 'pending'
-    return { key, state, at: at[key]?.toISOString(), channel: index < reached ? channel[key] : undefined }
+  return BOOKING_STAGES.map((key): BookingStageStep => {
+    if (done[key]) {
+      return { key, state: 'done', at: happened[key], channel: key === 'reserved' ? facts.channel : undefined }
+    }
+    if (cancelled) return { key, state: 'skipped' }
+    return { key, state: key === current ? 'current' : 'pending', at: due[key] }
   })
 }
 
@@ -299,8 +325,20 @@ export function buildBookingDetails(
   const total = booking ? booking.pricing.total : Math.abs(parseBookingTotal(totalText))
   const taxRatePct = booking?.pricing.taxRatePct ?? vehicle?.fees.taxRatePct ?? DEFAULT_TAX_PCT
 
-  const stages = buildStages(status, pickup, dropoff)
-  const stageIndex = STAGE_INDEX[status] ?? 1
+  const stages = bookingStages({
+    status,
+    pickupAt: pickup.toISOString(),
+    returnAt: dropoff.toISOString(),
+    createdAt: booking?.createdAt,
+    confirmedAt: booking?.confirmedAt,
+    pickedUpAt: booking?.pickedUpAt,
+    returnedAt: booking?.returnedAt,
+    completedAt: booking?.completedAt,
+    // Only a renter booking for themselves states how they would like to pay.
+    channel: booking ? (booking.paymentPreference ? 'web' : 'counter') : undefined,
+  })
+  // Counted from the stages, so the placeholder checks cannot disagree with the progress strip.
+  const stageIndex = stages.filter((stage) => stage.state === 'done').length
   const renter = buildRenter(customerName, total, booking)
   const agent = branch?.manager ?? ''
   const deposit = booking?.pricing.deposit ?? vehicle?.fees.deposit ?? 350
@@ -329,10 +367,11 @@ export function buildBookingDetails(
     pickupAddress: branch?.address ?? '',
     returnLocation: booking?.returnLocation ?? location,
     returnSameBranch: (booking?.returnLocation ?? location) === location,
-    // Varied per booking so the page doesn't read as a template; there are no real desks to model.
-    counter: `${(sequence(reference) % 3) + 1}`,
-    agent,
+    pickedUpAt: booking?.pickedUpAt,
+    returnedAt: booking?.returnedAt,
     days,
+    // The real length: `days` above is rounded, for the charge lines.
+    duration: rentalDuration({ from: pickup, to: dropoff }, booking?.pickedUpAt, booking?.returnedAt),
     includedMiles,
 
     vehicleId: booking?.vehicleId ?? vehicle?.id,
@@ -347,5 +386,11 @@ export function buildBookingDetails(
     checks: buildChecks(stageIndex),
     events: buildEvents(reference, stages, renter, plate, agent, deposit, depositHeld),
     renter,
+    // A prompt to answer the reservation, so it goes once that is done. Counter bookings carry neither.
+    request:
+      status === 'Pending' && (booking?.paymentPreference || booking?.notes)
+        ? { paymentPreference: booking.paymentPreference, notes: booking.notes }
+        : undefined,
+    declined: booking?.declined,
   }
 }

@@ -15,7 +15,6 @@
       "All": "All",
       "Upcoming": "Upcoming",
       "Today": "Today",
-      "Recent activity": "Recent activity",
       "Overdue": "Overdue",
       "Drafts": "Drafts"
     },
@@ -113,30 +112,34 @@
     "progress": {
       "title": "Rental progress",
       "stageOf": "Stage {{current}} of {{total}}",
+      "endedAt": "Ended at {{stage}}",
       "scheduled": "Scheduled {{when}}",
       "due": "Due {{when}}",
+      "done": "Done",
+      "notReached": "Not reached",
       "waiting": {
         "reserved": "Not yet reserved",
         "confirmed": "Awaiting confirmation",
         "pickedUp": "Not collected yet",
         "returned": "Not returned yet",
-        "closed": "Pending return"
+        "closed": "Not closed yet"
       }
     },
     "pickup": {
       "title": "Pickup",
-      "counter": "Counter",
-      "desk": "Desk {{number}} · {{agent}}",
-      "fuelOut": "Fuel out",
-      "fuelPolicy": "Full · same-to-same"
+      "handedOver": "Handed over",
+      "notYet": "Not yet"
     },
     "return": {
       "title": "Return",
       "sameBranch": "same branch",
       "oneWay": "one-way return",
+      "returned": "Returned",
       "duration": "Duration",
       "days_one": "{{count}} day",
       "days_other": "{{count}} days",
+      "hours": "{{count}}h",
+      "minutes": "{{count}}m",
       "mileageCap": "Mileage cap",
       "milesIncluded": "{{count}} mi included"
     },
@@ -290,26 +293,86 @@
       "vehicleAssigned": "Vehicle assigned"
     },
     "actions": {
-      "checkIn": "Check in",
+      "handOver": "Hand over vehicle",
+      "closeBooking": "Close booking",
+      "waitingFor": "Waiting for",
+      "needs": {
+        "payment": "Payment",
+        "deposit": "Deposit hold",
+        "signature": "Signed agreement",
+        "settlement": "Deposit release or capture"
+      },
+      "confirm": "Confirm reservation",
+      "decline": "Decline",
       "openAgreement": "Open agreement",
       "messageRenter": "Message renter",
       "pendingApi": "This needs the bookings API, which isn't live yet.",
+      "restore": "Restore reservation",
       "returnVehicle": "Return vehicle"
     },
     "cancelDialog": {
       "title": "Cancel this booking?",
       "description": "{{reference}} for {{name}} will be released and the vehicle freed for other rentals.",
       "confirm": "Cancel booking"
+    },
+    "request": {
+      "title": "Renter's request",
+      "subtitle": "What the renter asked for when they reserved online.",
+      "paymentPreference": "Prefers to pay",
+      "notes": "Note",
+      "preference": {
+        "online_rental_and_deposit": "Online, rental and deposit",
+        "online_rental_only": "Rental online, deposit at the counter",
+        "cash": "At the counter"
+      }
+    },
+    "declineDialog": {
+      "title": "Decline this reservation?",
+      "description": "{{reference}} for {{name}} will be cancelled. You can restore it until its pickup time.",
+      "withdrawsLink": "The payment link already sent to them will stop working.",
+      "reason": "Reason",
+      "reasonRequired": "Choose a reason.",
+      "message": "Message to the renter",
+      "messageHint": "Optional. Emailed to the renter with the reason.",
+      "confirm": "Decline reservation"
+    },
+    "restoreDialog": {
+      "title": "Restore this reservation?",
+      "description": "{{reference}} goes back to Pending for you to confirm or decline again, and {{name}} is emailed that it is under review. A payment link the decline withdrew stays cancelled.",
+      "confirm": "Restore reservation"
+    },
+    "declined": {
+      "title": "Reservation declined",
+      "subtitle": "Turned down on {{date}}.",
+      "reason": "Reason",
+      "message": "Message to the renter",
+      "reasons": {
+        "dates_unavailable": "Dates no longer available",
+        "vehicle_unavailable": "Vehicle unavailable",
+        "renter_not_verified": "Could not verify the renter",
+        "other": "Other"
+      }
     }
   },
   "toast": {
     "created": "Booking created",
     "createdDescription": "{{reference}} for {{name}} is on the schedule.",
     "createFailed": "Could not create booking",
+    "confirmed": "Reservation confirmed",
+    "confirmFailed": "Couldn't confirm the reservation",
+    "declined": "Reservation declined",
+    "declinedEmailQueued": "An email with the reason is on its way to {{name}}.",
+    "renterNotNotified": "Email isn't set up, so {{name}} was not told. Message them yourself.",
+    "declineFailed": "Couldn't decline the reservation",
+    "restored": "Reservation restored",
+    "restoredEmailQueued": "An email is on its way to {{name}} saying it is under review again.",
+    "restoreFailed": "Couldn't restore the reservation",
     "pickedUp": "Vehicle handed over",
     "pickUpFailed": "Couldn't hand the vehicle over",
     "returned": "Vehicle returned",
-    "returnFailed": "Couldn't return the vehicle"
+    "returnFailed": "Couldn't return the vehicle",
+    "closed": "Booking closed",
+    "closeFailed": "Couldn't close the booking"
   },
   "form": {
     "title": "New booking",

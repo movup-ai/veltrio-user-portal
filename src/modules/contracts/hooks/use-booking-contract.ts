@@ -25,7 +25,7 @@ export function useBookingContract(reference: string) {
 }
 
 /**
- * A change to the agreement that answers with where it now stands. Check in reads pickup's rule
+ * A change to the agreement that answers with where it now stands. Hand over reads pickup's rule
  * from the payments summary and lists read the booking's signed flag, so both are refreshed.
  */
 function useContractAction<TArgs>(

@@ -71,6 +71,9 @@ export const PAYMENT_REFUSALS = [
   'not_fully_paid',
   'contract_unsigned',
   'not_on_rental',
+  'not_confirmed',
+  'not_awaiting_close',
+  'deposit_unsettled',
 ] as const
 
 export type PaymentRefusal = (typeof PAYMENT_REFUSALS)[number]

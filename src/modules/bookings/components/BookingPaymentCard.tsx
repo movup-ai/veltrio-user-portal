@@ -18,7 +18,7 @@ import {
 } from '@/modules/payments/utils/booking-payment.utils'
 import { BookingChargeLines } from './BookingCharges'
 import type { BookingChargeLine } from '../types/booking.types'
-import { isBeforePickup } from '../utils/booking.handover'
+import { awaitsConfirmation, isBeforePickup } from '../utils/booking.handover'
 
 /** Everything the counter can do to the money on a booking. */
 export type PaymentAction =
@@ -80,6 +80,7 @@ export function BookingPaymentCard({
   const money = (amount: number) => format.currency(amount, payments.currency)
   const { actions } = payments
   const badge = paymentBadge(payments)
+  const unconfirmed = awaitsConfirmation(actions.sendLink)
 
   const outstanding = payments.balance > 0
   const partlyPaid = outstanding && payments.paid > 0
@@ -126,7 +127,8 @@ export function BookingPaymentCard({
       {rental.length > 0 && <PaymentHistory payments={rental} currency={payments.currency} />}
 
       <div className="mt-3 flex flex-col gap-2">
-        {outstanding && (
+        {unconfirmed && <Hint rule={actions.sendLink} />}
+        {outstanding && !unconfirmed && (
           <>
             <Button
               type="button"
@@ -255,7 +257,9 @@ function DepositSection({
   // Asked for until a hold is in place; gone once there is nothing left to ask for.
   const settledOrClosed = ['booking_returned', 'booking_cancelled', 'no_deposit'] as const
   const showRequest =
-    state !== 'held' && !settledOrClosed.some((reason) => reason === actions.requestDeposit.reason)
+    state !== 'held' &&
+    !awaitsConfirmation(actions.requestDeposit) &&
+    !settledOrClosed.some((reason) => reason === actions.requestDeposit.reason)
   // The next step once the rental is settled, so it leads; until then the payment link does.
   const requestLeads = actions.requestDeposit.allowed && payments.balance <= 0
 

@@ -78,6 +78,7 @@ export function bookingToTuple(b: Booking): BookingTuple {
     undefined, // vehicleImage — joined in from the fleet at render time
     b.vehicleId,
     isReadyForPickup(b),
+    Boolean(b.declined),
   ]
 }
 
@@ -159,11 +160,22 @@ const PRE_PICKUP: readonly string[] = ['Pending', 'Confirmed']
 /** Canonical label for the derived readiness badge — `domain:status.Ready` carries the text. */
 const READY = 'Ready'
 
+/** Nothing more happens to it: closed off after return, or cancelled before. */
+export function isOver(status: string): boolean {
+  return status === 'Completed' || status === 'Cancelled'
+}
+
+/** The API calls a declined request and a cancelled rental both `cancelled`; the badge does not. */
+export function shownStatus(status: string, declined: boolean): string {
+  return declined ? 'Declined' : status
+}
+
 /** `actions` is optional — read-only tables (dashboard, vehicle history) render the inert "…" button. */
 export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
-  const [customer, reference, vehicle, plate, window, note, location, status, total] = b
+  const [customer, reference, vehicle, plate, window, note, location, , total] = b
   const vehicleImage = b[11]
   const ready = b[13]
+  const status = shownStatus(b[7], Boolean(b[14]))
 
   return {
     key: reference,
@@ -189,9 +201,9 @@ export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
       { kind: 'text', primary: customer },
       { kind: 'stack', primary: window, secondary: note, weight: 500, subFontMono: false },
       { kind: 'text', primary: location },
-      // Two badges: where the rental is, and — while it is still ahead of pickup — whether
-      // the paperwork is done. Readiness is derived, so it cannot contradict the row.
-      { kind: 'badges', statuses: ready && PRE_PICKUP.includes(status) ? [status, READY] : [status] },
+      // One badge: once a booking still ahead of pickup is paid and signed it reads Ready, which
+      // already says it is confirmed. Readiness is derived, so it cannot contradict the row.
+      { kind: 'badges', statuses: [ready && PRE_PICKUP.includes(status) ? READY : status] },
       {
         kind: 'amount',
         primary: total,

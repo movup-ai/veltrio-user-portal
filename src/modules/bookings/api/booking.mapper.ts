@@ -16,6 +16,9 @@ import {
   type BookingSort,
   type BookingStats,
   type BookingStatus,
+  type DeclineInput,
+  type DeclineReason,
+  type PaymentPreference,
   type PaymentState,
   type BookingTab,
   type VerificationKind,
@@ -96,10 +99,15 @@ export interface BookingWire {
     method: string | null
     paidAt: string | null
   }
+  paymentPreference: PaymentPreference | null
+  notes: string | null
+  declined: { reason: DeclineReason; message: string | null; at: string; restorable: boolean } | null
   contract: { signedAt: string | null; version: string | null }
   verification: VerificationWire | null
+  confirmedAt: string | null
   pickedUpAt: string | null
   returnedAt: string | null
+  completedAt: string | null
   createdAt: string
   updatedAt: string
 }
@@ -301,13 +309,20 @@ export function toBooking(wire: BookingWire): Booking {
       method: wire.payment.method ?? undefined,
       paidAt: wire.payment.paidAt ?? undefined,
     },
+    paymentPreference: wire.paymentPreference ?? undefined,
+    notes: wire.notes ?? undefined,
+    declined: wire.declined
+      ? { ...wire.declined, message: wire.declined.message ?? undefined }
+      : undefined,
     contract: {
       signedAt: wire.contract.signedAt ?? undefined,
       version: wire.contract.version ?? undefined,
     },
     verification: wire.verification ? toVerification(wire.verification) : undefined,
+    confirmedAt: wire.confirmedAt ?? undefined,
     pickedUpAt: wire.pickedUpAt ?? undefined,
     returnedAt: wire.returnedAt ?? undefined,
+    completedAt: wire.completedAt ?? undefined,
     createdAt: wire.createdAt,
   }
 }
@@ -383,6 +398,18 @@ export function toBookingLists(bookings: Booking[], now = new Date()): BookingLi
 
 // --- Writes --------------------------------------------------------------------------------
 
+/** A booking after a decline or its undo, with whether an email to the renter is on its way. */
+export type BookingNotifiedWire = BookingWire & { emailQueued: boolean }
+
+/** Queued is not delivered: the API sends it afterwards. False while its email is switched off. */
+export function toNotifiedBooking(wire: BookingNotifiedWire) {
+  return { booking: toBooking(wire), emailQueued: wire.emailQueued }
+}
+
+export function toDeclinePayload(input: DeclineInput) {
+  return { reason: input.reason, message: input.message.trim() || null }
+}
+
 export function toBookingPayload(input: BookingInput) {
   return {
     ...(input.customerId && { customerId: input.customerId }),
@@ -433,7 +460,6 @@ const TAB_TO_API: Record<BookingTab, string | undefined> = {
   All: undefined,
   Upcoming: 'upcoming',
   Today: 'today',
-  'Recent activity': 'recent',
   Overdue: 'overdue',
 }
 
@@ -458,7 +484,12 @@ export function toBookingListQuery(params: BookingListParams): Record<string, un
 
   const search = filters.search.trim()
   if (search) query.search = search
-  if (filters.status !== 'Any') query.status = STATUS_TO_API[filters.status]
+  if (filters.status !== 'Any') {
+    const status = filters.status === 'Declined' ? 'Cancelled' : filters.status
+    query.status = STATUS_TO_API[status]
+    // The API calls both `cancelled`, so each has to say which of the two it means.
+    if (status === 'Cancelled') query.declined = filters.status === 'Declined'
+  }
   if (filters.location !== 'All') query.location = filters.location
   if (filters.make !== 'All') query.make = filters.make
   if (filters.pickup.from) query.pickupFrom = filters.pickup.from
@@ -493,6 +524,7 @@ export interface BookingStatsWire {
   unpaid: number
   unsigned: number
   ready: number
+  pending: number
   tabCounts: BookingTabCountsWire
 }
 
@@ -503,7 +535,6 @@ export function toTabCounts(wire: BookingTabCountsWire): Record<BookingTab, numb
     All: wire.upcoming + wire.recent,
     Upcoming: wire.upcoming,
     Today: wire.today,
-    'Recent activity': wire.recent,
     Overdue: wire.overdue,
   }
 }
@@ -517,6 +548,7 @@ export function toBookingStats(wire: BookingStatsWire): BookingStats {
     unpaid: wire.unpaid,
     unsigned: wire.unsigned,
     ready: wire.ready,
+    pending: wire.pending,
     tabCounts: toTabCounts(wire.tabCounts),
   }
 }
