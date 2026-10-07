@@ -7,6 +7,8 @@ import {
   formatRentalDuration,
   formatRentalWindow,
   tripCount,
+  isOver,
+  shownStatus,
   withVehicleImage,
 } from './booking.utils'
 
@@ -101,8 +103,17 @@ describe('withVehicleImage', () => {
   })
 })
 
+describe('isOver', () => {
+  it('ends a booking at close-off or cancellation, and nowhere before', () => {
+    // The page hides Manage and Hand over on this. It used to ask whether the last progress step
+    // was done, which a cancelled booking no longer is: its later steps are skipped.
+    expect(['Completed', 'Cancelled'].map(isOver)).toEqual([true, true])
+    expect(['Pending', 'Confirmed', 'On rental', 'Overdue', 'Returned'].some(isOver)).toBe(false)
+  })
+})
+
 describe('bookingRow readiness badge', () => {
-  const row = (status: string, ready: boolean): BookingTuple =>
+  const row = (status: string, ready: boolean, declined = false): BookingTuple =>
     [
       'Edward Thomas',
       'BK-10001',
@@ -118,6 +129,7 @@ describe('bookingRow readiness badge', () => {
       undefined,
       'v1',
       ready,
+      declined,
     ] as BookingTuple
 
   const badges = (tuple: BookingTuple) => {
@@ -125,8 +137,9 @@ describe('bookingRow readiness badge', () => {
     return cell.kind === 'badges' ? cell.statuses : []
   }
 
-  it('adds Ready beside the status once paid and signed', () => {
-    expect(badges(row('Confirmed', true))).toEqual(['Confirmed', 'Ready'])
+  it('shows Ready in place of the status once paid and signed, never both', () => {
+    // Two badges in one cell read as two statuses; Ready already means confirmed, paid and signed.
+    expect(badges(row('Confirmed', true))).toEqual(['Ready'])
   })
 
   it('shows the status alone while the paperwork is outstanding', () => {
@@ -136,6 +149,14 @@ describe('bookingRow readiness badge', () => {
   it('drops Ready once the car is out — the status already says so', () => {
     expect(badges(row('On rental', true))).toEqual(['On rental'])
     expect(badges(row('Completed', true))).toEqual(['Completed'])
+  })
+
+  it('reads Declined for a request the company turned down, not Cancelled', () => {
+    // Both are `cancelled` to the API; without this a declined request looks like a lost rental.
+    expect(badges(row('Cancelled', false, true))).toEqual(['Declined'])
+    expect(badges(row('Cancelled', false))).toEqual(['Cancelled'])
+    expect(shownStatus('Cancelled', true)).toBe('Declined')
+    expect(shownStatus('Cancelled', false)).toBe('Cancelled')
   })
 })
 

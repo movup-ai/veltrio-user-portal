@@ -2,7 +2,7 @@ import { apiClient } from '@/services/api/client'
 import { locationApi } from '@/modules/locations/api/location.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
 import { MAX_BOOKING_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
-import type { BookingFilters, BookingInput, BookingTuple } from '../types/booking.types'
+import type { BookingFilters, BookingInput, BookingTuple, DeclineInput } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
 import {
@@ -12,10 +12,13 @@ import {
   toBookingLists,
   toBookingPayload,
   toBookingStats,
+  toDeclinePayload,
   toInterval,
+  toNotifiedBooking,
   toTabCounts,
   type BookedIntervalWire,
   type BookingListParams,
+  type BookingNotifiedWire,
   type BookingStatsWire,
   type BookingTabCountsWire,
   type BookingWire,
@@ -93,12 +96,32 @@ export const bookingApi = {
   create: (input: BookingInput) =>
     apiClient.post<BookingWire>('/bookings', toBookingPayload(input)).then((r) => toBooking(r.data)),
 
+  /** Accepts a renter's own reservation. Refused when another booking took the dates meanwhile. */
+  confirm: (reference: string) =>
+    apiClient.post<BookingWire>(`/bookings/${reference}/confirm`).then((r) => toBooking(r.data)),
+
+  /** Withdraws a payment link nobody paid. Refused once money is taken or held on the booking. */
+  decline: (reference: string, input: DeclineInput) =>
+    apiClient
+      .post<BookingNotifiedWire>(`/bookings/${reference}/decline`, toDeclinePayload(input))
+      .then((r) => toNotifiedBooking(r.data)),
+
+  /** Undoes a decline: pending again, not accepted. Refused once the pickup time has passed. */
+  restore: (reference: string) =>
+    apiClient
+      .post<BookingNotifiedWire>(`/bookings/${reference}/restore`)
+      .then((r) => toNotifiedBooking(r.data)),
+
   /** Refused until the booking is fully paid: the rental settled and the deposit held. */
   pickUp: (reference: string) =>
     apiClient.post<BookingWire>(`/bookings/${reference}/pick-up`).then((r) => toBooking(r.data)),
 
   returnVehicle: (reference: string) =>
     apiClient.post<BookingWire>(`/bookings/${reference}/return`).then((r) => toBooking(r.data)),
+
+  /** The last step, once the car is back. Refused while a deposit is still held. */
+  close: (reference: string) =>
+    apiClient.post<BookingWire>(`/bookings/${reference}/close`).then((r) => toBooking(r.data)),
 
   /**
    * One filtered, sorted page — what the bookings table renders. The server does the narrowing,

@@ -27,6 +27,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   Returned: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
   'On rental': { bg: 'var(--color-info-tint)', fg: 'var(--color-info)' },
   Cancelled: { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' },
+  Declined: { bg: 'var(--color-error-tint)', fg: 'var(--color-error)' },
   Scheduled: { bg: 'var(--color-info-tint)', fg: 'var(--color-info)' },
   New: { bg: 'var(--color-info-tint)', fg: 'var(--color-info)' },
   Refunded: { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' },

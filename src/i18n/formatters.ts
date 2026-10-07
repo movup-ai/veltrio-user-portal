@@ -66,6 +66,15 @@ export function useFormatters() {
       percent: (value: number) => `${formatNumberIn(language, value)}%`,
       date: (date: Date | string, options: Intl.DateTimeFormatOptions) =>
         formatDateIn(language, typeof date === 'string' ? new Date(date) : date, options),
+      /** "Oct 2, 11:21 PM" — a moment on the 12-hour clock, which is how the counter reads times. */
+      dateTime: (date: Date | string) =>
+        formatDateIn(language, typeof date === 'string' ? new Date(date) : date, {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        }),
       /** "Sep 14" / "14 sept." — the compact form used in availability and timeline strips. */
       shortDate: (date: Date | string) =>
         formatDateIn(language, typeof date === 'string' ? new Date(date) : date, { month: 'short', day: 'numeric' }),

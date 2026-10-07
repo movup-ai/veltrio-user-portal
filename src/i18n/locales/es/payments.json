@@ -148,7 +148,10 @@
       "not_before_pickup": "El vehículo ya se recogió.",
       "not_fully_paid": "Para la recogida, el alquiler debe estar pagado y el depósito retenido.",
       "contract_unsigned": "Para la recogida, el contrato de alquiler debe estar firmado.",
-      "not_on_rental": "El vehículo no está fuera con esta reserva."
+      "not_on_rental": "El vehículo no está fuera con esta reserva.",
+      "not_confirmed": "El pago y el depósito se podrán solicitar cuando se confirme la reserva.",
+      "not_awaiting_close": "La reserva no está pendiente de cierre.",
+      "deposit_unsettled": "Primero libera o ejecuta el depósito."
     },
     "receipt": {
       "title": "Recibo",

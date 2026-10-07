@@ -21,6 +21,8 @@ export type BookingTuple = [
   vehicleId?: string,
   /** Paid and signed, so the keys can be handed over. Derived, never stored. */
   ready?: boolean,
+  /** A renter's request the company turned down; `status` says only Cancelled. */
+  declined?: boolean,
 ]
 
 /**
@@ -45,6 +47,40 @@ export type BookingStatus = (typeof BOOKING_STATUSES)[number]
 export const PAYMENT_STATES = ['unpaid', 'deposit_held', 'rental_paid', 'paid', 'refunded'] as const
 export type PaymentState = (typeof PAYMENT_STATES)[number]
 
+/** How a renter booking for themselves asked to pay. A wish: nothing is charged because of it. */
+export const PAYMENT_PREFERENCES = ['online_rental_and_deposit', 'online_rental_only', 'cash'] as const
+export type PaymentPreference = (typeof PAYMENT_PREFERENCES)[number]
+
+/** What a renter asked for with their own reservation. Absent on a booking taken at the counter. */
+export interface BookingRequest {
+  paymentPreference?: PaymentPreference
+  notes?: string
+}
+
+/** Why a reservation was turned down. Labels live in `bookings:details.declined.reasons.<value>`. */
+export const DECLINE_REASONS = [
+  'dates_unavailable',
+  'vehicle_unavailable',
+  'renter_not_verified',
+  'other',
+] as const
+export type DeclineReason = (typeof DECLINE_REASONS)[number]
+
+/** What the decline dialog sends. The renter is emailed both. */
+export interface DeclineInput {
+  reason: DeclineReason
+  message: string
+}
+
+/** A decline as the booking keeps it. Its presence is what tells declined from cancelled. */
+export interface BookingDecline {
+  reason: DeclineReason
+  message?: string
+  at: string
+  /** The API's answer on whether it can still be undone: only until the pickup time asked for. */
+  restorable: boolean
+}
+
 export interface BookingPayment {
   state: PaymentState
   paid: number
@@ -68,7 +104,7 @@ export const BOOKING_ATTENTION_STATUSES: readonly string[] = ['Overdue'] satisfi
 
 export const BOOKING_OVERDUE_STATUSES: readonly string[] = ['Overdue'] satisfies BookingStatus[]
 
-export const BOOKING_TABS = ['All', 'Upcoming', 'Today', 'Recent activity', 'Overdue'] as const
+export const BOOKING_TABS = ['All', 'Upcoming', 'Today', 'Overdue'] as const
 export type BookingTab = (typeof BOOKING_TABS)[number]
 
 /** Rental length in days — bounds only; the label lives in `bookings:filters.durationBand.<value>`. */
@@ -106,14 +142,20 @@ export interface BookingStats {
   unsigned: number
   /** Confirmed, paid and signed — waiting only on the renter to turn up. */
   ready: number
+  /** Reservations waiting for the company to confirm or decline them. */
+  pending: number
   /** Unfiltered count per tab; the filtered counts come from `useBookingTabCounts`. */
   tabCounts: Record<BookingTab, number>
 }
 
+/** The statuses the list shows, which tells a declined request from a cancelled rental. */
+export const BOOKING_STATUS_FILTERS = [...BOOKING_STATUSES, 'Declined'] as const
+export type BookingStatusFilter = (typeof BOOKING_STATUS_FILTERS)[number]
+
 /** Everything the list filters on. `Any`/`All`/an empty range are the "no constraint" values. */
 export interface BookingFilters {
   search: string
-  status: BookingStatus | 'Any'
+  status: BookingStatusFilter | 'Any'
   location: string | 'All'
   /** Pickup day must fall inside this span. Either end may be blank, meaning "open on that side". */
   pickup: DateRange
@@ -270,12 +312,19 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   rate: BookingRate
   pricing: BookingQuote
   payment: BookingPayment
+  paymentPreference?: PaymentPreference
+  notes?: string
+  declined?: BookingDecline
   contract: BookingContract
   /** The background check, when one has been ordered. Absent means it was never started. */
   verification?: BookingVerification
+  /** When the company accepted it. Absent on a request still waiting, and on one it declined. */
+  confirmedAt?: string
   /** When the car actually changed hands, which is not the same as the window's ends. */
   pickedUpAt?: string
   returnedAt?: string
+  /** When staff closed the booking off after return. */
+  completedAt?: string
   createdAt: string
 }
 
@@ -294,12 +343,15 @@ export type BookingStage = (typeof BOOKING_STAGES)[number]
 
 export interface BookingStageStep {
   key: BookingStage
-  /** `done` is behind us, `current` is where the rental sits now, `pending` is still ahead. */
-  state: 'done' | 'current' | 'pending'
-  /** ISO — when it happened, or when it falls due. Absent when there is nothing to date yet. */
+  /**
+   * `done` is behind us, `current` is where the rental sits now, `pending` is still ahead, and
+   * `skipped` never happened: the booking was declined or cancelled first.
+   */
+  state: 'done' | 'current' | 'pending' | 'skipped'
+  /** ISO — when it happened, or when it falls due. Absent when that was never recorded. */
   at?: string
-  /** How it was done. Only meaningful once the stage is behind us. */
-  channel?: 'web' | 'auto' | 'counter'
+  /** How the reservation was made: by the renter online, or at the counter. Reserved only. */
+  channel?: 'web' | 'counter'
 }
 
 export interface BookingCheckStep {
@@ -440,9 +492,13 @@ export interface BookingDetails {
   returnLocation: string
   /** True when the car comes back to the branch it left from — by far the common case. */
   returnSameBranch: boolean
-  counter: string
-  agent: string
+  /** When the car actually changed hands. Absent until it has. */
+  pickedUpAt?: string
+  returnedAt?: string
+  /** Whole days, rounded: what the charge lines bill by. */
   days: number
+  /** How long the rental ran once the car is back; until then, how long it is booked for. */
+  duration: { days: number; hours: number; minutes: number }
   /** Across the whole rental; `null` means unlimited. */
   includedMiles: number | null
 
@@ -461,6 +517,8 @@ export interface BookingDetails {
   checks: BookingCheckStep[]
   events: BookingEventEntry[]
   renter: BookingRenter
+  request?: BookingRequest
+  declined?: BookingDecline
 }
 
 /**

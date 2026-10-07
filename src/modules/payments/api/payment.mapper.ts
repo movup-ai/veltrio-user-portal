@@ -90,6 +90,7 @@ export interface PaymentActionsWire {
   releaseDeposit: PaymentActionWire
   pickUp: PaymentActionWire
   returnVehicle: PaymentActionWire
+  close: PaymentActionWire
 }
 
 export interface BookingPaymentsWire {
@@ -157,6 +158,7 @@ export function toPaymentActions(wire: PaymentActionsWire): PaymentActions {
     releaseDeposit: toPaymentAction(wire.releaseDeposit),
     pickUp: toPaymentAction(wire.pickUp),
     returnVehicle: toPaymentAction(wire.returnVehicle),
+    close: toPaymentAction(wire.close),
   }
 }
 

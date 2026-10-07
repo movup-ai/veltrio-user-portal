@@ -1,6 +1,6 @@
 import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { normalizeApiError } from '@/services/api/errors'
-import type { ContractLink } from '../types/booking-contract.types'
+import type { BookingContract, ContractLink } from '../types/booking-contract.types'
 
 /** What the signing form holds before it is sent. */
 export interface SignatureDraft {
@@ -37,6 +37,11 @@ export function drawingProblem(error: unknown): DrawingProblem | undefined {
 /** The renter's agreement page, on the company's own site: the host names the tenant, so the path does not. */
 export function contractLinkUrl(subdomain: string, link: Pick<ContractLink, 'contractId' | 'token'>): string {
   return `${siteUrl(subdomain)}/sign/${link.contractId}/${link.token}`
+}
+
+/** Whether there is a document to open: until one is issued there is only a preview. */
+export function agreementIssued(contract: Pick<BookingContract, 'status'> | undefined): boolean {
+  return contract != null && contract.status !== 'none'
 }
 
 /** Numbered from the booking, as the API names its agreement (AGR-). */

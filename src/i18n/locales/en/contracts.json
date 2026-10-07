@@ -129,7 +129,8 @@
     "booking_cancelled": "The booking is cancelled.",
     "not_before_pickup": "The vehicle has already been picked up.",
     "already_signed": "The agreement is already signed.",
-    "not_issued": "No agreement has been issued yet."
+    "not_issued": "No agreement has been issued yet.",
+    "not_confirmed": "The agreement can be sent once the reservation is confirmed."
   },
   "toast": {
     "issueFailed": "Couldn't prepare the agreement",

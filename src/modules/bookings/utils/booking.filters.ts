@@ -9,7 +9,7 @@ import {
 } from '../types/booking.types'
 import type { DateRange } from '@/components/ui/date-range-picker'
 import { parseRentalWindow } from './booking.schedule'
-import { parseBookingTotal } from './booking.utils'
+import { parseBookingTotal, shownStatus } from './booking.utils'
 
 /**
  * A day number that can be compared and differenced. Built from a real date where the booking
@@ -73,8 +73,6 @@ export function bookingsForTab(tab: BookingTab, lists: BookingLists): BookingTup
       return allBookings(lists)
     case 'Today':
       return lists.upcoming.filter((b) => bookingPickupOrdinal(b) === todayOrdinal())
-    case 'Recent activity':
-      return lists.recent
     case 'Overdue':
       return allBookings(lists).filter((b) => BOOKING_OVERDUE_STATUSES.includes(b[7]))
     case 'Upcoming':
@@ -132,7 +130,7 @@ export function filterBookings(bookings: BookingTuple[], f: BookingFilters): Boo
 
   return bookings.filter((b) => {
     if (term && !matchesSearch(b, term)) return false
-    if (f.status !== 'Any' && b[7] !== f.status) return false
+    if (f.status !== 'Any' && shownStatus(b[7], Boolean(b[14])) !== f.status) return false
     if (f.location !== 'All' && b[6] !== f.location) return false
     if (f.make !== 'All' && bookingMake(b) !== f.make) return false
     if (!matchesPickup(b, f.pickup)) return false

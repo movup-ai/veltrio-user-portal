@@ -36,13 +36,13 @@ import { useBookingDrafts, useDeleteBookingDraft } from '@/modules/bookings/hook
 import {
   BOOKING_DURATION_BANDS,
   BOOKING_SORTS,
-  BOOKING_STATUSES,
+  BOOKING_STATUS_FILTERS,
   BOOKING_TABS,
   BOOKING_VALUE_BANDS,
   type BookingDurationBand,
   type BookingFilters,
   type BookingSort,
-  type BookingStatus,
+  type BookingStatusFilter,
   type BookingTab,
   type BookingTuple,
   type BookingValueBand,
@@ -73,7 +73,7 @@ export function BookingsPage() {
 
   const [tab, setTab] = useState<BookingTab | typeof DRAFTS_TAB>('All')
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'Any'>('Any')
+  const [statusFilter, setStatusFilter] = useState<BookingStatusFilter | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')
   const [pickupFilter, setPickupFilter] = useState<DateRange>(EMPTY_DATE_RANGE)
   const [sort, setSort] = useState<BookingSort>('newest')
@@ -321,9 +321,9 @@ export function BookingsPage() {
             value: statusFilter === 'Any' ? tCommon('filters.any') : domain.status(statusFilter),
             options: [
               { value: 'Any', label: tCommon('filters.any') },
-              ...BOOKING_STATUSES.map((s) => ({ value: s, label: domain.status(s) })),
+              ...BOOKING_STATUS_FILTERS.map((s) => ({ value: s, label: domain.status(s) })),
             ],
-            onChange: (value) => setStatusFilter(value as BookingStatus | 'Any'),
+            onChange: (value) => setStatusFilter(value as BookingStatusFilter | 'Any'),
           },
           {
             label: t('filters.location'),
