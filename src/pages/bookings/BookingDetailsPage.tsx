@@ -180,9 +180,12 @@ export function BookingDetailsPage() {
   // one that never will (a cancelled booking) is a dash rather than "not yet".
   const happened = (at?: string) =>
     at ? format.dateTime(at) : closed ? '—' : t('details.pickup.notYet')
+  const { days, hours, minutes } = booking.duration
   const duration = [
-    booking.duration.days > 0 && t('details.return.days', { count: booking.duration.days }),
-    booking.duration.hours > 0 && t('details.return.hours', { count: booking.duration.hours }),
+    days > 0 && t('details.return.days', { count: days }),
+    hours > 0 && t('details.return.hours', { count: hours }),
+    // Also when it is all there is: a car back within the minute still has a length to show.
+    (minutes > 0 || days + hours === 0) && t('details.return.minutes', { count: minutes }),
   ]
     .filter(Boolean)
     .join(' ')

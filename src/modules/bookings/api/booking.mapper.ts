@@ -398,12 +398,12 @@ export function toBookingLists(bookings: Booking[], now = new Date()): BookingLi
 
 // --- Writes --------------------------------------------------------------------------------
 
-/** A booking after a decline or its undo, with whether the API could email the renter. */
-export type BookingNotifiedWire = BookingWire & { renterNotified: boolean }
+/** A booking after a decline or its undo, with whether an email to the renter is on its way. */
+export type BookingNotifiedWire = BookingWire & { emailQueued: boolean }
 
-/** Email is optional on the API, so the answer says whether the renter was actually told. */
+/** Queued is not delivered: the API sends it afterwards. False while its email is switched off. */
 export function toNotifiedBooking(wire: BookingNotifiedWire) {
-  return { booking: toBooking(wire), renterNotified: wire.renterNotified }
+  return { booking: toBooking(wire), emailQueued: wire.emailQueued }
 }
 
 export function toDeclinePayload(input: DeclineInput) {
@@ -484,7 +484,12 @@ export function toBookingListQuery(params: BookingListParams): Record<string, un
 
   const search = filters.search.trim()
   if (search) query.search = search
-  if (filters.status !== 'Any') query.status = STATUS_TO_API[filters.status]
+  if (filters.status !== 'Any') {
+    const status = filters.status === 'Declined' ? 'Cancelled' : filters.status
+    query.status = STATUS_TO_API[status]
+    // The API calls both `cancelled`, so each has to say which of the two it means.
+    if (status === 'Cancelled') query.declined = filters.status === 'Declined'
+  }
   if (filters.location !== 'All') query.location = filters.location
   if (filters.make !== 'All') query.make = filters.make
   if (filters.pickup.from) query.pickupFrom = filters.pickup.from

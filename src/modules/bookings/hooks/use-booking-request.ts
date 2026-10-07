@@ -52,22 +52,22 @@ export function useDeclineBooking(reference: string, renterName: string) {
     reference,
     'decline',
     (input: DeclineInput) => bookingApi.decline(reference, input),
-    // Email is optional on the API, so the toast never implies the renter was told when they were not.
-    ({ renterNotified }) =>
-      i18n.t(renterNotified ? 'bookings:toast.declinedNotified' : 'bookings:toast.renterNotNotified', {
+    // Queued is all the API knows, so the toast says an email is on its way, never that it arrived.
+    ({ emailQueued }) =>
+      i18n.t(emailQueued ? 'bookings:toast.declinedEmailQueued' : 'bookings:toast.renterNotNotified', {
         name: renterName,
       }),
   )
 }
 
-/** Undoes a decline. The renter was told no, so the toast says whether they were told otherwise. */
+/** Undoes a decline. The renter was told no, so the toast says whether an email says otherwise. */
 export function useRestoreBooking(reference: string, renterName: string) {
-  return useAnswer<void, { renterNotified: boolean }>(
+  return useAnswer<void, { emailQueued: boolean }>(
     reference,
     'restore',
     () => bookingApi.restore(reference),
-    ({ renterNotified }) =>
-      i18n.t(renterNotified ? 'bookings:toast.restoredNotified' : 'bookings:toast.renterNotNotified', {
+    ({ emailQueued }) =>
+      i18n.t(emailQueued ? 'bookings:toast.restoredEmailQueued' : 'bookings:toast.renterNotNotified', {
         name: renterName,
       }),
   )

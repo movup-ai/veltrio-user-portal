@@ -36,7 +36,8 @@ export function BookingRestoreAction({ reference, renterName }: BookingRestoreAc
         cancelLabel={tCommon('actions.back')}
         confirmVariant="primary"
         loading={restore.isPending}
-        onConfirm={() => restore.mutate(undefined, { onSettled: () => setConfirming(false) })}
+        // Left open on a refusal, so it can be tried again without reopening it.
+        onConfirm={() => restore.mutate(undefined, { onSuccess: () => setConfirming(false) })}
       />
     </>
   )

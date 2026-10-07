@@ -32,7 +32,7 @@ describe('BookingRestoreAction', () => {
   })
 
   it('restores only after the dialog is confirmed, then reloads the booking', async () => {
-    restore.mockResolvedValue({ booking: {}, renterNotified: true })
+    restore.mockResolvedValue({ booking: {}, emailQueued: true })
     const { invalidate, user } = renderAction()
 
     await user.click(screen.getByRole('button', { name: 'Restore reservation' }))
@@ -50,13 +50,25 @@ describe('BookingRestoreAction', () => {
     expect(toast).toHaveBeenCalledWith(
       expect.objectContaining({
         variant: 'success',
-        description: 'Marisol Vega has been emailed that it is under review again.',
+        description: 'An email is on its way to Marisol Vega saying it is under review again.',
       }),
     )
   })
 
+  it('keeps the dialog open when the restore fails, so it can be tried again', async () => {
+    restore.mockRejectedValue(new Error('network'))
+    const { user } = renderAction()
+
+    await user.click(screen.getByRole('button', { name: 'Restore reservation' }))
+    await screen.findByRole('dialog')
+    await user.click(screen.getAllByRole('button', { name: 'Restore reservation' }).at(-1)!)
+
+    await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'error' })))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
   it('warns that the renter was not told when the API could not email them', async () => {
-    restore.mockResolvedValue({ booking: {}, renterNotified: false })
+    restore.mockResolvedValue({ booking: {}, emailQueued: false })
     const { user } = renderAction()
 
     await user.click(screen.getByRole('button', { name: 'Restore reservation' }))

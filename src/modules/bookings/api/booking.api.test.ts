@@ -150,7 +150,7 @@ describe('bookingApi.confirm and decline', () => {
       restorable: true,
     }
     post.mockResolvedValue({
-      data: { ...wire('BK-10001'), status: 'cancelled', declined, renterNotified: false },
+      data: { ...wire('BK-10001'), status: 'cancelled', declined, emailQueued: false },
     })
 
     const result = await bookingApi.decline('BK-10001', { reason: 'vehicle_unavailable', message: '' })
@@ -162,18 +162,18 @@ describe('bookingApi.confirm and decline', () => {
     expect(result.booking.status).toBe('Cancelled')
     expect(result.booking.declined?.reason).toBe('vehicle_unavailable')
     // Email is optional on the API; the counter has to know to tell the renter another way.
-    expect(result.renterNotified).toBe(false)
+    expect(result.emailQueued).toBe(false)
   })
 
   it('restore posts to the booking and returns it waiting again', async () => {
-    post.mockResolvedValue({ data: { ...wire('BK-10001'), status: 'pending', renterNotified: true } })
+    post.mockResolvedValue({ data: { ...wire('BK-10001'), status: 'pending', emailQueued: true } })
 
     const result = await bookingApi.restore('BK-10001')
 
     expect(post).toHaveBeenCalledWith('/bookings/BK-10001/restore')
     expect(result.booking.status).toBe('Pending')
     expect(result.booking.declined).toBeUndefined()
-    expect(result.renterNotified).toBe(true)
+    expect(result.emailQueued).toBe(true)
   })
 })
 

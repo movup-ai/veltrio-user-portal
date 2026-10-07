@@ -148,10 +148,14 @@ export interface BookingStats {
   tabCounts: Record<BookingTab, number>
 }
 
+/** The statuses the list shows, which tells a declined request from a cancelled rental. */
+export const BOOKING_STATUS_FILTERS = [...BOOKING_STATUSES, 'Declined'] as const
+export type BookingStatusFilter = (typeof BOOKING_STATUS_FILTERS)[number]
+
 /** Everything the list filters on. `Any`/`All`/an empty range are the "no constraint" values. */
 export interface BookingFilters {
   search: string
-  status: BookingStatus | 'Any'
+  status: BookingStatusFilter | 'Any'
   location: string | 'All'
   /** Pickup day must fall inside this span. Either end may be blank, meaning "open on that side". */
   pickup: DateRange
@@ -493,8 +497,8 @@ export interface BookingDetails {
   returnedAt?: string
   /** Whole days, rounded: what the charge lines bill by. */
   days: number
-  /** The real length of the rental, to the hour. */
-  duration: { days: number; hours: number }
+  /** How long the rental ran once the car is back; until then, how long it is booked for. */
+  duration: { days: number; hours: number; minutes: number }
   /** Across the whole rental; `null` means unlimited. */
   includedMiles: number | null
 

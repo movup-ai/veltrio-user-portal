@@ -97,7 +97,7 @@ describe('BookingRequestActions', () => {
   })
 
   it('declines only once a reason is picked, and sends it with the message', async () => {
-    decline.mockResolvedValue({ booking: {}, renterNotified: true })
+    decline.mockResolvedValue({ booking: {}, emailQueued: true })
     const { invalidate, user } = renderActions()
 
     await user.click(screen.getByRole('button', { name: 'Decline' }))
@@ -125,13 +125,13 @@ describe('BookingRequestActions', () => {
       expect(refreshed(invalidate)).toEqual(expect.arrayContaining([['booking-contract', 'BK-10001']])),
     )
     expect(toast).toHaveBeenCalledWith(
-      expect.objectContaining({ variant: 'success', description: 'Marisol Vega has been emailed the reason.' }),
+      expect.objectContaining({ variant: 'success', description: 'An email with the reason is on its way to Marisol Vega.' }),
     )
     expect(confirm).not.toHaveBeenCalled()
   })
 
   it('warns that the renter was not told when the API could not email them', async () => {
-    decline.mockResolvedValue({ booking: {}, renterNotified: false })
+    decline.mockResolvedValue({ booking: {}, emailQueued: false })
     const { user } = renderActions()
 
     await user.click(screen.getByRole('button', { name: 'Decline' }))

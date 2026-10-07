@@ -274,6 +274,18 @@ describe('toBookingListQuery', () => {
     })
   })
 
+  it('asks for declined reservations apart from other cancellations', () => {
+    // The API stores both as `cancelled`; the list labels them apart, so the filter has to too.
+    const status = (value: BookingFilters['status']) => {
+      const { status, declined } = toBookingListQuery({ ...base, filters: { ...NO_FILTERS, status: value } })
+      return { status, declined }
+    }
+
+    expect(status('Declined')).toStrictEqual({ status: 'cancelled', declined: true })
+    expect(status('Cancelled')).toStrictEqual({ status: 'cancelled', declined: false })
+    expect(status('Confirmed')).toStrictEqual({ status: 'confirmed', declined: undefined })
+  })
+
   it('translates each control to its query param', () => {
     const query = toBookingListQuery({
       ...base,
@@ -575,11 +587,15 @@ describe('the pickup and return cards', () => {
     expect(detailsOf({ status: 'returned', ...moved })).toMatchObject(moved)
   })
 
-  it('give the rental its real length, hours included', () => {
-    expect(detailsOf().duration).toEqual({ days: 4, hours: 0 })
+  it('give the rental its real length, to the minute', () => {
+    const length = (days: number, hours: number, minutes: number) => ({ days, hours, minutes })
+    expect(detailsOf().duration).toEqual(length(4, 0, 0))
     // Rounded to whole days this read "4 days", hiding the hours a late return is billed for.
-    expect(detailsOf({ returnAt: '2026-10-05T17:30:00Z' }).duration).toEqual({ days: 4, hours: 4 })
-    expect(detailsOf({ returnAt: '2026-10-01T19:30:00Z' }).duration).toEqual({ days: 0, hours: 6 })
+    expect(detailsOf({ returnAt: '2026-10-05T17:30:00Z' }).duration).toEqual(length(4, 4, 0))
+    expect(detailsOf({ returnAt: '2026-10-01T19:30:00Z' }).duration).toEqual(length(0, 6, 0))
+    // Once the car is back it is what happened, not what was booked.
+    const moved = { pickedUpAt: '2026-10-01T15:42:00Z', returnedAt: '2026-10-05T12:10:00Z' }
+    expect(detailsOf({ status: 'returned', ...moved }).duration).toEqual(length(3, 20, 28))
   })
 
   it('invent no desk or agent', () => {

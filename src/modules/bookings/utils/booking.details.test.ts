@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '../mock/booking.mock'
 import type { Booking, BookingStageStep } from '../types/booking.types'
-import { bookingStages, buildBookingDetails, buildCharges, exactCharges } from './booking.details'
+import {
+  bookingStages,
+  buildBookingDetails,
+  buildCharges,
+  exactCharges,
+  rentalDuration,
+} from './booking.details'
 import { parseBookingTotal } from './booking.utils'
 
 function sum(amounts: number[]): number {
@@ -52,6 +58,26 @@ describe('buildBookingDetails', () => {
     const completed = buildBookingDetails(BOOKINGS_RECENT.find((b) => b[7] === 'Completed')!)
 
     expect(completed.stages.every((s) => s.state === 'done')).toBe(true)
+  })
+})
+
+describe('rentalDuration', () => {
+  const booked = { from: new Date('2026-10-09T09:00:00Z'), to: new Date('2026-10-09T13:30:00Z') }
+
+  it('keeps the minutes of a booked window', () => {
+    // Rounded to whole hours, four and a half hours read as five.
+    expect(rentalDuration(booked)).toEqual({ days: 0, hours: 4, minutes: 30 })
+  })
+
+  it('is what actually happened once the car is back', () => {
+    // Picked up forty minutes late and brought back a day and a bit over.
+    const ran = rentalDuration(booked, '2026-10-09T09:40:00Z', '2026-10-10T11:55:00Z')
+
+    expect(ran).toEqual({ days: 1, hours: 2, minutes: 15 })
+  })
+
+  it('stays the booked length while the car is still out', () => {
+    expect(rentalDuration(booked, '2026-10-09T09:40:00Z')).toEqual({ days: 0, hours: 4, minutes: 30 })
   })
 })
 

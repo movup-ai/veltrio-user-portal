@@ -42,6 +42,22 @@ function findVehicle(plate: string): Vehicle | undefined {
   return VEHICLES_SEED.find((v) => v.plate === plate)
 }
 
+/**
+ * How long the rental ran once the car is back, from the recorded handovers; until then, how
+ * long it is booked for. To the minute: rounded to hours, 4h 30m read as five.
+ */
+export function rentalDuration(
+  booked: { from: Date; to: Date },
+  pickedUpAt?: string,
+  returnedAt?: string,
+): BookingDetails['duration'] {
+  const ran = pickedUpAt && returnedAt
+  const from = ran ? new Date(pickedUpAt) : booked.from
+  const to = ran ? new Date(returnedAt) : booked.to
+  const minutes = Math.max(0, Math.floor((to.getTime() - from.getTime()) / 60_000))
+  return { days: Math.floor(minutes / 1440), hours: Math.floor((minutes % 1440) / 60), minutes: minutes % 60 }
+}
+
 /** What is recorded about how far a rental got. Only the status and the schedule are always known. */
 export interface StageFacts {
   status: string
@@ -301,7 +317,6 @@ export function buildBookingDetails(
   const pickup = dates ? dates.from : new Date()
   const dropoff = dates ? dates.to : addDays(pickup, 1)
   const days = Math.max(1, Math.round((dropoff.getTime() - pickup.getTime()) / 86_400_000))
-  const wholeHours = Math.max(1, Math.round((dropoff.getTime() - pickup.getTime()) / 3_600_000))
 
   // The live records where the caller fetched them; the seeds are the fallback for the
   // dashboard's mock rows, which have no real vehicle or branch behind them.
@@ -355,8 +370,8 @@ export function buildBookingDetails(
     pickedUpAt: booking?.pickedUpAt,
     returnedAt: booking?.returnedAt,
     days,
-    // The real length, as the list shows it: `days` above is rounded, for the charge lines.
-    duration: { days: Math.floor(wholeHours / 24), hours: wholeHours % 24 },
+    // The real length: `days` above is rounded, for the charge lines.
+    duration: rentalDuration({ from: pickup, to: dropoff }, booking?.pickedUpAt, booking?.returnedAt),
     includedMiles,
 
     vehicleId: booking?.vehicleId ?? vehicle?.id,
