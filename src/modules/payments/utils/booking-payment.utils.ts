@@ -18,9 +18,9 @@ export function documentFileName(kind: 'invoice' | 'receipt', reference: string)
   return `${kind === 'invoice' ? 'INV' : 'RCT'}-${reference}.pdf`
 }
 
-/** The renter's receipt page, on this portal's own origin. */
-export function receiptLinkUrl(origin: string, link: ReceiptLink): string {
-  return `${origin}/receipt/${link.tenantId}/${link.bookingId}/${link.token}`
+/** The renter's receipt page, on the company's own site: the host names the tenant, so the path does not. */
+export function receiptLinkUrl(subdomain: string, link: Pick<ReceiptLink, 'bookingId' | 'token'>): string {
+  return `${siteUrl(subdomain)}/receipt/${link.bookingId}/${link.token}`
 }
 
 /** Opens the counter's own email app with the message written; nothing is sent by Veltrio. */

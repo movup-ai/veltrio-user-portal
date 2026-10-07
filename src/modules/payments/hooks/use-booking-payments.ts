@@ -4,15 +4,13 @@ import { toast } from '@/components/ui/use-toast'
 import { bookingKeys } from '@/modules/bookings/hooks/use-bookings'
 import { normalizeApiError } from '@/services/api/errors'
 import { bookingPaymentApi } from '../api/booking-payment.api'
-import { documentFileName, linkIsGone } from '../utils/booking-payment.utils'
-import type { BookingPayments, PaymentLink, ReceiptLink } from '../types/booking-payment.types'
+import { documentFileName } from '../utils/booking-payment.utils'
+import type { BookingPayments, PaymentLink } from '../types/booking-payment.types'
 import { saveBlob } from '@/lib/download'
 
 export const bookingPaymentKeys = {
   all: ['booking-payments'] as const,
   booking: (reference: string) => ['booking-payments', reference] as const,
-  publicReceipt: (link: ReceiptLink) =>
-    ['public-receipt', link.tenantId, link.bookingId, link.token] as const,
 }
 
 export function useBookingPayments(reference: string | undefined) {
@@ -138,14 +136,5 @@ export function useReceiptLink(reference: string) {
         description: normalizeApiError(error).message,
         variant: 'error',
       }),
-  })
-}
-
-/** The renter's receipt page. Retried like the payment page: only a dead link fails at once. */
-export function usePublicReceipt(link: ReceiptLink) {
-  return useQuery({
-    queryKey: bookingPaymentKeys.publicReceipt(link),
-    queryFn: () => bookingPaymentApi.publicReceipt(link),
-    retry: (failures, error) => !linkIsGone(error) && failures < 2,
   })
 }

@@ -160,30 +160,5 @@
       "message": "Hola {{name}}, aquí tienes el recibo de tu alquiler {{reference}}: {{url}}",
       "download": "Descargar PDF"
     }
-  },
-  "pay": {
-    "pickup": "Recogida",
-    "booking": "Reserva {{reference}}",
-    "return": "Devolución",
-    "seats_one": "{{count}} plaza",
-    "seats_other": "{{count}} plazas",
-    "unreachable": {
-      "title": "No pudimos cargar tu pago",
-      "body": "Suele ser algo breve. Tu enlace es válido, así que inténtalo de nuevo en un momento.",
-      "retry": "Reintentar"
-    }
-  },
-  "receipt": {
-    "title": "Recibo",
-    "rental": "Pago del alquiler",
-    "deposit": "Depósito ejecutado",
-    "refunded": "{{amount}} reembolsados",
-    "received": "Total recibido",
-    "balance": "Quedan {{amount}} pendientes",
-    "download": "Descargar PDF",
-    "invalid": {
-      "title": "Este enlace de recibo no es válido",
-      "body": "Pide a la empresa de alquiler un enlace nuevo."
-    }
   }
 }

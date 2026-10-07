@@ -13,7 +13,8 @@ import { contractFileName } from '../utils/booking-contract.utils'
 
 export const bookingContractKeys = {
   booking: (reference: string) => ['booking-contract', reference] as const,
-  public: (link: ContractLink) => ['public-contract', link.tenantId, link.contractId, link.token] as const,
+  public: (subdomain: string, link: ContractLink) =>
+    ['public-contract', subdomain, link.contractId, link.token] as const,
 }
 
 export function useBookingContract(reference: string) {
@@ -105,11 +106,11 @@ export function useDownloadContract(reference: string) {
   })
 }
 
-/** The renter's page. A link that is not valid fails at once; anything else is worth one retry. */
-export function usePublicContract(link: ContractLink | undefined) {
+/** The agreement behind a renter's link. One that is not valid fails at once; anything else is worth one retry. */
+export function usePublicContract(subdomain: string, link: ContractLink | undefined) {
   return useQuery({
-    queryKey: link ? bookingContractKeys.public(link) : ['public-contract', 'none'],
-    queryFn: () => bookingContractApi.public(link as ContractLink),
+    queryKey: link ? bookingContractKeys.public(subdomain, link) : ['public-contract', 'none'],
+    queryFn: () => bookingContractApi.public(subdomain, link as ContractLink),
     enabled: Boolean(link),
     retry: (failures, error) => !linkIsGone(error) && failures < 1,
   })

@@ -26,7 +26,7 @@ vi.mock('@/modules/contracts/api/booking-contract.api', () => ({
 }))
 
 const ALLOWED = { allowed: true }
-const LINK = { tenantId: 't1', contractId: 'c1', token: 'tok' }
+const LINK = { contractId: 'c1', token: 'tok' }
 const NONE: BookingContract = {
   status: 'none',
   template: { id: 'tpl_1', name: 'Standard rental agreement', revision: 3 },

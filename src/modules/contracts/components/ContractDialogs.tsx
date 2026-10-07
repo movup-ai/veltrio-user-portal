@@ -71,6 +71,7 @@ export function ContractLinkDialog({
 
 interface CounterSignDialogProps extends DialogProps {
   reference: string
+  subdomain: string
   link: ContractLink
   renterName: string
 }
@@ -82,13 +83,14 @@ interface CounterSignDialogProps extends DialogProps {
  */
 export function CounterSignDialog({
   reference,
+  subdomain,
   link,
   renterName,
   open,
   onOpenChange,
 }: CounterSignDialogProps) {
   const { t } = useTranslation('contracts')
-  const { data: agreement, isLoading, refetch } = usePublicContract(open ? link : undefined)
+  const { data: agreement, isLoading, refetch } = usePublicContract(subdomain, open ? link : undefined)
   const sign = useSignAtCounter(reference)
 
   return (

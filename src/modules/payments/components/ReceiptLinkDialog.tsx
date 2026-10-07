@@ -13,6 +13,7 @@ interface ReceiptLinkDialogProps {
   payments: BookingPayments
   renter: LinkRecipient
   companyName: string
+  subdomain: string
   reference: string
   downloading: boolean
   onDownload: () => void
@@ -26,6 +27,7 @@ export function ReceiptLinkDialog({
   payments,
   renter,
   companyName,
+  subdomain,
   reference,
   downloading,
   onDownload,
@@ -33,7 +35,7 @@ export function ReceiptLinkDialog({
   const { t } = useTranslation('payments')
   const format = useFormatters()
   const money = (amount: number) => format.currency(amount, payments.currency)
-  const url = receiptLinkUrl(window.location.origin, link)
+  const url = receiptLinkUrl(subdomain, link)
   const captured = payments.deposit?.status === 'captured' ? payments.deposit.captured : 0
 
   return (

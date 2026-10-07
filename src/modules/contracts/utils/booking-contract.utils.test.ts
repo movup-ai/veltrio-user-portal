@@ -11,7 +11,7 @@ import {
 
 describe('contract links and files', () => {
   it("builds the renter's page on the company's own site, with no tenant id in the path", () => {
-    const link = { tenantId: 't1', contractId: 'c1', token: 'tok' }
+    const link = { contractId: 'c1', token: 'tok' }
     expect(contractLinkUrl('sunstate', link)).toBe(`${siteUrl('sunstate')}/sign/c1/tok`)
     expect(siteUrl('sunstate')).toMatch(/^https:\/\/sunstate\./)
   })

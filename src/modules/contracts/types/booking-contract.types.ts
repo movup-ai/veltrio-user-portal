@@ -13,9 +13,8 @@ export interface ContractActionRule {
   reason?: ContractRefusal
 }
 
-/** What the renter's link is built from; the portal adds its own origin. */
+/** What the renter's link is built from; the host is the company's own site. */
 export interface ContractLink {
-  tenantId: string
   contractId: string
   token: string
 }

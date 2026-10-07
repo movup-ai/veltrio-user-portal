@@ -160,30 +160,5 @@
       "message": "Hi {{name}}, here is your receipt for rental {{reference}}: {{url}}",
       "download": "Download PDF"
     }
-  },
-  "pay": {
-    "pickup": "Pickup",
-    "booking": "Booking {{reference}}",
-    "return": "Return",
-    "seats_one": "{{count}} seat",
-    "seats_other": "{{count}} seats",
-    "unreachable": {
-      "title": "We couldn't load your payment",
-      "body": "This is usually brief. Your link is fine, so please try again in a moment.",
-      "retry": "Try again"
-    }
-  },
-  "receipt": {
-    "title": "Receipt",
-    "rental": "Rental payment",
-    "deposit": "Deposit captured",
-    "refunded": "{{amount}} refunded",
-    "received": "Total received",
-    "balance": "{{amount}} still due",
-    "download": "Download PDF",
-    "invalid": {
-      "title": "This receipt link isn't valid",
-      "body": "Ask the rental company for a new link."
-    }
   }
 }

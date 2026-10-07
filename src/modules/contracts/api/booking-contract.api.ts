@@ -14,8 +14,8 @@ import {
 } from './contract.mapper'
 
 const base = (reference: string) => `/bookings/${reference}/contract`
-const publicBase = ({ tenantId, contractId, token }: ContractLink) =>
-  `/public/contracts/${tenantId}/${contractId}/${token}`
+const publicBase = (subdomain: string, { contractId, token }: ContractLink) =>
+  `/marketplace/companies/${subdomain}/contracts/${contractId}/${token}`
 
 const contract = (request: Promise<{ data: BookingContractWire }>) =>
   request.then((r) => toBookingContract(r.data))
@@ -45,7 +45,7 @@ export const bookingContractApi = {
   changeTemplate: (reference: string, templateId: string): Promise<BookingContract> =>
     contract(apiClient.put<BookingContractWire>(`${base(reference)}/template`, { templateId })),
 
-  /** The renter's page; needs no login. */
-  public: (link: ContractLink): Promise<PublicContract> =>
-    publicContract(apiClient.get<PublicContractWire>(publicBase(link))),
+  /** The agreement as the renter's link serves it; needs no login. */
+  public: (subdomain: string, link: ContractLink): Promise<PublicContract> =>
+    publicContract(apiClient.get<PublicContractWire>(publicBase(subdomain, link))),
 }

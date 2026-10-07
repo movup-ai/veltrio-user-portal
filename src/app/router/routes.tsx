@@ -6,7 +6,6 @@ import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { AgreementsPage } from '@/pages/agreements/AgreementsPage.lazy'
 import { InsuranceReturnPage } from '@/pages/verification/InsuranceReturnPage'
-import { ReceiptPage } from '@/pages/receipt/ReceiptPage.lazy'
 import { LegacyAppRedirect } from './legacy-app-redirect'
 import { ProtectedRoute } from './protected-route'
 
@@ -79,8 +78,6 @@ export const router = createBrowserRouter([
           { path: '/onboarding', element: withSuspense(<OnboardingPage />) },
           // Public: Axle returns the renter here, and they may be on their own phone. Not lazy,
           { path: '/insurance/return', element: <InsuranceReturnPage /> },
-          // Public: the renter's receipt, from the counter's link or the payment page.
-          { path: '/receipt/:tenantId/:bookingId/:token', element: withSuspense(<ReceiptPage />) },
         ],
       },
 

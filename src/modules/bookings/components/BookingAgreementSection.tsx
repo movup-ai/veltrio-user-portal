@@ -94,6 +94,7 @@ export function BookingAgreementSection({ reference, renter }: { reference: stri
             open={dialog === 'counter'}
             onOpenChange={close}
             reference={reference}
+            subdomain={subdomain}
             link={link}
             renterName={renter.name}
           />
