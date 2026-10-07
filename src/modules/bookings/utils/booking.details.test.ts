@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { VEHICLES_SEED } from '@/modules/vehicles/mock/vehicle.mock'
 import { BOOKINGS_RECENT, BOOKINGS_UPCOMING } from '../mock/booking.mock'
 import type { Booking, BookingStageStep } from '../types/booking.types'
 import {
@@ -58,6 +59,16 @@ describe('buildBookingDetails', () => {
     const completed = buildBookingDetails(BOOKINGS_RECENT.find((b) => b[7] === 'Completed')!)
 
     expect(completed.stages.every((s) => s.state === 'done')).toBe(true)
+  })
+
+  it('reads an electric vehicle for charge, and any other for fuel', () => {
+    const [tuple] = BOOKINGS_UPCOMING
+    const vehicle = VEHICLES_SEED[0]
+    const electric = { ...vehicle, specs: { ...vehicle.specs, fuelType: 'Electric' as const } }
+    const petrol = { ...vehicle, specs: { ...vehicle.specs, fuelType: 'Petrol' as const } }
+
+    expect(buildBookingDetails(tuple, undefined, { vehicle: electric }).vehicleElectric).toBe(true)
+    expect(buildBookingDetails(tuple, undefined, { vehicle: petrol }).vehicleElectric).toBe(false)
   })
 })
 

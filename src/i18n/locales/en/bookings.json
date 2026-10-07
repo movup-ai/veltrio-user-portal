@@ -143,6 +143,67 @@
       "mileageCap": "Mileage cap",
       "milesIncluded": "{{count}} mi included"
     },
+    "condition": {
+      "description": {
+        "pickup": "Record the car as it leaves. The return is measured against these readings.",
+        "return": "Record the car as it comes back."
+      },
+      "odometer": "Odometer",
+      "unit": "mi",
+      "miles": "{{miles}} mi",
+      "odometerInvalid": "Enter the miles on the odometer as a whole number.",
+      "odometerBelowPickup": "That is less than the {{miles}} read at pickup.",
+      "odometerBelowFile": "Lower than the {{miles}} on the vehicle's file. Check the reading.",
+      "level": {
+        "fuel": {
+          "label": "Fuel level",
+          "short": "Fuel",
+          "required": "Choose the fuel level."
+        },
+        "charge": {
+          "label": "Charge level",
+          "short": "Charge",
+          "required": "Choose the charge level."
+        }
+      },
+      "fuelLevels": {
+        "0": "Empty",
+        "1": "1/8",
+        "2": "1/4",
+        "3": "3/8",
+        "4": "1/2",
+        "5": "5/8",
+        "6": "3/4",
+        "7": "7/8",
+        "8": "Full"
+      },
+      "atPickup": "At pickup: {{value}}",
+      "driven": "{{driven}} driven",
+      "notes": {
+        "pickup": "Marks and damage already on the car",
+        "return": "New damage"
+      },
+      "notesHint": "Leave blank if there is none.",
+      "photos": {
+        "label": "Photos",
+        "add": "Add photos",
+        "hint": "JPEG, PNG or WebP, up to 10 MB each.",
+        "open": "Open {{name}}",
+        "remove": "Remove {{name}}",
+        "skipped": "Some photos were not added",
+        "rejected": {
+          "type": "{{name}} is not a JPEG, PNG or WebP",
+          "empty": "{{name}} is an empty file",
+          "size": "{{name}} is over 10 MB",
+          "limit": "{{name}} is past the {{max}}-photo limit"
+        }
+      },
+      "next": {
+        "label": "After this return",
+        "available": "Available to rent",
+        "service": "Send to maintenance"
+      }
+    },
     "vehicle": {
       "title": "Vehicle",
       "open": "Open vehicle",
@@ -185,7 +246,14 @@
         "requested": "Awaiting renter"
       },
       "releaseDeposit": "Release",
-      "captureDeposit": "Capture",
+      "settleDeposit": "Settle deposit",
+      "returnCharges": {
+        "title": "Return charges",
+        "add": "Add return charges",
+        "edit": "Edit return charges",
+        "fromDeposit": "From the deposit",
+        "overMileageNote": "{{miles}} mi over the allowance"
+      },
       "refund": "Refund",
       "paid": "Paid",
       "history": "Payments",
@@ -300,7 +368,8 @@
         "payment": "Payment",
         "deposit": "Deposit hold",
         "signature": "Signed agreement",
-        "settlement": "Deposit release or capture"
+        "settlement": "Deposit release or capture",
+        "charges": "Payment of the return charges"
       },
       "confirm": "Confirm reservation",
       "decline": "Decline",
@@ -335,6 +404,10 @@
       "message": "Message to the renter",
       "messageHint": "Optional. Emailed to the renter with the reason.",
       "confirm": "Decline reservation"
+    },
+    "closeDialog": {
+      "title": "Close this booking?",
+      "description": "{{reference}} will be marked Completed. After that nothing on it can be changed, including its return charges."
     },
     "restoreDialog": {
       "title": "Restore this reservation?",

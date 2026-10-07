@@ -90,6 +90,50 @@ export interface BookingPayment {
   paidAt?: string
 }
 
+/** Fuel on the gauge, in eighths of a tank: 0 is empty, 8 is full. */
+export const FUEL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const
+export type FuelLevel = (typeof FUEL_LEVELS)[number]
+
+/** Which end of the rental a reading or photo was taken at. */
+export type ConditionStage = 'pickup' | 'return'
+
+/** What was read off the car as it changed hands. */
+export interface BookingCondition {
+  /** Miles on the clock. */
+  odometer: number
+  fuelLevel: FuelLevel
+  notes?: string
+}
+
+/** What the handover form sends. A return also says where the car goes next. */
+export interface ConditionInput {
+  odometer: number
+  fuelLevel: FuelLevel
+  notes: string
+  sendToService?: boolean
+}
+
+/** A photo of the car at one handover. `url` is the image itself and expires within the hour. */
+export interface ConditionPhoto {
+  id: string
+  stage: ConditionStage
+  name: string
+  url: string
+}
+
+/** A photo picked on a handover form and not sent yet. `url` is a preview of the file itself. */
+export interface ConditionPhotoDraft {
+  id: string
+  name: string
+  url: string
+  file: File
+}
+
+/** A whole handover form: the readings, and the photos to store with them. */
+export interface HandoverInput extends ConditionInput {
+  photos: File[]
+}
+
 export interface BookingContract {
   /** Null means unsigned — the timestamp is the flag. */
   signedAt?: string
@@ -279,6 +323,8 @@ export interface BookingRate {
   units: number
   /** Across the whole rental; `null` means unlimited. */
   includedMiles: number | null
+  /** Charged per mile past the included ones, as booked. Absent where the vehicle set none. */
+  overageRatePerMile?: number
   /** Longest unit first; more than one when the engine combined rates. */
   lines: BookingRateLine[]
 }
@@ -325,6 +371,9 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   returnedAt?: string
   /** When staff closed the booking off after return. */
   completedAt?: string
+  /** Absent until that handover, and on a rental handed over before readings were taken. */
+  pickupCondition?: BookingCondition
+  returnCondition?: BookingCondition
   createdAt: string
 }
 
@@ -369,11 +418,7 @@ export const SCREENING_STATUSES = ['running', 'clear', 'consider', 'error'] as c
 export type VerificationStatus = (typeof SCREENING_STATUSES)[number]
 
 /** Statuses Checkr will never move away from — what the details page stops polling on. */
-export const TERMINAL_VERIFICATION_STATUSES: readonly VerificationStatus[] = [
-  'clear',
-  'consider',
-  'error',
-]
+export const TERMINAL_VERIFICATION_STATUSES: readonly VerificationStatus[] = ['clear', 'consider', 'error']
 
 /** A background check on one booking. Absent entirely when none has been ordered. */
 /** One row of the verification log: any check this tenant has run, on anyone. */
@@ -501,6 +546,10 @@ export interface BookingDetails {
   duration: { days: number; hours: number; minutes: number }
   /** Across the whole rental; `null` means unlimited. */
   includedMiles: number | null
+  pickupCondition?: BookingCondition
+  returnCondition?: BookingCondition
+  /** Miles past the allowance and their cost at the booked rate, once both ends are read. */
+  overMileage?: { miles: number; amount: number }
 
   vehicleId?: string
   vehicleName: string
@@ -511,6 +560,10 @@ export interface BookingDetails {
   vehicleSubtitle: string
   /** What the vehicle lists for today — not necessarily what this booking was charged. */
   listDailyRate: number
+  /** The odometer on the vehicle's file, which the pickup form starts from. */
+  vehicleMileage?: number
+  /** Read for charge rather than fuel. False once the vehicle is deleted and nothing says. */
+  vehicleElectric: boolean
 
   charges: BookingChargeLine[]
   total: number

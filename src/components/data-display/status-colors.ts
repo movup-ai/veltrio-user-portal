@@ -5,14 +5,17 @@
  * same color everywhere in the app.
  */
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  Confirmed: { bg: 'var(--color-tint)', fg: 'var(--color-primary)' },
+  // One hue per booking status, so no two badges in the bookings list read alike.
+  Confirmed: { bg: 'var(--color-info-tint)', fg: 'var(--color-info)' },
+  // Money reserved rather than taken. Its own key, so it does not follow a booking status's hue.
+  Held: { bg: 'var(--color-tint)', fg: 'var(--color-primary)' },
   'On rent': { bg: 'var(--color-tint)', fg: 'var(--color-primary)' },
   Active: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
   Available: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
   Completed: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
   Paid: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
   Open: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
-  Ready: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
+  Ready: { bg: 'var(--color-violet-tint)', fg: 'var(--color-violet)' },
   'Awaiting ID': { bg: 'var(--color-warning-tint)', fg: 'var(--color-warning)' },
   'Deposit due': { bg: 'var(--color-warning-tint)', fg: 'var(--color-warning)' },
   Maintenance: { bg: 'var(--color-warning-tint)', fg: 'var(--color-warning)' },
@@ -23,9 +26,10 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   'Payment failed': { bg: 'var(--color-error-tint)', fg: 'var(--color-error)' },
   Failed: { bg: 'var(--color-error-tint)', fg: 'var(--color-error)' },
   Flagged: { bg: 'var(--color-error-tint)', fg: 'var(--color-error)' },
-  Overdue: { bg: 'var(--color-error-tint)', fg: 'var(--color-error)' },
-  Returned: { bg: 'var(--color-success-tint)', fg: 'var(--color-success)' },
-  'On rental': { bg: 'var(--color-info-tint)', fg: 'var(--color-info)' },
+  // Filled, not tinted, for the two statuses under which the car is out with a renter.
+  Overdue: { bg: 'var(--color-error)', fg: 'var(--color-error-foreground)' },
+  'On rental': { bg: 'var(--color-primary)', fg: 'var(--color-primary-foreground)' },
+  Returned: { bg: 'var(--color-orange-tint)', fg: 'var(--color-orange)' },
   Cancelled: { bg: 'var(--color-neutral-tint)', fg: 'var(--color-fg-2)' },
   Declined: { bg: 'var(--color-error-tint)', fg: 'var(--color-error)' },
   Scheduled: { bg: 'var(--color-info-tint)', fg: 'var(--color-info)' },

@@ -4,6 +4,7 @@ import { Check, Copy } from 'lucide-react'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { focusDialogContent } from '@/components/ui/dialog-focus'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -42,7 +43,7 @@ export function InsuranceLinkDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="outline-none" onOpenAutoFocus={focusDialogContent}>
         <DialogHeader>
           <DialogTitle>{t('insuranceLink.title')}</DialogTitle>
           <DialogDescription>{t('insuranceLink.description', { name: renterName })}</DialogDescription>
@@ -102,6 +103,7 @@ function LinkBody({
             readOnly
             value={session.link}
             onFocus={(event) => event.currentTarget.select()}
+            className="bg-surface-2 text-fg-2"
           />
           <Button type="button" variant="outline" onClick={copy} className="shrink-0">
             {copied ? <Check aria-hidden /> : <Copy aria-hidden />}

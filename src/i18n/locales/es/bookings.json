@@ -143,6 +143,67 @@
       "mileageCap": "Límite de millas",
       "milesIncluded": "{{count}} mi incluidas"
     },
+    "condition": {
+      "description": {
+        "pickup": "Registra el vehículo tal como sale. La devolución se compara con estas lecturas.",
+        "return": "Registra el vehículo tal como vuelve."
+      },
+      "odometer": "Odómetro",
+      "unit": "mi",
+      "miles": "{{miles}} mi",
+      "odometerInvalid": "Indica las millas del odómetro como un número entero.",
+      "odometerBelowPickup": "Es menos que las {{miles}} leídas en la entrega.",
+      "odometerBelowFile": "Menos que las {{miles}} de la ficha del vehículo. Revisa la lectura.",
+      "level": {
+        "fuel": {
+          "label": "Nivel de combustible",
+          "short": "Combustible",
+          "required": "Elige el nivel de combustible."
+        },
+        "charge": {
+          "label": "Nivel de carga",
+          "short": "Carga",
+          "required": "Elige el nivel de carga."
+        }
+      },
+      "fuelLevels": {
+        "0": "Vacío",
+        "1": "1/8",
+        "2": "1/4",
+        "3": "3/8",
+        "4": "1/2",
+        "5": "5/8",
+        "6": "3/4",
+        "7": "7/8",
+        "8": "Lleno"
+      },
+      "atPickup": "En la entrega: {{value}}",
+      "driven": "{{driven}} recorridas",
+      "notes": {
+        "pickup": "Marcas y daños que el vehículo ya tiene",
+        "return": "Daños nuevos"
+      },
+      "notesHint": "Déjalo en blanco si no hay ninguno.",
+      "photos": {
+        "label": "Fotos",
+        "add": "Añadir fotos",
+        "hint": "JPEG, PNG o WebP, hasta 10 MB cada una.",
+        "open": "Abrir {{name}}",
+        "remove": "Quitar {{name}}",
+        "skipped": "Algunas fotos no se añadieron",
+        "rejected": {
+          "type": "{{name}} no es JPEG, PNG ni WebP",
+          "empty": "{{name}} es un archivo vacío",
+          "size": "{{name}} supera los 10 MB",
+          "limit": "{{name}} supera el límite de {{max}} fotos"
+        }
+      },
+      "next": {
+        "label": "Después de esta devolución",
+        "available": "Disponible para alquilar",
+        "service": "Enviar a mantenimiento"
+      }
+    },
     "vehicle": {
       "title": "Vehículo",
       "open": "Abrir vehículo",
@@ -185,7 +246,14 @@
         "requested": "Esperando al cliente"
       },
       "releaseDeposit": "Liberar",
-      "captureDeposit": "Cobrar",
+      "settleDeposit": "Liquidar depósito",
+      "returnCharges": {
+        "title": "Cargos de la devolución",
+        "add": "Añadir cargos de la devolución",
+        "edit": "Editar cargos de la devolución",
+        "fromDeposit": "Del depósito",
+        "overMileageNote": "{{miles}} mi por encima del límite"
+      },
       "refund": "Reembolsar",
       "paid": "Pagado",
       "history": "Pagos",
@@ -300,7 +368,8 @@
         "payment": "Pago",
         "deposit": "Retención del depósito",
         "signature": "Contrato firmado",
-        "settlement": "Liberar o ejecutar el depósito"
+        "settlement": "Liberar o ejecutar el depósito",
+        "charges": "Pago de los cargos de la devolución"
       },
       "confirm": "Confirmar reserva",
       "decline": "Rechazar",
@@ -335,6 +404,10 @@
       "message": "Mensaje para el arrendatario",
       "messageHint": "Opcional. Se envía por correo al arrendatario junto con el motivo.",
       "confirm": "Rechazar reserva"
+    },
+    "closeDialog": {
+      "title": "¿Cerrar esta reserva?",
+      "description": "{{reference}} quedará como Completada. Después no se podrá cambiar nada en ella, tampoco los cargos de la devolución."
     },
     "restoreDialog": {
       "title": "¿Restaurar esta reserva?",

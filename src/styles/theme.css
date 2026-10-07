@@ -25,7 +25,8 @@
   --color-border: var(--veltrio-border);
   --color-border-soft: var(--veltrio-border-soft);
   --color-border-strong: var(--veltrio-border-strong);
-  --color-input: var(--veltrio-border-strong);
+  /* The fallback is the rule; `--veltrio-input` exists only where a surface softens it. */
+  --color-input: var(--veltrio-input, var(--veltrio-border-strong));
   --color-ring: var(--veltrio-ring);
 
   --color-card: var(--veltrio-surface);
@@ -46,6 +47,10 @@
   --color-info: var(--veltrio-info);
   --color-info-tint: var(--veltrio-info-tint);
   --color-info-foreground: var(--veltrio-info-foreground);
+  --color-violet: var(--veltrio-violet);
+  --color-violet-tint: var(--veltrio-violet-tint);
+  --color-orange: var(--veltrio-orange);
+  --color-orange-tint: var(--veltrio-orange-tint);
   --color-neutral-tint: var(--veltrio-neutral-tint);
 
   --color-destructive: var(--veltrio-error);

@@ -1,4 +1,4 @@
-import { fromCents } from '@/lib/money'
+import { fromCents, toCents } from '@/lib/money'
 import type { CheckoutMethod, CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
 import { PAYMENT_REFUSALS, type PaymentRefusal } from '../constants/payment.constants'
@@ -10,6 +10,8 @@ import type {
   PaymentActionRule,
   PaymentActions,
   PaymentLink,
+  ReturnCharge,
+  ReturnChargeKind,
   ReceiptLink,
 } from '../types/booking-payment.types'
 
@@ -76,6 +78,12 @@ export interface BookingPaymentWire {
   createdAt: string
 }
 
+interface ReturnChargeWire {
+  kind: ReturnChargeKind
+  amountCents: number
+  note: string | null
+}
+
 export interface PaymentActionWire {
   allowed: boolean
   reason: string | null
@@ -86,8 +94,8 @@ export interface PaymentActionsWire {
   linkIncludesDeposit: boolean
   markPaid: PaymentActionWire
   requestDeposit: PaymentActionWire
-  captureDeposit: PaymentActionWire
   releaseDeposit: PaymentActionWire
+  setReturnCharges: PaymentActionWire
   pickUp: PaymentActionWire
   returnVehicle: PaymentActionWire
   close: PaymentActionWire
@@ -101,6 +109,8 @@ export interface BookingPaymentsWire {
   paidCents: number
   refundedCents: number
   balanceCents: number
+  returnCharges: ReturnChargeWire[]
+  returnChargesCents: number
   depositCents: number
   deposit: BookingPaymentWire | null
   openLink: boolean
@@ -154,8 +164,8 @@ export function toPaymentActions(wire: PaymentActionsWire): PaymentActions {
     linkIncludesDeposit: wire.linkIncludesDeposit,
     markPaid: toPaymentAction(wire.markPaid),
     requestDeposit: toPaymentAction(wire.requestDeposit),
-    captureDeposit: toPaymentAction(wire.captureDeposit),
     releaseDeposit: toPaymentAction(wire.releaseDeposit),
+    setReturnCharges: toPaymentAction(wire.setReturnCharges),
     pickUp: toPaymentAction(wire.pickUp),
     returnVehicle: toPaymentAction(wire.returnVehicle),
     close: toPaymentAction(wire.close),
@@ -171,12 +181,29 @@ export function toBookingPayments(wire: BookingPaymentsWire): BookingPayments {
     paid: fromCents(wire.paidCents),
     refunded: fromCents(wire.refundedCents),
     balance: fromCents(wire.balanceCents),
+    returnCharges: wire.returnCharges.map((charge) => ({
+      kind: charge.kind,
+      amount: fromCents(charge.amountCents),
+      note: charge.note ?? undefined,
+    })),
+    returnChargesTotal: fromCents(wire.returnChargesCents),
     depositAmount: fromCents(wire.depositCents),
     deposit: wire.deposit ? toBookingPaymentRecord(wire.deposit) : undefined,
     openLink: wire.openLink,
     depositRequested: wire.depositRequested,
     actions: toPaymentActions(wire.actions),
     payments: wire.payments.map(toBookingPaymentRecord),
+  }
+}
+
+/** The whole list as the API stores it; it replaces what was there. */
+export function toReturnChargesPayload(charges: ReturnCharge[]) {
+  return {
+    charges: charges.map((charge) => ({
+      kind: charge.kind,
+      amountCents: toCents(charge.amount),
+      note: charge.note?.trim() || null,
+    })),
   }
 }
 

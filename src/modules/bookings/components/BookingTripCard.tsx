@@ -1,5 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import type { ConditionPhoto } from '../types/booking.types'
+import { BookingConditionPhotos } from './BookingConditionPhotos'
 
 interface BookingTripCardProps {
   icon: LucideIcon
@@ -8,10 +10,12 @@ interface BookingTripCardProps {
   when: string
   place: string
   rows: { label: string; value: string }[]
+  /** The damage note and photos taken at this handover, once it is recorded and has either. */
+  condition?: { label: string; notes?: string; photos: ConditionPhoto[] }
 }
 
-/** One end of the rental: when, where, and the two facts the counter needs about it. */
-export function BookingTripCard({ icon: Icon, label, when, place, rows }: BookingTripCardProps) {
+/** One end of the rental: when and where, its facts, and the car's condition as it changed hands. */
+export function BookingTripCard({ icon: Icon, label, when, place, rows, condition }: BookingTripCardProps) {
   return (
     <Card as="section" className="flex flex-col p-[18px]">
       <div className="flex items-center gap-2.5">
@@ -34,6 +38,14 @@ export function BookingTripCard({ icon: Icon, label, when, place, rows }: Bookin
           </div>
         ))}
       </div>
+
+      {condition && (
+        <div className="border-border-soft flex flex-col gap-2 border-t pt-2.5">
+          <span className="text-fg-3 text-[13px]">{condition.label}</span>
+          {condition.notes && <p className="m-0 text-[13px] whitespace-pre-line">{condition.notes}</p>}
+          <BookingConditionPhotos photos={condition.photos} />
+        </div>
+      )}
     </Card>
   )
 }

@@ -1,15 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import {
-  ArrowDownLeft,
-  ArrowLeft,
-  ArrowUpRight,
-  CarFront,
-  ExternalLink,
-  FileText,
-  Mail,
-} from 'lucide-react'
+import { ArrowDownLeft, ArrowLeft, ArrowUpRight, CarFront, ExternalLink, FileText, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -37,6 +29,7 @@ import { BookingRestoreAction } from '@/modules/bookings/components/BookingResto
 import { BookingTripCard } from '@/modules/bookings/components/BookingTripCard'
 import { RentalProgress } from '@/modules/bookings/components/RentalProgress'
 import { useBookingDetails } from '@/modules/bookings/hooks/use-bookings'
+import { useConditionPhotos } from '@/modules/bookings/hooks/use-condition-photos'
 import {
   useInsuranceLinkDialog,
   useInsuranceResults,
@@ -44,6 +37,7 @@ import {
   useVerification,
   useVerificationReport,
 } from '@/modules/bookings/hooks/use-verification'
+import { awaitsReturnReadings, recordedStages } from '@/modules/bookings/utils/booking.condition'
 import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
 import { isOver, shownStatus } from '@/modules/bookings/utils/booking.utils'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
@@ -52,6 +46,7 @@ import { agreementIssued } from '@/modules/contracts/utils/booking-contract.util
 import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
 import {
   PROVIDER_KINDS,
+  type BookingCondition,
   type BookingVerification,
   type ProviderKind,
 } from '@/modules/bookings/types/booking.types'
@@ -105,12 +100,15 @@ export function BookingDetailsPage() {
   const agreementPdf = useContractPdfOpener(bookingId ?? '')
   // The agreement card's own query, so the header button costs no second request.
   const { data: contract } = useBookingContract(bookingId ?? '')
+  // Only once a handover is recorded: before that the booking has no photos to ask for.
+  const { data: conditionPhotos = [] } = useConditionPhotos(
+    bookingId ?? '',
+    Boolean(booking?.pickupCondition || booking?.returnCondition),
+  )
 
   const verifications: Partial<Record<ProviderKind, BookingVerification>> = { background, insurance }
 
-  const orderingKind: ProviderKind | undefined = orderVerification.isPending
-    ? 'background'
-    : undefined
+  const orderingKind: ProviderKind | undefined = orderVerification.isPending ? 'background' : undefined
 
   /** The session to send the renter; asking again while it is open returns the same link. */
   function insuranceOrder(): InsuranceOrderWire | undefined {
@@ -176,10 +174,38 @@ export function BookingDetailsPage() {
   const closed = !stillOpen
   const awaitingAnswer = booking.status === 'Pending'
 
+  const miles = (value: number) => t('details.condition.miles', { miles: format.number(value) })
+  const driven =
+    booking.pickupCondition && booking.returnCondition
+      ? booking.returnCondition.odometer - booking.pickupCondition.odometer
+      : undefined
+  const levelLabel = t(`details.condition.level.${booking.vehicleElectric ? 'charge' : 'fuel'}.short`)
   // The trip cards show only what is on record: a handover that has not happened says so, and
   // one that never will (a cancelled booking) is a dash rather than "not yet".
-  const happened = (at?: string) =>
-    at ? format.dateTime(at) : closed ? '—' : t('details.pickup.notYet')
+  const happened = (at?: string) => (at ? format.dateTime(at) : closed ? '—' : t('details.pickup.notYet'))
+  // Readings join a card when that handover is recorded. The return's are listed as still to
+  // come while the car is out, so the two cards read row for row instead of one sitting empty.
+  const readings = (read: BookingCondition | undefined, drivenBy?: number, awaited = false) =>
+    !read
+      ? (awaited ? [t('details.condition.odometer'), levelLabel] : []).map((label) => ({
+          label,
+          value: t('details.pickup.notYet'),
+        }))
+      : [
+          {
+            label: t('details.condition.odometer'),
+            value:
+              drivenBy === undefined
+                ? miles(read.odometer)
+                : `${miles(read.odometer)} · ${t('details.condition.driven', { driven: miles(drivenBy) })}`,
+          },
+          { label: levelLabel, value: t(`details.condition.fuelLevels.${read.fuelLevel}`) },
+        ]
+  const condition = recordedStages(booking.pickupCondition, booking.returnCondition, conditionPhotos)
+  const conditionAt = (stage: 'pickup' | 'return') => {
+    const entry = condition.find((recorded) => recorded.stage === stage)
+    return entry && { ...entry, label: t(`details.condition.notes.${stage}`) }
+  }
   const { days, hours, minutes } = booking.duration
   const duration = [
     days > 0 && t('details.return.days', { count: days }),
@@ -225,7 +251,14 @@ export function BookingDetailsPage() {
               }}
             />
             {/* A pending reservation holds no dates yet, so there is nothing to hand over. */}
-            {!awaitingAnswer && <BookingHandoverAction reference={booking.reference} />}
+            {!awaitingAnswer && (
+              <BookingHandoverAction
+                reference={booking.reference}
+                pickupCondition={booking.pickupCondition}
+                vehicleMileage={booking.vehicleMileage}
+                vehicleElectric={booking.vehicleElectric}
+              />
+            )}
           </>
         }
       />
@@ -233,9 +266,7 @@ export function BookingDetailsPage() {
       {awaitingAnswer && (
         <BookingRequestBanner
           request={booking.request}
-          actions={
-            <BookingRequestActions reference={booking.reference} renterName={booking.renter.name} />
-          }
+          actions={<BookingRequestActions reference={booking.reference} renterName={booking.renter.name} />}
         />
       )}
       {booking.declined && (
@@ -262,7 +293,9 @@ export function BookingDetailsPage() {
               rows={[
                 { label: t('details.pickup.handedOver'), value: happened(booking.pickedUpAt) },
                 { label: t('details.return.duration'), value: duration },
+                ...readings(booking.pickupCondition),
               ]}
+              condition={conditionAt('pickup')}
             />
             <BookingTripCard
               icon={ArrowDownLeft}
@@ -282,7 +315,9 @@ export function BookingDetailsPage() {
                       ? tVehicles('rateOptions.unlimitedMiles')
                       : t('details.return.milesIncluded', { count: booking.includedMiles }),
                 },
+                ...readings(booking.returnCondition, driven, awaitsReturnReadings(booking, closed)),
               ]}
+              condition={conditionAt('return')}
             />
           </div>
 
@@ -350,6 +385,7 @@ export function BookingDetailsPage() {
             renter={booking.renter}
             charges={booking.charges}
             days={booking.days}
+            overMileage={booking.overMileage}
           />
 
           <BookingAgreementSection reference={booking.reference} renter={booking.renter} />

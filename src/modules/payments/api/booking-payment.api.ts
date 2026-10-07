@@ -1,10 +1,11 @@
 import { toCents } from '@/lib/money'
 import { apiClient } from '@/services/api/client'
-import type { BookingPayments, PaymentLink, ReceiptLink } from '../types/booking-payment.types'
+import type { BookingPayments, PaymentLink, ReceiptLink, ReturnCharge } from '../types/booking-payment.types'
 import {
   toBookingPayments,
   toPaymentLink,
   toReceiptLink,
+  toReturnChargesPayload,
   type BookingPaymentsWire,
   type PaymentLinkWire,
   type ReceiptLinkWire,
@@ -48,6 +49,15 @@ export const bookingPaymentApi = {
 
   releaseDeposit: (reference: string): Promise<BookingPayments> =>
     summary(apiClient.post<BookingPaymentsWire>(`${base(reference)}/deposit/release`)),
+
+  /** Lists what the return cost. Takes nothing: the deposit is captured as its own step. */
+  setReturnCharges: (reference: string, charges: ReturnCharge[]): Promise<BookingPayments> =>
+    summary(
+      apiClient.put<BookingPaymentsWire>(
+        `${base(reference)}/return-charges`,
+        toReturnChargesPayload(charges),
+      ),
+    ),
 
   /** `requestId` stays the same if the same refund is sent again, so it is made only once. */
   refund: (

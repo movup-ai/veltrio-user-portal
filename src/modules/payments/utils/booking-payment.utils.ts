@@ -60,6 +60,41 @@ export function checkAmount(input: string, max: number): AmountCheck {
   return amount > max ? { error: 'over' } : { amount }
 }
 
+/** A return charge as typed: nothing typed is no charge, and `undefined` is not an amount. */
+export function parseCharge(input: string): number | undefined {
+  if (input.trim() === '') return 0
+  const value = Number(input)
+  if (!Number.isFinite(value) || value < 0) return undefined
+  return Math.round(value * 100) / 100
+}
+
+/** The deposit on hold, which is what return charges are captured from; 0 without one. */
+export function heldDeposit(payments: Pick<BookingPayments, 'deposit'>): number {
+  return payments.deposit?.status === 'held' ? payments.deposit.amount : 0
+}
+
+/**
+ * What has already gone towards the saved return charges: taken from the deposit, or paid
+ * another way since. Settling again must not ask for it twice.
+ */
+export function collectedForCharges(
+  payments: Pick<BookingPayments, 'returnChargesTotal' | 'balance' | 'deposit'>,
+): number {
+  const taken = payments.deposit?.status === 'captured' ? payments.deposit.captured : 0
+  // The larger of the two: a deposit taken beyond the charges does not show in the balance.
+  return Math.max(payments.returnChargesTotal - payments.balance, taken, 0)
+}
+
+/**
+ * How a return's charges fall on a deposit: captured as far as they go, the rest released,
+ * and what the deposit cannot cover left to collect. In cents, so 0.1 + 0.2 stays 0.3.
+ */
+export function settlement(charged: number, deposit: number) {
+  const [charges, available] = [Math.round(charged * 100), Math.round(deposit * 100)]
+  const capture = Math.min(charges, available)
+  return { capture: capture / 100, release: (available - capture) / 100, due: (charges - capture) / 100 }
+}
+
 /** What a link asks the renter for, which decides how the counter's message words it. */
 export type LinkPurpose = 'payment' | 'combined' | 'deposit'
 

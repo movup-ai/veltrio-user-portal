@@ -1,11 +1,15 @@
+import { useState } from 'react'
 import { ArrowDownLeft, FileCheck, KeyRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useBookingContract } from '@/modules/contracts/hooks/use-booking-contract'
 import { useBookingPayments } from '@/modules/payments/hooks/use-booking-payments'
 import { useBookingHandover } from '../hooks/use-booking-handover'
+import type { BookingCondition } from '../types/booking.types'
 import { handoverButton, nextStepNeeds } from '../utils/booking.handover'
+import { BookingConditionDialog } from './BookingConditionDialog'
 
 const BUTTONS = {
   pickUp: { icon: KeyRound, label: 'details.actions.handOver' },
@@ -13,37 +17,82 @@ const BUTTONS = {
   close: { icon: FileCheck, label: 'details.actions.closeBooking' },
 } as const
 
+interface BookingHandoverActionProps {
+  reference: string
+  /** What the handover form starts from and measures a return against. */
+  pickupCondition?: BookingCondition
+  vehicleMileage?: number
+  vehicleElectric?: boolean
+}
+
 /**
  * The page's main action: Hand over, Return or Close, as the booking's status and money allow.
- * Switched off, it says on hover everything it is waiting for.
+ * Switched off, it says on hover everything it is waiting for. Hand over and Return open the
+ * form the car's readings are taken on; Close asks first, because it cannot be undone.
  */
-export function BookingHandoverAction({ reference }: { reference: string }) {
+export function BookingHandoverAction({ reference, ...condition }: BookingHandoverActionProps) {
   const { t } = useTranslation('bookings')
   const { t: tPayments } = useTranslation('payments')
+  const { t: tCommon } = useTranslation('common')
   const { data: payments } = useBookingPayments(reference)
   // The agreement card's own query, so asking here costs no second request.
   const { data: contract } = useBookingContract(reference)
-  const mutations = {
-    pickUp: useBookingHandover(reference, 'pickUp'),
-    returnVehicle: useBookingHandover(reference, 'returnVehicle'),
-    close: useBookingHandover(reference, 'close'),
-  }
+  const pickUp = useBookingHandover(reference, 'pickUp')
+  const returnVehicle = useBookingHandover(reference, 'returnVehicle')
+  const close = useBookingHandover(reference, 'close')
+  const [recording, setRecording] = useState(false)
+  const [confirmingClose, setConfirmingClose] = useState(false)
   const action = payments ? handoverButton(payments.actions) : null
   if (!payments || !action) return null
 
   const { icon, label } = BUTTONS[action.action]
-  const mutation = mutations[action.action]
+  const handover = action.action === 'pickUp' ? pickUp : returnVehicle
   const { allowed, reason } = action.rule
   const button = (
     <PageActionButton
       icon={icon}
       label={t(label)}
       variant="solid"
-      disabled={!allowed || mutation.isPending}
-      onClick={() => mutation.mutate()}
+      disabled={!allowed || close.isPending}
+      onClick={() => (action.action === 'close' ? setConfirmingClose(true) : setRecording(true))}
     />
   )
-  if (allowed) return button
+  if (allowed) {
+    if (action.action === 'close') {
+      return (
+        <>
+          {button}
+          <ConfirmDialog
+            open={confirmingClose}
+            onOpenChange={setConfirmingClose}
+            title={t('details.closeDialog.title')}
+            description={t('details.closeDialog.description', { reference })}
+            confirmLabel={t('details.actions.closeBooking')}
+            cancelLabel={tCommon('actions.back')}
+            confirmVariant="primary"
+            loading={close.isPending}
+            // Left open on a refusal, so it can be tried again without reopening it.
+            onConfirm={() => close.mutate(undefined, { onSuccess: () => setConfirmingClose(false) })}
+          />
+        </>
+      )
+    }
+    return (
+      <>
+        {button}
+        <BookingConditionDialog
+          open={recording}
+          onOpenChange={setRecording}
+          stage={action.action === 'pickUp' ? 'pickup' : 'return'}
+          pickup={condition.pickupCondition}
+          vehicleMileage={condition.vehicleMileage}
+          electric={condition.vehicleElectric}
+          loading={handover.isPending}
+          onSubmit={(input) => handover.mutate(input, { onSuccess: () => setRecording(false) })}
+        />
+      </>
+    )
+  }
 
   // Until the agreement loads, the API's own reason says whether the signature is what is missing.
   const signed = contract ? contract.status === 'signed' : reason !== 'contract_unsigned'

@@ -4,8 +4,8 @@ import { toast } from '@/components/ui/use-toast'
 import { bookingKeys } from '@/modules/bookings/hooks/use-bookings'
 import { normalizeApiError } from '@/services/api/errors'
 import { bookingPaymentApi } from '../api/booking-payment.api'
-import { documentFileName } from '../utils/booking-payment.utils'
-import type { BookingPayments, PaymentLink } from '../types/booking-payment.types'
+import { documentFileName, heldDeposit, settlement } from '../utils/booking-payment.utils'
+import type { BookingPayments, PaymentLink, ReturnCharge } from '../types/booking-payment.types'
 import { saveBlob } from '@/lib/download'
 
 export const bookingPaymentKeys = {
@@ -60,17 +60,21 @@ function useMoneyAction<TArgs>(
   reference: string,
   action: (args: TArgs) => Promise<BookingPayments>,
   titles: { success: string; error: string },
+  { rereadOnError = false } = {},
 ) {
   const queryClient = useQueryClient()
+  const key = bookingPaymentKeys.booking(reference)
   return useMutation({
     mutationFn: action,
     onSuccess: (payments) => {
-      queryClient.setQueryData(bookingPaymentKeys.booking(reference), payments)
+      queryClient.setQueryData(key, payments)
       void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
       toast({ title: titles.success, variant: 'success' })
     },
-    onError: (error) =>
-      toast({ title: titles.error, description: normalizeApiError(error).message, variant: 'error' }),
+    onError: (error) => {
+      if (rereadOnError) void queryClient.invalidateQueries({ queryKey: key })
+      toast({ title: titles.error, description: normalizeApiError(error).message, variant: 'error' })
+    },
   })
 }
 
@@ -86,18 +90,38 @@ export function useRecordManualPayment(reference: string) {
   )
 }
 
-export function useCaptureDeposit(reference: string) {
-  return useMoneyAction(reference, (amount: number) => bookingPaymentApi.captureDeposit(reference, amount), {
-    success: i18n.t('payments:booking.toast.captured'),
-    error: i18n.t('payments:booking.toast.captureFailed'),
-  })
-}
-
 export function useReleaseDeposit(reference: string) {
   return useMoneyAction(reference, () => bookingPaymentApi.releaseDeposit(reference), {
     success: i18n.t('payments:booking.toast.released'),
     error: i18n.t('payments:booking.toast.releaseFailed'),
   })
+}
+
+/**
+ * Saves what the return cost, then settles the deposit on hold against it: captured as far
+ * as the charges go, or released when there are none. Without a hold only the charges are
+ * saved, and they become the booking's balance.
+ */
+export function useSettleReturn(reference: string) {
+  return useMoneyAction(
+    reference,
+    async (charges: ReturnCharge[]) => {
+      const saved = await bookingPaymentApi.setReturnCharges(reference, charges)
+      const held = heldDeposit(saved)
+      if (held <= 0) return saved
+      // The balance, not the charges: part of them may have been paid since an earlier attempt.
+      const { capture } = settlement(saved.balance, held)
+      return capture > 0
+        ? bookingPaymentApi.captureDeposit(reference, capture)
+        : bookingPaymentApi.releaseDeposit(reference)
+    },
+    {
+      success: i18n.t('payments:booking.toast.settled'),
+      error: i18n.t('payments:booking.toast.settleFailed'),
+    },
+    // The charges may have been saved before the deposit step failed, so the card is re-read.
+    { rereadOnError: true },
+  )
 }
 
 export function useRefundPayment(reference: string) {

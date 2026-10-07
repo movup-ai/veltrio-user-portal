@@ -50,6 +50,7 @@ function wire(reference: string): BookingWire {
       rateCents: 5500,
       units: 1,
       includedMiles: 200,
+      overageRatePerMileCents: null,
       lines: [{ optionId: 'r1', label: 'Daily', basis: 'day', rateCents: 5500, count: 1, cappedHours: null }],
     },
     pickupLocation: 'Downtown',
@@ -80,6 +81,8 @@ function wire(reference: string): BookingWire {
     pickedUpAt: null,
     returnedAt: null,
     completedAt: null,
+    pickupCondition: null,
+    returnCondition: null,
     createdAt: '2026-09-22T10:00:00Z',
     updatedAt: '2026-09-22T10:00:00Z',
   }
@@ -174,6 +177,46 @@ describe('bookingApi.confirm and decline', () => {
     expect(result.booking.status).toBe('Pending')
     expect(result.booking.declined).toBeUndefined()
     expect(result.emailQueued).toBe(true)
+  })
+})
+
+describe('bookingApi.pickUp and returnVehicle', () => {
+  const post = vi.mocked(apiClient.post)
+
+  beforeEach(() => post.mockReset())
+
+  it('pickUp sends the readings and returns them on the booking', async () => {
+    const pickupCondition = { odometer: 12480, fuelLevel: 6 as const, notes: null }
+    post.mockResolvedValue({ data: { ...wire('BK-10001'), status: 'on_rental', pickupCondition } })
+
+    const booking = await bookingApi.pickUp('BK-10001', { odometer: 12480, fuelLevel: 6, notes: '  ' })
+
+    // No sendToService: the pickup endpoint refuses a field it does not know.
+    expect(post).toHaveBeenCalledWith('/bookings/BK-10001/pick-up', {
+      odometer: 12480,
+      fuelLevel: 6,
+      notes: null,
+    })
+    expect(booking.pickupCondition).toEqual({ odometer: 12480, fuelLevel: 6, notes: undefined })
+    expect(booking.returnCondition).toBeUndefined()
+  })
+
+  it('returnVehicle also says where the car goes next', async () => {
+    post.mockResolvedValue({ data: { ...wire('BK-10001'), status: 'returned' } })
+
+    await bookingApi.returnVehicle('BK-10001', {
+      odometer: 13120,
+      fuelLevel: 4,
+      notes: ' Dent in the driver door ',
+      sendToService: true,
+    })
+
+    expect(post).toHaveBeenCalledWith('/bookings/BK-10001/return', {
+      odometer: 13120,
+      fuelLevel: 4,
+      notes: 'Dent in the driver door',
+      sendToService: true,
+    })
   })
 })
 

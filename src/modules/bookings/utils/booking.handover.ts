@@ -12,6 +12,9 @@ export interface HandoverButton {
 /** What pickup can still be waiting for; any other refusal means the car has already gone out. */
 const WAITING_FOR = ['not_fully_paid', 'contract_unsigned']
 
+/** What closing can still be waiting for after a return. */
+const CLOSE_WAITS_FOR = ['deposit_unsettled', 'charges_unpaid']
+
 /** Still waiting for the keys to change hands, whether or not it is paid for and signed yet. */
 export function isBeforePickup(actions: Pick<PaymentActions, 'pickUp'>): boolean {
   return actions.pickUp.allowed || WAITING_FOR.includes(actions.pickUp.reason ?? '')
@@ -33,8 +36,8 @@ export function handoverButton(
   if (isBeforePickup(actions)) {
     return { action: 'pickUp', rule: actions.pickUp }
   }
-  // Back, with only a held deposit in the way: any other refusal means there is nothing to close.
-  if (actions.close.allowed || actions.close.reason === 'deposit_unsettled') {
+  // Back, with only money in the way: any other refusal means there is nothing to close.
+  if (actions.close.allowed || CLOSE_WAITS_FOR.includes(actions.close.reason ?? '')) {
     return { action: 'close', rule: actions.close }
   }
   return null
@@ -57,8 +60,11 @@ export function pickupWaitsFor(
   return waiting
 }
 
-/** `settlement` is the held deposit a returned booking has to release or capture before closing. */
-export type StepNeed = PickupBlocker | 'settlement'
+/**
+ * `settlement` is the held deposit a returned booking has to release or capture before
+ * closing, and `charges` the return charges it did not cover, still to be paid.
+ */
+export type StepNeed = PickupBlocker | 'settlement' | 'charges'
 
 /** What the booking's next step still needs, for the button's tooltip. Empty when it can go ahead. */
 export function nextStepNeeds(
@@ -70,5 +76,6 @@ export function nextStepNeeds(
   const button = handoverButton(payments.actions)
   if (!button || button.rule.allowed) return []
   if (button.action === 'pickUp') return pickupWaitsFor(payments, signed)
-  return button.action === 'close' ? ['settlement'] : []
+  if (button.action !== 'close') return []
+  return [button.rule.reason === 'charges_unpaid' ? 'charges' : 'settlement']
 }
