@@ -140,33 +140,5 @@
     "templateChanged": "Terms changed",
     "templateChangeFailed": "Couldn't change the terms",
     "pdfFailed": "Couldn't open the agreement"
-  },
-  "page": {
-    "title": "Rental agreement",
-    "greeting": "Hi {{name}}, please read the agreement below and sign at the end.",
-    "secure": "Your signature is recorded with the date, time and device.",
-    "download": "Download PDF",
-    "downloadCopy": "Download your copy",
-    "signed": {
-      "title": "Agreement signed",
-      "body": "Signed by {{name}} on {{date}}. Keep a copy for your records."
-    },
-    "replaced": {
-      "title": "This agreement was replaced",
-      "body": "{{company}} issued a newer agreement for booking {{reference}}. Ask them for the new link."
-    },
-    "closed": {
-      "title": "This agreement can no longer be signed",
-      "body": "Booking {{reference}} is not waiting for a signature any more. Contact {{company}} if you think this is a mistake."
-    },
-    "invalid": {
-      "title": "This link is not valid",
-      "body": "Check the link you were sent, or ask the rental company for a new one."
-    },
-    "unreachable": {
-      "title": "We couldn't load your agreement",
-      "body": "Check your connection and try again.",
-      "retry": "Try again"
-    }
   }
 }

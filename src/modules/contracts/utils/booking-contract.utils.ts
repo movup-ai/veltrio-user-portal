@@ -1,3 +1,4 @@
+import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { normalizeApiError } from '@/services/api/errors'
 import type { BookingContract, ContractLink } from '../types/booking-contract.types'
 
@@ -33,9 +34,9 @@ export function drawingProblem(error: unknown): DrawingProblem | undefined {
   return code === 'signature_invalid' ? 'signatureUnreadable' : undefined
 }
 
-/** The renter's agreement page, on this portal's own origin. */
-export function contractLinkUrl(origin: string, link: ContractLink): string {
-  return `${origin}/sign/${link.tenantId}/${link.contractId}/${link.token}`
+/** The renter's agreement page, on the company's own site: the host names the tenant, so the path does not. */
+export function contractLinkUrl(subdomain: string, link: Pick<ContractLink, 'contractId' | 'token'>): string {
+  return `${siteUrl(subdomain)}/sign/${link.contractId}/${link.token}`
 }
 
 /** Whether there is a document to open: until one is issued there is only a preview. */

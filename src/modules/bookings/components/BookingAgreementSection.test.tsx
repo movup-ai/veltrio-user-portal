@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
 import type { BookingContract } from '@/modules/contracts/types/booking-contract.types'
+import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { Permission } from '@/types/user'
 import { BookingAgreementSection } from './BookingAgreementSection'
@@ -25,13 +26,20 @@ vi.mock('@/modules/contracts/api/booking-contract.api', () => ({
 }))
 
 const ALLOWED = { allowed: true }
-const LINK = { tenantId: 't1', contractId: 'c1', token: 'tok' }
+const LINK = { contractId: 'c1', token: 'tok' }
 const NONE: BookingContract = {
   status: 'none',
   template: { id: 'tpl_1', name: 'Standard rental agreement', revision: 3 },
   actions: { sign: ALLOWED, void: { allowed: false, reason: 'not_issued' }, changeTemplate: ALLOWED },
 }
-const ISSUED: BookingContract = { ...NONE, status: 'issued', number: 'AGR-BK-10001', companySigner: 'Edward Thomas', link: LINK, actions: { ...NONE.actions, void: ALLOWED } }
+const ISSUED: BookingContract = {
+  ...NONE,
+  status: 'issued',
+  number: 'AGR-BK-10001',
+  companySigner: 'Edward Thomas',
+  link: LINK,
+  actions: { ...NONE.actions, void: ALLOWED },
+}
 const SIGNED: BookingContract = {
   ...ISSUED,
   status: 'signed',
@@ -91,8 +99,10 @@ describe('BookingAgreementSection', () => {
     expect(screen.getByText("The keys can't be handed over until this is signed.")).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Send for signature' }))
 
-    expect(await screen.findByRole('heading', { name: 'Send the agreement for signature' })).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: /link/i })).toHaveValue(`${window.location.origin}/sign/t1/c1/tok`)
+    expect(
+      await screen.findByRole('heading', { name: 'Send the agreement for signature' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /link/i })).toHaveValue(`${siteUrl('sunstate')}/sign/c1/tok`)
     expect(issue).toHaveBeenCalledTimes(1)
   })
 
@@ -119,13 +129,18 @@ describe('BookingAgreementSection', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Send for signature' }))
 
-    expect(await screen.findByRole('heading', { name: 'Send the agreement for signature' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Send the agreement for signature' }),
+    ).toBeInTheDocument()
     expect(issue).not.toHaveBeenCalled()
   })
 
   it('turns signing off with the reason once the booking no longer takes a signature', async () => {
     const cancelled = { allowed: false, reason: 'booking_cancelled' } as const
-    get.mockResolvedValue({ ...NONE, actions: { ...NONE.actions, sign: cancelled, changeTemplate: cancelled } })
+    get.mockResolvedValue({
+      ...NONE,
+      actions: { ...NONE.actions, sign: cancelled, changeTemplate: cancelled },
+    })
     renderSection()
 
     const send = await screen.findByRole('button', { name: 'Send for signature' })

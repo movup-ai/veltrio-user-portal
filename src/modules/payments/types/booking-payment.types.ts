@@ -1,5 +1,4 @@
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
-import type { VehicleSpecs } from '@/modules/vehicles/api/vehicle.mapper'
 import type { PaymentRefusal } from '../constants/payment.constants'
 
 export type BookingPaymentKind = 'charge' | 'deposit' | 'manual'
@@ -69,7 +68,6 @@ export interface BookingPayments {
 
 /** The pieces of a payment link; the API hands the same one back while nothing changes. */
 export interface PaymentLink {
-  tenantId: string
   token: string
   /** The rental it charges and the deposit it holds; either may be 0, never both. */
   amount: number
@@ -77,71 +75,8 @@ export interface PaymentLink {
   currency: string
 }
 
-/** One half of the renter's link: the rental payment or the deposit hold. */
-export interface PublicPaymentPart<Status extends string> {
-  status: Status
-  amount: number
-  /** Present only while the renter has something to do. */
-  clientSecret?: string
-}
-
-export type PublicChargeStatus = 'open' | 'processing' | 'paid' | 'closed'
-export type PublicDepositStatus = 'open' | 'processing' | 'held' | 'closed'
-
-/** What the renter's payment page shows. */
-export interface PublicPayment {
-  companyName: string
-  reference: string
-  renterName: string
-  vehicleName: string
-  /** The vehicle's cover photo; absent when it has none. */
-  vehiclePhotoUrl?: string
-  /** Absent once the vehicle is deleted; the name was copied onto the booking. */
-  vehicleSpecs?: VehicleSpecs
-  pickupAt: string
-  returnAt: string
-  pickupLocation: string
-  currency: string
-  /** The booking's deposit, mentioned even on a link that does not ask for it yet. */
-  depositAmount: number
-  stripeAccountId?: string
-  charge?: PublicPaymentPart<PublicChargeStatus>
-  deposit?: PublicPaymentPart<PublicDepositStatus>
-  /** Once anything is paid: the renter's receipt, a page of its own. */
-  receipt?: ReceiptLink
-}
-
 /** The pieces of a receipt link; the same every time, derived from the booking. */
 export interface ReceiptLink {
-  tenantId: string
   bookingId: string
   token: string
-}
-
-export interface PublicReceiptPayment {
-  /** A captured deposit is money taken too, for damage or fuel. */
-  kind: 'rental' | 'deposit'
-  method?: string
-  amount: number
-  refunded: number
-  completedAt?: string
-}
-
-/** What the renter's receipt page shows. */
-export interface PublicReceipt {
-  number: string
-  companyName: string
-  reference: string
-  renterName: string
-  vehicleName: string
-  vehiclePhotoUrl?: string
-  vehicleSpecs?: VehicleSpecs
-  pickupAt: string
-  returnAt: string
-  pickupLocation: string
-  currency: string
-  total: number
-  received: number
-  balance: number
-  payments: PublicReceiptPayment[]
 }

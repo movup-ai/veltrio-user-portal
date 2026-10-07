@@ -52,7 +52,7 @@ const ACTIONS: PaymentActions = {
   close: { allowed: false, reason: 'not_awaiting_close' },
 }
 
-const LINK: PaymentLink = { tenantId: 't1', token: 'secret-token', amount: 319, deposit: 0, currency: 'USD' }
+const LINK: PaymentLink = { token: 'secret-token', amount: 319, deposit: 0, currency: 'USD' }
 
 const UNPAID: BookingPayments = {
   available: true,
@@ -394,7 +394,7 @@ describe('BookingPaymentSection', () => {
 
   it('shares the receipt as a link, with the PDF for the counter', async () => {
     get.mockResolvedValue(RENTAL_PAID)
-    receiptLink.mockResolvedValue({ tenantId: 't1', bookingId: 'b1', token: 'receipt-token' })
+    receiptLink.mockResolvedValue({ bookingId: 'b1', token: 'receipt-token' })
     documentPdf.mockResolvedValue(new Blob(['%PDF']))
     const user = userEvent.setup({ delay: null })
     renderAs([])
@@ -403,7 +403,7 @@ describe('BookingPaymentSection', () => {
 
     const dialog = await screen.findByRole('dialog')
     expect(
-      within(dialog).getByDisplayValue(`${window.location.origin}/receipt/t1/b1/receipt-token`),
+      within(dialog).getByDisplayValue(`${siteUrl('sunstate')}/receipt/b1/receipt-token`),
     ).toBeInTheDocument()
     expect(within(dialog).getByText('Paid for the rental')).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Download PDF' }))

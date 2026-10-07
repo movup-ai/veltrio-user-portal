@@ -151,6 +151,7 @@ export function BookingPaymentSection({ reference, renter, charges, days }: Book
           payments={payments}
           renter={renter}
           companyName={companyName}
+          subdomain={subdomain}
           reference={reference}
           downloading={download.isPending && download.variables === 'receipt'}
           onDownload={() => download.mutate('receipt')}

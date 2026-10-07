@@ -1,7 +1,6 @@
 import { fromCents } from '@/lib/money'
 import type { CheckoutMethod, CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
-import { toVehicleSpecs, type VehicleSpecsWire } from '@/modules/vehicles/api/vehicle.mapper'
 import { PAYMENT_REFUSALS, type PaymentRefusal } from '../constants/payment.constants'
 import type {
   BookingPaymentKind,
@@ -11,11 +10,6 @@ import type {
   PaymentActionRule,
   PaymentActions,
   PaymentLink,
-  PublicChargeStatus,
-  PublicDepositStatus,
-  PublicPayment,
-  PublicPaymentPart,
-  PublicReceipt,
   ReceiptLink,
 } from '../types/booking-payment.types'
 
@@ -116,95 +110,19 @@ export interface BookingPaymentsWire {
 }
 
 export interface PaymentLinkWire {
-  tenantId: string
   token: string
   amountCents: number
   depositCents: number
   currency: string
 }
 
-export interface PublicPaymentPartWire<Status extends string> {
-  status: Status
-  amountCents: number
-  clientSecret: string | null
-}
-
-export interface PublicPaymentWire {
-  companyName: string
-  reference: string
-  renterName: string
-  vehicleName: string
-  vehiclePhotoUrl: string | null
-  vehicleSpecs: VehicleSpecsWire | null
-  pickupAt: string
-  returnAt: string
-  pickupLocation: string
-  currency: string
-  depositCents: number
-  stripeAccountId: string | null
-  charge: PublicPaymentPartWire<PublicChargeStatus> | null
-  deposit: PublicPaymentPartWire<PublicDepositStatus> | null
-  receipt: ReceiptLinkWire | null
-}
-
 export interface ReceiptLinkWire {
-  tenantId: string
   bookingId: string
   token: string
 }
 
-export interface PublicReceiptWire {
-  number: string
-  companyName: string
-  reference: string
-  renterName: string
-  vehicleName: string
-  vehiclePhotoUrl: string | null
-  vehicleSpecs: VehicleSpecsWire | null
-  pickupAt: string
-  returnAt: string
-  pickupLocation: string
-  currency: string
-  totalCents: number
-  receivedCents: number
-  balanceCents: number
-  payments: {
-    kind: 'rental' | 'deposit'
-    method: string | null
-    amountCents: number
-    refundedCents: number
-    completedAt: string | null
-  }[]
-}
-
 export function toReceiptLink(wire: ReceiptLinkWire): ReceiptLink {
-  return { tenantId: wire.tenantId, bookingId: wire.bookingId, token: wire.token }
-}
-
-export function toPublicReceipt(wire: PublicReceiptWire): PublicReceipt {
-  return {
-    number: wire.number,
-    companyName: wire.companyName,
-    reference: wire.reference,
-    renterName: wire.renterName,
-    vehicleName: wire.vehicleName,
-    vehiclePhotoUrl: wire.vehiclePhotoUrl ?? undefined,
-    vehicleSpecs: wire.vehicleSpecs ? toVehicleSpecs(wire.vehicleSpecs) : undefined,
-    pickupAt: wire.pickupAt,
-    returnAt: wire.returnAt,
-    pickupLocation: wire.pickupLocation,
-    currency: wire.currency,
-    total: fromCents(wire.totalCents),
-    received: fromCents(wire.receivedCents),
-    balance: fromCents(wire.balanceCents),
-    payments: wire.payments.map((p) => ({
-      kind: p.kind,
-      method: p.method ?? undefined,
-      amount: fromCents(p.amountCents),
-      refunded: fromCents(p.refundedCents),
-      completedAt: p.completedAt ?? undefined,
-    })),
-  }
+  return { bookingId: wire.bookingId, token: wire.token }
 }
 
 export function toBookingPaymentRecord(wire: BookingPaymentWire): BookingPaymentRecord {
@@ -264,41 +182,9 @@ export function toBookingPayments(wire: BookingPaymentsWire): BookingPayments {
 
 export function toPaymentLink(wire: PaymentLinkWire): PaymentLink {
   return {
-    tenantId: wire.tenantId,
     token: wire.token,
     amount: fromCents(wire.amountCents),
     deposit: fromCents(wire.depositCents),
     currency: wire.currency,
-  }
-}
-
-function toPublicPart<Status extends string>(
-  wire: PublicPaymentPartWire<Status> | null,
-): PublicPaymentPart<Status> | undefined {
-  if (!wire) return undefined
-  return {
-    status: wire.status,
-    amount: fromCents(wire.amountCents),
-    clientSecret: wire.clientSecret ?? undefined,
-  }
-}
-
-export function toPublicPayment(wire: PublicPaymentWire): PublicPayment {
-  return {
-    companyName: wire.companyName,
-    reference: wire.reference,
-    renterName: wire.renterName,
-    vehicleName: wire.vehicleName,
-    vehiclePhotoUrl: wire.vehiclePhotoUrl ?? undefined,
-    vehicleSpecs: wire.vehicleSpecs ? toVehicleSpecs(wire.vehicleSpecs) : undefined,
-    pickupAt: wire.pickupAt,
-    returnAt: wire.returnAt,
-    pickupLocation: wire.pickupLocation,
-    currency: wire.currency,
-    depositAmount: fromCents(wire.depositCents),
-    stripeAccountId: wire.stripeAccountId ?? undefined,
-    charge: toPublicPart(wire.charge),
-    deposit: toPublicPart(wire.deposit),
-    receipt: wire.receipt ? toReceiptLink(wire.receipt) : undefined,
   }
 }

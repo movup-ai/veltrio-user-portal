@@ -183,9 +183,9 @@ describe('documentFileName', () => {
 })
 
 describe('receiptLinkUrl', () => {
-  it("points at this portal's receipt page", () => {
-    expect(receiptLinkUrl('https://app.veltrio.test', { tenantId: 't1', bookingId: 'b1', token: 'x' })).toBe(
-      'https://app.veltrio.test/receipt/t1/b1/x',
+  it("points at the receipt page on the company's own site, with no tenant id in the path", () => {
+    expect(receiptLinkUrl('sunstate', { bookingId: 'b1', token: 'x' })).toBe(
+      `${siteUrl('sunstate')}/receipt/b1/x`,
     )
   })
 })

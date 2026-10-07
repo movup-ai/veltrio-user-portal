@@ -37,13 +37,21 @@ interface ContractLinkDialogProps extends DialogProps {
   contract: BookingContract & { link: ContractLink }
   renter: LinkRecipient
   companyName: string
+  subdomain: string
   reference: string
 }
 
 /** The renter's link: to sign on while the agreement is open, and to their copy once it is signed. */
-export function ContractLinkDialog({ contract, renter, companyName, reference, ...dialog }: ContractLinkDialogProps) {
+export function ContractLinkDialog({
+  contract,
+  renter,
+  companyName,
+  subdomain,
+  reference,
+  ...dialog
+}: ContractLinkDialogProps) {
   const { t } = useTranslation('contracts')
-  const url = contractLinkUrl(window.location.origin, contract.link)
+  const url = contractLinkUrl(subdomain, contract.link)
   const signed = contract.status === 'signed'
   const values = { name: renter.name, company: companyName, reference, url }
 
@@ -63,6 +71,7 @@ export function ContractLinkDialog({ contract, renter, companyName, reference, .
 
 interface CounterSignDialogProps extends DialogProps {
   reference: string
+  subdomain: string
   link: ContractLink
   renterName: string
 }
@@ -72,9 +81,16 @@ interface CounterSignDialogProps extends DialogProps {
  * same page the renter's link serves, and signs through the staff endpoint, which records who
  * was logged in as the witness.
  */
-export function CounterSignDialog({ reference, link, renterName, open, onOpenChange }: CounterSignDialogProps) {
+export function CounterSignDialog({
+  reference,
+  subdomain,
+  link,
+  renterName,
+  open,
+  onOpenChange,
+}: CounterSignDialogProps) {
   const { t } = useTranslation('contracts')
-  const { data: agreement, isLoading, refetch } = usePublicContract(open ? link : undefined)
+  const { data: agreement, isLoading, refetch } = usePublicContract(subdomain, open ? link : undefined)
   const sign = useSignAtCounter(reference)
 
   return (
@@ -137,7 +153,9 @@ export function VoidContractDialog({ reference, signed, open, onOpenChange }: Vo
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('void.title')}</DialogTitle>
-          <DialogDescription>{t(signed ? 'void.signedDescription' : 'void.unsignedDescription')}</DialogDescription>
+          <DialogDescription>
+            {t(signed ? 'void.signedDescription' : 'void.unsignedDescription')}
+          </DialogDescription>
         </DialogHeader>
         <FormField label={t('void.reason')} error={missing ? t('void.reasonRequired') : undefined} required>
           {(fieldProps) => (
@@ -170,7 +188,12 @@ interface ChangeTemplateDialogProps extends DialogProps {
   currentId?: string
 }
 
-export function ChangeTemplateDialog({ reference, currentId, open, onOpenChange }: ChangeTemplateDialogProps) {
+export function ChangeTemplateDialog({
+  reference,
+  currentId,
+  open,
+  onOpenChange,
+}: ChangeTemplateDialogProps) {
   const { t } = useTranslation('contracts')
   const { t: tCommon } = useTranslation('common')
   const { data: templates, isLoading, refetch } = useAgreementTemplates()
