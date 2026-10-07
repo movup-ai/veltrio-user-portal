@@ -93,6 +93,40 @@ describe('useBookingHandover', () => {
     invalidate.mockRestore()
   })
 
+  it('takes back on the next try what it could not take back before', async () => {
+    // The handover is refused and so is the request to take its photo back. Left there, the
+    // photo would hold one of the stage's slots against the retry's own copy.
+    pickUp.mockRejectedValueOnce(new Error('not_fully_paid'))
+    remove.mockRejectedValueOnce(new Error('Network Error'))
+    const result = handOver({ ...READINGS, photos: [file('front')] })
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    calls.length = 0
+
+    result.current.mutate({ ...READINGS, photos: [file('front-again')] })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    // Its own leftover, by id, before the new copy goes up: never the whole stage.
+    expect(calls).toEqual(['remove front', 'upload front-again', 'pickUp'])
+    expect(pickUp).toHaveBeenLastCalledWith('BK-10001', { ...READINGS, photoIds: ['front-again'] })
+  })
+
+  it('forgets a leftover once it has been taken back', async () => {
+    pickUp.mockRejectedValueOnce(new Error('not_fully_paid'))
+    remove.mockRejectedValueOnce(new Error('Network Error'))
+    const result = handOver({ ...READINGS, photos: [file('front')] })
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    pickUp.mockRejectedValueOnce(new Error('not_fully_paid'))
+    result.current.mutate({ ...READINGS, photos: [] })
+    await waitFor(() => expect(remove).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    calls.length = 0
+
+    result.current.mutate({ ...READINGS, photos: [] })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(calls).toEqual(['pickUp'])
+  })
+
   it('does not hand over with a photo missing, and takes back the ones that did arrive', async () => {
     upload.mockImplementation((_, stage, sent) =>
       sent.name === 'rear'

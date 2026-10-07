@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
@@ -25,16 +26,29 @@ const TOASTS = {
 } as const
 
 /**
+ * Takes this page's own uploads back, by id, and keeps the ids it could not. Left where they
+ * are they hold the stage's photo slots, so the next try clears them before sending its own.
+ */
+async function takeBack(reference: string, ids: string[], stuck: Set<string>) {
+  const results = await Promise.allSettled(ids.map((id) => conditionPhotoApi.remove(reference, id)))
+  results.forEach((result, index) =>
+    result.status === 'fulfilled' ? stuck.delete(ids[index]) : stuck.add(ids[index]),
+  )
+}
+
+/**
  * Sends a handover's photos, then records it naming them. The API keeps those and discards
- * any other left on the stage, so nothing here deletes a photo this attempt did not upload.
+ * any other left on the stage, so nothing here deletes a photo this page did not upload.
  * Its own are taken back if the handover does not go through.
  */
 async function recordHandover(
   reference: string,
   handover: 'pickUp' | 'returnVehicle',
   { photos, ...condition }: HandoverInput,
+  stuck: Set<string>,
 ) {
   const stage = handover === 'pickUp' ? 'pickup' : 'return'
+  await takeBack(reference, [...stuck], stuck)
   const sent: ConditionPhoto[] = []
   try {
     const uploads = await Promise.allSettled(
@@ -46,7 +60,11 @@ async function recordHandover(
     if (failed) throw failed.reason
     return await bookingApi[handover](reference, { ...condition, photoIds: sent.map((photo) => photo.id) })
   } catch (error) {
-    await Promise.allSettled(sent.map((photo) => conditionPhotoApi.remove(reference, photo.id)))
+    await takeBack(
+      reference,
+      sent.map((photo) => photo.id),
+      stuck,
+    )
     throw error
   }
 }
@@ -54,12 +72,14 @@ async function recordHandover(
 /** A rental moving on a step. The payment card is refreshed too: its buttons follow the status. */
 export function useBookingHandover<H extends Handover>(reference: string, handover: H) {
   const queryClient = useQueryClient()
+  // Photos an earlier try uploaded and could not take back, for the next one to clear first.
+  const stuck = useRef(new Set<string>())
   return useMutation({
     mutationFn: (input: Inputs[H]) =>
       handover === 'close'
         ? bookingApi.close(reference)
         : // Cast: TypeScript cannot tie `handover` to the input its own step takes.
-          recordHandover(reference, handover, input as HandoverInput),
+          recordHandover(reference, handover, input as HandoverInput, stuck.current),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
       void queryClient.invalidateQueries({ queryKey: bookingPaymentKeys.booking(reference) })
