@@ -28,11 +28,16 @@
   }
 
   /*
-   * Tailwind 4 leaves buttons on the default arrow. In the base layer, so a cursor utility on
-   * one button (`disabled:cursor-not-allowed`) still wins.
+   * Tailwind 4's reset no longer sets this, so buttons got the browser's arrow. In the base
+   * layer, so cursor-* utilities still win.
    */
   button:not(:disabled),
-  [role='button']:not([aria-disabled='true']) {
+  [role='button']:not([aria-disabled='true']),
+  [role='tab']:not([aria-disabled='true']),
+  [role='menuitem']:not([data-disabled]),
+  [role='option']:not([data-disabled]),
+  summary,
+  label[for] {
     cursor: pointer;
   }
 

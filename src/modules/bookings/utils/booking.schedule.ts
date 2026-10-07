@@ -81,7 +81,7 @@ export function conflictsForVehicle(
     .sort((a, b) => Date.parse(a.from) - Date.parse(b.from))
 }
 
-/** Just this plate's intervals — what the availability strip needs to shade its days. */
-export function intervalsForPlate(schedule: BookedInterval[], plate: string): BookedInterval[] {
-  return schedule.filter((i) => i.plate === plate)
+/** Just this vehicle's intervals — what the availability strip needs to shade its days. */
+export function intervalsForVehicle(schedule: BookedInterval[], vehicleId: string): BookedInterval[] {
+  return schedule.filter((i) => i.vehicleId === vehicleId)
 }

@@ -1,4 +1,5 @@
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
+import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { normalizeApiError } from '@/services/api/errors'
 import type {
   BookingPaymentRecord,
@@ -7,9 +8,9 @@ import type {
   ReceiptLink,
 } from '../types/booking-payment.types'
 
-/** The renter's payment page, on this portal's own origin. */
-export function paymentLinkUrl(origin: string, link: Pick<PaymentLink, 'tenantId' | 'token'>): string {
-  return `${origin}/pay/${link.tenantId}/${link.token}`
+/** The renter's payment page, on the company's own site: the host names the tenant, so the path does not. */
+export function paymentLinkUrl(subdomain: string, link: Pick<PaymentLink, 'token'>): string {
+  return `${siteUrl(subdomain)}/pay/${link.token}`
 }
 
 /** Numbered from the booking, as the API names its invoice (INV-) and receipt (RCT-). */

@@ -5,7 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_API_URL: string
   readonly VITE_USE_MOCKS: string
   readonly VITE_CLERK_PUBLISHABLE_KEY: string
-  /** Root domain for customer-portal links, e.g. `veltrio.com`. */
+  /** Root domain company sites hang off, for vehicle and payment links, e.g. `veltrio.autos`. */
   readonly VITE_CUSTOMER_PORTAL_DOMAIN?: string
   /**
    * Google Maps key with the Places API enabled, for the location address picker. Absent in
