@@ -111,6 +111,7 @@ export interface BookingPaymentsWire {
   balanceCents: number
   returnCharges: ReturnChargeWire[]
   returnChargesCents: number
+  returnChargesSaved: boolean
   depositCents: number
   deposit: BookingPaymentWire | null
   openLink: boolean
@@ -187,6 +188,7 @@ export function toBookingPayments(wire: BookingPaymentsWire): BookingPayments {
       note: charge.note ?? undefined,
     })),
     returnChargesTotal: fromCents(wire.returnChargesCents),
+    returnChargesSaved: wire.returnChargesSaved,
     depositAmount: fromCents(wire.depositCents),
     deposit: wire.deposit ? toBookingPaymentRecord(wire.deposit) : undefined,
     openLink: wire.openLink,

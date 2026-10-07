@@ -201,6 +201,19 @@ describe('bookingApi.pickUp and returnVehicle', () => {
     expect(booking.returnCondition).toBeUndefined()
   })
 
+  it('names the photos a handover keeps, when it has any', async () => {
+    post.mockResolvedValue({ data: wire('BK-10001') })
+
+    await bookingApi.pickUp('BK-10001', { odometer: 1, fuelLevel: 8, notes: '', photoIds: ['p1', 'p2'] })
+
+    expect(post).toHaveBeenCalledWith('/bookings/BK-10001/pick-up', {
+      odometer: 1,
+      fuelLevel: 8,
+      notes: null,
+      photoIds: ['p1', 'p2'],
+    })
+  })
+
   it('returnVehicle also says where the car goes next', async () => {
     post.mockResolvedValue({ data: { ...wire('BK-10001'), status: 'returned' } })
 

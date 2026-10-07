@@ -22,6 +22,7 @@ const HELD = {
   deposit: DEPOSIT,
   returnCharges: [],
   returnChargesTotal: 0,
+  returnChargesSaved: false,
   balance: 0,
 } as unknown as BookingPayments
 
@@ -105,6 +106,7 @@ describe('ReturnChargesDialog', () => {
       ...HELD,
       returnCharges: [{ kind: 'damage' as const, amount: 75 }],
       returnChargesTotal: 75,
+      returnChargesSaved: true,
     }
 
     const { unmount } = render(
@@ -132,6 +134,7 @@ describe('ReturnChargesDialog', () => {
         ...HELD,
         returnCharges: [{ kind: 'damage', amount: 80 }],
         returnChargesTotal: 80,
+        returnChargesSaved: true,
         balance: 0,
       },
     })
@@ -142,9 +145,10 @@ describe('ReturnChargesDialog', () => {
     expect(screen.getByRole('button', { name: 'Release deposit' })).toBeInTheDocument()
   })
 
-  it('does not suggest a charge again once the deposit has been settled without it', () => {
+  it('does not suggest a charge again once the charges were saved without it, even as none', () => {
+    // No deposit to go by: saving is what makes an empty row a decision.
     renderDialog({
-      payments: { ...HELD, deposit: { ...DEPOSIT, status: 'released' } },
+      payments: { ...HELD, deposit: undefined, returnChargesSaved: true },
       suggested: { over_mileage: { amount: 18, note: '40 mi over the allowance' } },
     })
 
@@ -159,6 +163,7 @@ describe('ReturnChargesDialog', () => {
         deposit: taken,
         returnCharges: [{ kind: 'damage', amount: 2000 }],
         returnChargesTotal: 2000,
+        returnChargesSaved: true,
       },
     })
 

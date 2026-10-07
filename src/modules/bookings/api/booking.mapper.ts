@@ -453,6 +453,7 @@ export function toConditionPayload(input: ConditionInput) {
     fuelLevel: input.fuelLevel,
     notes: input.notes.trim() || null,
     ...(input.sendToService !== undefined && { sendToService: input.sendToService }),
+    ...(input.photoIds && { photoIds: input.photoIds }),
   }
 }
 

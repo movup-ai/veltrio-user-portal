@@ -64,6 +64,7 @@ const UNPAID: BookingPayments = {
   balance: 319,
   returnCharges: [],
   returnChargesTotal: 0,
+  returnChargesSaved: false,
   depositAmount: 2000,
   openLink: false,
   depositRequested: false,

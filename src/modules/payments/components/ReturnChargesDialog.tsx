@@ -60,11 +60,11 @@ export function ReturnChargesDialog({ open, onOpenChange, ...form }: ReturnCharg
 type Rows = Record<ReturnChargeKind, { amount: string; note: string }>
 
 function startingRows(payments: BookingPayments, suggested: SuggestedCharges): Rows {
-  const saved = payments.returnCharges
-  // Suggestions only fill a return nobody has settled: after that an empty row was a decision.
-  const settled = ['captured', 'released'].includes(payments.deposit?.status ?? '')
+  // Suggestions only fill a return nobody has saved: after that an empty row was a decision.
   const from = (kind: ReturnChargeKind) =>
-    saved.length > 0 || settled ? saved.find((charge) => charge.kind === kind) : suggested[kind]
+    payments.returnChargesSaved
+      ? payments.returnCharges.find((charge) => charge.kind === kind)
+      : suggested[kind]
   return Object.fromEntries(
     RETURN_CHARGE_KINDS.map((kind) => {
       const charge = from(kind)

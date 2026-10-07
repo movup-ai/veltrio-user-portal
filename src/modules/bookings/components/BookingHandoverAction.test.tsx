@@ -52,6 +52,7 @@ const UNPAID: BookingPayments = {
   balance: 319,
   returnCharges: [],
   returnChargesTotal: 0,
+  returnChargesSaved: false,
   depositAmount: 2000,
   openLink: false,
   depositRequested: false,
@@ -150,9 +151,32 @@ describe('BookingHandoverAction', () => {
     await user.click(form.getByRole('button', { name: 'Hand over vehicle' }))
 
     await waitFor(() =>
-      expect(pickUp).toHaveBeenCalledWith('BK-10001', { odometer: 12000, fuelLevel: 8, notes: '' }),
+      expect(pickUp).toHaveBeenCalledWith('BK-10001', {
+        odometer: 12000,
+        fuelLevel: 8,
+        notes: '',
+        photoIds: [],
+      }),
     )
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('closes the pickup form when the booking turns out to be picked up already', async () => {
+    // The pickup was recorded but its answer was lost. The form must not stay open to be
+    // submitted again as the next step, a return, carrying the pickup's readings.
+    const ready = { ...UNPAID, state: 'paid' as const, balance: 0 }
+    payments.mockResolvedValue({ ...ready, actions: { ...ACTIONS, pickUp: { allowed: true } } })
+    pickUp.mockRejectedValue(new Error('Network Error'))
+    const user = renderAction(12000)
+    await user.click(await screen.findByRole('button', { name: 'Hand over vehicle' }))
+    const form = within(await screen.findByRole('dialog'))
+    await user.click(form.getByRole('radio', { name: 'Full' }))
+    payments.mockResolvedValue({ ...ready, actions: { ...BACK, returnVehicle: { allowed: true } } })
+
+    await user.click(form.getByRole('button', { name: 'Hand over vehicle' }))
+
+    expect(await screen.findByRole('button', { name: 'Return vehicle' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('says on hover that the deposit has to be settled before a returned booking is closed', async () => {

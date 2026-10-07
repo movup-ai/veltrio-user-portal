@@ -25,9 +25,9 @@ const TOASTS = {
 } as const
 
 /**
- * Sends a handover's photos, then records it. The form stores nothing before this, so the
- * photos are taken back if the handover does not go through: a booking keeps them only as
- * part of a handover that happened.
+ * Sends a handover's photos, then records it naming them. The API keeps those and discards
+ * any other left on the stage, so nothing here deletes a photo this attempt did not upload.
+ * Its own are taken back if the handover does not go through.
  */
 async function recordHandover(
   reference: string,
@@ -35,10 +35,6 @@ async function recordHandover(
   { photos, ...condition }: HandoverInput,
 ) {
   const stage = handover === 'pickUp' ? 'pickup' : 'return'
-  // Left by an attempt that could not take its own back; the record is what this form showed.
-  const leftover = (await conditionPhotoApi.list(reference)).filter((photo) => photo.stage === stage)
-  await Promise.all(leftover.map((photo) => conditionPhotoApi.remove(reference, photo.id)))
-
   const sent: ConditionPhoto[] = []
   try {
     const uploads = await Promise.allSettled(
@@ -48,7 +44,7 @@ async function recordHandover(
     for (const upload of uploads) if (upload.status === 'fulfilled') sent.push(upload.value)
     const failed = uploads.find((upload) => upload.status === 'rejected')
     if (failed) throw failed.reason
-    return await bookingApi[handover](reference, condition)
+    return await bookingApi[handover](reference, { ...condition, photoIds: sent.map((photo) => photo.id) })
   } catch (error) {
     await Promise.allSettled(sent.map((photo) => conditionPhotoApi.remove(reference, photo.id)))
     throw error
@@ -74,6 +70,7 @@ export function useBookingHandover<H extends Handover>(reference: string, handov
       // An answer lost on the way back leaves the step recorded: re-read, so the button says so.
       void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
       void queryClient.invalidateQueries({ queryKey: bookingPaymentKeys.booking(reference) })
+      void queryClient.invalidateQueries({ queryKey: conditionPhotoKeys.booking(reference) })
       toast({
         title: i18n.t(TOASTS[handover].error),
         description: normalizeApiError(error).message,

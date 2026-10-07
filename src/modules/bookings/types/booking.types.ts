@@ -111,6 +111,8 @@ export interface ConditionInput {
   fuelLevel: FuelLevel
   notes: string
   sendToService?: boolean
+  /** The photos this handover keeps, by id. The API discards any other left on the stage. */
+  photoIds?: string[]
 }
 
 /** A photo of the car at one handover. `url` is the image itself and expires within the hour. */

@@ -40,7 +40,9 @@ export function BookingHandoverAction({ reference, ...condition }: BookingHandov
   const pickUp = useBookingHandover(reference, 'pickUp')
   const returnVehicle = useBookingHandover(reference, 'returnVehicle')
   const close = useBookingHandover(reference, 'close')
-  const [recording, setRecording] = useState(false)
+  // The step the form was opened for. If the booking moves on under it, the form is no
+  // longer that step's: it closes rather than send a pickup's readings as a return.
+  const [recording, setRecording] = useState<'pickUp' | 'returnVehicle'>()
   const [confirmingClose, setConfirmingClose] = useState(false)
   const action = payments ? handoverButton(payments.actions) : null
   if (!payments || !action) return null
@@ -54,7 +56,7 @@ export function BookingHandoverAction({ reference, ...condition }: BookingHandov
       label={t(label)}
       variant="solid"
       disabled={!allowed || close.isPending}
-      onClick={() => (action.action === 'close' ? setConfirmingClose(true) : setRecording(true))}
+      onClick={() => (action.action === 'close' ? setConfirmingClose(true) : setRecording(action.action))}
     />
   )
   if (allowed) {
@@ -77,18 +79,19 @@ export function BookingHandoverAction({ reference, ...condition }: BookingHandov
         </>
       )
     }
+    const step = action.action
     return (
       <>
         {button}
         <BookingConditionDialog
-          open={recording}
-          onOpenChange={setRecording}
-          stage={action.action === 'pickUp' ? 'pickup' : 'return'}
+          open={recording === step}
+          onOpenChange={(open) => setRecording(open ? step : undefined)}
+          stage={step === 'pickUp' ? 'pickup' : 'return'}
           pickup={condition.pickupCondition}
           vehicleMileage={condition.vehicleMileage}
           electric={condition.vehicleElectric}
           loading={handover.isPending}
-          onSubmit={(input) => handover.mutate(input, { onSuccess: () => setRecording(false) })}
+          onSubmit={(input) => handover.mutate(input, { onSuccess: () => setRecording(undefined) })}
         />
       </>
     )

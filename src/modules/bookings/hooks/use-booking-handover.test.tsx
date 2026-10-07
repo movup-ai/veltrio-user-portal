@@ -5,7 +5,6 @@ import '@/i18n'
 import type { ConditionPhoto, HandoverInput } from '../types/booking.types'
 
 const calls: string[] = []
-const list = vi.fn<() => Promise<ConditionPhoto[]>>()
 const remove = vi.fn<(reference: string, photoId: string) => Promise<void>>()
 const upload = vi.fn<(reference: string, stage: string, file: File) => Promise<ConditionPhoto>>()
 const pickUp = vi.fn<(reference: string, input: unknown) => Promise<unknown>>()
@@ -13,7 +12,6 @@ const pickUp = vi.fn<(reference: string, input: unknown) => Promise<unknown>>()
 vi.mock('@/components/ui/use-toast', () => ({ toast: vi.fn() }))
 vi.mock('../api/booking-condition-photo.api', () => ({
   conditionPhotoApi: {
-    list: () => list(),
     remove: (reference: string, photoId: string) => {
       calls.push(`remove ${photoId}`)
       return remove(reference, photoId)
@@ -56,20 +54,22 @@ function handOver(input: HandoverInput) {
 describe('useBookingHandover', () => {
   beforeEach(() => {
     calls.length = 0
-    for (const mock of [list, remove, upload, pickUp]) mock.mockReset()
-    list.mockResolvedValue([])
+    for (const mock of [remove, upload, pickUp]) mock.mockReset()
     remove.mockResolvedValue()
     upload.mockImplementation((_, stage, sent) => Promise.resolve(photo(sent.name, stage as 'pickup')))
     pickUp.mockResolvedValue({})
   })
 
-  it('sends the photos, then records the handover with the readings alone', async () => {
+  it('sends the photos, then records the handover naming the ones it sent', async () => {
     const result = handOver({ ...READINGS, photos: [file('front'), file('rear')] })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(calls).toEqual(['upload front', 'upload rear', 'pickUp'])
     expect(upload).toHaveBeenCalledWith('BK-10001', 'pickup', expect.any(File))
-    expect(pickUp).toHaveBeenCalledWith('BK-10001', READINGS)
+    // By id: the API keeps these and discards any other photo left on the stage.
+    expect(pickUp).toHaveBeenCalledWith('BK-10001', { ...READINGS, photoIds: ['front', 'rear'] })
+    // Never the portal's job: another tab's photos must not be deleted from under it.
+    expect(remove).not.toHaveBeenCalled()
   })
 
   it('takes the photos back when the handover is refused', async () => {
@@ -89,6 +89,7 @@ describe('useBookingHandover', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['booking-payments', 'BK-10001'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['booking-condition-photos', 'BK-10001'] })
     invalidate.mockRestore()
   })
 
@@ -119,14 +120,5 @@ describe('useBookingHandover', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(remove).toHaveBeenCalledWith('BK-10001', 'rear')
-  })
-
-  it('clears photos an earlier attempt left on this handover, and only this one', async () => {
-    list.mockResolvedValue([photo('stale'), photo('other-end', 'return')])
-
-    const result = handOver({ ...READINGS, photos: [file('front')] })
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(calls).toEqual(['remove stale', 'upload front', 'pickUp'])
   })
 })

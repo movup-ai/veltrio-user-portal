@@ -71,6 +71,8 @@ export interface BookingPayments {
   balance: number
   returnCharges: ReturnCharge[]
   returnChargesTotal: number
+  /** False until the counter saves the charges, even as none: a return nobody has settled. */
+  returnChargesSaved: boolean
   depositAmount: number
   /** The latest deposit held or settled; absent until the renter authorises one. */
   deposit?: BookingPaymentRecord
