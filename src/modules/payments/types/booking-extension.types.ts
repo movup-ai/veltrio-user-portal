@@ -27,6 +27,8 @@ export interface BookingExtension {
   acceptedMethod?: ExtensionConsent
   /** The renter's link while one is out; absent for a company that does not take cards. */
   link?: PaymentLink
+  /** Money can still land on it, even out of time: its link is out, or the bank is deciding. */
+  paymentOpen: boolean
   /** Paid for but never in effect, so the renter's to have back. */
   refundDue: number
   /** Whether there is an addendum to open: one the renter agreed to with the car out. */

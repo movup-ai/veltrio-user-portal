@@ -123,6 +123,20 @@ export function addenda(history: BookingExtension[]) {
     .map((extension, index) => ({ extension, number: index + 1 }))
 }
 
+/** Whether money can still arrive: for the request waiting, or late on one whose link is still out. */
+export function awaitsPayment(extensions: BookingExtensions | undefined): boolean {
+  if (!extensions) return false
+  return Boolean(extensions.pending) || extensions.history.some((extension) => extension.paymentOpen)
+}
+
+/**
+ * How the requests no longer waiting stand, as one value to compare. It changes when a payment
+ * lands or a link closes, which is when the booking and its payments are worth reading again.
+ */
+export function settledOutcome(history: BookingExtension[]): string {
+  return history.map(({ id, status, paymentOpen }) => `${id}:${status}:${paymentOpen}`).join('|')
+}
+
 /** Money paid for a request that never took effect, which is the renter's to have back. */
 export function refundDue(history: BookingExtension[]): number {
   return Math.round(history.reduce((sum, extension) => sum + extension.refundDue, 0) * 100) / 100

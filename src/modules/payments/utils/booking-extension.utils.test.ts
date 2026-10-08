@@ -4,6 +4,7 @@ import type { BookingExtension } from '../types/booking-extension.types'
 import {
   addedTime,
   addenda,
+  awaitsPayment,
   chosenReturn,
   extendUnavailable,
   extensionError,
@@ -11,6 +12,7 @@ import {
   refundDue,
   returnDayBounds,
   returnProblem,
+  settledOutcome,
   suggestedReturn,
 } from './booking-extension.utils'
 
@@ -28,6 +30,7 @@ function extension(overrides: Partial<BookingExtension>): BookingExtension {
     newTotal: 353.1,
     amount: 117.7,
     requestedAt: iso(9),
+    paymentOpen: false,
     refundDue: 0,
     hasAddendum: true,
     ...overrides,
@@ -174,6 +177,45 @@ describe('addenda', () => {
       ['oldest', 1],
       ['newest', 2],
     ])
+  })
+})
+
+describe('awaitsPayment', () => {
+  const expired = extension({ status: 'expired', hasAddendum: false })
+
+  it('is true for a request waiting, and for one out of time whose link is still out', () => {
+    const waiting = extension({ id: 'e2', status: 'pending', paymentOpen: true })
+    const late = { ...expired, paymentOpen: true }
+
+    expect(awaitsPayment({ extend: { allowed: false }, pending: waiting, history: [] })).toBe(true)
+    expect(awaitsPayment({ extend: { allowed: true }, history: [extension({}), late] })).toBe(true)
+  })
+
+  it('is false once every request is closed, and before any has been read', () => {
+    expect(awaitsPayment({ extend: { allowed: true }, history: [extension({}), expired] })).toBe(false)
+    expect(awaitsPayment(undefined)).toBe(false)
+  })
+})
+
+describe('settledOutcome', () => {
+  const late = extension({ status: 'expired', hasAddendum: false, paymentOpen: true })
+
+  it('changes when a late payment takes effect, and when it is refused and the link closes', () => {
+    const before = settledOutcome([late])
+
+    expect(settledOutcome([{ ...late, status: 'applied', paymentOpen: false }])).not.toBe(before)
+    expect(settledOutcome([{ ...late, paymentOpen: false, refundDue: 117.7 }])).not.toBe(before)
+  })
+
+  it('changes when a request joins the others, and not when the same ones are read again', () => {
+    expect(settledOutcome([late])).not.toBe(settledOutcome([]))
+    expect(settledOutcome([{ ...late }])).toBe(settledOutcome([late]))
+  })
+
+  it('stays as it was when the money owed back is refunded: the refund re-reads the booking', () => {
+    const owed = { ...late, paymentOpen: false, refundDue: 117.7 }
+
+    expect(settledOutcome([{ ...owed, refundDue: 0 }])).toBe(settledOutcome([owed]))
   })
 })
 

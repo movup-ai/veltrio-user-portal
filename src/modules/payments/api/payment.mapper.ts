@@ -248,6 +248,7 @@ interface BookingExtensionWire {
   acceptedName: string | null
   acceptedMethod: ExtensionConsent | null
   link: PaymentLinkWire | null
+  paymentOpen: boolean
   refundDueCents: number
   hasAddendum: boolean
 }
@@ -284,6 +285,7 @@ function toBookingExtension(wire: BookingExtensionWire): BookingExtension {
     acceptedName: wire.acceptedName ?? undefined,
     acceptedMethod: wire.acceptedMethod ?? undefined,
     link: wire.link ? toPaymentLink(wire.link) : undefined,
+    paymentOpen: wire.paymentOpen,
     refundDue: fromCents(wire.refundDueCents),
     hasAddendum: wire.hasAddendum,
   }

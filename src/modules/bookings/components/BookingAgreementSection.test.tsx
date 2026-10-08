@@ -237,6 +237,7 @@ describe('BookingAgreementSection', () => {
       newTotal: 353.1,
       amount: 117.7,
       requestedAt: '2026-10-09T09:00:00Z',
+      paymentOpen: false,
       refundDue: 0,
       hasAddendum: true,
     }

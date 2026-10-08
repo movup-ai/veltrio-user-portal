@@ -54,7 +54,7 @@ export function BookingExtensionNotice({
   const [dialog, setDialog] = useState<ExtensionDialog | null>(null)
   const close = () => setDialog(null)
   const pending = extensions?.pending
-  useExtensionSettled(reference, pending?.id)
+  useExtensionSettled(reference, extensions?.history)
 
   if (!extensions) return null
   const toRefund = refundDue(extensions.history)

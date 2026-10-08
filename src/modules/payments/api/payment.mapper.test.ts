@@ -21,6 +21,7 @@ const PENDING: BookingExtensionsWire['history'][number] = {
   acceptedName: null,
   acceptedMethod: null,
   link: { token: 'tok', amountCents: 11770, depositCents: 0, currency: 'USD' },
+  paymentOpen: true,
   refundDueCents: 0,
   hasAddendum: false,
 }

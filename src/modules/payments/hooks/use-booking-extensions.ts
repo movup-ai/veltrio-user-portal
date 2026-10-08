@@ -7,7 +7,8 @@ import { bookingKeys } from '@/modules/bookings/hooks/use-bookings'
 import { bookingContractKeys } from '@/modules/contracts/hooks/use-booking-contract'
 import { normalizeApiError } from '@/services/api/errors'
 import { bookingExtensionApi } from '../api/booking-extension.api'
-import type { BookingExtensions } from '../types/booking-extension.types'
+import type { BookingExtension, BookingExtensions } from '../types/booking-extension.types'
+import { awaitsPayment, settledOutcome } from '../utils/booking-extension.utils'
 import { bookingPaymentKeys } from './use-booking-payments'
 
 /** Under the bookings key: whatever re-reads a booking (a handover, a refund) re-reads these. */
@@ -17,7 +18,7 @@ export const bookingExtensionKeys = {
     [...bookingExtensionKeys.booking(reference), 'quote', returnAt] as const,
 }
 
-/** How often a request waiting to be paid is checked: the renter pays on their own page. */
+/** How often a request that can still be paid is checked: the renter pays on their own page. */
 const PENDING_POLL_MS = 15_000
 
 export function useBookingExtensions(reference: string | undefined) {
@@ -25,24 +26,26 @@ export function useBookingExtensions(reference: string | undefined) {
     queryKey: bookingExtensionKeys.booking(reference ?? ''),
     queryFn: () => bookingExtensionApi.get(reference as string),
     enabled: Boolean(reference),
-    refetchInterval: (query) => (query.state.data?.pending ? PENDING_POLL_MS : false),
+    // Past its time too, while its link is out: paid late it can still take effect or be owed back.
+    refetchInterval: (query) => (awaitsPayment(query.state.data) ? PENDING_POLL_MS : false),
   })
 }
 
 /**
- * Re-reads the booking when a request stops waiting: paid, it moved the return time and the
- * total, and nothing on this page did that. Call it once per page, with the pending request's id.
+ * Re-reads the booking when a request is settled from elsewhere: a payment moved the return time
+ * and the total, or left money to refund. Call it once per page, with the requests not waiting.
  */
-export function useExtensionSettled(reference: string, pendingId: string | undefined) {
+export function useExtensionSettled(reference: string, history: BookingExtension[] | undefined) {
   const queryClient = useQueryClient()
-  const watched = useRef(pendingId)
+  const outcome = history && settledOutcome(history)
+  const seen = useRef(outcome)
   useEffect(() => {
-    if (watched.current && !pendingId) {
+    if (seen.current !== undefined && outcome !== undefined && seen.current !== outcome) {
       void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
       void queryClient.invalidateQueries({ queryKey: bookingPaymentKeys.booking(reference) })
     }
-    watched.current = pendingId
-  }, [pendingId, queryClient, reference])
+    seen.current = outcome
+  }, [outcome, queryClient, reference])
 }
 
 /**

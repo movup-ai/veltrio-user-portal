@@ -33,6 +33,7 @@ const PENDING: BookingExtension = {
   expiresAt: '2026-10-10T14:00:00Z',
   requestedAt: '2026-10-09T09:00:00Z',
   link: { token: 'tok', amount: 117.7, deposit: 0, currency: 'USD' },
+  paymentOpen: true,
   refundDue: 0,
   hasAddendum: false,
 }
@@ -152,6 +153,25 @@ describe('BookingExtensionNotice', () => {
     await client.refetchQueries({ queryKey: [...bookingKeys.all, 'extensions', 'BK-10001'] })
 
     await waitFor(() => expect(invalidated).toHaveBeenCalledWith({ queryKey: bookingKeys.all }))
+  })
+
+  it('re-reads the booking when a payment lands on a request that had run out of time', async () => {
+    const lapsed = { ...PENDING, status: 'expired' as const, link: undefined }
+    get.mockResolvedValue({ extend: { allowed: true }, history: [lapsed] })
+    const { client, invalidated } = renderNotice()
+    const key = [...bookingKeys.all, 'extensions', 'BK-10001']
+    await waitFor(() => expect(client.getQueryData(key)).toBeDefined())
+    invalidated.mockClear()
+
+    // Paid on a page the renter still had open; the time had been sold, so it is theirs back.
+    get.mockResolvedValue({
+      extend: { allowed: true },
+      history: [{ ...lapsed, paymentOpen: false, refundDue: 117.7 }],
+    })
+    await client.refetchQueries({ queryKey: key })
+
+    await screen.findByRole('heading', { name: 'Extension payment to refund' })
+    expect(invalidated).toHaveBeenCalledWith({ queryKey: bookingKeys.all })
   })
 
   it("says when a payment came too late to count and is the renter's to have back", async () => {
