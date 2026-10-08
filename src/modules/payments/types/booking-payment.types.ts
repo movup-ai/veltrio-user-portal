@@ -24,6 +24,17 @@ export interface BookingPaymentRecord {
   createdAt: string
 }
 
+/** What a return charge is for. One line of each at most; `other` takes the rest. */
+export const RETURN_CHARGE_KINDS = ['over_mileage', 'fuel', 'damage', 'late_return', 'other'] as const
+export type ReturnChargeKind = (typeof RETURN_CHARGE_KINDS)[number]
+
+/** One thing the return cost beyond the quote, as the counter priced it. */
+export interface ReturnCharge {
+  kind: ReturnChargeKind
+  amount: number
+  note?: string
+}
+
 /** Whether the counter can do something now, and if not, why. */
 export interface PaymentActionRule {
   allowed: boolean
@@ -37,11 +48,12 @@ export interface PaymentActions {
   linkIncludesDeposit: boolean
   markPaid: PaymentActionRule
   requestDeposit: PaymentActionRule
-  captureDeposit: PaymentActionRule
   releaseDeposit: PaymentActionRule
+  /** Listing what the return cost: once the vehicle is back, until the booking is closed. */
+  setReturnCharges: PaymentActionRule
   pickUp: PaymentActionRule
   returnVehicle: PaymentActionRule
-  /** Closing the booking off after return, which waits for the deposit to be settled. */
+  /** Closing off after return: waits for the deposit, and for charges it did not cover. */
   close: PaymentActionRule
 }
 
@@ -55,7 +67,12 @@ export interface BookingPayments {
   /** Taken for the rental; a captured deposit is not counted here. */
   paid: number
   refunded: number
+  /** Still to collect: the rental, and after the return any charges the deposit did not cover. */
   balance: number
+  returnCharges: ReturnCharge[]
+  returnChargesTotal: number
+  /** False until the counter saves the charges, even as none: a return nobody has settled. */
+  returnChargesSaved: boolean
   depositAmount: number
   /** The latest deposit held or settled; absent until the renter authorises one. */
   deposit?: BookingPaymentRecord

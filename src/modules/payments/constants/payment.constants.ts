@@ -57,6 +57,9 @@ export const MANUAL_METHODS = [
 
 export type ManualMethod = (typeof MANUAL_METHODS)[number]
 
+/** Mirrors the note length on ReturnCharge in the API (app/modules/payments/schemas.py). */
+export const RETURN_CHARGE_NOTE_MAX = 300
+
 /** Why the API turns a booking's money or handover action down; hints live in the translations. */
 export const PAYMENT_REFUSALS = [
   'payments_not_ready',
@@ -74,6 +77,8 @@ export const PAYMENT_REFUSALS = [
   'not_confirmed',
   'not_awaiting_close',
   'deposit_unsettled',
+  'charges_unpaid',
+  'booking_closed',
 ] as const
 
 export type PaymentRefusal = (typeof PAYMENT_REFUSALS)[number]
@@ -85,8 +90,8 @@ export type PaymentRefusal = (typeof PAYMENT_REFUSALS)[number]
 export const PAYMENT_STATE_BADGE: Record<PaymentBadge, string> = {
   unpaid: 'Pending',
   awaiting: 'Scheduled',
-  deposit_held: 'Confirmed',
-  rental_paid: 'Confirmed',
+  deposit_held: 'Held',
+  rental_paid: 'Held',
   paid: 'Paid',
   refunded: 'Refunded',
 }
@@ -98,7 +103,7 @@ export const PAYMENT_STATE_BADGE: Record<PaymentBadge, string> = {
 export const DEPOSIT_STATUS_BADGE: Record<DepositStatus, string> = {
   pending: 'Pending',
   requested: 'Scheduled',
-  held: 'Confirmed',
+  held: 'Held',
   captured: 'Paid',
   released: 'Refunded',
 }

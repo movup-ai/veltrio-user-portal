@@ -1,4 +1,5 @@
 import { toCustomer, toCustomerPayload, type CustomerWire } from '@/modules/customers/api/customer.mapper'
+import type { PresignedUpload } from '@/modules/vehicles/api/vehicle.mapper'
 import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
 import { fromCents, toCents } from '@/lib/money'
 import { toLimitOffset } from '@/lib/pagination'
@@ -21,6 +22,11 @@ import {
   type PaymentPreference,
   type PaymentState,
   type BookingTab,
+  type BookingCondition,
+  type ConditionInput,
+  type ConditionPhoto,
+  type ConditionStage,
+  type FuelLevel,
   type VerificationKind,
   type BookingVerification,
   type VerificationRecord,
@@ -49,6 +55,25 @@ interface BookingFeeWire {
   amountCents: number
 }
 
+interface ConditionWire {
+  odometer: number
+  fuelLevel: FuelLevel
+  notes: string | null
+}
+
+export interface ConditionPhotoWire {
+  id: string
+  stage: ConditionStage
+  name: string
+  url: string
+}
+
+/** A photo row reserved, and the form to post its file to. */
+export interface ConditionPhotoSlotWire {
+  id: string
+  upload: PresignedUpload
+}
+
 export interface BookingWire {
   id: string
   reference: string
@@ -64,6 +89,7 @@ export interface BookingWire {
     rateCents: number
     units: number
     includedMiles: number | null
+    overageRatePerMileCents: number | null
     lines: {
       optionId: string
       label: string
@@ -108,6 +134,8 @@ export interface BookingWire {
   pickedUpAt: string | null
   returnedAt: string | null
   completedAt: string | null
+  pickupCondition: ConditionWire | null
+  returnCondition: ConditionWire | null
   createdAt: string
   updatedAt: string
 }
@@ -252,6 +280,16 @@ function toFee(wire: BookingFeeWire): BookingFee {
   return { id: wire.id, label: wire.label, amount: fromCents(wire.amountCents) }
 }
 
+function toCondition(wire: ConditionWire | null): BookingCondition | undefined {
+  return wire
+    ? { odometer: wire.odometer, fuelLevel: wire.fuelLevel, notes: wire.notes ?? undefined }
+    : undefined
+}
+
+export function toConditionPhoto(wire: ConditionPhotoWire): ConditionPhoto {
+  return { id: wire.id, stage: wire.stage, name: wire.name, url: wire.url }
+}
+
 export function toBooking(wire: BookingWire): Booking {
   return {
     id: wire.id,
@@ -271,6 +309,8 @@ export function toBooking(wire: BookingWire): Booking {
       rate: fromCents(wire.rate.rateCents),
       units: wire.rate.units,
       includedMiles: wire.rate.includedMiles,
+      overageRatePerMile:
+        wire.rate.overageRatePerMileCents == null ? undefined : fromCents(wire.rate.overageRatePerMileCents),
       lines: wire.rate.lines.map((line) => ({
         optionId: line.optionId,
         label: line.label,
@@ -311,9 +351,7 @@ export function toBooking(wire: BookingWire): Booking {
     },
     paymentPreference: wire.paymentPreference ?? undefined,
     notes: wire.notes ?? undefined,
-    declined: wire.declined
-      ? { ...wire.declined, message: wire.declined.message ?? undefined }
-      : undefined,
+    declined: wire.declined ? { ...wire.declined, message: wire.declined.message ?? undefined } : undefined,
     contract: {
       signedAt: wire.contract.signedAt ?? undefined,
       version: wire.contract.version ?? undefined,
@@ -323,6 +361,8 @@ export function toBooking(wire: BookingWire): Booking {
     pickedUpAt: wire.pickedUpAt ?? undefined,
     returnedAt: wire.returnedAt ?? undefined,
     completedAt: wire.completedAt ?? undefined,
+    pickupCondition: toCondition(wire.pickupCondition),
+    returnCondition: toCondition(wire.returnCondition),
     createdAt: wire.createdAt,
   }
 }
@@ -404,6 +444,17 @@ export type BookingNotifiedWire = BookingWire & { emailQueued: boolean }
 /** Queued is not delivered: the API sends it afterwards. False while its email is switched off. */
 export function toNotifiedBooking(wire: BookingNotifiedWire) {
   return { booking: toBooking(wire), emailQueued: wire.emailQueued }
+}
+
+/** `sendToService` only goes with a return: the pickup endpoint refuses fields it does not know. */
+export function toConditionPayload(input: ConditionInput) {
+  return {
+    odometer: input.odometer,
+    fuelLevel: input.fuelLevel,
+    notes: input.notes.trim() || null,
+    ...(input.sendToService !== undefined && { sendToService: input.sendToService }),
+    ...(input.photoIds && { photoIds: input.photoIds }),
+  }
 }
 
 export function toDeclinePayload(input: DeclineInput) {

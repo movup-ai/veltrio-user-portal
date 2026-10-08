@@ -45,8 +45,8 @@ const ACTIONS: PaymentActions = {
   linkIncludesDeposit: false,
   markPaid: ALLOWED,
   requestDeposit: ALLOWED,
-  captureDeposit: { allowed: false, reason: 'no_deposit_held' },
   releaseDeposit: { allowed: false, reason: 'no_deposit_held' },
+  setReturnCharges: { allowed: false, reason: 'not_returned' },
   pickUp: { allowed: false, reason: 'not_fully_paid' },
   returnVehicle: { allowed: false, reason: 'not_on_rental' },
   close: { allowed: false, reason: 'not_awaiting_close' },
@@ -62,6 +62,9 @@ const UNPAID: BookingPayments = {
   paid: 0,
   refunded: 0,
   balance: 319,
+  returnCharges: [],
+  returnChargesTotal: 0,
+  returnChargesSaved: false,
   depositAmount: 2000,
   openLink: false,
   depositRequested: false,
@@ -111,13 +114,16 @@ const HELD: BookingPayments = {
   actions: {
     ...RENTAL_PAID.actions,
     requestDeposit: { allowed: false, reason: 'deposit_already_held' },
-    captureDeposit: { allowed: false, reason: 'not_returned' },
     releaseDeposit: { allowed: false, reason: 'not_returned' },
     pickUp: ALLOWED,
   },
 }
 
-function renderAs(permissions: string[], charges: BookingChargeLine[] = []) {
+function renderAs(
+  permissions: string[],
+  charges: BookingChargeLine[] = [],
+  overMileage?: { miles: number; amount: number },
+) {
   useOrganizationStore.setState({
     membership: {
       organizationId: 'org_1',
@@ -136,6 +142,7 @@ function renderAs(permissions: string[], charges: BookingChargeLine[] = []) {
         renter={{ name: 'Marisol Vega', email: 'marisol@example.com', phone: '+1 305 442 0118' }}
         charges={charges}
         days={1}
+        overMileage={overMileage}
       />
     </QueryClientProvider>,
   )
@@ -321,12 +328,11 @@ describe('BookingPaymentSection', () => {
     expect(within(dialog).queryByText('Rental payment')).not.toBeInTheDocument()
   })
 
-  it('keeps Capture and Release off until the vehicle is back', async () => {
+  it('keeps the deposit from being settled until the vehicle is back', async () => {
     get.mockResolvedValue(HELD)
     renderAs([])
 
-    expect(await screen.findByRole('button', { name: 'Release' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Capture' })).toBeDisabled()
+    expect(await screen.findByRole('button', { name: 'Settle deposit' })).toBeDisabled()
     expect(screen.getByText(/once the vehicle is back/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Request deposit' })).not.toBeInTheDocument()
     expect(screen.getByText('Fully paid')).toBeInTheDocument()
@@ -336,16 +342,45 @@ describe('BookingPaymentSection', () => {
     expect(screen.getByText(/^Held until Oct 9/)).toBeInTheDocument()
   })
 
-  it('settles the deposit after the return', async () => {
+  it('settles the deposit after the return, starting from the miles over the allowance', async () => {
     get.mockResolvedValue({
       ...HELD,
-      actions: { ...HELD.actions, captureDeposit: ALLOWED, releaseDeposit: ALLOWED },
+      actions: { ...HELD.actions, releaseDeposit: ALLOWED, setReturnCharges: ALLOWED },
     })
+    renderAs([], [], { miles: 40, amount: 18 })
+    const user = userEvent.setup({ delay: null })
+
+    await user.click(await screen.findByRole('button', { name: 'Settle deposit' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+    expect(dialog.getByRole('heading', { name: 'Return charges' })).toBeInTheDocument()
+    expect(dialog.getByRole('textbox', { name: 'Extra mileage amount' })).toHaveValue('18')
+    expect(dialog.getByRole('textbox', { name: 'Extra mileage note' })).toHaveValue(
+      '40 mi over the allowance',
+    )
+    expect(screen.queryByText(/once the vehicle is back/)).not.toBeInTheDocument()
+  })
+
+  it('only releases a held deposit on a cancelled booking, which has no return to charge for', async () => {
+    get.mockResolvedValue({ ...HELD, actions: { ...HELD.actions, releaseDeposit: ALLOWED } })
     renderAs([])
 
     expect(await screen.findByRole('button', { name: 'Release' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Capture' })).toBeEnabled()
-    expect(screen.queryByText(/once the vehicle is back/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Settle deposit' })).not.toBeInTheDocument()
+  })
+
+  it('lists the return charges, and takes more where no deposit is on hold', async () => {
+    get.mockResolvedValue({
+      ...RENTAL_PAID,
+      balance: 150,
+      returnCharges: [{ kind: 'damage', amount: 150, note: 'Rear bumper' }],
+      returnChargesTotal: 150,
+      actions: { ...ACTIONS, setReturnCharges: ALLOWED },
+    })
+    renderAs([])
+
+    expect(await screen.findByText('Rear bumper')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit return charges' })).toBeEnabled()
   })
 
   it('shows what a part payment leaves', async () => {

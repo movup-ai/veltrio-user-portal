@@ -97,6 +97,14 @@
  * `text-caption text-error` field error rendered as grey hint text.
  */
 @layer components {
+  /*
+   * A dialog is white, so its fields and outline buttons are cut from white, not filled with
+   * the page grey, and drawn with the regular border: on white the strong one read as thick.
+   */
+  .surface-controls {
+    --veltrio-bg: var(--veltrio-surface);
+    --veltrio-input: var(--veltrio-border);
+  }
   .text-description {
     font-size: var(--text-description);
     line-height: var(--text-description--line-height);

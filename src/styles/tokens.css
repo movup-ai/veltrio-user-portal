@@ -41,6 +41,11 @@
   --veltrio-info: #0369a1;
   --veltrio-info-tint: #e0f2fe;
   --veltrio-info-foreground: #ffffff;
+  /* Not in the design spec: booking statuses needed two more hues to each read apart. */
+  --veltrio-violet: #6d28d9;
+  --veltrio-violet-tint: #ede9fe;
+  --veltrio-orange: #c2410c;
+  --veltrio-orange-tint: #ffedd5;
 
   --veltrio-bar-dim: #a7d8d2;
   --veltrio-neutral-tint: #f5f5f4;
@@ -96,6 +101,10 @@
   --veltrio-info: #38bdf8;
   --veltrio-info-tint: rgba(56, 189, 248, 0.14);
   --veltrio-info-foreground: #171514;
+  --veltrio-violet: #a78bfa;
+  --veltrio-violet-tint: rgba(167, 139, 250, 0.16);
+  --veltrio-orange: #fb923c;
+  --veltrio-orange-tint: rgba(251, 146, 60, 0.15);
 
   --veltrio-bar-dim: #2f4f4c;
   --veltrio-neutral-tint: #2e2a28;

@@ -41,8 +41,8 @@
       "linkFailed": "Couldn't create the payment link",
       "recorded": "Payment recorded",
       "recordFailed": "Couldn't record the payment",
-      "captured": "Deposit captured",
-      "captureFailed": "Couldn't capture the deposit",
+      "settled": "Return settled",
+      "settleFailed": "Couldn't settle the return",
       "released": "Deposit released",
       "releaseFailed": "Couldn't release the deposit",
       "refunded": "Refund issued",
@@ -102,13 +102,31 @@
       "balance": "Balance due",
       "hint": "Enter what the renter paid, up to the {{max}} still owed. A part payment leaves the rest due."
     },
-    "capture": {
-      "title": "Capture the deposit",
-      "description": "Take part or all of the {{held}} on hold. Whatever isn't taken goes back to the renter.",
-      "amount": "Amount to capture",
-      "submit": "Capture",
-      "held": "Deposit held",
-      "hint": "Take up to the {{max}} held. Whatever you don't capture goes back to the renter straight away."
+    "charges": {
+      "title": "Return charges",
+      "description": "List what the return cost beyond the rental. The deposit on hold pays for it first, and anything above the deposit is added to the balance.",
+      "held": "Deposit on hold",
+      "noHold": "No deposit is on hold, so charges are added to the balance.",
+      "kinds": {
+        "over_mileage": "Extra mileage",
+        "fuel": "Fuel",
+        "damage": "Damage",
+        "late_return": "Late return",
+        "other": "Other"
+      },
+      "amountOf": "{{kind}} amount",
+      "noteOf": "{{kind}} note",
+      "note": "Reason or note",
+      "invalid": "Enter each amount as a number, or leave it blank.",
+      "total": "Total charges",
+      "captured": "Captured from the deposit",
+      "released": "Released to the renter",
+      "collected": "Already collected",
+      "due": "Still to collect",
+      "dueHint": "Collect it with a payment link, or record it once the renter has paid.",
+      "save": "Save charges",
+      "capture": "Capture {{amount}}",
+      "release": "Release deposit"
     },
     "refund": {
       "title": "Refund a payment",
@@ -144,14 +162,16 @@
       "deposit_already_held": "The deposit is already on hold.",
       "booking_returned": "The vehicle is back.",
       "no_deposit_held": "No deposit is on hold.",
-      "not_returned": "Capture or release the deposit once the vehicle is back.",
+      "not_returned": "The deposit is settled once the vehicle is back.",
       "not_before_pickup": "The vehicle has already been picked up.",
       "not_fully_paid": "Pickup needs the rental paid and the deposit on hold.",
       "contract_unsigned": "Pickup waits until the rental agreement is signed.",
       "not_on_rental": "The vehicle isn't out on this booking.",
       "not_confirmed": "Payment and the deposit can be requested once the reservation is confirmed.",
       "not_awaiting_close": "The booking isn't waiting to be closed.",
-      "deposit_unsettled": "Release or capture the deposit first."
+      "deposit_unsettled": "Release or capture the deposit first.",
+      "charges_unpaid": "Return charges are still owed. Collect them, or lower the charges.",
+      "booking_closed": "The booking is closed."
     },
     "receipt": {
       "title": "Receipt",

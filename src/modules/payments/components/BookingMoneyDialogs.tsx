@@ -63,34 +63,6 @@ export function ManualPaymentDialog({
   )
 }
 
-/** Take part or all of the held deposit; the rest goes back to the renter. */
-export function DepositCaptureDialog({
-  onSubmit,
-  ...props
-}: DialogProps & { onSubmit: (amount: number) => void }) {
-  const { t } = useTranslation('payments')
-  const format = useFormatters()
-  const held = props.payments.deposit?.amount ?? 0
-
-  return (
-    <PaymentAmountDialog
-      open={props.open}
-      onOpenChange={props.onOpenChange}
-      title={t('booking.capture.title')}
-      description={t('booking.capture.description', { held: format.currency(held, props.payments.currency) })}
-      summaryLabel={t('booking.capture.held')}
-      amountLabel={t('booking.capture.amount')}
-      amountHint={t('booking.capture.hint', { max: format.currency(held, props.payments.currency) })}
-      submitLabel={t('booking.capture.submit')}
-      max={held}
-      defaultAmount={held}
-      currency={props.payments.currency}
-      loading={props.loading}
-      onSubmit={onSubmit}
-    />
-  )
-}
-
 /** Give money back on one payment, up to what is left of it. */
 export function RefundDialog({
   onSubmit,

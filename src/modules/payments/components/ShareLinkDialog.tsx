@@ -87,7 +87,8 @@ export function ShareLinkDialog({
                 readOnly
                 value={url}
                 onFocus={(event) => event.currentTarget.select()}
-                className="text-fg-2 pl-9"
+                // Grey like the summary: a value to copy, not a field to type in.
+                className="bg-surface-2 text-fg-2 pl-9"
               />
             </div>
             <Button type="button" variant="outline" onClick={copy} className="w-[92px] shrink-0">
@@ -98,9 +99,7 @@ export function ShareLinkDialog({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-fg-3 text-[12.5px] font-semibold">
-            {t('booking.link.shareWith', { name: recipient.name })}
-          </span>
+          <span className="text-label">{t('booking.link.shareWith', { name: recipient.name })}</span>
           <div className="grid grid-cols-2 gap-2">
             <ShareButton
               icon={Mail}

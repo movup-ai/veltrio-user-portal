@@ -2,7 +2,13 @@ import { apiClient } from '@/services/api/client'
 import { locationApi } from '@/modules/locations/api/location.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
 import { MAX_BOOKING_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
-import type { BookingFilters, BookingInput, BookingTuple, DeclineInput } from '../types/booking.types'
+import type {
+  BookingFilters,
+  BookingInput,
+  BookingTuple,
+  ConditionInput,
+  DeclineInput,
+} from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
 import {
@@ -12,6 +18,7 @@ import {
   toBookingLists,
   toBookingPayload,
   toBookingStats,
+  toConditionPayload,
   toDeclinePayload,
   toInterval,
   toNotifiedBooking,
@@ -113,11 +120,16 @@ export const bookingApi = {
       .then((r) => toNotifiedBooking(r.data)),
 
   /** Refused until the booking is fully paid: the rental settled and the deposit held. */
-  pickUp: (reference: string) =>
-    apiClient.post<BookingWire>(`/bookings/${reference}/pick-up`).then((r) => toBooking(r.data)),
+  pickUp: (reference: string, input: ConditionInput) =>
+    apiClient
+      .post<BookingWire>(`/bookings/${reference}/pick-up`, toConditionPayload(input))
+      .then((r) => toBooking(r.data)),
 
-  returnVehicle: (reference: string) =>
-    apiClient.post<BookingWire>(`/bookings/${reference}/return`).then((r) => toBooking(r.data)),
+  /** Refused when the odometer reads less than it did at pickup. */
+  returnVehicle: (reference: string, input: ConditionInput) =>
+    apiClient
+      .post<BookingWire>(`/bookings/${reference}/return`, toConditionPayload(input))
+      .then((r) => toBooking(r.data)),
 
   /** The last step, once the car is back. Refused while a deposit is still held. */
   close: (reference: string) =>
@@ -128,14 +140,12 @@ export const bookingApi = {
    * so the browser never holds more than the rows on screen.
    */
   page: (params: BookingListParams) =>
-    apiClient
-      .get<ListEnvelope<BookingWire>>('/bookings', { params: toBookingListQuery(params) })
-      .then((r) =>
-        toPaginatedResult(r.data.items.map(toBooking).map(bookingToTuple), r.data.total, {
-          page: params.page,
-          pageSize: params.pageSize,
-        }),
-      ),
+    apiClient.get<ListEnvelope<BookingWire>>('/bookings', { params: toBookingListQuery(params) }).then((r) =>
+      toPaginatedResult(r.data.items.map(toBooking).map(bookingToTuple), r.data.total, {
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    ),
 
   /**
    * Every row matching the filters, for the CSV — not just the page on screen. Paged because
@@ -161,8 +171,7 @@ export const bookingApi = {
   },
 
   /** Headline totals for the whole book — not narrowed by the list's filters. */
-  stats: () =>
-    apiClient.get<BookingStatsWire>('/bookings/stats').then((r) => toBookingStats(r.data)),
+  stats: () => apiClient.get<BookingStatsWire>('/bookings/stats').then((r) => toBookingStats(r.data)),
 
   /** What each tab would show under the filters already applied. */
   tabCounts: (filters: BookingFilters) =>

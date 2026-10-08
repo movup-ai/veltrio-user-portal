@@ -1,6 +1,7 @@
 import { FileDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { DialogFooter } from '@/components/ui/dialog'
 import { useFormatters } from '@/i18n'
 import type { BookingPayments, ReceiptLink } from '../types/booking-payment.types'
 import { receiptLinkUrl } from '../utils/booking-payment.utils'
@@ -56,16 +57,18 @@ export function ReceiptLinkDialog({
       subject={t('booking.receipt.subject', { company: companyName, reference })}
       message={t('booking.receipt.message', { name: renter.name, reference, url })}
       footer={
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onDownload}
-          loading={downloading}
-          className="gap-1.5"
-        >
-          <FileDown className="size-4" aria-hidden />
-          {t('booking.receipt.download')}
-        </Button>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onDownload}
+            loading={downloading}
+            className="gap-1.5"
+          >
+            <FileDown className="size-4" aria-hidden />
+            {t('booking.receipt.download')}
+          </Button>
+        </DialogFooter>
       }
     />
   )

@@ -13,7 +13,12 @@ import {
   type BookingWire,
   type VerificationWire,
 } from './booking.mapper'
-import { isReadyForPickup, type BookingFilters, type BookingInput, type PaymentState } from '../types/booking.types'
+import {
+  isReadyForPickup,
+  type BookingFilters,
+  type BookingInput,
+  type PaymentState,
+} from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
 
@@ -43,6 +48,7 @@ const wire: BookingWire = {
     rateCents: 5500,
     units: 4,
     includedMiles: 800,
+    overageRatePerMileCents: 45,
     lines: [{ optionId: 'r1', label: 'Daily', basis: 'day', rateCents: 5500, count: 4, cappedHours: null }],
   },
   pickupLocation: 'Downtown',
@@ -79,6 +85,8 @@ const wire: BookingWire = {
   pickedUpAt: null,
   returnedAt: null,
   completedAt: null,
+  pickupCondition: null,
+  returnCondition: null,
   createdAt: '2026-09-22T10:00:00Z',
   updatedAt: '2026-09-22T10:00:00Z',
 }
@@ -502,10 +510,17 @@ describe('isReadyForPickup', () => {
 
   it('ignores the background check, which is informational and gates nothing', () => {
     // Records found, no check at all - neither changes whether the keys can be handed over.
-    expect(isReadyForPickup(toBooking({ ...wire, verifications: ['background'],
-      payment: { ...wire.payment, state: 'paid' },
-      contract: { signedAt: '2026-09-22T10:00:00Z', version: 'v3' },
-      verification: null }))).toBe(true)
+    expect(
+      isReadyForPickup(
+        toBooking({
+          ...wire,
+          verifications: ['background'],
+          payment: { ...wire.payment, state: 'paid' },
+          contract: { signedAt: '2026-09-22T10:00:00Z', version: 'v3' },
+          verification: null,
+        }),
+      ),
+    ).toBe(true)
   })
 })
 
@@ -617,7 +632,12 @@ describe('booking details renter', () => {
 
 describe('toBookingPayload agreement template', () => {
   const input: BookingInput = {
-    customer: { name: 'Marisol Vega', email: 'marisol@example.com', phone: '+1 305 442 0118', licenceNumber: 'X' },
+    customer: {
+      name: 'Marisol Vega',
+      email: 'marisol@example.com',
+      phone: '+1 305 442 0118',
+      licenceNumber: 'X',
+    },
     vehicleId: 'v1',
     pickupLocation: 'Downtown',
     returnLocation: 'Downtown',

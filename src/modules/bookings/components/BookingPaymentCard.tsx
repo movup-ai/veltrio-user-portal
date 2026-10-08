@@ -1,4 +1,4 @@
-import { BanknoteArrowUp, FileDown, Link2, Lock, LockOpen, Mail, Undo2 } from 'lucide-react'
+import { BanknoteArrowUp, FileDown, Link2, Lock, LockOpen, Mail, SquarePen, Undo2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -12,6 +12,7 @@ import type {
 } from '@/modules/payments/types/booking-payment.types'
 import {
   depositStatus,
+  heldDeposit,
   paymentBadge,
   refundablePayments,
   rentalHistory,
@@ -28,7 +29,7 @@ export type PaymentAction =
   | 'sendReceipt'
   | 'requestDeposit'
   | 'releaseDeposit'
-  | 'captureDeposit'
+  | 'settleReturn'
   | 'refund'
 
 interface BookingPaymentCardProps {
@@ -198,6 +199,11 @@ export function BookingPaymentCard({
       {payments.depositAmount > 0 && (
         <DepositSection payments={payments} busy={busy} onAction={onAction} money={money} />
       )}
+
+      {(payments.returnCharges.length > 0 ||
+        (actions.setReturnCharges.allowed && heldDeposit(payments) <= 0)) && (
+        <ReturnChargesSection payments={payments} onAction={onAction} money={money} />
+      )}
     </Card>
   )
 }
@@ -234,8 +240,75 @@ function PaymentHistory({ payments, currency }: { payments: BookingPaymentRecord
 }
 
 /**
+ * What the return cost beyond the quote. With a deposit on hold these are entered where the
+ * deposit is settled; without one, here, and they become the balance above.
+ */
+function ReturnChargesSection({
+  payments,
+  onAction,
+  money,
+}: Pick<BookingPaymentCardProps, 'payments' | 'onAction'> & { money: (amount: number) => string }) {
+  const { t } = useTranslation('bookings')
+  const { t: tPayments } = useTranslation('payments')
+  const { returnCharges: charges, deposit } = payments
+  // As far as it went towards the charges: more than that was taken for something else.
+  const covered = deposit?.status === 'captured' ? Math.min(deposit.captured, payments.returnChargesTotal) : 0
+  const editable = payments.actions.setReturnCharges.allowed && heldDeposit(payments) <= 0
+
+  return (
+    <div className="border-border-soft mt-3.5 border-t pt-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[13px] font-semibold">{t('details.payment.returnCharges.title')}</span>
+        {editable && charges.length > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-fg-3 hover:text-foreground -my-1 size-7"
+            aria-label={t('details.payment.returnCharges.edit')}
+            onClick={() => onAction('settleReturn')}
+          >
+            <SquarePen className="size-4" aria-hidden />
+          </Button>
+        )}
+      </div>
+      {charges.length > 0 && (
+        <div className="divide-border-soft mt-1 flex flex-col divide-y">
+          {charges.map((charge) => (
+            <div key={charge.kind} className="flex items-start justify-between gap-3 py-1.5">
+              <span className="min-w-0">
+                <span className="text-fg-3 block text-[13px]">
+                  {tPayments(`booking.charges.kinds.${charge.kind}`)}
+                </span>
+                {charge.note && <span className="text-fg-4 block text-[12px]">{charge.note}</span>}
+              </span>
+              <span className="text-[13px] font-semibold tabular-nums">{money(charge.amount)}</span>
+            </div>
+          ))}
+          {covered > 0 && (
+            <Line label={t('details.payment.returnCharges.fromDeposit')} value={`−${money(covered)}`} />
+          )}
+        </div>
+      )}
+      {/* With nothing listed there is no row to sit beside, so adding stays a full button. */}
+      {editable && charges.length === 0 && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onAction('settleReturn')}
+          className="mt-2 w-full"
+        >
+          {t('details.payment.returnCharges.add')}
+        </Button>
+      )}
+    </div>
+  )
+}
+
+/**
  * A separate pot from the rental: authorised by the renter, from the day before pickup, and
- * captured or released once the car is back.
+ * settled against the return's charges once the car is back.
  */
 function DepositSection({
   payments,
@@ -309,32 +382,34 @@ function DepositSection({
       )}
       {state === 'held' && (
         <div className="mt-2 flex flex-col gap-1.5">
-          <div className="flex flex-wrap gap-2">
+          {actions.releaseDeposit.allowed && !actions.setReturnCharges.allowed ? (
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onAction('releaseDeposit')}
               loading={busy.releaseDeposit}
-              disabled={!actions.releaseDeposit.allowed}
-              className="flex-1 gap-1.5"
+              className="w-full gap-1.5"
             >
               <LockOpen className="size-3.5" aria-hidden />
               {t('details.payment.releaseDeposit')}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onAction('captureDeposit')}
-              disabled={!actions.captureDeposit.allowed}
-              className="flex-1 gap-1.5"
-            >
-              <BanknoteArrowUp className="size-3.5" aria-hidden />
-              {t('details.payment.captureDeposit')}
-            </Button>
-          </div>
-          <Hint rule={actions.captureDeposit} />
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant={actions.setReturnCharges.allowed ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => onAction('settleReturn')}
+                disabled={!actions.setReturnCharges.allowed}
+                className="w-full gap-1.5"
+              >
+                <BanknoteArrowUp className="size-3.5" aria-hidden />
+                {t('details.payment.settleDeposit')}
+              </Button>
+              <Hint rule={actions.setReturnCharges} />
+            </>
+          )}
         </div>
       )}
     </div>

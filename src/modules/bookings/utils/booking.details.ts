@@ -14,6 +14,7 @@ import {
   type BookingStageStep,
   type BookingTuple,
 } from '../types/booking.types'
+import { overMileage } from './booking.condition'
 import { parseBookingTotal } from './booking.utils'
 import { rentalWindowDates } from './booking.schedule'
 
@@ -111,7 +112,12 @@ export function bookingStages(facts: StageFacts): BookingStageStep[] {
 
   return BOOKING_STAGES.map((key): BookingStageStep => {
     if (done[key]) {
-      return { key, state: 'done', at: happened[key], channel: key === 'reserved' ? facts.channel : undefined }
+      return {
+        key,
+        state: 'done',
+        at: happened[key],
+        channel: key === 'reserved' ? facts.channel : undefined,
+      }
     }
     if (cancelled) return { key, state: 'skipped' }
     return { key, state: key === current ? 'current' : 'pending', at: due[key] }
@@ -373,6 +379,14 @@ export function buildBookingDetails(
     // The real length: `days` above is rounded, for the charge lines.
     duration: rentalDuration({ from: pickup, to: dropoff }, booking?.pickedUpAt, booking?.returnedAt),
     includedMiles,
+    pickupCondition: booking?.pickupCondition,
+    returnCondition: booking?.returnCondition,
+    overMileage: overMileage(
+      booking?.pickupCondition,
+      booking?.returnCondition,
+      includedMiles,
+      booking?.rate.overageRatePerMile,
+    ),
 
     vehicleId: booking?.vehicleId ?? vehicle?.id,
     vehicleName,
@@ -380,6 +394,8 @@ export function buildBookingDetails(
     vehicleImage: vehicle?.photos[0]?.url,
     vehicleSubtitle: vehicle ? `${vehicle.vehicleType} · ${vehicle.year} · ${vehicle.location}` : location,
     listDailyRate,
+    vehicleMileage: vehicle?.mileage,
+    vehicleElectric: vehicle?.specs.fuelType === 'Electric',
 
     charges: booking ? exactCharges(booking) : buildCharges(total, days, listDailyRate, taxRatePct, []),
     total,

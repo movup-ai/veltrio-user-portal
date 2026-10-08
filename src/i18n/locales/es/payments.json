@@ -41,8 +41,8 @@
       "linkFailed": "No se pudo crear el enlace de pago",
       "recorded": "Pago registrado",
       "recordFailed": "No se pudo registrar el pago",
-      "captured": "Depósito cobrado",
-      "captureFailed": "No se pudo cobrar el depósito",
+      "settled": "Devolución liquidada",
+      "settleFailed": "No se pudo liquidar la devolución",
       "released": "Depósito liberado",
       "releaseFailed": "No se pudo liberar el depósito",
       "refunded": "Reembolso emitido",
@@ -102,13 +102,31 @@
       "balance": "Saldo pendiente",
       "hint": "Indica lo que pagó el cliente, hasta los {{max}} pendientes. Un pago parcial deja el resto pendiente."
     },
-    "capture": {
-      "title": "Cobrar el depósito",
-      "description": "Cobra una parte o todo el depósito de {{held}}. Lo que no se cobre vuelve al cliente.",
-      "amount": "Importe a cobrar",
-      "submit": "Cobrar",
+    "charges": {
+      "title": "Cargos de la devolución",
+      "description": "Indica lo que costó la devolución además del alquiler. Primero lo paga el depósito retenido, y lo que lo supere se suma al saldo.",
       "held": "Depósito retenido",
-      "hint": "Ejecuta hasta los {{max}} retenidos. Lo que no ejecutes se devuelve al cliente al momento."
+      "noHold": "No hay depósito retenido, así que los cargos se suman al saldo.",
+      "kinds": {
+        "over_mileage": "Millas extra",
+        "fuel": "Combustible",
+        "damage": "Daños",
+        "late_return": "Devolución tardía",
+        "other": "Otros"
+      },
+      "amountOf": "Importe de {{kind}}",
+      "noteOf": "Nota de {{kind}}",
+      "note": "Motivo o nota",
+      "invalid": "Indica cada importe como un número, o déjalo en blanco.",
+      "total": "Total de cargos",
+      "captured": "Cobrado del depósito",
+      "released": "Liberado al cliente",
+      "collected": "Ya cobrado",
+      "due": "Pendiente de cobro",
+      "dueHint": "Cóbralo con un enlace de pago, o regístralo cuando el cliente haya pagado.",
+      "save": "Guardar cargos",
+      "capture": "Cobrar {{amount}}",
+      "release": "Liberar depósito"
     },
     "refund": {
       "title": "Reembolsar un pago",
@@ -144,14 +162,16 @@
       "deposit_already_held": "El depósito ya está retenido.",
       "booking_returned": "El vehículo ya se devolvió.",
       "no_deposit_held": "No hay ningún depósito retenido.",
-      "not_returned": "Ejecuta o libera el depósito cuando se devuelva el vehículo.",
+      "not_returned": "El depósito se liquida cuando se devuelva el vehículo.",
       "not_before_pickup": "El vehículo ya se recogió.",
       "not_fully_paid": "Para la recogida, el alquiler debe estar pagado y el depósito retenido.",
       "contract_unsigned": "Para la recogida, el contrato de alquiler debe estar firmado.",
       "not_on_rental": "El vehículo no está fuera con esta reserva.",
       "not_confirmed": "El pago y el depósito se podrán solicitar cuando se confirme la reserva.",
       "not_awaiting_close": "La reserva no está pendiente de cierre.",
-      "deposit_unsettled": "Primero libera o ejecuta el depósito."
+      "deposit_unsettled": "Primero libera o ejecuta el depósito.",
+      "charges_unpaid": "Aún se deben cargos de la devolución. Cóbralos o redúcelos.",
+      "booking_closed": "La reserva está cerrada."
     },
     "receipt": {
       "title": "Recibo",

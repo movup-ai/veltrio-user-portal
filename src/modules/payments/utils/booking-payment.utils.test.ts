@@ -5,9 +5,11 @@ import { DEPOSIT_STATUS_BADGE, PAYMENT_STATE_BADGE } from '../constants/payment.
 import type { BookingPaymentRecord } from '../types/booking-payment.types'
 import {
   checkAmount,
+  collectedForCharges,
   depositStatus,
   documentFileName,
   linkIsGone,
+  parseCharge,
   paymentBadge,
   emailHref,
   linkPurpose,
@@ -17,6 +19,7 @@ import {
   receiptLinkUrl,
   refundAttempt,
   rentalHistory,
+  settlement,
   smsHref,
 } from './booking-payment.utils'
 
@@ -54,6 +57,57 @@ describe('smsHref', () => {
     expect(smsHref('+1 (305) 442-0118', 'Pay here: https://x')).toBe(
       'sms:+13054420118?&body=Pay%20here%3A%20https%3A%2F%2Fx',
     )
+  })
+})
+
+describe('parseCharge', () => {
+  it('reads nothing typed as no charge, and an amount to the cent', () => {
+    expect(parseCharge('')).toBe(0)
+    expect(parseCharge('  ')).toBe(0)
+    expect(parseCharge('120')).toBe(120)
+    expect(parseCharge('11.555')).toBe(11.56)
+  })
+
+  it('has no amount for what is not one', () => {
+    for (const input of ['abc', '-5', '12,50', 'Infinity']) expect(parseCharge(input)).toBeUndefined()
+  })
+})
+
+describe('collectedForCharges', () => {
+  const taken = (captured: number) => ({ status: 'captured', captured }) as BookingPaymentRecord
+
+  it('is nothing until something is taken or paid towards the charges', () => {
+    expect(collectedForCharges({ returnChargesTotal: 0, balance: 0 })).toBe(0)
+    expect(collectedForCharges({ returnChargesTotal: 200, balance: 200 })).toBe(0)
+  })
+
+  it('counts what was paid another way while the deposit is still on hold', () => {
+    expect(collectedForCharges({ returnChargesTotal: 200, balance: 120 })).toBe(80)
+  })
+
+  it('counts the deposit taken, and what was paid on top of it', () => {
+    expect(collectedForCharges({ returnChargesTotal: 2150, balance: 150, deposit: taken(2000) })).toBe(2000)
+    expect(collectedForCharges({ returnChargesTotal: 2150, balance: 0, deposit: taken(2000) })).toBe(2150)
+  })
+
+  it('counts all of a deposit taken beyond the charges, which later charges draw on first', () => {
+    expect(collectedForCharges({ returnChargesTotal: 300, balance: 0, deposit: taken(500) })).toBe(500)
+  })
+})
+
+describe('settlement', () => {
+  it('captures the charges from the deposit and releases the rest', () => {
+    expect(settlement(120, 2000)).toEqual({ capture: 120, release: 1880, due: 0 })
+    expect(settlement(0, 2000)).toEqual({ capture: 0, release: 2000, due: 0 })
+  })
+
+  it('takes the whole deposit and leaves the rest to collect when charges run past it', () => {
+    expect(settlement(2150, 2000)).toEqual({ capture: 2000, release: 0, due: 150 })
+    expect(settlement(150, 0)).toEqual({ capture: 0, release: 0, due: 150 })
+  })
+
+  it('keeps cents exact', () => {
+    expect(settlement(0.3, 0.1)).toEqual({ capture: 0.1, release: 0, due: 0.2 })
   })
 })
 
