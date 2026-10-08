@@ -14,13 +14,7 @@ export type VerificationTone = 'success' | 'error' | 'pending' | 'neutral'
  * Suffix of `bookings:verification.state.<kind>.<key>` and `.hint.<kind>.<key>`. A literal union
  * rather than `string`, so a key added here without a translation is a tsc error.
  */
-export type VerificationStateKey =
-  | 'notStarted'
-  | 'running'
-  | 'clear'
-  | 'consider'
-  | 'error'
-  | 'otherDates'
+export type VerificationStateKey = 'notStarted' | 'running' | 'clear' | 'consider' | 'error' | 'expired'
 
 export interface VerificationView {
   tone: VerificationTone
@@ -44,10 +38,10 @@ const NOT_STARTED: VerificationView = {
   inProgress: false,
 }
 
-/** A check on file for another rental: no verdict for this one, so checking it is the action. */
-const OTHER_DATES: VerificationView = {
-  tone: 'neutral',
-  stateKey: 'otherDates',
+/** A verdict that has run out: on file, but cover no longer, so verifying again is the action. */
+const EXPIRED: VerificationView = {
+  tone: 'error',
+  stateKey: 'expired',
   action: 'order',
   canViewReport: false,
   inProgress: false,
@@ -58,7 +52,7 @@ const BY_STATUS: Record<VerificationStatus, VerificationView> = {
   // Rare for Checkr, which answers instantly; routine for Axle, which waits on the renter.
   running: { tone: 'pending', stateKey: 'running', canViewReport: false, inProgress: true },
   clear: { tone: 'success', stateKey: 'clear', canViewReport: true, inProgress: false },
-  // Records found, or cover that does not last the rental. Not a refusal: a human decides.
+  // Records found, or a policy that does not cover the renter. Not a refusal: a human decides.
   consider: {
     tone: 'error',
     stateKey: 'consider',
@@ -84,8 +78,8 @@ export function verificationView(
   kind: ProviderKind = 'background',
 ): VerificationView {
   if (!verification) return NOT_STARTED
-  // Ahead of `canReorder`: a session still open for the old dates is replaced by checking these.
-  if (verification.forOtherDates) return OTHER_DATES
+  // Ahead of the verdict it once was: a green tick here would say the renter is still covered.
+  if (verification.expired) return EXPIRED
 
   const view = BY_STATUS[verification.status] ?? NOT_STARTED
   // An insurance check waits on the renter, who may close the tab. Without a way back in the
@@ -103,25 +97,35 @@ export function verificationView(
 
 /**
  * Whether sending a link starts a fresh check rather than handing back the open one. Only a
- * session still waiting on these dates is reused; after a result, or for other dates, the renter
- * gets a new link.
+ * session still waiting on the renter is reused; after a result they get a new link.
  */
-export function sendsNewLink(
-  verification: Pick<BookingVerification, 'status' | 'forOtherDates'> | undefined,
+export function sendsNewLink(verification: Pick<BookingVerification, 'status'> | undefined): boolean {
+  return verification !== undefined && verification.status !== 'running'
+}
+
+/**
+ * Whether a rental runs past the day its renter's insurance was verified to. Only a warning:
+ * one check stands for the renter, and whether to verify again is the counter's call.
+ */
+export function outlastsCover(
+  verification: Pick<BookingVerification, 'validUntil' | 'expired'> | undefined,
+  /** The rental's last day, as `YYYY-MM-DD`. */
+  returnOn: string | undefined,
 ): boolean {
-  if (!verification) return false
-  return Boolean(verification.forOtherDates) || verification.status !== 'running'
+  if (!verification?.validUntil || verification.expired || !returnOn) return false
+  return verification.validUntil < returnOn
 }
 
 /** What a row of the verification history can do, in the order its menu lists them. */
 export type LogAction = 'viewReport' | 'sendLink' | 'sendNewLink' | 'delete'
 
-export function logActions(record: VerificationRecord, canDelete: boolean): LogAction[] {
+export function logActions(record: VerificationRecord, canDelete: boolean, today: string): LogAction[] {
   const actions: LogAction[] = []
   if (record.hasReport) actions.push('viewReport')
-  // Covered needs nothing more; anything else can be put to the renter again. The session is
-  // matched on the birth date, so a row without one cannot open another.
-  if (record.kind === 'insurance' && record.status !== 'clear' && record.dateOfBirth) {
+  // Covered needs nothing more until it runs out; anything else can be put to the renter
+  // again. The session is matched on the birth date, so a row without one cannot open another.
+  const covered = record.status === 'clear' && (!record.validUntil || record.validUntil >= today)
+  if (record.kind === 'insurance' && !covered && record.dateOfBirth) {
     actions.push(sendsNewLink(record) ? 'sendNewLink' : 'sendLink')
   }
   // A running check may still be answered, which is why the API refuses to delete one.
@@ -131,8 +135,7 @@ export function logActions(record: VerificationRecord, canDelete: boolean): LogA
 
 /**
  * The insurance session to open again from a history row. A booking's check goes back through
- * the booking, so it is judged for that rental and shows on it; any other uses the dates the
- * row was judged for.
+ * the booking, so the renter's details are read from it and the link lands there.
  */
 export function resendInsuranceOrder(
   record: VerificationRecord,
@@ -142,7 +145,7 @@ export function resendInsuranceOrder(
   const renter = { name: record.name, dateOfBirth: record.dateOfBirth, email: record.email }
   return record.bookingReference
     ? { ...renter, reference: record.bookingReference, redirectUri }
-    : { ...renter, coversFrom: record.coversFrom, coversThrough: record.coversThrough, redirectUri }
+    : { ...renter, redirectUri }
 }
 
 /** A check run in the booking form, tagged with the renter it was ordered for. */

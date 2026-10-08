@@ -64,7 +64,6 @@ describe('verificationApi.order', () => {
   })
 })
 
-
 describe('verificationApi.report', () => {
   it('asks for the PDF as a blob, not as parsed JSON', async () => {
     // Without responseType the browser would try to parse the PDF bytes as JSON and fail.
@@ -99,21 +98,6 @@ describe('verificationApi.forEmail', () => {
 
     expect(get).toHaveBeenCalledWith('/customers/verification', {
       params: { email: 'm@example.com', kind: 'insurance' },
-    })
-  })
-
-  it('asks for an insurance verdict that answers for the rental being taken', async () => {
-    get.mockResolvedValue({ data: null } as never)
-
-    await verificationApi.forEmail('m@example.com', 'insurance', { from: '2026-10-20', to: '2026-10-25' })
-
-    expect(get).toHaveBeenCalledWith('/customers/verification', {
-      params: {
-        email: 'm@example.com',
-        kind: 'insurance',
-        coversFrom: '2026-10-20',
-        coversThrough: '2026-10-25',
-      },
     })
   })
 

@@ -95,7 +95,8 @@ describe('the verification form', () => {
     await user.click(screen.getByRole('radio', { name: /Insurance/ }))
 
     expect(screen.queryByLabelText('Street')).not.toBeInTheDocument()
-    expect(screen.getByText('Insurance cover needed')).toBeInTheDocument()
+    // Nor dates: the check answers for the person, to their policy's expiry, not for a rental.
+    expect(screen.queryByText('Insurance cover needed')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Run background check' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create insurance link' })).toBeInTheDocument()
   })
@@ -110,6 +111,7 @@ describe('the verification form', () => {
 
     await vi.waitFor(() => expect(share).toHaveBeenCalledOnce())
     expect(share.mock.calls[0][0]).toMatchObject({ name: 'Jordan Reyes', dateOfBirth: '1990-06-01' })
+    expect(share.mock.calls[0][0]).not.toHaveProperty('coversFrom')
     expect(orderMutate).not.toHaveBeenCalled()
   })
 
@@ -171,9 +173,7 @@ describe('the verification history', () => {
 
   it('sends a new insurance link back through the booking it was for', async () => {
     const user = userEvent.setup()
-    logItems = [
-      record({ kind: 'insurance', status: 'consider', bookingReference: 'BK-10001' }),
-    ]
+    logItems = [record({ kind: 'insurance', status: 'consider', bookingReference: 'BK-10001' })]
     render(<VerificationPage />)
 
     await pick(user, 'Kevin Ragira', 'Send new link')

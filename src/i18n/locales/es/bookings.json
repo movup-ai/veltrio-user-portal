@@ -229,10 +229,11 @@
     },
     "payment": {
       "title": "Pago",
-      "dueNote": "Quedan {{amount}} por cobrar al arrendatario.",
+      "unpaidNote": "Aún no se ha pagado nada.",
       "capturedNote": "Cobrado el {{when}} · {{method}}",
       "refunded": "Reembolsado",
-      "balance": "Saldo",
+      "balance": "Saldo pendiente",
+      "balanceHint": "Por cobrar al arrendatario",
       "sendLink": "Enviar enlace de pago",
       "markPaid": "Marcar como pagado",
       "downloadInvoice": "Factura",
@@ -276,7 +277,7 @@
     },
     "manage": {
       "title": "Gestionar reserva",
-      "subtitle": "Modifica el alquiler antes de la entrega",
+      "subtitle": "Modifica el alquiler mientras esté abierto",
       "modify": "Modificar fechas",
       "extend": "Ampliar alquiler",
       "addDriver": "Añadir conductor",
@@ -645,7 +646,7 @@
         "clear": "Sin hallazgos",
         "consider": "Requiere revisión",
         "error": "No se pudo realizar",
-        "otherDates": "Otras fechas"
+        "expired": "Caducada"
       },
       "insurance": {
         "notStarted": "Sin iniciar",
@@ -653,7 +654,7 @@
         "clear": "Cubierto",
         "consider": "Requiere revisión",
         "error": "No se pudo realizar",
-        "otherDates": "Otras fechas"
+        "expired": "Caducada"
       }
     },
     "hint": {
@@ -663,15 +664,15 @@
         "clear": "No se encontraron antecedentes para este conductor.",
         "consider": "Se encontraron antecedentes. Lea el informe antes de la entrega.",
         "error": "Checkr no pudo realizar esta verificación. Al repetirla se empieza de nuevo.",
-        "otherDates": "La última verificación registrada fue para otra reserva."
+        "expired": "La última verificación registrada es demasiado antigua. Ejecútela de nuevo."
       },
       "insurance": {
-        "notStarted": "El conductor conecta su propia aseguradora y comprobamos que la póliza cubre todos los días del alquiler.",
+        "notStarted": "El cliente conecta su propia aseguradora y comprobamos que una póliza activa lo incluye. Una verificación vale hasta que esa póliza caduque.",
         "running": "Esperando a que el conductor conecte su aseguradora. Envíe el enlace de nuevo si lo perdió.",
-        "clear": "Una póliza activa cubre todo el alquiler.",
-        "consider": "La póliza no basta por sí sola para este alquiler. Revísela antes de entregar las llaves.",
+        "clear": "Una póliza activa incluye a este cliente.",
+        "consider": "La póliza no basta por sí sola para este cliente. Revísela antes de entregar las llaves.",
         "error": "Axle no pudo completar esta verificación. Empezar de nuevo abre una sesión nueva.",
-        "otherDates": "La última verificación registrada fue para otro alquiler. Envíe el enlace para verificar estas fechas."
+        "expired": "El seguro verificado de este cliente ha caducado. Envíe el enlace para verificarlo de nuevo."
       }
     },
     "action": {
@@ -710,14 +711,17 @@
       "checking": "Comprobando si el seguro de este conductor ya fue verificado…",
       "none": "Sin registros. Envíe al conductor un enlace para conectar su aseguradora desde su propio teléfono.",
       "running": "Esperando a que el conductor conecte su aseguradora. El resultado aparecerá aquí cuando termine.",
-      "clearOn": "Verificado el {{when}} · una póliza activa cubre todo el alquiler",
-      "recordsOn": "Verificado el {{when}} · la póliza no basta para este alquiler, revísela antes de entregar las llaves",
+      "clearOn": "Verificado el {{when}} · una póliza activa incluye a este cliente",
+      "recordsOn": "Verificado el {{when}} · la póliza no basta para este cliente, revísela antes de entregar las llaves",
       "needsRenter": "Añada primero el nombre completo, el correo y la fecha de nacimiento del conductor. La póliza debe incluir a este conductor, y el resultado se guarda con su correo.",
       "needsDob": "Este conductor no tiene fecha de nacimiento registrada. Añádala primero a su perfil.",
-      "otherDates": "Verificado para {{range}} · no para estas fechas, envíe el enlace para verificar este alquiler",
-      "otherRental": "Verificado para otro alquiler · envíe el enlace para verificar estas fechas"
+      "expiredOn": "Caducó el {{when}} · envíe el enlace para verificar de nuevo"
     },
-    "policyExpires": "Vence el {{date}}"
+    "policyExpires": "Vence el {{date}}",
+    "validity": {
+      "until": "Válida hasta el {{date}}",
+      "endsBeforeReturn": "Caduca el {{date}}, antes de la devolución de este alquiler"
+    }
   },
   "verificationPage": {
     "title": "Verificación",
@@ -758,10 +762,7 @@
         "insurance": "Recibirá un enlace para copiar o enviar. El resultado aparece abajo cuando termine."
       },
       "createLink": "Crear enlace de seguro",
-      "cancel": "Cancelar",
-      "coverNeeded": "Cobertura de seguro necesaria",
-      "coverHint": "Los días que la póliza debe cubrir, como un alquiler. Déjelo en blanco para comprobar que está vigente hoy.",
-      "coverToday": "Solo hoy"
+      "cancel": "Cancelar"
     },
     "log": {
       "title": "Historial de verificaciones",

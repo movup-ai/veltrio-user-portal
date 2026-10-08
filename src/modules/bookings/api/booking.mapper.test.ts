@@ -428,29 +428,18 @@ describe('toVerification', () => {
       canReorder: false,
       reused: false,
       policy: undefined,
-      coversFrom: undefined,
-      coversThrough: undefined,
-      forOtherDates: false,
+      validUntil: undefined,
+      expired: false,
       completedAt: undefined,
       createdAt: '2026-09-20T10:00:00Z',
       updatedAt: '2026-09-20T10:00:00Z',
     })
   })
 
-  it('keeps which rental an insurance check was for, and whether it answers this one', () => {
-    const verification = toVerification(
-      verificationWire({
-        coversFrom: '2026-10-01',
-        coversThrough: '2026-10-05',
-        forOtherDates: true,
-      }),
-    )
+  it('keeps how long an insurance check stands, and whether it has run out', () => {
+    const verification = toVerification(verificationWire({ validUntil: '2026-10-05', expired: true }))
 
-    expect(verification).toMatchObject({
-      coversFrom: '2026-10-01',
-      coversThrough: '2026-10-05',
-      forOtherDates: true,
-    })
+    expect(verification).toMatchObject({ validUntil: '2026-10-05', expired: true })
   })
 
   it('names the policy an insurance verdict was read from, in words rather than a slug', () => {

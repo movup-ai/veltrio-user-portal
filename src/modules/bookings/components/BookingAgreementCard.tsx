@@ -12,9 +12,11 @@ import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { useFormatters } from '@/i18n'
 import type { BookingContract } from '@/modules/contracts/types/booking-contract.types'
 import { contractFileName } from '@/modules/contracts/utils/booking-contract.utils'
+import type { BookingExtension } from '@/modules/payments/types/booking-extension.types'
 import { awaitsConfirmation } from '../utils/booking.handover'
 
-export type AgreementAction = 'view' | 'download' | 'send' | 'signAtCounter' | 'changeTemplate' | 'shareCopy' | 'void'
+export type AgreementAction =
+  'view' | 'download' | 'send' | 'signAtCounter' | 'changeTemplate' | 'shareCopy' | 'void'
 
 interface BookingAgreementCardProps {
   contract: BookingContract
@@ -25,6 +27,9 @@ interface BookingAgreementCardProps {
   /** The action in flight, whose button shows it. */
   busy?: AgreementAction
   onAction: (action: AgreementAction) => void
+  /** Later returns agreed to after pickup, oldest first, numbered as their files are. */
+  addenda?: { extension: BookingExtension; number: number }[]
+  onOpenAddendum?: (extensionId: string) => void
 }
 
 /**
@@ -32,9 +37,18 @@ interface BookingAgreementCardProps {
  * it's a document that goes out, comes back signed, and has to stay retrievable for years
  * afterwards.
  */
-export function BookingAgreementCard({ contract, reference, canVoid, busy, onAction }: BookingAgreementCardProps) {
+export function BookingAgreementCard({
+  contract,
+  reference,
+  canVoid,
+  busy,
+  onAction,
+  addenda = [],
+  onOpenAddendum,
+}: BookingAgreementCardProps) {
   const { t } = useTranslation('bookings')
   const { t: tContracts } = useTranslation('contracts')
+  const { t: tPayments } = useTranslation('payments')
   const format = useFormatters()
   const signed = contract.status === 'signed'
   const { sign, changeTemplate } = contract.actions
@@ -75,7 +89,12 @@ export function BookingAgreementCard({ contract, reference, canVoid, busy, onAct
           {menu.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-7" aria-label={t('details.agreement.more')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  aria-label={t('details.agreement.more')}
+                >
                   <MoreVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -102,7 +121,9 @@ export function BookingAgreementCard({ contract, reference, canVoid, busy, onAct
           <span className="border-border bg-surface text-fg-3 flex size-9 shrink-0 items-center justify-center rounded-[8px] border">
             <FileText className="size-4" aria-hidden />
           </span>
-          <p className="m-0 min-w-0 flex-1 truncate text-[13px] font-semibold">{contractFileName(reference)}</p>
+          <p className="m-0 min-w-0 flex-1 truncate text-[13px] font-semibold">
+            {contractFileName(reference)}
+          </p>
         </div>
 
         <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
@@ -171,6 +192,33 @@ export function BookingAgreementCard({ contract, reference, canVoid, busy, onAct
           </div>
         )}
       </div>
+
+      {addenda.length > 0 && (
+        <ul className="m-0 mt-2.5 flex list-none flex-col gap-1.5 p-0">
+          {addenda.map(({ extension, number }) => (
+            <li key={extension.id} className="flex items-center justify-between gap-2.5">
+              <span className="min-w-0 text-[12px]">
+                <span className="font-semibold">{tPayments('extension.addendum.label', { number })}</span>
+                <span className="text-fg-4">
+                  {' · '}
+                  {tPayments('extension.addendum.detail', { when: format.dateTime(extension.newReturnAt) })}
+                </span>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                aria-label={tPayments('extension.addendum.open', { number })}
+                onClick={() => onOpenAddendum?.(extension.id)}
+              >
+                <FileText className="size-3.5" aria-hidden />
+                {t('details.agreement.view')}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {unconfirmed && <p className="text-fg-4 m-0 mt-2.5 text-[12px]">{signHint}</p>}
       {!signed && sign.allowed && (

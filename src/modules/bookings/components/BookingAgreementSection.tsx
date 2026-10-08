@@ -16,6 +16,8 @@ import {
   useIssueContract,
 } from '@/modules/contracts/hooks/use-booking-contract'
 import type { LinkRecipient } from '@/modules/payments/components/ShareLinkDialog'
+import { useAddendumOpener, useBookingExtensions } from '@/modules/payments/hooks/use-booking-extensions'
+import { addenda } from '@/modules/payments/utils/booking-extension.utils'
 import { useOrganizationStore } from '@/state/organization.store'
 import { hasAnyPermission } from '@/utils/permissions'
 import { BookingAgreementCard, type AgreementAction } from './BookingAgreementCard'
@@ -31,6 +33,9 @@ export function BookingAgreementSection({ reference, renter }: { reference: stri
   const issue = useIssueContract(reference)
   const view = useContractPdfOpener(reference)
   const download = useDownloadContract(reference)
+  // Later returns the renter agreed to with the car out: each adds to the agreement, so they sit with it.
+  const { data: extensions } = useBookingExtensions(reference)
+  const addendum = useAddendumOpener(reference)
   const [dialog, setDialog] = useState<AgreementDialog | null>(null)
   // Which button asked for the agreement to be issued, so that one shows the wait.
   const [issuingFor, setIssuingFor] = useState<AgreementAction>()
@@ -78,6 +83,8 @@ export function BookingAgreementSection({ reference, renter }: { reference: stri
         canVoid={canVoid}
         busy={busy}
         onAction={run}
+        addenda={addenda(extensions?.history ?? [])}
+        onOpenAddendum={addendum.open}
       />
       {link && (
         <>

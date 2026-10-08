@@ -57,6 +57,23 @@ function Line({ label, value }: { label: string; value: string }) {
   )
 }
 
+/**
+ * What is still to collect, as the invoice's closing line: ruled off and set like the total,
+ * in the amber of the Unpaid badge. As a plain line it read no louder than "Refunded".
+ */
+function BalanceDue({ amount }: { amount: string }) {
+  const { t } = useTranslation('bookings')
+  return (
+    <dl className="border-border m-0 mt-1 flex items-baseline justify-between gap-3 border-t pt-3">
+      <dt>
+        <span className="block text-[13.5px] font-semibold">{t('details.payment.balance')}</span>
+        <span className="text-fg-4 mt-0.5 block text-[12px]">{t('details.payment.balanceHint')}</span>
+      </dt>
+      <dd className="text-warning m-0 text-[18px] leading-none font-bold tabular-nums">{amount}</dd>
+    </dl>
+  )
+}
+
 /** Why a button is off, under it; nothing for one that is on. */
 function Hint({ rule, fallback }: { rule: PaymentActionRule; fallback?: string }) {
   const { t } = useTranslation('payments')
@@ -85,6 +102,9 @@ export function BookingPaymentCard({
 
   const outstanding = payments.balance > 0
   const partlyPaid = outstanding && payments.paid > 0
+  // With nothing paid, refunded or added, the total is the balance: it is not said twice.
+  const owesOtherThanTotal =
+    outstanding && (partlyPaid || payments.refunded > 0 || payments.balance !== payments.total)
   const rental = rentalHistory(payments.payments)
   const latest = rental.find((p) => p.status === 'succeeded')
 
@@ -104,26 +124,28 @@ export function BookingPaymentCard({
         <span className="text-[13.5px] font-semibold">{t('details.charges.total')}</span>
         <span className="text-[22px] leading-none font-bold tabular-nums">{money(payments.total)}</span>
       </div>
-      <p className="text-fg-4 m-0 mt-1.5 text-[12px]" style={{ textWrap: 'pretty' }}>
-        {outstanding
-          ? t('details.payment.dueNote', { amount: money(payments.balance) })
-          : t('details.payment.capturedNote', {
-              when: latest?.completedAt ? format.shortDate(latest.completedAt) : '—',
-              method: latest?.method ?? '—',
-            })}
-      </p>
+      {/* A balance that differs from the total gets its own line below; this says the rest. */}
+      {!owesOtherThanTotal && (
+        <p className="text-fg-4 m-0 mt-1.5 text-[12px]" style={{ textWrap: 'pretty' }}>
+          {outstanding
+            ? t('details.payment.unpaidNote')
+            : t('details.payment.capturedNote', {
+                when: latest?.completedAt ? format.shortDate(latest.completedAt) : '—',
+                method: latest?.method ?? '—',
+              })}
+        </p>
+      )}
 
-      {/* Only figures the note above does not already give earn a line: a part payment and
-          what it leaves, and refunds. Paid in full, the balance is just $0. */}
+      {/* Only what explains the balance earns a line: a part payment, and refunds. */}
       {(partlyPaid || payments.refunded > 0) && (
         <div className="border-border-soft divide-border-soft mt-3 flex flex-col divide-y border-t pt-1">
           {partlyPaid && <Line label={t('details.payment.paid')} value={money(payments.paid)} />}
           {payments.refunded > 0 && (
             <Line label={t('details.payment.refunded')} value={money(payments.refunded)} />
           )}
-          {partlyPaid && <Line label={t('details.payment.balance')} value={money(payments.balance)} />}
         </div>
       )}
+      {owesOtherThanTotal && <BalanceDue amount={money(payments.balance)} />}
 
       {rental.length > 0 && <PaymentHistory payments={rental} currency={payments.currency} />}
 

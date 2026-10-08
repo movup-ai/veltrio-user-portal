@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import type {
-  BookingVerification,
-  VerificationRecord,
-  VerificationStatus,
-} from '../types/booking.types'
+import type { BookingVerification, VerificationRecord, VerificationStatus } from '../types/booking.types'
 import {
   logActions,
+  outlastsCover,
   resendInsuranceOrder,
   sendsNewLink,
   verificationView,
 } from './booking.verification'
+
+const TODAY = '2026-10-08'
 
 function row(overrides: Partial<VerificationRecord> = {}): VerificationRecord {
   return {
@@ -28,43 +27,49 @@ function row(overrides: Partial<VerificationRecord> = {}): VerificationRecord {
 
 describe('what a history row offers', () => {
   it('opens a background report, and lets a manager delete the finished check', () => {
-    expect(logActions(row({ kind: 'background', status: 'clear', hasReport: true }), true)).toEqual([
+    expect(logActions(row({ kind: 'background', status: 'clear', hasReport: true }), true, TODAY)).toEqual([
       'viewReport',
       'delete',
     ])
   })
 
   it('offers insurance a new link after a verdict that needs one', () => {
-    expect(logActions(row({ status: 'consider' }), true)).toEqual(['sendNewLink', 'delete'])
-    expect(logActions(row({ status: 'error' }), false)).toEqual(['sendNewLink'])
+    expect(logActions(row({ status: 'consider' }), true, TODAY)).toEqual(['sendNewLink', 'delete'])
+    expect(logActions(row({ status: 'error' }), false, TODAY)).toEqual(['sendNewLink'])
   })
 
   it('offers the same link again while the renter has not finished, and no delete', () => {
     // The API refuses to delete a running check: the renter could still answer it.
-    expect(logActions(row({ status: 'running', completedAt: undefined }), true)).toEqual(['sendLink'])
+    expect(logActions(row({ status: 'running', completedAt: undefined }), true, TODAY)).toEqual(['sendLink'])
   })
 
   it('leaves covered insurance with nothing to send', () => {
-    expect(logActions(row({ status: 'clear' }), true)).toEqual(['delete'])
+    expect(logActions(row({ status: 'clear' }), true, TODAY)).toEqual(['delete'])
+    // Its last day still counts.
+    expect(logActions(row({ status: 'clear', validUntil: TODAY }), true, TODAY)).toEqual(['delete'])
+  })
+
+  it('offers a new link once covered insurance has run out', () => {
+    expect(logActions(row({ status: 'clear', validUntil: '2026-10-07' }), true, TODAY)).toEqual([
+      'sendNewLink',
+      'delete',
+    ])
   })
 
   it('keeps delete from counter staff', () => {
-    expect(logActions(row({ status: 'clear' }), false)).toEqual([])
+    expect(logActions(row({ status: 'clear' }), false, TODAY)).toEqual([])
   })
 
   it('cannot send a link for a row with no birth date to match on', () => {
-    expect(logActions(row({ dateOfBirth: undefined }), false)).toEqual([])
+    expect(logActions(row({ dateOfBirth: undefined }), false, TODAY)).toEqual([])
   })
 })
 
 describe('the session a history row opens again', () => {
   const RETURN = 'https://portal.test/insurance/return'
 
-  it('goes back through the booking, so it is judged for that rental and shows on it', () => {
-    const order = resendInsuranceOrder(
-      row({ bookingReference: 'BK-10001', email: 'k@example.com', coversFrom: '2026-10-22' }),
-      RETURN,
-    )
+  it('goes back through the booking, so the link lands on it', () => {
+    const order = resendInsuranceOrder(row({ bookingReference: 'BK-10001', email: 'k@example.com' }), RETURN)
 
     expect(order).toEqual({
       name: 'Kevin Ragira',
@@ -75,14 +80,15 @@ describe('the session a history row opens again', () => {
     })
   })
 
-  it('keeps the dates it was judged for when there is no booking', () => {
-    const order = resendInsuranceOrder(
-      row({ coversFrom: '2026-10-22', coversThrough: '2026-10-23' }),
-      RETURN,
-    )
+  it('names only the person when there is no booking: a check is no longer for set dates', () => {
+    const order = resendInsuranceOrder(row({ validUntil: '2026-10-23' }), RETURN)
 
-    expect(order).toMatchObject({ coversFrom: '2026-10-22', coversThrough: '2026-10-23' })
-    expect(order).not.toHaveProperty('reference')
+    expect(order).toEqual({
+      name: 'Kevin Ragira',
+      dateOfBirth: '1987-11-11',
+      email: undefined,
+      redirectUri: RETURN,
+    })
   })
 })
 
@@ -101,20 +107,37 @@ function verification(overrides: Partial<BookingVerification> = {}): BookingVeri
   }
 }
 
-describe('an insurance check on file for other dates', () => {
-  it('is no verdict for this rental, and offers to check it', () => {
-    const view = verificationView(verification({ forOtherDates: true }), 'insurance')
+describe('an insurance check that has run out', () => {
+  it('is cover no longer, and offers to verify again', () => {
+    const view = verificationView(verification({ expired: true, validUntil: '2026-10-05' }), 'insurance')
 
-    expect(view.tone).toBe('neutral')
-    expect(view.stateKey).toBe('otherDates')
+    expect(view.tone).toBe('error')
+    expect(view.stateKey).toBe('expired')
     expect(view.action).toBe('order')
+    expect(view.canViewReport).toBe(false)
   })
 
-  it('still offers a check while a session for the old dates is open', () => {
-    // canReorder is false for that session, yet checking these dates replaces it.
-    const open = verification({ status: 'running', canReorder: false, forOtherDates: true })
+  it('reads as covered until then', () => {
+    expect(verificationView(verification({ validUntil: '2027-01-01' }), 'insurance').stateKey).toBe('clear')
+  })
+})
 
-    expect(verificationView(open, 'insurance').action).toBe('order')
+describe('a rental that outlasts verified cover', () => {
+  it('is flagged when the cover ends before the return day', () => {
+    expect(outlastsCover(verification({ validUntil: '2026-10-05' }), '2026-10-06')).toBe(true)
+  })
+
+  it('is not when the cover lasts through the return day', () => {
+    expect(outlastsCover(verification({ validUntil: '2026-10-05' }), '2026-10-05')).toBe(false)
+    expect(outlastsCover(verification({ validUntil: '2026-10-05' }), '2026-10-01')).toBe(false)
+  })
+
+  it('says nothing where there is no standing verdict to outlast', () => {
+    expect(outlastsCover(undefined, '2026-10-06')).toBe(false)
+    expect(outlastsCover(verification({}), '2026-10-06')).toBe(false)
+    expect(outlastsCover(verification({ validUntil: '2026-10-05' }), undefined)).toBe(false)
+    // Already expired is its own state, shown in red: a second note would only repeat it.
+    expect(outlastsCover(verification({ validUntil: '2026-10-05', expired: true }), '2026-10-06')).toBe(false)
   })
 })
 
@@ -124,10 +147,10 @@ describe('whether a link starts a fresh check', () => {
     expect(sendsNewLink(verification({ status: 'running' }))).toBe(false)
   })
 
-  it('starts a new one after a result, or for other dates', () => {
+  it('starts a new one after a result', () => {
     expect(sendsNewLink(verification({ status: 'consider' }))).toBe(true)
     expect(sendsNewLink(verification({ status: 'error' }))).toBe(true)
-    expect(sendsNewLink(verification({ status: 'running', forOtherDates: true }))).toBe(true)
+    expect(sendsNewLink(verification({ status: 'clear', expired: true }))).toBe(true)
   })
 })
 
@@ -174,7 +197,6 @@ describe('verificationView', () => {
       expect(verificationView(verification({ status })).inProgress).toBe(false)
     }
   })
-
 })
 
 describe('offering a re-run', () => {

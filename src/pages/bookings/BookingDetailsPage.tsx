@@ -15,10 +15,12 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
 import { useFormatters } from '@/i18n'
+import { formatDay } from '@/utils/dates'
 import { BookingActivity } from '@/modules/bookings/components/BookingActivity'
 import { BookingAgreementSection } from '@/modules/bookings/components/BookingAgreementSection'
 import { BookingChecklist } from '@/modules/bookings/components/BookingChecklist'
 import { BookingDeclinedBanner } from '@/modules/bookings/components/BookingDeclinedBanner'
+import { BookingExtensionNotice } from '@/modules/bookings/components/BookingExtensionNotice'
 import { BookingHandoverAction } from '@/modules/bookings/components/BookingHandoverAction'
 import { BookingManagePanel } from '@/modules/bookings/components/BookingManagePanel'
 import { BookingPaymentSection } from '@/modules/bookings/components/BookingPaymentSection'
@@ -43,6 +45,8 @@ import { isOver, shownStatus } from '@/modules/bookings/utils/booking.utils'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
 import { useBookingContract, useContractPdfOpener } from '@/modules/contracts/hooks/use-booking-contract'
 import { agreementIssued } from '@/modules/contracts/utils/booking-contract.utils'
+import { useBookingExtensions } from '@/modules/payments/hooks/use-booking-extensions'
+import { extendUnavailable } from '@/modules/payments/utils/booking-extension.utils'
 import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
 import {
   PROVIDER_KINDS,
@@ -83,10 +87,12 @@ export function BookingDetailsPage() {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const { t: tVehicles } = useTranslation('vehicles')
+  const { t: tPayments } = useTranslation('payments')
   const format = useFormatters()
   const navigate = useNavigate()
   const { bookingId } = useParams()
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [extending, setExtending] = useState(false)
 
   const { data: booking, isLoading, isError, refetch } = useBookingDetails(bookingId)
   // Its own query, so a check that takes days can be polled without refetching the whole page.
@@ -100,6 +106,8 @@ export function BookingDetailsPage() {
   const agreementPdf = useContractPdfOpener(bookingId ?? '')
   // The agreement card's own query, so the header button costs no second request.
   const { data: contract } = useBookingContract(bookingId ?? '')
+  // Shared with the extension notice, which owns the dialog this page's manage row opens.
+  const { data: extensions, isError: extensionsFailed } = useBookingExtensions(bookingId)
   // Only once a handover is recorded: before that the booking has no photos to ask for.
   const { data: conditionPhotos = [] } = useConditionPhotos(
     bookingId ?? '',
@@ -173,6 +181,7 @@ export function BookingDetailsPage() {
 
   const closed = !stillOpen
   const awaitingAnswer = booking.status === 'Pending'
+  const extendOff = extendUnavailable(extensions, extensionsFailed)
 
   const miles = (value: number) => t('details.condition.miles', { miles: format.number(value) })
   const driven =
@@ -280,6 +289,17 @@ export function BookingDetailsPage() {
         />
       )}
 
+      <BookingExtensionNotice
+        reference={booking.reference}
+        renter={booking.renter}
+        returnAt={booking.returnAt}
+        pickedUp={Boolean(booking.pickedUpAt)}
+        // Not once it has run out: the checklist already says so, whatever the new return.
+        coverValidUntil={insurance?.expired ? undefined : insurance?.validUntil}
+        extending={extending}
+        onExtendingChange={setExtending}
+      />
+
       <RentalProgress stages={booking.stages} />
 
       <div className="flex flex-wrap items-start gap-4">
@@ -370,6 +390,7 @@ export function BookingDetailsPage() {
                 onShare={handleShare}
                 sharing={insuranceLink.sharing ? 'insurance' : undefined}
                 closed={closed}
+                returnOn={formatDay(new Date(booking.returnAt))}
                 onAction={(kind) => pending(t(`details.checks.${kind}`))}
               />
             }
@@ -394,8 +415,15 @@ export function BookingDetailsPage() {
               extend or cancel a rental that has already finished. */}
           {!closed && (
             <BookingManagePanel
+              unavailable={{
+                // Off until the API says it can be asked for, and then with its reason.
+                extend: extendOff && {
+                  reason: extendOff.reason && tPayments(`extension.errors.${extendOff.reason}`),
+                },
+              }}
               onAction={(action) => {
                 if (action === 'cancel') return setConfirmCancel(true)
+                if (action === 'extend') return setExtending(true)
                 pending(t(`details.manage.${action}`))
               }}
             />

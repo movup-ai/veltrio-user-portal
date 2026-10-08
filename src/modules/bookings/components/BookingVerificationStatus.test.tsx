@@ -30,9 +30,7 @@ describe('the run button while the renter is incomplete', () => {
   it('is shown disabled rather than hidden, so the action stays where it is expected', () => {
     const onRunCheck = vi.fn()
 
-    renderRow(
-      <BookingVerificationStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />,
-    )
+    renderRow(<BookingVerificationStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />)
 
     expect(screen.getByRole('button')).toBeDisabled()
   })
@@ -40,9 +38,7 @@ describe('the run button while the renter is incomplete', () => {
   it('says what is missing on hover', async () => {
     // The button is disabled, so it fires no pointer events itself — the wrapper span is
     // what receives the hover. Without it the tooltip never opens.
-    renderRow(
-      <BookingVerificationStatus onRunCheck={vi.fn()} runBlockedReason="Add the renter first" />,
-    )
+    renderRow(<BookingVerificationStatus onRunCheck={vi.fn()} runBlockedReason="Add the renter first" />)
 
     await userEvent.hover(screen.getByRole('button').parentElement as HTMLElement)
 
@@ -52,9 +48,7 @@ describe('the run button while the renter is incomplete', () => {
   it('cannot be clicked while blocked', async () => {
     const onRunCheck = vi.fn()
 
-    renderRow(
-      <BookingVerificationStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />,
-    )
+    renderRow(<BookingVerificationStatus onRunCheck={onRunCheck} runBlockedReason="Add the renter first" />)
     await userEvent.click(screen.getByRole('button'))
 
     expect(onRunCheck).not.toHaveBeenCalled()
@@ -115,25 +109,44 @@ describe('the insurance card', () => {
     expect(screen.getByRole('button', { name: 'Send link' })).toHaveClass('bg-primary')
   })
 
-  it('shows a check for other dates as on file, never as cover for this rental', () => {
+  it('shows a check that has run out as on file, never as cover', () => {
     renderRow(
       <BookingVerificationStatus
         kind="insurance"
-        verification={verification({
-          hasReport: false,
-          forOtherDates: true,
-          coversFrom: '2026-10-01',
-          coversThrough: '2026-10-05',
-        })}
+        verification={verification({ hasReport: false, expired: true, validUntil: '2026-10-05' })}
         onShare={vi.fn()}
       />,
     )
 
-    expect(screen.getByText('Other dates')).toBeInTheDocument()
-    expect(screen.getByText(/^Last checked for Oct 1 – Oct 5/)).toBeInTheDocument()
+    expect(screen.getByText('Expired')).toBeInTheDocument()
+    expect(screen.getByText(/^Ran out Oct 5/)).toBeInTheDocument()
     expect(screen.queryByText('Covered')).not.toBeInTheDocument()
-    // A session for these dates is a new one, whatever the old dates' session is doing.
     expect(screen.getByRole('button', { name: 'Send new link' })).toBeInTheDocument()
+  })
+
+  it('flags cover that runs out before the rental being taken ends, and stays green', () => {
+    renderRow(
+      <BookingVerificationStatus
+        kind="insurance"
+        verification={verification({ hasReport: false, validUntil: '2026-10-05' })}
+        returnOn="2026-10-07"
+      />,
+    )
+
+    expect(screen.getByText('Covered')).toBeInTheDocument()
+    expect(screen.getByText("Runs out Oct 5, before this rental's return")).toBeInTheDocument()
+  })
+
+  it('says how long a verdict stands when the policy names no expiry of its own', () => {
+    renderRow(
+      <BookingVerificationStatus
+        kind="insurance"
+        verification={verification({ hasReport: false, validUntil: '2026-12-29' })}
+        returnOn="2026-10-07"
+      />,
+    )
+
+    expect(screen.getByText('Stands until Dec 29')).toBeInTheDocument()
   })
 
   it('keeps a verdict to the result, without the reason line beneath it', () => {

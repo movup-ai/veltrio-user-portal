@@ -2,16 +2,10 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { CalendarRange, Send, ShieldCheck } from 'lucide-react'
+import { Send, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
-import {
-  DateRangePicker,
-  EMPTY_DATE_RANGE,
-  fromDateValue,
-  type DateRange,
-} from '@/components/ui/date-range-picker'
 import { Input } from '@/components/ui/input'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import type { Cell, Column, Row } from '@/components/data-display/record-table.types'
@@ -38,6 +32,7 @@ import {
   resendInsuranceOrder,
   type LogAction,
 } from '@/modules/bookings/utils/booking.verification'
+import { today } from '@/utils/dates'
 import { hasPermission } from '@/utils/permissions'
 import { CheckKindPicker } from '@/modules/bookings/components/CheckKindPicker'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
@@ -49,10 +44,7 @@ import {
   toVerificationOrder,
   type VerificationFormValues,
 } from '@/modules/bookings/schema/verification.schema'
-import {
-  isProviderKind,
-  type VerificationRecord,
-} from '@/modules/bookings/types/booking.types'
+import { isProviderKind, type VerificationRecord } from '@/modules/bookings/types/booking.types'
 
 /** Wide enough for any adult — the picker pages by dropdown, not month by month. */
 const DOB_YEAR_RANGE = { from: new Date().getFullYear() - 100, to: new Date().getFullYear() }
@@ -68,8 +60,6 @@ export function VerificationPage() {
   const { t: tValidation } = useTranslation('validation')
   const { date: formatDate, shortDate } = useFormatters()
   const [kind, setKind] = useState<StandaloneCheck>('background')
-  // Insurance only: the days the cover has to span. Blank checks that a policy is in force today.
-  const [cover, setCover] = useState<DateRange>(EMPTY_DATE_RANGE)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
@@ -104,20 +94,7 @@ export function VerificationPage() {
   async function insuranceOrder(): Promise<InsuranceOrderWire | undefined> {
     if (!(await form.trigger(['name', 'dateOfBirth']))) return undefined
     const { name, dateOfBirth } = form.getValues()
-    return {
-      name: name.trim(),
-      dateOfBirth,
-      coversFrom: cover.from || undefined,
-      coversThrough: cover.to || cover.from || undefined,
-      redirectUri: insuranceReturnUri(window.location),
-    }
-  }
-
-  function coverLabel({ from, to }: DateRange): string {
-    const start = fromDateValue(from)
-    if (!start) return t('verificationPage.form.coverToday')
-    const end = fromDateValue(to)
-    return end && to !== from ? `${shortDate(start)} – ${shortDate(end)}` : shortDate(start)
+    return { name: name.trim(), dateOfBirth, redirectUri: insuranceReturnUri(window.location) }
   }
 
   async function onSendInsuranceLink() {
@@ -134,16 +111,15 @@ export function VerificationPage() {
     insuranceLink.share(input)
   }
 
-  const actionFor: Record<LogAction, { label: string; run: (record: VerificationRecord) => void }> =
-    {
-      viewReport: { label: t('verificationPage.log.viewReport'), run: (r) => report.open(r.id) },
-      sendLink: { label: t('insuranceLink.action'), run: resend },
-      sendNewLink: { label: t('insuranceLink.actionNew'), run: resend },
-      delete: { label: t('verificationPage.log.delete'), run: setDeleting },
-    }
+  const actionFor: Record<LogAction, { label: string; run: (record: VerificationRecord) => void }> = {
+    viewReport: { label: t('verificationPage.log.viewReport'), run: (r) => report.open(r.id) },
+    sendLink: { label: t('insuranceLink.action'), run: resend },
+    sendNewLink: { label: t('insuranceLink.actionNew'), run: resend },
+    delete: { label: t('verificationPage.log.delete'), run: setDeleting },
+  }
 
   function actionsCell(record: VerificationRecord): Cell {
-    const actions = logActions(record, canDelete)
+    const actions = logActions(record, canDelete, today())
     // No menu at all rather than one that opens empty.
     if (actions.length === 0) return { kind: 'text', primary: '' }
     return {
@@ -216,9 +192,7 @@ export function VerificationPage() {
       { kind: 'text', primary: t(`details.checks.${record.kind}`) },
       {
         kind: 'text',
-        primary: record.customerId
-          ? t('verificationPage.log.renter')
-          : t('verificationPage.log.standalone'),
+        primary: record.customerId ? t('verificationPage.log.renter') : t('verificationPage.log.standalone'),
       },
       checkedCell(record),
       resultCell(record),
@@ -228,10 +202,7 @@ export function VerificationPage() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('verificationPage.title')}
-        description={t('verificationPage.description')}
-      />
+      <PageHeader title={t('verificationPage.title')} description={t('verificationPage.description')} />
 
       <Card as="section" className="overflow-hidden">
         <div className="p-[18px]">
@@ -358,35 +329,6 @@ export function VerificationPage() {
                 </div>
               </div>
             )}
-
-            {kind === 'insurance' && (
-              <div className="border-border-soft border-t pt-4">
-                <FormField
-                  label={t('verificationPage.form.coverNeeded')}
-                  description={t('verificationPage.form.coverHint')}
-                  className="md:max-w-[340px]"
-                >
-                  {({ id, 'aria-describedby': describedBy }) => (
-                    <DateRangePicker
-                      value={cover}
-                      onChange={setCover}
-                      trigger={
-                        <Button
-                          id={id}
-                          aria-describedby={describedBy}
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-between font-normal"
-                        >
-                          {coverLabel(cover)}
-                          <CalendarRange className="size-4 opacity-50" aria-hidden />
-                        </Button>
-                      }
-                    />
-                  )}
-                </FormField>
-              </div>
-            )}
           </div>
 
           {/* One action, for the check that is picked, with what happens next beside it. */}
@@ -412,11 +354,7 @@ export function VerificationPage() {
       </Card>
 
       {/* A renter's row brings their email; someone from the form is typed in by the counter. */}
-      <InsuranceLinkDialog
-        {...insuranceLink.dialog}
-        renterName={linkFor.name}
-        defaultEmail={linkFor.email}
-      />
+      <InsuranceLinkDialog {...insuranceLink.dialog} renterName={linkFor.name} defaultEmail={linkFor.email} />
 
       <ConfirmDialog
         open={Boolean(deleting)}
@@ -431,9 +369,7 @@ export function VerificationPage() {
         }
         confirmLabel={t('verificationPage.log.delete')}
         loading={removal.isPending}
-        onConfirm={() =>
-          deleting && removal.mutate(deleting.id, { onSettled: () => setDeleting(undefined) })
-        }
+        onConfirm={() => deleting && removal.mutate(deleting.id, { onSettled: () => setDeleting(undefined) })}
       />
 
       <RecordTable
@@ -442,10 +378,7 @@ export function VerificationPage() {
         rows={rows}
         emptyState={
           log.isError ? (
-            <ErrorState
-              description={t('verificationPage.log.loadError')}
-              onRetry={() => log.refetch()}
-            />
+            <ErrorState description={t('verificationPage.log.loadError')} onRetry={() => log.refetch()} />
           ) : (
             t('verificationPage.log.empty')
           )

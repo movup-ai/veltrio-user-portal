@@ -83,6 +83,31 @@ export const PAYMENT_REFUSALS = [
 
 export type PaymentRefusal = (typeof PAYMENT_REFUSALS)[number]
 
+/** Why the API will not take a request to extend; hints live in the translations. */
+export const EXTENSION_REFUSALS = [
+  'not_confirmed',
+  'booking_cancelled',
+  'booking_returned',
+  'vehicle_removed',
+  'extension_pending',
+] as const
+
+export type ExtensionRefusal = (typeof EXTENSION_REFUSALS)[number]
+
+/** What the API answers a quote or a request it turns down with, where the dialog has words for it. */
+export const EXTENSION_ERRORS = [
+  ...EXTENSION_REFUSALS,
+  'vehicle_unavailable',
+  'return_not_later',
+  'return_in_past',
+  'rental_too_long',
+  'vehicle_has_no_rates',
+  'quote_changed',
+  'extension_paid',
+] as const
+
+export type ExtensionError = (typeof EXTENSION_ERRORS)[number]
+
 /**
  * The payment badge's colour, as a shared status-colour key: amber while nothing is taken, teal
  * once the rental or the deposit is, green when both are.
