@@ -19,20 +19,17 @@ import type {
   StandaloneOrderWire,
   VerificationOrder,
 } from '../api/booking.mapper'
-import { verificationApi, type CoverWindow } from '../api/verification.api'
+import { verificationApi } from '../api/verification.api'
 import { VERIFICATION_POLL_MS } from '../constants/verification.constants'
-import {
-  TERMINAL_VERIFICATION_STATUSES,
-  type ProviderKind,
-} from '../types/booking.types'
+import { TERMINAL_VERIFICATION_STATUSES, type ProviderKind } from '../types/booking.types'
 import { readInsuranceRedirect } from '../utils/booking.insurance-redirect'
 import { bookingKeys } from './use-bookings'
 
 export const verificationKeys = {
   detail: (reference: string, kind: ProviderKind = 'background') =>
     [...bookingKeys.all, 'verification', reference, kind] as const,
-  forEmail: (email: string, kind: ProviderKind = 'background', cover?: CoverWindow) =>
-    [...bookingKeys.all, 'verification', 'email', email, kind, cover ?? null] as const,
+  forEmail: (email: string, kind: ProviderKind = 'background') =>
+    [...bookingKeys.all, 'verification', 'email', email, kind] as const,
   logs: () => ['verifications'] as const,
   log: (params: PaginationParams) => ['verifications', params] as const,
 }
@@ -44,18 +41,14 @@ export const verificationKeys = {
  * before it knows their id, and looking them up by id let the card say "nothing on file"
  * about someone the order endpoint then refused as already screened.
  */
-export function useVerificationByEmail(
-  email: string | undefined,
-  kind: ProviderKind = 'background',
-  cover?: CoverWindow,
-) {
+export function useVerificationByEmail(email: string | undefined, kind: ProviderKind = 'background') {
   // Debounced and shape-checked: the counter types this a character at a time, and a half
   // written address is a request that can only come back empty.
   const trimmed = useDebounced(email?.trim().toLowerCase() ?? '')
 
   return useQuery({
-    queryKey: verificationKeys.forEmail(trimmed, kind, cover),
-    queryFn: () => verificationApi.forEmail(trimmed, kind, cover),
+    queryKey: verificationKeys.forEmail(trimmed, kind),
+    queryFn: () => verificationApi.forEmail(trimmed, kind),
     enabled: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed),
     refetchInterval: (query) => {
       const status = query.state.data?.status
@@ -137,7 +130,6 @@ export function useOrderVerification(reference: string) {
     },
   })
 }
-
 
 const REPORT_PDF = {
   fallbackName: 'background-check.pdf',
@@ -224,10 +216,7 @@ export function useDeleteVerification() {
 
 /** Opens a report from the log, where a standalone check has no renter to key on. */
 export function useVerificationReportById() {
-  return usePdfOpener(
-    (verificationId: string) => verificationApi.reportById(verificationId),
-    REPORT_PDF,
-  )
+  return usePdfOpener((verificationId: string) => verificationApi.reportById(verificationId), REPORT_PDF)
 }
 
 /** What the return tab tells the tab the counter started from, which is the one left open. */

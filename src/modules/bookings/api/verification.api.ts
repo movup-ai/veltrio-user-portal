@@ -16,12 +16,6 @@ import {
   type StandaloneOrderWire,
 } from './booking.mapper'
 
-/** The rental an insurance verdict has to answer for, as `YYYY-MM-DD` dates. */
-export interface CoverWindow {
-  from: string
-  to: string
-}
-
 /**
  * Verifications: background checks through Checkr, insurance through Axle.
  *
@@ -43,12 +37,9 @@ export const verificationApi = {
    * knows a typed-in renter by email before it knows their customer id, and looking them up
    * any other way let the card contradict the refusal ordering would give.
    */
-  forEmail: (email: string, kind: ProviderKind = 'background', cover?: CoverWindow) =>
+  forEmail: (email: string, kind: ProviderKind = 'background') =>
     apiClient
-      .get<VerificationWire | null>('/customers/verification', {
-        // An insurance verdict judged for other dates is no answer for this rental.
-        params: { email, kind, coversFrom: cover?.from, coversThrough: cover?.to },
-      })
+      .get<VerificationWire | null>('/customers/verification', { params: { email, kind } })
       .then((r) => (r.data ? toVerification(r.data) : undefined)),
 
   /**
@@ -98,12 +89,10 @@ export const verificationApi = {
    * `completeInsurance` turns the code their redirect carries into a verdict.
    */
   startInsurance: (input: InsuranceOrderWire) =>
-    apiClient
-      .post<InsuranceSessionWire>('/verifications/insurance', input)
-      .then((r) => ({
-        verification: toVerification(r.data.verification),
-        ignitionUri: r.data.ignitionUri,
-      })),
+    apiClient.post<InsuranceSessionWire>('/verifications/insurance', input).then((r) => ({
+      verification: toVerification(r.data.verification),
+      ignitionUri: r.data.ignitionUri,
+    })),
 
   /**
    * Trades the redirect's single-use code for the policy the renter shared. Public, since the

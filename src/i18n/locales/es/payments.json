@@ -142,7 +142,8 @@
     "kind": {
       "charge": "Pago con tarjeta",
       "deposit": "Depósito",
-      "manual": "Pago registrado"
+      "manual": "Pago registrado",
+      "extension": "Pago de ampliación"
     },
     "status": {
       "requires_payment": "Pendiente de pago",
@@ -182,6 +183,108 @@
       "subject": "Tu recibo de {{company}} para {{reference}}",
       "message": "Hola {{name}}, aquí tienes el recibo de tu alquiler {{reference}}: {{url}}",
       "download": "Descargar PDF"
+    }
+  },
+  "extension": {
+    "title": "Ampliar alquiler",
+    "description": "Retrasa la devolución a una hora posterior. Todo el alquiler se vuelve a calcular con su nueva duración.",
+    "currentReturn": "Devolución prevista",
+    "availableUntil": "Vehículo libre hasta",
+    "newDate": "Nueva fecha de devolución",
+    "newTime": "Hora",
+    "problems": {
+      "notLater": "Elige una hora posterior a la devolución actual.",
+      "inPast": "Esa hora ya ha pasado.",
+      "pastNextBooking": "La siguiente reserva recoge este vehículo el {{when}}."
+    },
+    "quote": {
+      "added": "Tiempo adicional",
+      "rates": "Todo el alquiler con su nueva duración",
+      "line": "{{label}} × {{count}}",
+      "currentTotal": "Total actual del alquiler",
+      "newTotal": "Nuevo total del alquiler",
+      "amount": "A pagar por la ampliación",
+      "free": "Sin cargo adicional"
+    },
+    "notes": {
+      "payFirst": "La fecha de devolución cambia cuando {{name}} haya pagado. Recibirás un enlace para enviárselo, o puedes registrar el pago en el mostrador.",
+      "beforePickup": "Se aplica de inmediato. El importe adicional se suma al saldo, y un contrato ya enviado o firmado se sustituye, así que debe firmarse de nuevo antes de la recogida.",
+      "free": "Se aplica de inmediato, sin nada más que pagar."
+    },
+    "warnings": {
+      "depositLapses": "La retención del depósito caduca el {{when}}, antes de la nueva devolución. Solicita una nueva retención si aún la necesitas.",
+      "insuranceEnds": "El seguro verificado del cliente caduca el {{when}}, antes de la nueva devolución."
+    },
+    "submit": {
+      "request": "Solicitar ampliación",
+      "extend": "Ampliar alquiler"
+    },
+    "errors": {
+      "not_confirmed": "La reserva debe confirmarse antes de poder ampliarla.",
+      "booking_cancelled": "La reserva está cancelada.",
+      "booking_returned": "El vehículo ya se ha devuelto, así que no hay nada que ampliar.",
+      "vehicle_removed": "El vehículo se eliminó, así que no se puede calcular el tiempo adicional.",
+      "extension_pending": "Ya hay una ampliación pendiente de pago.",
+      "vehicle_unavailable": "Otra reserva tiene este vehículo antes de esa hora.",
+      "return_not_later": "Elige una hora posterior a la devolución actual.",
+      "return_in_past": "Esa hora ya ha pasado.",
+      "rental_too_long": "Un alquiler puede durar 365 días como máximo.",
+      "vehicle_has_no_rates": "Este vehículo no tiene tarifas para calcular el tiempo adicional.",
+      "quote_changed": "El precio cambió mientras esto estaba abierto. Revisa el nuevo importe y confirma de nuevo.",
+      "extension_paid": "El cliente acaba de pagar una solicitud anterior. Revisa la fecha de devolución antes de solicitarla de nuevo.",
+      "loadFailed": "No se pudo comprobar si esta reserva se puede ampliar. Recarga la página para intentarlo de nuevo."
+    },
+    "pending": {
+      "title": "Ampliación pendiente de pago",
+      "subtitle": "La fecha de devolución cambia cuando se pague",
+      "newReturn": "Nueva devolución",
+      "amount": "A pagar",
+      "expires": "Fechas reservadas hasta",
+      "agreed": "Aceptada por el cliente",
+      "notYet": "Aún no",
+      "share": "Enviar enlace",
+      "markPaid": "Registrar pago",
+      "cancel": "Retirar"
+    },
+    "refundDue": {
+      "title": "Pago de ampliación por reembolsar",
+      "subtitle": "Se pagó después de que la solicitud caducara, y las fechas ya no estaban libres",
+      "amount": "A reembolsar",
+      "how": "Qué hacer",
+      "hint": "Reembólsalo desde la tarjeta de pagos, o solicita de nuevo la ampliación si el vehículo está libre."
+    },
+    "link": {
+      "title": "Enlace de ampliación",
+      "description": "Envía este enlace a {{name}} para que acepte la nueva devolución y la pague.",
+      "newReturn": "Nueva devolución",
+      "charge": "Cargo por ampliación",
+      "subject": "Amplía tu alquiler {{reference}} con {{company}}",
+      "message": "Hola {{name}}, para mantener tu alquiler {{reference}} hasta el {{when}}, confirma y paga {{amount}} aquí: {{url}}"
+    },
+    "paid": {
+      "title": "Registrar el pago de la ampliación",
+      "description": "Para dinero cobrado fuera de Stripe, como efectivo. Al registrarlo cambia la fecha de devolución.",
+      "amount": "Cargo por ampliación",
+      "method": "Forma de pago",
+      "submit": "Registrar y ampliar"
+    },
+    "cancelDialog": {
+      "title": "¿Retirar la solicitud de ampliación?",
+      "description": "El enlace enviado a {{name}} deja de funcionar, y el vehículo sigue con devolución el {{when}}.",
+      "confirm": "Retirar solicitud"
+    },
+    "toast": {
+      "requested": "Ampliación solicitada",
+      "extended": "Alquiler ampliado",
+      "cancelled": "Solicitud de ampliación retirada",
+      "cancelFailed": "No se pudo retirar la solicitud",
+      "recordFailed": "No se pudo registrar el pago",
+      "addendumFailed": "No se pudo abrir el anexo"
+    },
+    "addendum": {
+      "label": "Anexo {{number}}",
+      "detail": "Devolución cambiada al {{when}}",
+      "open": "Ver anexo {{number}}"
     }
   }
 }

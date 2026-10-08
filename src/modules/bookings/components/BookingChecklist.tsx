@@ -29,6 +29,8 @@ interface BookingChecklistProps {
   sharing?: ProviderKind
   /** The rental is over, so nothing is checked again: reports can still be read. */
   closed?: boolean
+  /** The rental's last day, as `YYYY-MM-DD`, so cover that runs out before it can be flagged. */
+  returnOn?: string
   /** Fired for a kind with no provider — verify it, or open what was signed. */
   onAction: (kind: VerificationKind) => void
 }
@@ -57,6 +59,7 @@ export function BookingChecklist({
   onShare,
   sharing,
   closed,
+  returnOn,
   onAction,
 }: BookingChecklistProps) {
   const { t } = useTranslation('bookings')
@@ -115,25 +118,19 @@ export function BookingChecklist({
                   openingReport={openingReport}
                   // Sent to the renter, never opened here: see SHAREABLE_KINDS.
                   onOrder={
-                    closed || (onShare && SHAREABLE_KINDS.includes(kind))
-                      ? undefined
-                      : () => onOrder(kind)
+                    closed || (onShare && SHAREABLE_KINDS.includes(kind)) ? undefined : () => onOrder(kind)
                   }
                   onViewReport={() => onViewReport(kind)}
                   onShare={
-                    !closed && onShare && SHAREABLE_KINDS.includes(kind)
-                      ? () => onShare(kind)
-                      : undefined
+                    !closed && onShare && SHAREABLE_KINDS.includes(kind) ? () => onShare(kind) : undefined
                   }
                   sharing={sharing === kind}
+                  returnOn={returnOn}
                 />
               ) : (
                 <>
                   <p className="m-0 text-[13px] font-semibold">{t(`details.checks.${check.key}`)}</p>
-                  <p
-                    className="text-fg-4 m-0 mt-1 text-[11.5px] leading-snug"
-                    style={{ textWrap: 'pretty' }}
-                  >
+                  <p className="text-fg-4 m-0 mt-1 text-[11.5px] leading-snug" style={{ textWrap: 'pretty' }}>
                     {t(`details.checkHints.${check.key}`)}
                   </p>
 
@@ -144,9 +141,7 @@ export function BookingChecklist({
                     onClick={() => onAction(check.key)}
                     className="mt-auto w-full"
                   >
-                    {check.done
-                      ? t(`details.checkActions.${check.key}`)
-                      : t('details.checklist.verify')}
+                    {check.done ? t(`details.checkActions.${check.key}`) : t('details.checklist.verify')}
                   </Button>
                 </>
               )}

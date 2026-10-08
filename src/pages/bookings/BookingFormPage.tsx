@@ -61,10 +61,7 @@ import {
 import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
 import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
-import {
-  customerLabel,
-  customerSearchTerm,
-} from '@/modules/bookings/utils/booking.customer-search'
+import { customerLabel, customerSearchTerm } from '@/modules/bookings/utils/booking.customer-search'
 import { BookingPriceSummary } from '@/modules/bookings/components/BookingPriceSummary'
 import { BookingRatePlan } from '@/modules/bookings/components/BookingRatePlan'
 import { BookingVehiclePicker, type VehicleOption } from '@/modules/bookings/components/BookingVehiclePicker'
@@ -76,10 +73,7 @@ import {
 } from '@/modules/bookings/hooks/use-booking-drafts'
 import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
-import {
-  verificationForRenter,
-  type RanVerification,
-} from '@/modules/bookings/utils/booking.verification'
+import { verificationForRenter, type RanVerification } from '@/modules/bookings/utils/booking.verification'
 import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
@@ -300,11 +294,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   })
 
   // Only the bookings touching this window — the API does the overlap filtering.
-  const { data: scheduleData, isReady: scheduleReady } = useBookingSchedule(
-    pickupAt,
-    returnAt,
-    hours > 0,
-  )
+  const { data: scheduleData, isReady: scheduleReady } = useBookingSchedule(pickupAt, returnAt, hours > 0)
   // Availability is only meaningful once the schedule describes the dates on screen: until it
   // has loaded, an empty list would mark every car free and let a booked one be picked.
   const schedule = scheduleData ?? EMPTY_SCHEDULE
@@ -377,7 +367,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const { data: insurance, isFetching: loadingInsurance } = useVerificationByEmail(
     values.customerEmail,
     'insurance',
-    { from: values.pickupDate, to: values.returnDate },
   )
   useInsuranceResults()
   const insuranceLink = useInsuranceLinkDialog()
@@ -387,9 +376,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
     name: values.customerName.trim(),
     email: values.customerEmail.trim().toLowerCase(),
     dateOfBirth: values.customerDob,
-    // There is no booking yet to read the rental window from.
-    coversFrom: values.pickupDate,
-    coversThrough: values.returnDate,
     redirectUri: insuranceReturnUri(window.location),
   })
 
@@ -993,7 +979,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   >
                     {(fieldProps) => <Input type="tel" {...register('customerPhone')} {...fieldProps} />}
                   </FormField>
-                                    <FormField
+                  <FormField
                     label={t('form.fields.customerDob')}
                     error={errors.customerDob?.message}
                     required
@@ -1142,9 +1128,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                     onRunCheck={handleRunCheck}
                     running={orderVerification.isPending}
                     runBlockedReason={runBlockedReason}
-                    onViewReport={
-                      verification ? () => verificationReport.open() : undefined
-                    }
+                    onViewReport={verification ? () => verificationReport.open() : undefined}
                     openingReport={verificationReport.isPending}
                   />
                 </div>
@@ -1153,11 +1137,10 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                     kind="insurance"
                     verification={insurance}
                     loading={loadingInsurance}
+                    returnOn={values.returnDate}
                     onShare={() => insuranceLink.share(insuranceOrder())}
                     sharing={insuranceLink.sharing}
-                    runBlockedReason={
-                      runBlockedReason && t('verification.insurance.needsRenter')
-                    }
+                    runBlockedReason={runBlockedReason && t('verification.insurance.needsRenter')}
                   />
                   <InsuranceLinkDialog
                     {...insuranceLink.dialog}
@@ -1261,11 +1244,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                       {/* The rates the engine chose; what they cost lives in the breakdown panel. */}
                       <ReviewRow
                         label={t('form.review.rate')}
-                        value={
-                          pricing
-                            ? formatPlanLines(planLineNames(pricing.plan.lines), tVehicles)
-                            : '—'
-                        }
+                        value={pricing ? formatPlanLines(planLineNames(pricing.plan.lines), tVehicles) : '—'}
                       />
                     </ReviewRowGrid>
                   ) : (
@@ -1316,9 +1295,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   {verification || insurance ? (
                     <div className="flex flex-col gap-3">
                       {verification && <BookingVerificationStatus verification={verification} />}
-                      {insurance && (
-                        <BookingVerificationStatus kind="insurance" verification={insurance} />
-                      )}
+                      {insurance && <BookingVerificationStatus kind="insurance" verification={insurance} />}
                     </div>
                   ) : (
                     <p className="text-fg-4 text-[14px]">{t('form.review.noVerification')}</p>

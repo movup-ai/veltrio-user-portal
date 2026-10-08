@@ -2,11 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 // Initialises the translations; the tiles used to pull this in only by accident.
 import '@/i18n'
-import type {
-  BookingCheckStep,
-  BookingVerification,
-  ProviderKind,
-} from '../types/booking.types'
+import type { BookingCheckStep, BookingVerification, ProviderKind } from '../types/booking.types'
 import { BookingChecklist } from './BookingChecklist'
 
 const CHECKS: BookingCheckStep[] = [
@@ -73,7 +69,7 @@ describe('which tiles a provider answers for', () => {
       insurance: verification({ status: 'consider', hasReport: false }),
     })
 
-    expect(screen.getByText(/the policy does not clear this rental/i)).toBeInTheDocument()
+    expect(screen.getByText(/the policy does not clear this renter/i)).toBeInTheDocument()
     expect(screen.queryByText(/records were found/i)).not.toBeInTheDocument()
   })
 

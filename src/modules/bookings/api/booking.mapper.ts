@@ -161,9 +161,6 @@ export interface InsuranceOrderWire {
   dateOfBirth: string
   email?: string
   reference?: string
-  /** The rental window, from the booking form; the API reads it off the booking otherwise. */
-  coversFrom?: string
-  coversThrough?: string
   redirectUri: string
 }
 
@@ -200,8 +197,7 @@ export interface VerificationListWire {
   email: string | null
   customerId: string | null
   bookingReference?: string | null
-  coversFrom?: string | null
-  coversThrough?: string | null
+  validUntil?: string | null
   status: VerificationStatus
   recordsFound: boolean
   hasReport: boolean
@@ -226,9 +222,8 @@ export interface VerificationWire {
   canReorder: boolean
   reused: boolean
   policy?: InsurancePolicyWire | null
-  coversFrom?: string | null
-  coversThrough?: string | null
-  forOtherDates?: boolean
+  validUntil?: string | null
+  expired?: boolean
   completedAt: string | null
   createdAt: string
   updatedAt: string
@@ -384,9 +379,8 @@ export function toVerification(wire: VerificationWire): BookingVerification {
           expiresOn: wire.policy.expiresOn ?? undefined,
         }
       : undefined,
-    coversFrom: wire.coversFrom ?? undefined,
-    coversThrough: wire.coversThrough ?? undefined,
-    forOtherDates: wire.forOtherDates ?? false,
+    validUntil: wire.validUntil ?? undefined,
+    expired: wire.expired ?? false,
     completedAt: wire.completedAt ?? undefined,
     createdAt: wire.createdAt,
     updatedAt: wire.updatedAt,
@@ -614,8 +608,7 @@ export function toVerificationListRow(wire: VerificationListWire): VerificationR
     email: wire.email ?? undefined,
     customerId: wire.customerId ?? undefined,
     bookingReference: wire.bookingReference ?? undefined,
-    coversFrom: wire.coversFrom ?? undefined,
-    coversThrough: wire.coversThrough ?? undefined,
+    validUntil: wire.validUntil ?? undefined,
     status: wire.status,
     recordsFound: wire.recordsFound,
     hasReport: wire.hasReport,

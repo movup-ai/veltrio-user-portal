@@ -434,9 +434,8 @@ export interface VerificationRecord {
   customerId?: string
   /** The booking that called for it, so a new insurance link lands on that booking. */
   bookingReference?: string
-  /** The rental an insurance check was judged for, as `YYYY-MM-DD` dates. */
-  coversFrom?: string
-  coversThrough?: string
+  /** The last day an insurance verdict stands, as `YYYY-MM-DD`. Absent without one. */
+  validUntil?: string
   status: VerificationStatus
   recordsFound: boolean
   hasReport: boolean
@@ -469,14 +468,13 @@ export interface BookingVerification {
   reused: boolean
   /** The policy an insurance verdict was read from, once the renter has linked one. */
   policy?: { carrier?: string; policyNumber?: string; expiresOn?: string }
-  /** The rental an insurance check was judged for, as `YYYY-MM-DD` dates. */
-  coversFrom?: string
-  coversThrough?: string
   /**
-   * The renter's latest insurance check, returned because none answers this rental's dates.
-   * Shown as on file, never as cover for these dates.
+   * The last day an insurance verdict stands, as `YYYY-MM-DD`: the policy's own expiry, or 90
+   * days after the check when the insurer gave none.
    */
-  forOtherDates?: boolean
+  validUntil?: string
+  /** Past that day: still the renter's last check, shown as on file but no longer as cover. */
+  expired?: boolean
   completedAt?: string
   createdAt: string
   updatedAt: string

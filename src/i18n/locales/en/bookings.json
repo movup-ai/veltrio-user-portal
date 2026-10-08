@@ -229,10 +229,11 @@
     },
     "payment": {
       "title": "Payment",
-      "dueNote": "{{amount}} still to collect from the renter.",
+      "unpaidNote": "Nothing has been paid yet.",
       "capturedNote": "Captured {{when}} · {{method}}",
       "refunded": "Refunded",
-      "balance": "Balance",
+      "balance": "Balance due",
+      "balanceHint": "Still to collect from the renter",
       "sendLink": "Send payment link",
       "markPaid": "Mark as paid",
       "downloadInvoice": "Invoice",
@@ -276,7 +277,7 @@
     },
     "manage": {
       "title": "Manage booking",
-      "subtitle": "Change the rental before handover",
+      "subtitle": "Change the rental while it is open",
       "modify": "Modify dates",
       "extend": "Extend rental",
       "addDriver": "Add driver",
@@ -645,7 +646,7 @@
         "clear": "Clear",
         "consider": "Needs review",
         "error": "Could not be run",
-        "otherDates": "Other dates"
+        "expired": "Expired"
       },
       "insurance": {
         "notStarted": "Not started",
@@ -653,7 +654,7 @@
         "clear": "Covered",
         "consider": "Needs review",
         "error": "Could not be run",
-        "otherDates": "Other dates"
+        "expired": "Expired"
       }
     },
     "hint": {
@@ -663,15 +664,15 @@
         "clear": "No records were found for this renter.",
         "consider": "Records were found. Read the report before handover.",
         "error": "Checkr could not run this check. Running it again starts over.",
-        "otherDates": "The last check on file was for another booking."
+        "expired": "The last check on file is too old to count. Run it again."
       },
       "insurance": {
-        "notStarted": "The renter connects their own insurer, and we check the policy covers every day of the rental.",
+        "notStarted": "The renter connects their own insurer, and we check that an active policy lists them. One check stands until that policy expires.",
         "running": "Waiting for the renter to connect their insurer. Send the link again if they lost it.",
-        "clear": "An active policy covers the whole rental.",
-        "consider": "The policy does not clear this rental on its own. Check it before handing over keys.",
+        "clear": "An active policy lists this renter.",
+        "consider": "The policy does not clear this renter on its own. Check it before handing over keys.",
         "error": "Axle could not finish this check. Starting again opens a new session.",
-        "otherDates": "The last check on file was for another rental. Send the link to check these dates."
+        "expired": "The insurance verified for this renter has run out. Send the link to verify it again."
       }
     },
     "action": {
@@ -710,14 +711,17 @@
       "checking": "Checking whether this renter’s insurance has been verified…",
       "none": "Nothing on file. Send the renter a link to connect their insurer on their own phone.",
       "running": "Waiting for the renter to connect their insurer. The result appears here when they finish.",
-      "clearOn": "Checked {{when}} · an active policy covers the whole rental",
-      "recordsOn": "Checked {{when}} · the policy does not clear this rental, check it before handing over keys",
+      "clearOn": "Checked {{when}} · an active policy lists this renter",
+      "recordsOn": "Checked {{when}} · the policy does not clear this renter, check it before handing over keys",
       "needsRenter": "Add the renter’s full name, email and date of birth first. The policy has to list this renter, and the result is saved against their email.",
       "needsDob": "This renter has no date of birth on file. Add it to their profile first.",
-      "otherDates": "Last checked for {{range}} · not these dates, send the link to check this rental",
-      "otherRental": "Last checked for another rental · send the link to check these dates"
+      "expiredOn": "Ran out {{when}} · send the link to verify again"
     },
-    "policyExpires": "Expires {{date}}"
+    "policyExpires": "Expires {{date}}",
+    "validity": {
+      "until": "Stands until {{date}}",
+      "endsBeforeReturn": "Runs out {{date}}, before this rental's return"
+    }
   },
   "verificationPage": {
     "title": "Verification",
@@ -758,10 +762,7 @@
         "insurance": "You get a link to copy or send them. The result appears below when they finish."
       },
       "createLink": "Create insurance link",
-      "cancel": "Cancel",
-      "coverNeeded": "Insurance cover needed",
-      "coverHint": "The days the policy has to cover, such as a rental. Leave blank to check it is in force today.",
-      "coverToday": "Today only"
+      "cancel": "Cancel"
     },
     "log": {
       "title": "Verification history",

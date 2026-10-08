@@ -1,7 +1,7 @@
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
 import type { PaymentRefusal } from '../constants/payment.constants'
 
-export type BookingPaymentKind = 'charge' | 'deposit' | 'manual'
+export type BookingPaymentKind = 'charge' | 'deposit' | 'manual' | 'extension'
 
 export type BookingPaymentStatus =
   'requires_payment' | 'processing' | 'succeeded' | 'held' | 'captured' | 'released' | 'failed' | 'canceled'

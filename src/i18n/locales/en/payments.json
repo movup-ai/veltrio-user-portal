@@ -142,7 +142,8 @@
     "kind": {
       "charge": "Card payment",
       "deposit": "Deposit",
-      "manual": "Recorded payment"
+      "manual": "Recorded payment",
+      "extension": "Extension payment"
     },
     "status": {
       "requires_payment": "Awaiting payment",
@@ -182,6 +183,108 @@
       "subject": "Your receipt from {{company}} for {{reference}}",
       "message": "Hi {{name}}, here is your receipt for rental {{reference}}: {{url}}",
       "download": "Download PDF"
+    }
+  },
+  "extension": {
+    "title": "Extend rental",
+    "description": "Move the return to a later time. The whole rental is priced again at its new length.",
+    "currentReturn": "Due back",
+    "availableUntil": "Vehicle free until",
+    "newDate": "New return date",
+    "newTime": "Time",
+    "problems": {
+      "notLater": "Pick a time after the current return.",
+      "inPast": "That time has already passed.",
+      "pastNextBooking": "The next booking takes this vehicle on {{when}}."
+    },
+    "quote": {
+      "added": "Extra time",
+      "rates": "Whole rental at its new length",
+      "line": "{{label}} × {{count}}",
+      "currentTotal": "Rental total now",
+      "newTotal": "New rental total",
+      "amount": "To pay for the extension",
+      "free": "No extra charge"
+    },
+    "notes": {
+      "payFirst": "The return date moves once {{name}} has paid. You get a link to send them, or you can record the payment at the counter.",
+      "beforePickup": "Takes effect straight away. Any extra is added to the balance, and an agreement already sent or signed is replaced, so it has to be signed again before pickup.",
+      "free": "Takes effect straight away, with nothing more to pay."
+    },
+    "warnings": {
+      "depositLapses": "The deposit hold lapses on {{when}}, before the new return. Ask for a new hold if you still need one.",
+      "insuranceEnds": "The renter's verified insurance runs out on {{when}}, before the new return."
+    },
+    "submit": {
+      "request": "Request extension",
+      "extend": "Extend rental"
+    },
+    "errors": {
+      "not_confirmed": "The reservation has to be confirmed before it can be extended.",
+      "booking_cancelled": "The booking is cancelled.",
+      "booking_returned": "The vehicle is back, so there is nothing to extend.",
+      "vehicle_removed": "The vehicle was deleted, so the extra time can't be priced.",
+      "extension_pending": "An extension is already waiting to be paid.",
+      "vehicle_unavailable": "Another booking has this vehicle before then.",
+      "return_not_later": "Pick a time after the current return.",
+      "return_in_past": "That time has already passed.",
+      "rental_too_long": "A rental can be at most 365 days.",
+      "vehicle_has_no_rates": "This vehicle has no rates to price the extra time at.",
+      "quote_changed": "The price changed while this was open. Check the new figure and confirm again.",
+      "extension_paid": "The renter has just paid for an earlier request. Check the return date before asking again.",
+      "loadFailed": "Couldn't check whether this booking can be extended. Reload the page to try again."
+    },
+    "pending": {
+      "title": "Extension waiting for payment",
+      "subtitle": "The return date moves once it is paid",
+      "newReturn": "New return",
+      "amount": "To pay",
+      "expires": "Dates kept until",
+      "agreed": "Renter agreed",
+      "notYet": "Not yet",
+      "share": "Send link",
+      "markPaid": "Record payment",
+      "cancel": "Withdraw"
+    },
+    "refundDue": {
+      "title": "Extension payment to refund",
+      "subtitle": "It was paid after the request ran out, and the dates had gone",
+      "amount": "To refund",
+      "how": "What to do",
+      "hint": "Refund it from the payment card, or ask for the extension again if the vehicle is free."
+    },
+    "link": {
+      "title": "Extension link",
+      "description": "Send {{name}} this link to agree to the later return and pay for it.",
+      "newReturn": "New return",
+      "charge": "Extension charge",
+      "subject": "Extend your {{company}} rental {{reference}}",
+      "message": "Hi {{name}}, to keep your rental {{reference}} until {{when}}, please confirm and pay {{amount}} here: {{url}}"
+    },
+    "paid": {
+      "title": "Record the extension payment",
+      "description": "For money taken outside Stripe, such as cash. Recording it moves the return date.",
+      "amount": "Extension charge",
+      "method": "How it was paid",
+      "submit": "Record and extend"
+    },
+    "cancelDialog": {
+      "title": "Withdraw the extension request?",
+      "description": "The link sent to {{name}} stops working, and the vehicle stays due back {{when}}.",
+      "confirm": "Withdraw request"
+    },
+    "toast": {
+      "requested": "Extension requested",
+      "extended": "Rental extended",
+      "cancelled": "Extension request withdrawn",
+      "cancelFailed": "Couldn't withdraw the request",
+      "recordFailed": "Couldn't record the payment",
+      "addendumFailed": "Couldn't open the addendum"
+    },
+    "addendum": {
+      "label": "Addendum {{number}}",
+      "detail": "Return moved to {{when}}",
+      "open": "View addendum {{number}}"
     }
   }
 }

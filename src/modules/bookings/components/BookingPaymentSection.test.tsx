@@ -319,7 +319,8 @@ describe('BookingPaymentSection', () => {
     const request = await screen.findByRole('button', { name: 'Request deposit' })
     expect(request.className).toContain('bg-primary')
     expect(screen.getByText('Rental paid')).toBeInTheDocument()
-    expect(screen.queryByText('Balance')).not.toBeInTheDocument()
+    // Nothing left to collect, so nothing is set apart as owed.
+    expect(screen.queryByText('Balance due')).not.toBeInTheDocument()
     await user.click(request)
 
     const dialog = await screen.findByRole('dialog')
@@ -383,12 +384,33 @@ describe('BookingPaymentSection', () => {
     expect(screen.getByRole('button', { name: 'Edit return charges' })).toBeEnabled()
   })
 
-  it('shows what a part payment leaves', async () => {
+  it('sets what a part payment leaves apart from the figures around it', async () => {
     get.mockResolvedValue({ ...UNPAID, paid: 100, balance: 219 })
     renderAs([])
 
-    expect(await screen.findByText('Balance')).toBeInTheDocument()
-    expect(screen.getByText('$219')).toBeInTheDocument()
+    const due = (await screen.findByText('Balance due')).closest('dl')
+    expect(due).toHaveTextContent('$219')
+    expect(due).toHaveTextContent('Still to collect from the renter')
+    // What was taken is a plain line beside it, not part of the callout.
+    expect(due).not.toHaveTextContent('$100')
+    expect(screen.getByText('Paid')).toBeInTheDocument()
+  })
+
+  it('does not repeat the total as a balance when nothing has been paid yet', async () => {
+    get.mockResolvedValue(UNPAID)
+    renderAs([])
+
+    // The total is the balance: a second line with the same figure under it only adds noise.
+    expect(await screen.findByText('Nothing has been paid yet.')).toBeInTheDocument()
+    expect(screen.queryByText('Balance due')).not.toBeInTheDocument()
+  })
+
+  it('shows a balance that return charges pushed past the total, even with nothing paid', async () => {
+    get.mockResolvedValue({ ...UNPAID, balance: 469, returnChargesTotal: 150 })
+    renderAs([])
+
+    expect((await screen.findByText('Balance due')).closest('dl')).toHaveTextContent('$469')
+    expect(screen.queryByText('Nothing has been paid yet.')).not.toBeInTheDocument()
   })
 
   it('offers neither the invoice nor the receipt until something is paid', async () => {

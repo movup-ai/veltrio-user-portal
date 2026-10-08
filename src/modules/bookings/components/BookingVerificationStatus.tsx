@@ -8,7 +8,7 @@ import { TONE_ICON, TONE_LABEL, TONE_RING } from '../constants/verification.cons
 import type { BookingVerification, ProviderKind } from '../types/booking.types'
 import { sendsNewLink, verificationView } from '../utils/booking.verification'
 import { RunCheckButton } from './RunCheckButton'
-import { PolicyLine } from './VerificationCheckRow'
+import { PolicyLine, ValidityLine } from './VerificationCheckRow'
 
 interface BookingVerificationStatusProps {
   kind?: ProviderKind
@@ -26,6 +26,8 @@ interface BookingVerificationStatusProps {
   /** Hands the renter a link to finish the check on their own device. Blocked as running is. */
   onShare?: () => void
   sharing?: boolean
+  /** The rental's last day, as `YYYY-MM-DD`, so cover that runs out before it can be flagged. */
+  returnOn?: string
 }
 
 /**
@@ -45,6 +47,7 @@ export function BookingVerificationStatus({
   openingReport,
   onShare,
   sharing,
+  returnOn,
 }: BookingVerificationStatusProps) {
   const { t } = useTranslation('bookings')
   const { shortDate } = useFormatters()
@@ -54,15 +57,12 @@ export function BookingVerificationStatus({
   function detail() {
     if (loading) return t(`verification.${kind}.checking`)
     if (!verification) return t(`verification.${kind}.none`)
-    if (verification.forOtherDates) {
-      // Dates, not instants: `new Date('2026-10-01')` is a day early in the US.
-      const start = fromDateValue(verification.coversFrom ?? '')
-      const end = fromDateValue(verification.coversThrough ?? '')
-      return start && end
-        ? t('verification.insurance.otherDates', {
-            range: `${shortDate(start)} – ${shortDate(end)}`,
-          })
-        : t('verification.insurance.otherRental')
+    if (verification.expired) {
+      // A date, not an instant: `new Date('2026-10-01')` is a day early in the US.
+      const ended = fromDateValue(verification.validUntil ?? '')
+      return ended
+        ? t('verification.insurance.expiredOn', { when: shortDate(ended) })
+        : t('verification.hint.insurance.expired')
     }
     if (view.inProgress) return t(`verification.${kind}.running`)
     if (verification.completedAt) {
@@ -81,10 +81,7 @@ export function BookingVerificationStatus({
       <div className="flex items-center gap-3">
         <span
           aria-hidden
-          className={cn(
-            'flex size-8 shrink-0 items-center justify-center rounded-[9px]',
-            TONE_ICON[tone],
-          )}
+          className={cn('flex size-8 shrink-0 items-center justify-center rounded-[9px]', TONE_ICON[tone])}
         >
           {loading || view.inProgress ? (
             <Loader2 className="size-4 animate-spin" />
@@ -99,31 +96,23 @@ export function BookingVerificationStatus({
 
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            <span className="text-[14px] font-semibold">
-              {t(`verification.${kind}.label`)}
-            </span>
+            <span className="text-[14px] font-semibold">{t(`verification.${kind}.label`)}</span>
             {verification && !loading && (
-              <span
-                className={cn('text-[11px] font-bold tracking-wide uppercase', TONE_LABEL[tone])}
-              >
+              <span className={cn('text-[11px] font-bold tracking-wide uppercase', TONE_LABEL[tone])}>
                 {t(`verification.state.${kind}.${view.stateKey}`)}
               </span>
             )}
           </span>
-          <span
-            className="text-fg-4 mt-0.5 block text-[12.5px] leading-snug"
-            style={{ textWrap: 'pretty' }}
-          >
+          <span className="text-fg-4 mt-0.5 block text-[12.5px] leading-snug" style={{ textWrap: 'pretty' }}>
             {detail()}
           </span>
 
           {/* Only why a check could not run: the card is kept to the verdict while booking. */}
           {verification?.status === 'error' && verification.failureReason && (
-            <span className="text-fg-4 mt-1 block text-[11.5px] italic">
-              {verification.failureReason}
-            </span>
+            <span className="text-fg-4 mt-1 block text-[11.5px] italic">{verification.failureReason}</span>
           )}
           {verification?.policy && <PolicyLine policy={verification.policy} />}
+          {verification && <ValidityLine verification={verification} returnOn={returnOn} />}
         </span>
 
         <span className="flex shrink-0 items-center gap-2">
@@ -132,7 +121,11 @@ export function BookingVerificationStatus({
               label={
                 view.action === 'resume'
                   ? t('verification.action.insurance.resume')
-                  : t(verification ? `verification.action.${kind}.orderAgain` : `verification.action.${kind}.order`)
+                  : t(
+                      verification
+                        ? `verification.action.${kind}.orderAgain`
+                        : `verification.action.${kind}.order`,
+                    )
               }
               variant={verification ? 'outline' : 'primary'}
               loading={running}
@@ -143,9 +136,7 @@ export function BookingVerificationStatus({
 
           {view.action && onShare && (
             <RunCheckButton
-              label={
-                sendsNewLink(verification) ? t('insuranceLink.actionNew') : t('insuranceLink.action')
-              }
+              label={sendsNewLink(verification) ? t('insuranceLink.actionNew') : t('insuranceLink.action')}
               // The primary action when it is the only one, as for insurance.
               variant={verification || onRunCheck ? 'outline' : 'primary'}
               loading={sharing}
@@ -155,13 +146,7 @@ export function BookingVerificationStatus({
           )}
 
           {view.canViewReport && verification?.hasReport && onViewReport && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              loading={openingReport}
-              onClick={onViewReport}
-            >
+            <Button type="button" size="sm" variant="outline" loading={openingReport} onClick={onViewReport}>
               {t('verification.action.viewReport')}
             </Button>
           )}

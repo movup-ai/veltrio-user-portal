@@ -1,7 +1,20 @@
 import { fromCents, toCents } from '@/lib/money'
 import type { CheckoutMethod, CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
-import { PAYMENT_REFUSALS, type PaymentRefusal } from '../constants/payment.constants'
+import type { BookingWire } from '@/modules/bookings/api/booking.mapper'
+import {
+  EXTENSION_REFUSALS,
+  PAYMENT_REFUSALS,
+  type ExtensionRefusal,
+  type PaymentRefusal,
+} from '../constants/payment.constants'
+import type {
+  BookingExtension,
+  BookingExtensions,
+  ExtensionConsent,
+  ExtensionQuote,
+  ExtensionStatus,
+} from '../types/booking-extension.types'
 import type {
   BookingPaymentKind,
   BookingPaymentRecord,
@@ -216,4 +229,99 @@ export function toPaymentLink(wire: PaymentLinkWire): PaymentLink {
     deposit: fromCents(wire.depositCents),
     currency: wire.currency,
   }
+}
+
+// --- Extensions ----------------------------------------------------------------------------
+
+interface BookingExtensionWire {
+  id: string
+  status: ExtensionStatus
+  previousReturnAt: string
+  newReturnAt: string
+  previousTotalCents: number
+  newTotalCents: number
+  amountCents: number
+  expiresAt: string | null
+  requestedAt: string
+  appliedAt: string | null
+  acceptedAt: string | null
+  acceptedName: string | null
+  acceptedMethod: ExtensionConsent | null
+  link: PaymentLinkWire | null
+  refundDueCents: number
+  hasAddendum: boolean
+}
+
+export interface BookingExtensionsWire {
+  extend: PaymentActionWire
+  availableUntil: string | null
+  pending: BookingExtensionWire | null
+  history: BookingExtensionWire[]
+}
+
+export interface ExtensionQuoteWire {
+  returnAt: string
+  previousTotalCents: number
+  totalCents: number
+  amountCents: number
+  lines: BookingWire['rate']['lines']
+  payFirst: boolean
+}
+
+function toBookingExtension(wire: BookingExtensionWire): BookingExtension {
+  return {
+    id: wire.id,
+    status: wire.status,
+    previousReturnAt: wire.previousReturnAt,
+    newReturnAt: wire.newReturnAt,
+    previousTotal: fromCents(wire.previousTotalCents),
+    newTotal: fromCents(wire.newTotalCents),
+    amount: fromCents(wire.amountCents),
+    expiresAt: wire.expiresAt ?? undefined,
+    requestedAt: wire.requestedAt,
+    appliedAt: wire.appliedAt ?? undefined,
+    acceptedAt: wire.acceptedAt ?? undefined,
+    acceptedName: wire.acceptedName ?? undefined,
+    acceptedMethod: wire.acceptedMethod ?? undefined,
+    link: wire.link ? toPaymentLink(wire.link) : undefined,
+    refundDue: fromCents(wire.refundDueCents),
+    hasAddendum: wire.hasAddendum,
+  }
+}
+
+export function toBookingExtensions(wire: BookingExtensionsWire): BookingExtensions {
+  // As for the money actions: a reason with no words here leaves the row off, unexplained.
+  const known = (EXTENSION_REFUSALS as readonly string[]).includes(wire.extend.reason ?? '')
+  return {
+    extend: {
+      allowed: wire.extend.allowed,
+      reason: known ? (wire.extend.reason as ExtensionRefusal) : undefined,
+    },
+    availableUntil: wire.availableUntil ?? undefined,
+    pending: wire.pending ? toBookingExtension(wire.pending) : undefined,
+    history: wire.history.map(toBookingExtension),
+  }
+}
+
+export function toExtensionQuote(wire: ExtensionQuoteWire): ExtensionQuote {
+  return {
+    returnAt: wire.returnAt,
+    previousTotal: fromCents(wire.previousTotalCents),
+    total: fromCents(wire.totalCents),
+    amount: fromCents(wire.amountCents),
+    lines: wire.lines.map((line) => ({
+      optionId: line.optionId,
+      label: line.label,
+      basis: line.basis,
+      rate: fromCents(line.rateCents),
+      count: line.count,
+      cappedHours: line.cappedHours ?? undefined,
+    })),
+    payFirst: wire.payFirst,
+  }
+}
+
+/** The figure goes back as the API gave it, in cents, so a rounding here cannot read as a change. */
+export function toExtensionPayload(returnAt: string, amount: number) {
+  return { returnAt, amountCents: toCents(amount) }
 }

@@ -6,7 +6,7 @@ import { fromDateValue } from '@/components/ui/date-range-picker'
 import { useFormatters } from '@/i18n'
 import type { BookingVerification, ProviderKind } from '../types/booking.types'
 import { TONE_DOT, TONE_LABEL } from '../constants/verification.constants'
-import { sendsNewLink, verificationView } from '../utils/booking.verification'
+import { outlastsCover, sendsNewLink, verificationView } from '../utils/booking.verification'
 
 interface VerificationCheckRowProps {
   kind: ProviderKind
@@ -19,6 +19,8 @@ interface VerificationCheckRowProps {
   /** Hands the renter a link to finish the check on their own device, where the kind allows. */
   onShare?: () => void
   sharing?: boolean
+  /** The rental's last day, as `YYYY-MM-DD`, so cover that runs out before it can be flagged. */
+  returnOn?: string
 }
 
 /**
@@ -41,6 +43,37 @@ export function PolicyLine({ policy }: { policy: NonNullable<BookingVerification
 }
 
 /**
+ * How long an insurance verdict stands, said only where the card does not already: a policy
+ * with no expiry of its own, or a rental that runs past the day the cover was verified to.
+ */
+export function ValidityLine({
+  verification,
+  returnOn,
+}: {
+  verification: BookingVerification
+  returnOn?: string
+}) {
+  const { t } = useTranslation('bookings')
+  const { shortDate } = useFormatters()
+  const until = verification.validUntil ? fromDateValue(verification.validUntil) : undefined
+  if (!until || verification.expired) return null
+  const date = shortDate(until)
+
+  if (outlastsCover(verification, returnOn)) {
+    return (
+      <span className="text-warning mt-1 block text-[11.5px] font-medium">
+        {t('verification.validity.endsBeforeReturn', { date })}
+      </span>
+    )
+  }
+  // With an expiry on the policy, the line above has already said it.
+  if (verification.policy?.expiresOn) return null
+  return (
+    <span className="text-fg-3 mt-1 block text-[11.5px]">{t('verification.validity.until', { date })}</span>
+  )
+}
+
+/**
  * The checklist dot for a provider-backed check, with its status beside it. A component rather
  * than a class-and-icon helper so the checklist can place it without knowing about providers.
  */
@@ -59,10 +92,7 @@ export function VerificationCheckDot({
     <>
       <span
         aria-hidden
-        className={cn(
-          'flex size-[16px] shrink-0 items-center justify-center rounded-full',
-          TONE_DOT[tone],
-        )}
+        className={cn('flex size-[16px] shrink-0 items-center justify-center rounded-full', TONE_DOT[tone])}
       >
         {tone === 'success' ? (
           <Check className="size-2.5" strokeWidth={3} />
@@ -96,6 +126,7 @@ export function VerificationCheckRow({
   onViewReport,
   onShare,
   sharing,
+  returnOn,
 }: VerificationCheckRowProps) {
   const { t } = useTranslation('bookings')
   const view = verificationView(verification, kind)
@@ -122,6 +153,7 @@ export function VerificationCheckRow({
         <p className="text-fg-4 m-0 mt-1 text-[11.5px] italic">{verification.failureReason}</p>
       )}
       {verification?.policy && <PolicyLine policy={verification.policy} />}
+      {verification && <ValidityLine verification={verification} returnOn={returnOn} />}
 
       {/* mt-auto pins the buttons to the bottom so they align across tiles of unequal height;
           side by side so a tile with two actions is no taller than one with a single. */}
