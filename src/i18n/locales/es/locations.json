@@ -38,6 +38,7 @@
     "addressHint": "Busque la dirección de la sucursal para enviar a los clientes al lugar correcto.",
     "addressPlaceholder": "1440 Collins Ave, Miami Beach, FL",
     "addressSearchPlaceholder": "Buscar dirección o lugar",
+    "mapLabel": "Mapa de la dirección marcada",
     "status": "Estado",
     "openingDays": "Abierta",
     "opensAt": "Abre a las",

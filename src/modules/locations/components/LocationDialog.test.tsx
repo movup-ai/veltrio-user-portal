@@ -7,16 +7,30 @@ import type { Location } from '../types/location.types'
 let configured = false
 const FULL_ADDRESS = '1440 Collins Ave, Miami Beach, FL 33139, USA'
 
-const SUGGESTION = { id: 'p1', primary: '1440 Collins Ave', secondary: 'Miami Beach, FL, USA', prediction: {} }
+const SUGGESTION = {
+  id: 'p1',
+  primary: '1440 Collins Ave',
+  secondary: 'Miami Beach, FL, USA',
+  prediction: {},
+}
 
 vi.mock('../utils/places', () => ({
   get placesConfigured() {
     return configured
   },
   suggestPlaces: () => Promise.resolve([SUGGESTION]),
-  resolvePlace: () => Promise.resolve({ address: FULL_ADDRESS, city: 'Miami Beach', country: 'US' }),
+  resolvePlace: () => Promise.resolve(resolved),
   newSessionToken: () => Promise.resolve(undefined),
   loadPlaces: () => Promise.resolve(),
+}))
+
+let resolved: Record<string, unknown> = { address: FULL_ADDRESS, city: 'Miami Beach', country: 'US' }
+
+// The real one needs Google's script; what matters here is when it is shown and where it points.
+vi.mock('./AddressMap', () => ({
+  AddressMap: ({ latitude, longitude }: { latitude: number; longitude: number }) => (
+    <div data-testid="address-map">{`${latitude},${longitude}`}</div>
+  ),
 }))
 
 const create = vi.fn()
@@ -52,8 +66,45 @@ function open(location?: Location) {
 
 beforeEach(() => {
   configured = false
+  resolved = { address: FULL_ADDRESS, city: 'Miami Beach', country: 'US' }
   create.mockReset()
   update.mockReset()
+})
+
+describe('LocationDialog map', () => {
+  const PINNED = { ...resolved, latitude: 25.7907, longitude: -80.13 }
+
+  it('shows the picked place on a map and saves the same coordinates', async () => {
+    configured = true
+    resolved = PINNED
+    const user = userEvent.setup({ delay: null })
+    open()
+
+    expect(screen.queryByTestId('address-map')).not.toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/Branch name/), 'Miami Beach')
+    await user.type(screen.getByLabelText(/^Pin location/), '1440 Collins')
+    await user.click(await screen.findByRole('option', { name: /1440 Collins Ave/ }))
+
+    expect(await screen.findByTestId('address-map')).toHaveTextContent('25.7907,-80.13')
+
+    await user.click(screen.getByRole('button', { name: 'Add location' }))
+    await waitFor(() => expect(create).toHaveBeenCalled())
+    expect(create.mock.calls[0][0]).toMatchObject({ latitude: 25.7907, longitude: -80.13 })
+  })
+
+  it('drops the map when the address is retyped by hand', async () => {
+    configured = true
+    const user = userEvent.setup({ delay: null })
+    open({ ...BRANCH, latitude: 25.7907, longitude: -80.13 })
+
+    expect(screen.getByTestId('address-map')).toBeInTheDocument()
+
+    // The pin described the old address; leaving it up would show a place no longer saved.
+    await user.type(screen.getByLabelText(/^Pin location/), ' suite 3')
+
+    expect(screen.queryByTestId('address-map')).not.toBeInTheDocument()
+  })
 })
 
 describe('LocationDialog without a Maps key', () => {

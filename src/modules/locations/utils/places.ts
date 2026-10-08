@@ -46,6 +46,16 @@ export function loadPlaces(): Promise<void> {
   return loader
 }
 
+/** The map classes, fetched on demand so the picker alone never downloads them. */
+export async function loadMap() {
+  await loadPlaces()
+  const [{ Map }, { Marker }] = await Promise.all([
+    google.maps.importLibrary('maps') as Promise<google.maps.MapsLibrary>,
+    google.maps.importLibrary('marker') as Promise<google.maps.MarkerLibrary>,
+  ])
+  return { Map, Marker }
+}
+
 export interface PlaceSuggestion {
   id: string
   /** The bold part of the row — usually the street line. */
@@ -123,7 +133,10 @@ export async function suggestPlaces(
         },
       ]
     })
-  } catch {
+  } catch (error) {
+    // Logged because an empty list otherwise looks like "no matches": a key without Places
+    // API (New) fails here on every keystroke and the field just seems not to suggest.
+    console.warn('Places autocomplete failed', error)
     return []
   }
 }
@@ -135,9 +148,7 @@ export async function suggestPlaces(
  * autocomplete request: Google then bills the whole session as one lookup instead of charging
  * for every keystroke that led to it.
  */
-export async function resolvePlace(
-  suggestion: PlaceSuggestion,
-): Promise<ResolvedPlace | null> {
+export async function resolvePlace(suggestion: PlaceSuggestion): Promise<ResolvedPlace | null> {
   try {
     const place = suggestion.prediction.toPlace()
     await place.fetchFields({ fields: ['formattedAddress', 'addressComponents', 'location'] })
@@ -149,9 +160,7 @@ export async function resolvePlace(
   }
 }
 
-export async function newSessionToken(): Promise<
-  google.maps.places.AutocompleteSessionToken | undefined
-> {
+export async function newSessionToken(): Promise<google.maps.places.AutocompleteSessionToken | undefined> {
   try {
     await loadPlaces()
     const { AutocompleteSessionToken } = (await google.maps.importLibrary(

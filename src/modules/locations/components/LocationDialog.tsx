@@ -1,38 +1,22 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { ChevronRight, Star } from 'lucide-react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { TimePicker } from '@/components/ui/time-picker'
 import { cn } from '@/lib/utils'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormField } from '@/components/forms/FormField'
 import { useCreateLocation, useUpdateLocation } from '../hooks/use-locations'
-import {
-  LOCATION_STATUSES,
-  OPENING_DAYS,
-  type AddressPin,
-  type Location,
-} from '../types/location.types'
+import { LOCATION_STATUSES, OPENING_DAYS, type AddressPin, type Location } from '../types/location.types'
 import { placesConfigured } from '../utils/places'
+import { AddressMap } from './AddressMap'
 import { AddressPicker } from './AddressPicker'
 import { fromTimeValue, toTimeValue } from '../utils/hours'
 
@@ -124,6 +108,8 @@ export function LocationDialog({ location, open, onOpenChange }: Props) {
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: valuesFrom(location) })
 
+  const [latitude, longitude] = useWatch({ control, name: ['latitude', 'longitude'] })
+
   const detailsId = useId()
   const [detailsOpen, setDetailsOpen] = useState(false)
   // True only once the expand transition has finished, so the panel stops clipping and a
@@ -161,7 +147,7 @@ export function LocationDialog({ location, open, onOpenChange }: Props) {
       country: unset(values.country)?.toUpperCase(),
       originalAddress: location
         ? unset(values.originalAddress)
-        : unset(values.originalAddress) ?? unset(values.address),
+        : (unset(values.originalAddress) ?? unset(values.address)),
       opensAt: fromTimeValue(values.opensAt),
       closesAt: fromTimeValue(values.closesAt),
     }
@@ -200,20 +186,25 @@ export function LocationDialog({ location, open, onOpenChange }: Props) {
                 control={control}
                 name="address"
                 render={({ field }) => (
-                  <AddressPicker
-                    // Seeded once, then owned by the picker: remounted so reopening the
-                    // dialog for another branch starts from that branch's address.
-                    key={location?.id ?? 'new'}
-                    id={id}
-                    invalid={invalid}
-                    describedBy={describedBy}
-                    value={field.value}
-                    onChange={(address, pin) => {
-                      field.onChange(address)
-                      // Replaced as a set, so the parts always describe the address shown.
-                      setPin(pin)
-                    }}
-                  />
+                  <>
+                    <AddressPicker
+                      // Seeded once, then owned by the picker: remounted so reopening the
+                      // dialog for another branch starts from that branch's address.
+                      key={location?.id ?? 'new'}
+                      id={id}
+                      invalid={invalid}
+                      describedBy={describedBy}
+                      value={field.value}
+                      onChange={(address, pin) => {
+                        field.onChange(address)
+                        // Replaced as a set, so the parts always describe the address shown.
+                        setPin(pin)
+                      }}
+                    />
+                    {latitude !== undefined && longitude !== undefined && (
+                      <AddressMap latitude={latitude} longitude={longitude} label={t('form.mapLabel')} />
+                    )}
+                  </>
                 )}
               />
             )}
@@ -250,65 +241,65 @@ export function LocationDialog({ location, open, onOpenChange }: Props) {
                 }}
               >
                 <div className={cn(detailsOpen && settled ? 'overflow-visible' : 'overflow-hidden')}>
-              <div className="mt-2 grid gap-4 p-1 sm:grid-cols-2">
-                {/* Spans both columns: a street line is longer than the fields beneath it. */}
-                <FormField
-                  label={t('form.street')}
-                  error={errors.street?.message}
-                  className="sm:col-span-2"
-                >
-                  {({ id, invalid }) => (
-                    <Input
-                      id={id}
-                      aria-invalid={invalid}
-                      placeholder={t('form.streetPlaceholder')}
-                      {...register('street')}
-                    />
-                  )}
-                </FormField>
-                <FormField label={t('form.city')} error={errors.city?.message}>
-                  {({ id, invalid }) => (
-                    <Input
-                      id={id}
-                      aria-invalid={invalid}
-                      placeholder={t('form.cityPlaceholder')}
-                      {...register('city')}
-                    />
-                  )}
-                </FormField>
-                <FormField label={t('form.state')} error={errors.state?.message}>
-                  {({ id, invalid }) => (
-                    <Input
-                      id={id}
-                      aria-invalid={invalid}
-                      placeholder={t('form.statePlaceholder')}
-                      {...register('state')}
-                    />
-                  )}
-                </FormField>
-                <FormField label={t('form.postalCode')} error={errors.postalCode?.message}>
-                  {({ id, invalid }) => (
-                    <Input
-                      id={id}
-                      aria-invalid={invalid}
-                      placeholder={t('form.postalCodePlaceholder')}
-                      {...register('postalCode')}
-                    />
-                  )}
-                </FormField>
-                <FormField label={t('form.country')} error={errors.country?.message}>
-                  {({ id, invalid }) => (
-                    <Input
-                      id={id}
-                      aria-invalid={invalid}
-                      maxLength={2}
-                      className="uppercase"
-                      placeholder={t('form.countryPlaceholder')}
-                      {...register('country')}
-                    />
-                  )}
-                </FormField>
-              </div>
+                  <div className="mt-2 grid gap-4 p-1 sm:grid-cols-2">
+                    {/* Spans both columns: a street line is longer than the fields beneath it. */}
+                    <FormField
+                      label={t('form.street')}
+                      error={errors.street?.message}
+                      className="sm:col-span-2"
+                    >
+                      {({ id, invalid }) => (
+                        <Input
+                          id={id}
+                          aria-invalid={invalid}
+                          placeholder={t('form.streetPlaceholder')}
+                          {...register('street')}
+                        />
+                      )}
+                    </FormField>
+                    <FormField label={t('form.city')} error={errors.city?.message}>
+                      {({ id, invalid }) => (
+                        <Input
+                          id={id}
+                          aria-invalid={invalid}
+                          placeholder={t('form.cityPlaceholder')}
+                          {...register('city')}
+                        />
+                      )}
+                    </FormField>
+                    <FormField label={t('form.state')} error={errors.state?.message}>
+                      {({ id, invalid }) => (
+                        <Input
+                          id={id}
+                          aria-invalid={invalid}
+                          placeholder={t('form.statePlaceholder')}
+                          {...register('state')}
+                        />
+                      )}
+                    </FormField>
+                    <FormField label={t('form.postalCode')} error={errors.postalCode?.message}>
+                      {({ id, invalid }) => (
+                        <Input
+                          id={id}
+                          aria-invalid={invalid}
+                          placeholder={t('form.postalCodePlaceholder')}
+                          {...register('postalCode')}
+                        />
+                      )}
+                    </FormField>
+                    <FormField label={t('form.country')} error={errors.country?.message}>
+                      {({ id, invalid }) => (
+                        <Input
+                          id={id}
+                          aria-invalid={invalid}
+                          maxLength={2}
+                          className="uppercase"
+                          placeholder={t('form.countryPlaceholder')}
+                          {...register('country')}
+                        />
+                      )}
+                    </FormField>
+                  </div>
                 </div>
               </div>
             </div>
@@ -407,9 +398,7 @@ export function LocationDialog({ location, open, onOpenChange }: Props) {
               const locked = Boolean(location?.isDefault)
               return (
                 <div className="border-border-soft flex items-center gap-3 rounded-md border p-3">
-                  <Star
-                    className={cn('size-4 shrink-0', field.value ? 'text-primary' : 'text-fg-4')}
-                  />
+                  <Star className={cn('size-4 shrink-0', field.value ? 'text-primary' : 'text-fg-4')} />
                   <div className="min-w-0 flex-1">
                     <p className="m-0 text-[13px] font-medium">{t('form.makeDefault')}</p>
                     <p className="text-fg-3 m-0 text-caption">

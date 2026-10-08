@@ -38,6 +38,7 @@
     "addressHint": "Search for the branch address so customers are sent to the right place.",
     "addressPlaceholder": "1440 Collins Ave, Miami Beach, FL",
     "addressSearchPlaceholder": "Search address or place",
+    "mapLabel": "Map of the pinned address",
     "status": "Status",
     "openingDays": "Open on",
     "opensAt": "Opens at",
