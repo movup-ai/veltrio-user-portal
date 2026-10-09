@@ -45,8 +45,16 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
   // Custom starts from the schedule on screen; after, it must not overwrite their work.
   const [own, setOwn] = useState(policyChoice(saved) === 'custom')
   const [attempted, setAttempted] = useState(false)
+  // The saved policy the fields above were last taken from.
+  const [synced, setSynced] = useState(saved)
 
   const policy = choice === 'none' ? undefined : choice === 'custom' ? tiers : [...POLICY_PRESETS[choice]]
+  // The company is shown from cache and then read again. A card nobody has changed follows the
+  // newer policy: left on the old one, it would read as an edit and Save would put it back.
+  if (!samePolicy(saved, synced)) {
+    if (samePolicy(policy, synced)) showSaved()
+    setSynced(saved)
+  }
   const problems = choice === 'custom' ? tierProblems(tiers) : {}
   const valid = Object.keys(problems).length === 0
   const addable = nextTier(tiers)
@@ -77,7 +85,7 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
     )
   }
 
-  function discard() {
+  function showSaved() {
     setChoice(policyChoice(saved))
     setTiers(saved ?? [...POLICY_PRESETS.standard])
     setOwn(policyChoice(saved) === 'custom')
@@ -89,7 +97,7 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
       title={t('payments.cancellation.title')}
       description={t('payments.cancellation.description')}
       onSubmit={submit}
-      onDiscard={discard}
+      onDiscard={showSaved}
       dirty={!samePolicy(policy, saved)}
       saving={update.isPending}
       columns={1}

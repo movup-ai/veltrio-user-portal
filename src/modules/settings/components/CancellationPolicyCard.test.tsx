@@ -39,6 +39,21 @@ function renderCard(policy?: CancellationPolicy) {
   return userEvent.setup({ delay: null })
 }
 
+/** The card as the page shows it: first from cached company data, then from a fresh read. */
+function renderStaleThenFresh(stale: CancellationPolicy | undefined) {
+  const client = new QueryClient()
+  const card = (policy: CancellationPolicy | undefined) => (
+    <QueryClientProvider client={client}>
+      <CancellationPolicyCard company={{ ...COMPANY, cancellationPolicy: policy }} />
+    </QueryClientProvider>
+  )
+  const { rerender } = render(card(stale))
+  return {
+    user: userEvent.setup({ delay: null }),
+    freshArrives: (policy: CancellationPolicy | undefined) => rerender(card(policy)),
+  }
+}
+
 const save = () => screen.getByRole('button', { name: 'Save changes' })
 
 afterEach(() => setPolicy.mockReset())
@@ -139,6 +154,47 @@ describe('CancellationPolicyCard', () => {
     expect(screen.getByRole('spinbutton', { name: 'Tier 1: days before pickup' })).toHaveValue(10)
     expect(screen.getByRole('spinbutton', { name: 'Tier 2: refund percent' })).toHaveValue(30)
     expect(save()).toBeDisabled()
+  })
+
+  it('follows a newer policy that arrives after it opened on cached data', () => {
+    const { freshArrives } = renderStaleThenFresh(STANDARD)
+    expect(screen.getByRole('radio', { name: /Standard/ })).toBeChecked()
+
+    freshArrives([{ daysBefore: 1, refundPercent: 100 }])
+
+    // Left on the old schedule it would read as an unsaved change, and Save would put it back.
+    expect(screen.getByRole('radio', { name: /Flexible/ })).toBeChecked()
+    expect(save()).toBeDisabled()
+  })
+
+  it('follows a newer custom policy into the custom tiers, and a withdrawn one to none', async () => {
+    const { user, freshArrives } = renderStaleThenFresh(undefined)
+
+    freshArrives([{ daysBefore: 10, refundPercent: 80 }])
+    expect(screen.getByRole('radio', { name: /Custom/ })).toBeChecked()
+    expect(screen.getByRole('spinbutton', { name: 'Tier 1: days before pickup' })).toHaveValue(10)
+    // The owner's own now: a look at a ready-made schedule must not replace them.
+    await user.click(screen.getByRole('radio', { name: /Standard/ }))
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+    expect(screen.getByRole('spinbutton', { name: 'Tier 1: refund percent' })).toHaveValue(80)
+
+    await user.click(screen.getByRole('button', { name: 'Discard' }))
+    freshArrives(undefined)
+    expect(screen.getByRole('radio', { name: /No stated policy/ })).toBeChecked()
+    expect(save()).toBeDisabled()
+  })
+
+  it("keeps the owner's unsaved change when a newer policy arrives under it", async () => {
+    const { user, freshArrives } = renderStaleThenFresh(STANDARD)
+    await user.click(screen.getByRole('radio', { name: /Non-refundable/ }))
+
+    freshArrives([{ daysBefore: 1, refundPercent: 100 }])
+
+    // Their choice stands, still unsaved: it is theirs to save over the newer one or discard.
+    expect(screen.getByRole('radio', { name: /Non-refundable/ })).toBeChecked()
+    expect(save()).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Discard' }))
+    expect(screen.getByRole('radio', { name: /Flexible/ })).toBeChecked()
   })
 
   it('goes back to the saved policy on discard', async () => {
