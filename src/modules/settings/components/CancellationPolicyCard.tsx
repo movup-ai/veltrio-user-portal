@@ -41,6 +41,9 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
   const [choice, setChoice] = useState<PolicyChoice>(policyChoice(saved))
   // The custom tiers, kept while a preset is looked at so switching back does not lose them.
   const [tiers, setTiers] = useState<CancellationPolicy>(saved ?? [...POLICY_PRESETS.standard])
+  // Whether those tiers are the owner's own: saved as custom, or edited here. Until then
+  // Custom starts from the schedule on screen; after, it must not overwrite their work.
+  const [own, setOwn] = useState(policyChoice(saved) === 'custom')
   const [attempted, setAttempted] = useState(false)
 
   const policy = choice === 'none' ? undefined : choice === 'custom' ? tiers : [...POLICY_PRESETS[choice]]
@@ -49,14 +52,18 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
   const addable = nextTier(tiers)
 
   function choose(next: PolicyChoice) {
-    // Custom starts from the schedule on screen, which is usually what is being adjusted.
-    if (next === 'custom' && policy) setTiers(policy)
+    if (next === 'custom' && !own && policy) setTiers(policy)
     setChoice(next)
     setAttempted(false)
   }
 
-  function edit(index: number, change: Partial<CancellationTier>) {
-    setTiers(tiers.map((tier, i) => (i === index ? { ...tier, ...change } : tier)))
+  function change(next: CancellationPolicy) {
+    setTiers(next)
+    setOwn(true)
+  }
+
+  function edit(index: number, changed: Partial<CancellationTier>) {
+    change(tiers.map((tier, i) => (i === index ? { ...tier, ...changed } : tier)))
   }
 
   async function submit(event?: React.BaseSyntheticEvent) {
@@ -73,6 +80,7 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
   function discard() {
     setChoice(policyChoice(saved))
     setTiers(saved ?? [...POLICY_PRESETS.standard])
+    setOwn(policyChoice(saved) === 'custom')
     setAttempted(false)
   }
 
@@ -151,7 +159,7 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
                     variant="ghost"
                     size="icon"
                     aria-label={t('payments.cancellation.tier.remove', { number: index + 1 })}
-                    onClick={() => setTiers(tiers.filter((_, i) => i !== index))}
+                    onClick={() => change(tiers.filter((_, i) => i !== index))}
                   >
                     <Trash2 className="size-4" aria-hidden />
                   </Button>
@@ -170,7 +178,7 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
             size="sm"
             className="w-fit gap-1.5"
             disabled={!addable}
-            onClick={() => addable && setTiers([...tiers, addable])}
+            onClick={() => addable && change([...tiers, addable])}
           >
             <Plus className="size-3.5" aria-hidden />
             {t('payments.cancellation.addTier')}

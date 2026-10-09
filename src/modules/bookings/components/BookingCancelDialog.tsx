@@ -24,6 +24,7 @@ import type { CancellationQuote } from '@/modules/payments/types/booking-payment
 import { parseCharge } from '@/modules/payments/utils/booking-payment.utils'
 import {
   hasSuggestion,
+  refundChoice,
   refundPresets,
   refundSplit,
   suggestedPreset,
@@ -104,7 +105,7 @@ interface CancelFormProps extends Pick<
 function CancelForm({ reference, renterName, loading, onCancel, onBack }: CancelFormProps) {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
-  const { data: quote, isLoading, isError, refetch } = useCancellationQuote(reference, true)
+  const { data: quote, isLoading, isFetching, isError, refetch } = useCancellationQuote(reference, true)
   // One id for this opening, so sending the same cancellation again cannot refund twice.
   const [requestId] = useState(() => crypto.randomUUID())
   const [reason, setReason] = useState<CancelReason>()
@@ -136,12 +137,13 @@ function CancelForm({ reference, renterName, loading, onCancel, onBack }: Cancel
 
   const presets = refundPresets(quote)
   const suggested = suggestedPreset(quote, reason)
-  const choice = picked ?? suggested
+  const choice = refundChoice(picked, presets, suggested)
   // An emptied field is not a decision to refund nothing: "No refund" is there for that.
   const typed = custom.trim() === '' ? undefined : parseCharge(custom)
   const refund = choice === 'custom' ? typed : presets.find((preset) => preset.key === choice)?.amount
   const over = refund !== undefined && refund > quote.paid
-  const split = refundSplit(quote, refund ?? 0)
+  // Undefined until there is an amount to speak of: an empty field is not "keep it all".
+  const split = refund === undefined || over ? undefined : refundSplit(quote, refund)
   const customError =
     choice !== 'custom' || !(attempted || custom !== '')
       ? undefined
@@ -153,7 +155,7 @@ function CancelForm({ reference, renterName, loading, onCancel, onBack }: Cancel
 
   function confirm() {
     setAttempted(true)
-    if (!reason || refund === undefined || over) return
+    if (isFetching || !reason || !split) return
     onCancel({ reason, message, keep: split.kept, requestId })
   }
 
@@ -186,6 +188,7 @@ function CancelForm({ reference, renterName, loading, onCancel, onBack }: Cancel
       {quote.paid > 0 ? (
         <RefundChoices
           quote={quote}
+          presets={presets}
           choice={choice}
           // Marked only when something stands behind it: the policy, or the company's own fault.
           suggested={hasSuggestion(quote, reason) ? suggested : undefined}
@@ -223,7 +226,9 @@ function CancelForm({ reference, renterName, loading, onCancel, onBack }: Cancel
         <Button variant="outline" onClick={onBack} disabled={loading}>
           {tCommon('actions.back')}
         </Button>
-        <Button variant="destructive" onClick={confirm} loading={loading}>
+        {/* Off while the quote is read again: the form shows the one read ahead, and what is
+            kept is worked out from it. A payment landed since would otherwise be refunded. */}
+        <Button variant="destructive" onClick={confirm} loading={loading} disabled={isFetching}>
           {t('details.cancelDialog.confirm')}
         </Button>
       </DialogFooter>
@@ -233,6 +238,7 @@ function CancelForm({ reference, renterName, loading, onCancel, onBack }: Cancel
 
 interface RefundChoicesProps {
   quote: CancellationQuote
+  presets: ReturnType<typeof refundPresets>
   choice: RefundChoice
   /** The answer to mark as suggested; none when the starting one is only a default. */
   suggested?: RefundChoice
@@ -248,6 +254,7 @@ interface RefundChoicesProps {
  */
 function RefundChoices({
   quote,
+  presets,
   choice,
   suggested,
   onChoose,
@@ -259,7 +266,6 @@ function RefundChoices({
   const format = useFormatters()
   const money = (amount: number) => format.currency(amount, quote.currency)
   const hintId = useId()
-  const presets = refundPresets(quote)
   // Three answers share a line. With the policy's own as a fourth, none would have room.
   const threeAcross = presets.length === 2
 
@@ -375,7 +381,8 @@ function RefundChoices({
 
 interface ConsequencesProps {
   quote: CancellationQuote
-  split: ReturnType<typeof refundSplit>
+  /** Where the money goes; absent while the amount to refund is not yet a valid one. */
+  split?: ReturnType<typeof refundSplit>
   renterName: string
 }
 
@@ -384,10 +391,11 @@ function Consequences({ quote, split, renterName }: ConsequencesProps) {
   const { t } = useTranslation('bookings')
   const format = useFormatters()
   const money = (amount: number) => format.currency(amount, quote.currency)
+  const { toCard = 0, byHand = 0, kept = 0 } = split ?? {}
   const lines = [
-    split.toCard > 0 && t('details.cancelDialog.effects.toCard', { amount: money(split.toCard) }),
-    split.byHand > 0 && t('details.cancelDialog.effects.byHand', { amount: money(split.byHand) }),
-    split.kept > 0 && t('details.cancelDialog.effects.kept', { amount: money(split.kept) }),
+    toCard > 0 && t('details.cancelDialog.effects.toCard', { amount: money(toCard) }),
+    byHand > 0 && t('details.cancelDialog.effects.byHand', { amount: money(byHand) }),
+    kept > 0 && t('details.cancelDialog.effects.kept', { amount: money(kept) }),
     quote.depositHeld > 0 && t('details.cancelDialog.effects.deposit', { amount: money(quote.depositHeld) }),
     quote.withdrawsLink && t('details.cancelDialog.effects.link'),
     // Said either way: a counter expecting an email must not find out later that none went.

@@ -10,7 +10,7 @@ export type CancellationPolicy = CancellationTier[]
 
 /** Mirrors the limits in the API (app/modules/tenants/cancellation.py). */
 export const MAX_CANCELLATION_TIERS = 5
-export const MAX_DAYS_BEFORE = 365
+const MAX_DAYS_BEFORE = 365
 
 export const POLICY_PRESETS = {
   flexible: [{ daysBefore: 1, refundPercent: 100 }],
@@ -44,7 +44,7 @@ export function samePolicy(a: CancellationPolicy | undefined, b: CancellationPol
   return a === undefined || b === undefined ? a === b : sameTiers(a, b)
 }
 
-export type TierProblem = 'days' | 'percent' | 'daysOrder' | 'percentOrder'
+type TierProblem = 'days' | 'percent' | 'daysOrder' | 'percentOrder'
 
 /**
  * What is wrong with each tier, by index, checked here so the API is not asked to refuse it.

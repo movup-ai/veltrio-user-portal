@@ -110,6 +110,37 @@ describe('CancellationPolicyCard', () => {
     expect(setPolicy).not.toHaveBeenCalled()
   })
 
+  it('keeps edited tiers while a ready-made schedule is looked at', async () => {
+    const user = renderCard(STANDARD)
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+    const half = () => screen.getByRole('spinbutton', { name: 'Tier 2: refund percent' })
+    await user.clear(half())
+    await user.type(half(), '25')
+
+    await user.click(screen.getByRole('radio', { name: /Flexible/ }))
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+
+    // Seeded from the schedule on screen only the first time: after an edit they are the owner's.
+    expect(half()).toHaveValue(25)
+    expect(screen.getByRole('spinbutton', { name: 'Tier 1: days before pickup' })).toHaveValue(14)
+  })
+
+  it('keeps a saved custom schedule while a ready-made one is looked at', async () => {
+    const own = [
+      { daysBefore: 10, refundPercent: 100 },
+      { daysBefore: 2, refundPercent: 30 },
+    ]
+    const user = renderCard(own)
+    expect(screen.getByRole('radio', { name: /Custom/ })).toBeChecked()
+
+    await user.click(screen.getByRole('radio', { name: /Flexible/ }))
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+
+    expect(screen.getByRole('spinbutton', { name: 'Tier 1: days before pickup' })).toHaveValue(10)
+    expect(screen.getByRole('spinbutton', { name: 'Tier 2: refund percent' })).toHaveValue(30)
+    expect(save()).toBeDisabled()
+  })
+
   it('goes back to the saved policy on discard', async () => {
     const user = renderCard(STANDARD)
 

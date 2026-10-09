@@ -618,7 +618,9 @@
       "noVerification": "No check run.",
       "drivers": "Additional drivers",
       "noDrivers": "No additional drivers.",
-      "fees": "Additional fees"
+      "fees": "Additional fees",
+      "termsNotKept": "This draft was saved with the terms “{{name}}”. Bookings now start on your default terms, so pick “{{name}}” again on the booking before its agreement is sent.",
+      "termsNotKeptUnnamed": "This draft was saved with its own rental terms. Bookings now start on your default terms, so pick them again on the booking before its agreement is sent."
     },
     "draft": {
       "save": "Save draft",

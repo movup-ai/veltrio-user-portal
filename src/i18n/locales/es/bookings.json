@@ -618,7 +618,9 @@
       "noVerification": "Sin verificación.",
       "drivers": "Conductores adicionales",
       "noDrivers": "Sin conductores adicionales.",
-      "fees": "Cargos adicionales"
+      "fees": "Cargos adicionales",
+      "termsNotKept": "Este borrador se guardó con los términos «{{name}}». Las reservas empiezan ahora con tus términos por defecto, así que vuelve a elegir «{{name}}» en la reserva antes de enviar su contrato.",
+      "termsNotKeptUnnamed": "Este borrador se guardó con sus propios términos de alquiler. Las reservas empiezan ahora con tus términos por defecto, así que vuelve a elegirlos en la reserva antes de enviar su contrato."
     },
     "draft": {
       "save": "Guardar borrador",

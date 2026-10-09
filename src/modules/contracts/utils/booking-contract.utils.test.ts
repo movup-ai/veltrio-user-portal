@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { ApiError } from '@/types/api'
+import { draftTemplateId, lostDraftTerms } from './agreement-template.utils'
 import {
   agreementIssued,
   contractFileName,
@@ -56,5 +57,36 @@ describe('drawingProblem', () => {
     expect(drawingProblem(refusal('signature_blank'))).toBe('signatureRequired')
     expect(drawingProblem(refusal('signature_invalid'))).toBe('signatureUnreadable')
     expect(drawingProblem(refusal('already_signed'))).toBeUndefined()
+  })
+})
+
+describe('the terms an older draft was saved with', () => {
+  const templates = [
+    { id: 'std', name: 'Standard rental agreement', isDefault: true },
+    { id: 'vans', name: 'Vans', isDefault: false },
+  ]
+
+  it('reads the choice off a draft saved when the booking form still picked the terms', () => {
+    expect(draftTemplateId({ agreementTemplateId: 'vans' })).toBe('vans')
+    expect(draftTemplateId({ agreementTemplateId: '' })).toBeUndefined()
+    expect(draftTemplateId({ agreementTemplateId: 7 })).toBeUndefined()
+    expect(draftTemplateId({})).toBeUndefined()
+  })
+
+  it('names the terms the booking will no longer start on', () => {
+    expect(lostDraftTerms('vans', templates)).toEqual({ name: 'Vans' })
+  })
+
+  it('loses nothing when the draft named the default, or a template deleted since', () => {
+    // Either way the booking was going to be made on the default, as it is now.
+    expect(lostDraftTerms('std', templates)).toBeUndefined()
+    expect(lostDraftTerms('deleted', templates)).toBeUndefined()
+    expect(lostDraftTerms(undefined, templates)).toBeUndefined()
+  })
+
+  it('still warns, unnamed, while the templates cannot say which it was', () => {
+    // Silence here could hide a real change of terms behind a list that failed to load.
+    expect(lostDraftTerms('vans', undefined)).toEqual({})
+    expect(lostDraftTerms(undefined, undefined)).toBeUndefined()
   })
 })

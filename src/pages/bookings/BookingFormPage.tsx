@@ -23,6 +23,8 @@ import { FormField } from '@/components/forms/FormField'
 import { StepSidebar } from '@/components/forms/StepSidebar'
 import type { StepDef } from '@/components/forms/Stepper'
 import { PageContainer } from '@/components/layout/PageContainer'
+import { useAgreementTemplates } from '@/modules/contracts/hooks/use-agreement-templates'
+import { draftTemplateId, lostDraftTerms } from '@/modules/contracts/utils/agreement-template.utils'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
@@ -188,6 +190,7 @@ export function BookingFormPage() {
       key={draft?.id ?? 'new'}
       draftId={draft?.id}
       initialValues={draft ? fromDraftPayload(draft.payload) : null}
+      savedTemplateId={draftTemplateId(draft?.payload)}
     />
   )
 }
@@ -196,9 +199,11 @@ interface BookingWizardProps {
   draftId?: string
   /** Null for a fresh booking; the resumed draft's values otherwise. */
   initialValues: BookingFormValues | null
+  /** The terms an older draft picked here, before they were picked on the booking itself. */
+  savedTemplateId?: string
 }
 
-function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
+function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizardProps) {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const { t: tValidation } = useTranslation('validation')
@@ -210,6 +215,10 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const deleteDraft = useDeleteBookingDraft({ silent: true })
   const queryClient = useQueryClient()
   const locations = useLocationNames()
+  // Read only for a draft that named its terms: the booking no longer starts on them, and
+  // the counter has to be told before creating it rather than find out on the agreement.
+  const { data: templates } = useAgreementTemplates(Boolean(savedTemplateId))
+  const lostTerms = lostDraftTerms(savedTemplateId, templates)
 
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
@@ -1337,6 +1346,14 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                       ))}
                     </ul>
                   </ReviewSection>
+                )}
+
+                {lostTerms && (
+                  <p role="status" className="bg-warning-tint m-0 rounded-[10px] px-3.5 py-3 text-[13px]">
+                    {lostTerms.name
+                      ? t('form.review.termsNotKept', { name: lostTerms.name })
+                      : t('form.review.termsNotKeptUnnamed')}
+                  </p>
                 )}
               </div>
 

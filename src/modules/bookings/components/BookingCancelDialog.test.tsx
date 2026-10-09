@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
@@ -108,6 +108,46 @@ describe('BookingCancelDialog', () => {
     expect(screen.getByRole('radiogroup', { name: 'Refund' })).toBeInTheDocument()
     // Still read again as it opens: the policy's answer depends on the hour.
     await waitFor(() => expect(quote).toHaveBeenCalledTimes(2))
+  })
+
+  it('does not cancel on the earlier quote while the one read on opening is still on its way', async () => {
+    // A payment landed after the page loaded: the quote read while closed is short of it.
+    quote.mockResolvedValueOnce({ ...NO_POLICY, paid: 100 })
+    let answer: (fresh: CancellationQuote) => void = () => {}
+    quote.mockReturnValueOnce(new Promise((resolve) => (answer = resolve)))
+    setOrganization()
+    const onCancel = vi.fn<(input: CancelInput) => void>()
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const dialog = (open: boolean) => (
+      <QueryClientProvider client={client}>
+        <BookingCancelDialog
+          open={open}
+          cancellable
+          onOpenChange={vi.fn()}
+          reference="BK-10001"
+          renterName="Marisol Vega"
+          loading={false}
+          onCancel={onCancel}
+        />
+      </QueryClientProvider>
+    )
+    const user = userEvent.setup({ delay: null })
+    const { rerender } = render(dialog(false))
+    await waitFor(() => expect(client.isFetching()).toBe(0))
+    rerender(dialog(true))
+    await user.click((await refunds()).getByRole('radio', { name: /No refund/ }))
+    await user.click(reason('Renter did not show up'))
+
+    // Keeping "everything" off the old figure would have the API refund the new payment.
+    expect(confirm()).toBeDisabled()
+    await user.click(confirm())
+    expect(onCancel).not.toHaveBeenCalled()
+
+    await act(async () => answer({ ...NO_POLICY, paid: 235.4 }))
+    await waitFor(() => expect(confirm()).toBeEnabled())
+    await user.click(confirm())
+
+    expect(onCancel).toHaveBeenCalledWith(expect.objectContaining({ reason: 'no_show', keep: 235.4 }))
   })
 
   it('reads nothing for a booking that cannot be cancelled', async () => {
@@ -287,6 +327,21 @@ describe('BookingCancelDialog', () => {
       expect(effects.getByText(said)).toBeInTheDocument()
     }
     expect(effects.queryByText(/is kept/)).not.toBeInTheDocument()
+  })
+
+  it('says nothing about the money while the amount to refund is still to be typed', async () => {
+    quote.mockResolvedValue({ ...HALF, depositHeld: 350 })
+    const { user } = renderDialog()
+
+    await user.click((await refunds()).getByRole('radio', { name: 'Other amount' }))
+
+    // An empty field is not a decision to keep it all, so no line may read as one.
+    const effects = within(screen.getByRole('list', { name: 'What cancelling does' }))
+    expect(effects.queryByText(/is kept|goes back/)).not.toBeInTheDocument()
+    expect(effects.getByText('The $350 deposit hold is released.')).toBeInTheDocument()
+
+    await user.type(screen.getByRole('spinbutton', { name: 'Amount to refund' }), '200')
+    expect(effects.getByText('$35.40 is kept.')).toBeInTheDocument()
   })
 
   it('does not promise an email the API will not send', async () => {

@@ -32,7 +32,7 @@ interface BookingManagePanelProps {
 export function BookingManagePanel({ unavailable = {}, onAction }: BookingManagePanelProps) {
   const { t } = useTranslation('bookings')
 
-  // The ConfirmDialog is what actually guards the click.
+  // The cancel dialog is what actually guards the click.
   const cancel = (
     <Button
       type="button"

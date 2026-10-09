@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CancellationQuote } from '../types/booking-payment.types'
 import {
   hasSuggestion,
+  refundChoice,
   refundPresets,
   refundSplit,
   suggestedPreset,
@@ -79,6 +80,23 @@ describe('suggestedPreset', () => {
       'full',
     )
     expect(suggestedPreset(quote(), 'other')).toBe('full')
+  })
+})
+
+describe('refundChoice', () => {
+  const offered = refundPresets(quote({ policy: [], refundPercent: 50, policyRefund: 117.7 }))
+  const withoutPolicy = refundPresets(quote())
+
+  it("is the counter's own answer while that is still one of those offered", () => {
+    expect(refundChoice('none', offered, 'policy')).toBe('none')
+    expect(refundChoice('policy', offered, 'full')).toBe('policy')
+    expect(refundChoice('custom', withoutPolicy, 'full')).toBe('custom')
+  })
+
+  it('is the suggested one until the counter picks, and again if their pick is withdrawn', () => {
+    expect(refundChoice(undefined, offered, 'policy')).toBe('policy')
+    // The quote was read again and the policy's figure is no longer a third answer.
+    expect(refundChoice('policy', withoutPolicy, 'full')).toBe('full')
   })
 })
 

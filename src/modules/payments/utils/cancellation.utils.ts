@@ -15,7 +15,7 @@ export function suggestedRefund(quote: CancellationQuote, reason: CancelReason |
 }
 
 /** The ready-made answers to how much goes back; `custom` is the counter typing its own. */
-export type RefundPreset = 'full' | 'policy' | 'none'
+type RefundPreset = 'full' | 'policy' | 'none'
 export type RefundChoice = RefundPreset | 'custom'
 
 /**
@@ -37,6 +37,19 @@ export function suggestedPreset(quote: CancellationQuote, reason: CancelReason |
   const amount = suggestedRefund(quote, reason)
   if (amount >= quote.paid) return 'full'
   return amount <= 0 ? 'none' : 'policy'
+}
+
+/**
+ * The answer in force: the counter's own while it is still one of those offered, else the
+ * suggested one. A quote read again can take the policy's figure out of the answers.
+ */
+export function refundChoice(
+  picked: RefundChoice | undefined,
+  presets: { key: RefundPreset }[],
+  suggested: RefundPreset,
+): RefundChoice {
+  const offered = picked === 'custom' || presets.some((preset) => preset.key === picked)
+  return picked && offered ? picked : suggested
 }
 
 /**

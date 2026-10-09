@@ -22,8 +22,8 @@ export function useBookingPayments(reference: string | undefined) {
 }
 
 /**
- * What cancelling would refund, read as the dialog opens and never kept: the policy's answer
- * depends on the hour, and on payments that may have landed since the page loaded.
+ * What cancelling would refund. Read again on every mount and dropped once unused: the policy's
+ * answer depends on the hour, and on payments that may have landed since the last read.
  */
 export function useCancellationQuote(reference: string, enabled: boolean) {
   return useQuery({
