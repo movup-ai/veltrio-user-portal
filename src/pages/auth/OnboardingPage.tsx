@@ -20,10 +20,9 @@ import { ME_QUERY_KEY, useMe } from '@/services/auth/use-me'
 import { ApiError } from '@/types/api'
 import { countryOptions, isCountryCode } from '@/utils/countries'
 import { TIMEZONES } from '@/utils/dates'
-import { isValidWebsite, subdomainFor } from '@/utils/slug'
+import { isValidWebsite, SUBDOMAIN_ATTEMPTS, subdomainFor } from '@/utils/slug'
 
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
-const SUBDOMAIN_ATTEMPTS = 5
 
 /**
  * Registers under the company name's own subdomain, moving to -2, -3… while one is taken.

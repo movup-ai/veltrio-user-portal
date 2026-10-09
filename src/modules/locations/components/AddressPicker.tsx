@@ -78,6 +78,9 @@ export function AddressPicker({ value, onChange, id, invalid, describedBy }: Pro
     timer.current = setTimeout(async () => {
       try {
         session.current ??= await newSessionToken()
+        // Loading Google can take a second, and each lookup is billed: one for a field
+        // cleared or closed in the meantime must not be sent at all.
+        if (request !== latest.current) return
         const results = await suggestPlaces(text.trim(), session.current)
         // A newer keystroke owns the list now; leave its results alone.
         if (request !== latest.current) return

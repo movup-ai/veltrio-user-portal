@@ -132,6 +132,24 @@ describe('AddressPicker', () => {
     expect(screen.queryByRole('option')).not.toBeInTheDocument()
   })
 
+  it('sends no lookup for a field cleared while Google was still loading', async () => {
+    let loaded: () => void = () => {}
+    newSessionToken.mockReturnValue(new Promise<undefined>((resolve) => (loaded = () => resolve(undefined))))
+    const user = userEvent.setup({ delay: null })
+    render(<Picker onChange={vi.fn()} />)
+    const input = screen.getByRole('combobox')
+
+    await user.type(input, '1440 Collins')
+    // Past the debounce, so the search is now waiting on the script rather than the timer.
+    await pastDebounce()
+    await user.clear(input)
+    loaded()
+    await pastDebounce()
+
+    // The lookup is billed, so it must not be sent for text that is no longer there.
+    expect(suggestPlaces).not.toHaveBeenCalled()
+  })
+
   it('does not search for an address that is only focused, not typed', async () => {
     const user = userEvent.setup({ delay: null })
     render(<AddressPicker value="1440 Collins Ave" onChange={vi.fn()} />)
