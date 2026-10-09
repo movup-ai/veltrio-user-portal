@@ -29,6 +29,14 @@ export function loadPlaces(): Promise<void> {
       return
     }
 
+    // Lookups go to a different host than the script, and opening that connection is about
+    // two thirds of the first search's wait. Anonymous, as the SDK sends no credentials.
+    const hint = document.createElement('link')
+    hint.rel = 'preconnect'
+    hint.href = 'https://places.googleapis.com'
+    hint.crossOrigin = 'anonymous'
+    document.head.appendChild(hint)
+
     const script = document.createElement('script')
     script.id = SCRIPT_ID
     script.async = true

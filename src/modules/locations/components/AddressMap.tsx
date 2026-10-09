@@ -2,13 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { loadMap } from '../utils/places'
 
 interface Props {
-  latitude: number
-  longitude: number
+  /** Set together or not at all. Without them the map shows its default view and no marker. */
+  latitude?: number
+  longitude?: number
   /** Names the map for assistive tech; the tiles carry no text of their own. */
   label: string
 }
 
-const ZOOM = 15
+const PIN_ZOOM = 15
+// The contiguous United States: there is no address to centre on until one is picked.
+const DEFAULT_VIEW = { center: { lat: 39.5, lng: -98.35 }, zoom: 3 }
 
 /**
  * Shows where a picked address landed, so a wrong match is seen before the branch is saved.
@@ -21,26 +24,30 @@ export function AddressMap({ latitude, longitude, label }: Props) {
 
   useEffect(() => {
     let cancelled = false
-    const position = { lat: latitude, lng: longitude }
+    const position =
+      latitude !== undefined && longitude !== undefined ? { lat: latitude, lng: longitude } : undefined
 
     void (async () => {
       try {
         const { Map, Marker } = await loadMap()
         if (cancelled || !container.current) return
 
-        if (view.current) {
-          // Moved rather than rebuilt: Google bills every new Map as a map load.
-          view.current.map.setCenter(position)
-          view.current.marker.setPosition(position)
-          return
+        // Built once and then moved: Google bills every new Map as a map load.
+        view.current ??= {
+          map: new Map(container.current, {
+            ...DEFAULT_VIEW,
+            disableDefaultUI: true,
+            zoomControl: true,
+          }),
+          marker: new Marker(),
         }
-        const map = new Map(container.current, {
-          center: position,
-          zoom: ZOOM,
-          disableDefaultUI: true,
-          zoomControl: true,
-        })
-        view.current = { map, marker: new Marker({ map, position }) }
+        const { map, marker } = view.current
+        marker.setMap(position ? map : null)
+        if (!position) return
+
+        marker.setPosition(position)
+        map.setCenter(position)
+        map.setZoom(PIN_ZOOM)
       } catch {
         if (!cancelled) setFailed(true)
       }
@@ -58,7 +65,9 @@ export function AddressMap({ latitude, longitude, label }: Props) {
       ref={container}
       role="region"
       aria-label={label}
-      className="border-border h-44 w-full overflow-hidden rounded-md border"
+      // Isolated: Google's controls carry huge z-indexes that would otherwise paint over the
+      // suggestion list that drops down across the map.
+      className="border-border isolate h-44 w-full overflow-hidden rounded-md border"
     />
   )
 }

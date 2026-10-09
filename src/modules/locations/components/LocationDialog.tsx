@@ -159,7 +159,7 @@ export function LocationDialog({ location, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{location ? t('form.editTitle') : t('form.addTitle')}</DialogTitle>
         </DialogHeader>
@@ -201,7 +201,7 @@ export function LocationDialog({ location, open, onOpenChange }: Props) {
                         setPin(pin)
                       }}
                     />
-                    {latitude !== undefined && longitude !== undefined && (
+                    {placesConfigured && (
                       <AddressMap latitude={latitude} longitude={longitude} label={t('form.mapLabel')} />
                     )}
                   </>

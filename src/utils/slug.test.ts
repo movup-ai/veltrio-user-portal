@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isReservedSubdomain, isValidSubdomain, isValidWebsite, slugify } from './slug'
+import { isReservedSubdomain, isValidSubdomain, isValidWebsite, slugify, subdomainFor } from './slug'
 
 describe('slugify', () => {
   it('lowercases and hyphenates a company name', () => {
@@ -22,6 +22,34 @@ describe('slugify', () => {
     const slug = slugify(`${'a'.repeat(62)} rentals`)
     expect(slug).toHaveLength(62)
     expect(slug.endsWith('-')).toBe(false)
+  })
+})
+
+describe('subdomainFor', () => {
+  it('uses the company name itself first', () => {
+    expect(subdomainFor('Sunstate Car Co.')).toBe('sunstate-car-co')
+  })
+
+  it('numbers later attempts from 2, for when the name is taken', () => {
+    expect(subdomainFor('Sunstate Car Co.', 1)).toBe('sunstate-car-co-2')
+    expect(subdomainFor('Sunstate Car Co.', 2)).toBe('sunstate-car-co-3')
+  })
+
+  it.each([
+    ['too short', 'A&', 'a-rentals'],
+    ['reserved', 'Portal', 'portal-rentals'],
+    ['no Latin letters at all', '汽车租赁', 'rentals'],
+  ])('still yields something the API accepts when the name is %s', (_case, name, expected) => {
+    expect(subdomainFor(name)).toBe(expected)
+    expect(isValidSubdomain(expected) && !isReservedSubdomain(expected)).toBe(true)
+  })
+
+  it('keeps a numbered attempt inside the 63 character limit', () => {
+    const numbered = subdomainFor('a'.repeat(80), 1)
+
+    expect(numbered).toHaveLength(63)
+    expect(numbered.endsWith('-2')).toBe(true)
+    expect(isValidSubdomain(numbered)).toBe(true)
   })
 })
 

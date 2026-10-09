@@ -28,8 +28,8 @@ let resolved: Record<string, unknown> = { address: FULL_ADDRESS, city: 'Miami Be
 
 // The real one needs Google's script; what matters here is when it is shown and where it points.
 vi.mock('./AddressMap', () => ({
-  AddressMap: ({ latitude, longitude }: { latitude: number; longitude: number }) => (
-    <div data-testid="address-map">{`${latitude},${longitude}`}</div>
+  AddressMap: ({ latitude, longitude }: { latitude?: number; longitude?: number }) => (
+    <div data-testid="address-map">{latitude === undefined ? 'no pin' : `${latitude},${longitude}`}</div>
   ),
 }))
 
@@ -74,36 +74,47 @@ beforeEach(() => {
 describe('LocationDialog map', () => {
   const PINNED = { ...resolved, latitude: 25.7907, longitude: -80.13 }
 
-  it('shows the picked place on a map and saves the same coordinates', async () => {
+  it('shows the map before anything is picked', () => {
+    configured = true
+    open()
+
+    expect(screen.getByTestId('address-map')).toHaveTextContent('no pin')
+  })
+
+  it('has no map without a Maps key, since nothing could draw it', () => {
+    open({ ...BRANCH, latitude: 25.7907, longitude: -80.13 })
+
+    expect(screen.queryByTestId('address-map')).not.toBeInTheDocument()
+  })
+
+  it('pins the picked place on the map and saves the same coordinates', async () => {
     configured = true
     resolved = PINNED
     const user = userEvent.setup({ delay: null })
     open()
 
-    expect(screen.queryByTestId('address-map')).not.toBeInTheDocument()
-
     await user.type(screen.getByLabelText(/Branch name/), 'Miami Beach')
     await user.type(screen.getByLabelText(/^Pin location/), '1440 Collins')
     await user.click(await screen.findByRole('option', { name: /1440 Collins Ave/ }))
 
-    expect(await screen.findByTestId('address-map')).toHaveTextContent('25.7907,-80.13')
+    await waitFor(() => expect(screen.getByTestId('address-map')).toHaveTextContent('25.7907,-80.13'))
 
     await user.click(screen.getByRole('button', { name: 'Add location' }))
     await waitFor(() => expect(create).toHaveBeenCalled())
     expect(create.mock.calls[0][0]).toMatchObject({ latitude: 25.7907, longitude: -80.13 })
   })
 
-  it('drops the map when the address is retyped by hand', async () => {
+  it('lifts the pin when the address is retyped by hand', async () => {
     configured = true
     const user = userEvent.setup({ delay: null })
     open({ ...BRANCH, latitude: 25.7907, longitude: -80.13 })
 
-    expect(screen.getByTestId('address-map')).toBeInTheDocument()
+    expect(screen.getByTestId('address-map')).toHaveTextContent('25.7907,-80.13')
 
     // The pin described the old address; leaving it up would show a place no longer saved.
     await user.type(screen.getByLabelText(/^Pin location/), ' suite 3')
 
-    expect(screen.queryByTestId('address-map')).not.toBeInTheDocument()
+    expect(screen.getByTestId('address-map')).toHaveTextContent('no pin')
   })
 })
 
