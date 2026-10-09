@@ -1,0 +1,2 @@
+# One line-ending style for every text file, whatever the machine or tool that wrote it.
+* text=auto eol=lf

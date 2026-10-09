@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { Loader2, MapPin, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
@@ -29,7 +29,10 @@ interface Props {
 }
 
 const EMPTY_PIN: AddressPin = {}
-const DEBOUNCE_MS = 250
+// Long enough to skip the keystrokes inside a word, short enough not to be felt as a wait.
+const DEBOUNCE_MS = 150
+// One character matches half the planet: a billed request whose results nobody picks.
+const MIN_QUERY_LENGTH = 2
 
 /**
  * Address lookup for a branch. Searching returns real places, so a saved branch has a
@@ -50,47 +53,69 @@ export function AddressPicker({ value, onChange, id, invalid, describedBy }: Pro
 
   const session = useRef<Awaited<ReturnType<typeof newSessionToken>>>(undefined)
   const container = useRef<HTMLDivElement>(null)
-  // Guards against a slow response overwriting the results of a newer keystroke.
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  // The newest search asked for. Whoever holds it owns the list and the spinner, so every
+  // call below either settles both itself or hands them to a request that will.
   const latest = useRef(0)
+  // Results by term for this session, so deleting a character back costs no request.
+  const cache = useRef(new Map<string, PlaceSuggestion[]>())
 
-  useEffect(() => {
-    if (!placesConfigured || !open) return
-    const term = query.trim()
-    if (term === '') return
-
+  // Called from typing rather than an effect on the query: a field that is merely focused
+  // would otherwise search for the address it already holds, and be billed for it.
+  const search = (text: string) => {
+    clearTimeout(timer.current)
     const request = ++latest.current
-    const timer = setTimeout(async () => {
-      // Set here rather than in the effect body: the spinner belongs to the request, not to
-      // the debounce window that precedes it.
-      setSearching(true)
+    const term = text.trim().toLowerCase()
+    const known = term.length < MIN_QUERY_LENGTH ? [] : cache.current.get(term)
+    if (known) {
+      setSuggestions(known)
+      setActive(-1)
+      setSearching(false)
+      return
+    }
+
+    setSearching(true)
+    timer.current = setTimeout(async () => {
       try {
         session.current ??= await newSessionToken()
-        const results = await suggestPlaces(term, session.current)
+        // Loading Google can take a second, and each lookup is billed: one for a field
+        // cleared or closed in the meantime must not be sent at all.
+        if (request !== latest.current) return
+        const results = await suggestPlaces(text.trim(), session.current)
         // A newer keystroke owns the list now; leave its results alone.
         if (request !== latest.current) return
+        // An empty list may be a failed lookup, which should be retried, not remembered.
+        if (results.length > 0) cache.current.set(term, results)
         setSuggestions(results)
         setActive(-1)
       } finally {
-        // Always cleared, even for a superseded request: closing the menu mid-flight would
-        // otherwise leave the spinner turning with nothing behind it.
         if (request === latest.current) setSearching(false)
       }
     }, DEBOUNCE_MS)
+  }
 
-    return () => clearTimeout(timer)
-  }, [query, open])
+  /** Closes the list and drops any search queued or in flight, so nothing lands afterwards. */
+  const close = useCallback(() => {
+    clearTimeout(timer.current)
+    latest.current += 1
+    setSearching(false)
+    setOpen(false)
+  }, [])
 
   useEffect(() => {
     if (!open) return
     const onPointerDown = (event: PointerEvent) => {
-      if (!container.current?.contains(event.target as Node)) setOpen(false)
+      if (!container.current?.contains(event.target as Node)) close()
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
-  }, [open])
+  }, [open, close])
+
+  // A search still queued at unmount would otherwise be sent for a field that is gone.
+  useEffect(() => close, [close])
 
   const choose = async (suggestion: PlaceSuggestion) => {
-    setOpen(false)
+    close()
     setSuggestions([])
     // Shown immediately; the formatted address replaces it once the details come back.
     const provisional = `${suggestion.primary} ${suggestion.secondary}`.trim()
@@ -100,8 +125,10 @@ export function AddressPicker({ value, onChange, id, invalid, describedBy }: Pro
     onChange(provisional, EMPTY_PIN, false)
 
     const place = await resolvePlace(suggestion)
-    // A session ends with its details lookup, so the next search starts a new one.
+    // A session ends with its details lookup, so the next search starts a new one. The cached
+    // suggestions go with it: they carry the token of the session that just closed.
     session.current = undefined
+    cache.current.clear()
     // Details failed. The chosen text stands, without the parts that would have described it.
     if (!place) return
 
@@ -121,7 +148,7 @@ export function AddressPicker({ value, onChange, id, invalid, describedBy }: Pro
       event.preventDefault()
       void choose(suggestions[active])
     } else if (event.key === 'Escape') {
-      setOpen(false)
+      close()
     }
   }
 
@@ -137,21 +164,25 @@ export function AddressPicker({ value, onChange, id, invalid, describedBy }: Pro
           aria-invalid={invalid}
           aria-describedby={describedBy}
           className={cn(placesConfigured && 'pl-9')}
-          placeholder={
-            placesConfigured ? t('form.addressSearchPlaceholder') : t('form.addressPlaceholder')
-          }
+          placeholder={placesConfigured ? t('form.addressSearchPlaceholder') : t('form.addressPlaceholder')}
           autoComplete="off"
           role={placesConfigured ? 'combobox' : undefined}
           aria-expanded={placesConfigured ? open : undefined}
           aria-controls={placesConfigured ? listId : undefined}
           aria-autocomplete={placesConfigured ? 'list' : undefined}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true)
+            // Fetches Google's script now, so the first search is not also waiting on it.
+            if (placesConfigured && !session.current) {
+              void newSessionToken().then((token) => (session.current ??= token))
+            }
+          }}
           onKeyDown={onKeyDown}
           onChange={(event) => {
             const next = event.target.value
             setQuery(next)
             setOpen(true)
-            if (next.trim() === '') setSuggestions([])
+            if (placesConfigured) search(next)
             // Typed by hand: the old components no longer describe this address.
             onChange(next, EMPTY_PIN, false)
           }}
@@ -183,13 +214,9 @@ export function AddressPicker({ value, onChange, id, invalid, describedBy }: Pro
               >
                 <MapPin className="text-fg-4 mt-0.5 size-3.5 shrink-0" />
                 <span className="min-w-0">
-                  <span className="block truncate text-[13px] font-medium">
-                    {suggestion.primary}
-                  </span>
+                  <span className="block truncate text-[13px] font-medium">{suggestion.primary}</span>
                   {suggestion.secondary && (
-                    <span className="text-fg-3 block truncate text-caption">
-                      {suggestion.secondary}
-                    </span>
+                    <span className="text-fg-3 block truncate text-caption">{suggestion.secondary}</span>
                   )}
                 </span>
               </button>
