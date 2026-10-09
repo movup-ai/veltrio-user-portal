@@ -288,6 +288,12 @@
         "extend": "Retrasar la fecha de devolución",
         "addDriver": "Añadir otro conductor al contrato",
         "swapVehicle": "Asignar otro vehículo al conductor"
+      },
+      "cancelOff": {
+        "not_confirmed": "Aún no aceptada: rechaza la solicitud en su lugar.",
+        "vehicle_out": "El vehículo está fuera: recíbelo para terminar el alquiler.",
+        "rental_over": "El alquiler ya terminó.",
+        "booking_cancelled": "Ya está cancelada."
       }
     },
     "renter": {
@@ -382,7 +388,40 @@
     },
     "cancelDialog": {
       "title": "¿Cancelar esta reserva?",
-      "description": "{{reference}} de {{name}} se liberará y el vehículo quedará disponible para otros alquileres.",
+      "description": "{{reference}} de {{name}} se cancelará y el vehículo quedará disponible para otros alquileres. No se puede deshacer.",
+      "unavailable": "Esta reserva no se puede cancelar ahora.",
+      "reason": "Motivo",
+      "reasonRequired": "Elige un motivo.",
+      "paid": "Pagado hasta ahora",
+      "nothingPaid": "No se ha pagado nada por esta reserva, así que no hay nada que reembolsar.",
+      "policyNow": "Si se cancela ahora, la política de esta reserva reembolsa el {{percent}}%: {{amount}}.",
+      "policyNonRefundable": "Esta reserva no es reembolsable según su política de cancelación.",
+      "noPolicy": "Esta reserva no tiene política de cancelación, así que el reembolso lo decides tú.",
+      "refund": "Reembolso",
+      "refundHint": "Hasta {{max}}.",
+      "refundInvalid": "Indica el importe a reembolsar.",
+      "refundOver": "Es más de lo que se pagó.",
+      "options": {
+        "full": "Reembolso total",
+        "policy": "Según la política · {{percent}}%",
+        "none": "Sin reembolso",
+        "custom": "Otro importe"
+      },
+      "suggested": "Sugerido",
+      "customAmount": "Importe a reembolsar",
+      "effects": {
+        "title": "Qué hace la cancelación",
+        "toCard": "{{amount}} vuelven a la tarjeta con la que pagó el arrendatario.",
+        "byHand": "{{amount}} se pagaron en persona. Devuélvelos tú; quedan registrados como reembolsados.",
+        "kept": "{{amount}} se conservan.",
+        "deposit": "Se libera la retención del depósito de {{amount}}.",
+        "link": "El enlace de pago que ya se envió deja de funcionar.",
+        "email": "Se avisa a {{name}} por correo de que la reserva está cancelada, con el motivo.",
+        "noEmail": "El correo no está configurado, así que {{name}} no será avisado. Avísale tú."
+      },
+      "message": "Mensaje para el arrendatario",
+      "messageHint": "Opcional. Se envía por correo al arrendatario junto con el motivo.",
+      "messageHintNoEmail": "Opcional. Se guarda en la reserva; el correo no está configurado, así que no se envía.",
       "confirm": "Cancelar reserva"
     },
     "request": {
@@ -426,6 +465,18 @@
         "renter_not_verified": "No se pudo verificar al arrendatario",
         "other": "Otro"
       }
+    },
+    "cancelled": {
+      "title": "Reserva cancelada",
+      "subtitle": "Cancelada el {{date}}.",
+      "reason": "Motivo",
+      "message": "Mensaje para el arrendatario",
+      "reasons": {
+        "renter_request": "El arrendatario pidió cancelar",
+        "no_show": "El arrendatario no se presentó",
+        "vehicle_unavailable": "No podemos entregar el vehículo",
+        "other": "Otro"
+      }
     }
   },
   "toast": {
@@ -441,6 +492,10 @@
     "restored": "Reserva restaurada",
     "restoredEmailQueued": "Se está enviando a {{name}} un correo avisando de que vuelve a estar en revisión.",
     "restoreFailed": "No se pudo restaurar la reserva",
+    "cancelled": "Reserva cancelada",
+    "cancelledEmailQueued": "Se está enviando un correo a {{name}}.",
+    "cancelledByHand": "Devuelve {{amount}} al arrendatario en persona.",
+    "cancelFailed": "No se pudo cancelar la reserva",
     "pickedUp": "Vehículo entregado",
     "pickUpFailed": "No se pudo registrar la entrega",
     "returned": "Vehículo devuelto",
@@ -564,11 +619,8 @@
       "drivers": "Conductores adicionales",
       "noDrivers": "Sin conductores adicionales.",
       "fees": "Cargos adicionales",
-      "agreement": "Contrato de alquiler",
-      "agreementTemplate": "Condiciones",
-      "agreementHint": "Las condiciones que firmará el cliente. Se pueden cambiar hasta que el contrato esté firmado.",
-      "agreementDefault": "Se usarán las condiciones predeterminadas de tu empresa.",
-      "agreementUnchecked": "No pudimos cargar tus plantillas de contrato, así que no se pueden confirmar las condiciones guardadas en este borrador. Vuelve a intentarlo para continuar."
+      "termsNotKept": "Este borrador se guardó con los términos «{{name}}». Las reservas empiezan ahora con tus términos por defecto, así que vuelve a elegir «{{name}}» en la reserva antes de enviar su contrato.",
+      "termsNotKeptUnnamed": "Este borrador se guardó con sus propios términos de alquiler. Las reservas empiezan ahora con tus términos por defecto, así que vuelve a elegirlos en la reserva antes de enviar su contrato."
     },
     "draft": {
       "save": "Guardar borrador",

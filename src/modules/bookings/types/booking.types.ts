@@ -81,6 +81,27 @@ export interface BookingDecline {
   restorable: boolean
 }
 
+/** Why a booking the company had accepted was cancelled. Labels in `bookings:details.cancelled.reasons`. */
+export const CANCEL_REASONS = ['renter_request', 'no_show', 'vehicle_unavailable', 'other'] as const
+export type CancelReason = (typeof CANCEL_REASONS)[number]
+
+/** What the cancel dialog sends. The renter is emailed the reason and the message. */
+export interface CancelInput {
+  reason: CancelReason
+  message: string
+  /** What the company keeps of the money paid; the API refunds everything above it. */
+  keep: number
+  /** Stays the same if the same cancellation is sent again. */
+  requestId: string
+}
+
+/** A cancellation as the booking keeps it. */
+export interface BookingCancellation {
+  reason: CancelReason
+  message?: string
+  at: string
+}
+
 export interface BookingPayment {
   state: PaymentState
   paid: number
@@ -300,8 +321,6 @@ export interface BookingInput {
   additionalDrivers: AdditionalDriver[]
   fees: BookingFee[]
   verifications: VerificationKind[]
-  /** The terms the renter will sign. Absent, the booking follows the company's default. */
-  agreementTemplateId?: string
 }
 
 /** One rate the rental was billed at, as it was when booked: "Daily × 3". */
@@ -363,6 +382,8 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   paymentPreference?: PaymentPreference
   notes?: string
   declined?: BookingDecline
+  /** Set on a booking the company had accepted and then cancelled. */
+  cancelled?: BookingCancellation
   contract: BookingContract
   /** The background check, when one has been ordered. Absent means it was never started. */
   verification?: BookingVerification
@@ -572,6 +593,7 @@ export interface BookingDetails {
   renter: BookingRenter
   request?: BookingRequest
   declined?: BookingDecline
+  cancelled?: BookingCancellation
 }
 
 /**

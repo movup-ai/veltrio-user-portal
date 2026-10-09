@@ -1,6 +1,13 @@
+import type { CancellationTier } from '@/lib/cancellation-policy'
 import type { FleetSize } from '@/services/auth/auth.api'
 import type { Brand, BrandValues } from '../types/brand.types'
-import { SOCIAL_FIELDS, type Company, type CompanyPatch, type CompanyValues, type SocialField } from '../types/company.types'
+import {
+  SOCIAL_FIELDS,
+  type Company,
+  type CompanyPatch,
+  type CompanyValues,
+  type SocialField,
+} from '../types/company.types'
 import { toSocialHandle } from '../utils/company.utils'
 
 // --- Company ---
@@ -25,12 +32,19 @@ export interface CompanyWire {
   facebookHandle: string | null
   xHandle: string | null
   tiktokHandle: string | null
+  cancellationPolicy: CancellationTier[] | null
 }
 
 type CompanyPayload = { [K in keyof CompanyValues]?: CompanyValues[K] | null }
 
 /** The API rejects null for these; the rest are cleared with it. */
-const REQUIRED: ReadonlySet<keyof CompanyValues> = new Set(['name', 'fleetSize', 'country', 'currency', 'timezone'])
+const REQUIRED: ReadonlySet<keyof CompanyValues> = new Set([
+  'name',
+  'fleetSize',
+  'country',
+  'currency',
+  'timezone',
+])
 
 function optional<T>(value: T | null): T | undefined {
   return value ?? undefined
@@ -57,6 +71,7 @@ export function toCompany(wire: CompanyWire): Company {
     facebookHandle: optional(wire.facebookHandle),
     xHandle: optional(wire.xHandle),
     tiktokHandle: optional(wire.tiktokHandle),
+    cancellationPolicy: optional(wire.cancellationPolicy),
   }
 }
 
@@ -90,7 +105,7 @@ export function toCompanyPayload(patch: CompanyPatch): CompanyPayload {
   for (const [key, value] of Object.entries(patch) as [keyof CompanyValues, string][]) {
     // A pasted profile link is cut down to the username the API stores.
     const trimmed = isSocialField(key) ? toSocialHandle(key, value) : value.trim()
-    payload[key] = (trimmed || REQUIRED.has(key)) ? trimmed : null
+    payload[key] = trimmed || REQUIRED.has(key) ? trimmed : null
   }
   return payload as CompanyPayload
 }

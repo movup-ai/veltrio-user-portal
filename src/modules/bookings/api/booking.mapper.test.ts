@@ -6,6 +6,8 @@ import {
   toBookingLists,
   toBookingPayload,
   toBookingStats,
+  toCancelPayload,
+  toCancelledBooking,
   toDeclinePayload,
   toInterval,
   toTabCounts,
@@ -79,6 +81,7 @@ const wire: BookingWire = {
   paymentPreference: null,
   notes: null,
   declined: null,
+  cancelled: null,
   contract: { signedAt: null, version: null },
   verification: null,
   confirmedAt: null,
@@ -637,8 +640,54 @@ describe('toBookingPayload agreement template', () => {
     verifications: [],
   }
 
-  it('names the template only when one was picked, so other bookings follow the default', () => {
+  it('names no template, so every new booking starts on the company default', () => {
+    // The terms are changed from the booking itself; the API reads a missing id as the default.
     expect('agreementTemplateId' in toBookingPayload(input)).toBe(false)
-    expect(toBookingPayload({ ...input, agreementTemplateId: 'tpl_2' }).agreementTemplateId).toBe('tpl_2')
+  })
+})
+
+describe('a cancelled booking', () => {
+  const cancelled = { reason: 'renter_request' as const, message: null, at: '2026-10-09T15:00:00Z' }
+
+  it('carries why it was cancelled, apart from a decline', () => {
+    const booking = toBooking({ ...wire, status: 'cancelled', cancelled })
+
+    expect(booking.cancelled).toEqual({
+      reason: 'renter_request',
+      message: undefined,
+      at: '2026-10-09T15:00:00Z',
+    })
+    expect(booking.declined).toBeUndefined()
+    expect(toBooking(wire).cancelled).toBeUndefined()
+  })
+
+  it('reads what the cancellation did with the money, in currency units', () => {
+    const result = toCancelledBooking({
+      ...wire,
+      status: 'cancelled',
+      cancelled,
+      emailQueued: true,
+      refundedCents: 21540,
+      refundByHandCents: 3000,
+      depositReleased: true,
+    })
+
+    expect(result).toMatchObject({
+      emailQueued: true,
+      refunded: 215.4,
+      refundByHand: 30,
+      depositReleased: true,
+    })
+    expect(result.booking.status).toBe('Cancelled')
+  })
+
+  it('sends what is kept in whole cents, and a blank message as none', () => {
+    // 19.99 * 100 is 1998.9999999999998 in floating point.
+    expect(toCancelPayload({ reason: 'no_show', message: '  ', keep: 19.99, requestId: 'r1' })).toEqual({
+      reason: 'no_show',
+      message: null,
+      keepCents: 1999,
+      requestId: 'r1',
+    })
   })
 })

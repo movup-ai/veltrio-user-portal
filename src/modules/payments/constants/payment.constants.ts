@@ -83,6 +83,11 @@ export const PAYMENT_REFUSALS = [
 
 export type PaymentRefusal = (typeof PAYMENT_REFUSALS)[number]
 
+/** Why the API will not cancel a booking; hints live in `bookings:details.manage.cancelOff`. */
+export const CANCEL_REFUSALS = ['not_confirmed', 'vehicle_out', 'rental_over', 'booking_cancelled'] as const
+
+export type CancelRefusal = (typeof CANCEL_REFUSALS)[number]
+
 /** Why the API will not take a request to extend; hints live in the translations. */
 export const EXTENSION_REFUSALS = [
   'not_confirmed',

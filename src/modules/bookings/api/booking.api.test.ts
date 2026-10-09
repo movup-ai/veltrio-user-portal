@@ -75,6 +75,7 @@ function wire(reference: string): BookingWire {
     paymentPreference: null,
     notes: null,
     declined: null,
+    cancelled: null,
     contract: { signedAt: null, version: null },
     verification: null,
     confirmedAt: null,

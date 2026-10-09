@@ -188,6 +188,50 @@
       "reconnectFailed": "Couldn't reconnect Stripe",
       "methodEnabled": "{{method}} turned on",
       "methodFailed": "Couldn't change the payment method"
+    },
+    "cancellation": {
+      "title": "Cancellation policy",
+      "description": "What a renter gets back when a booking is cancelled before pickup. Shown to renters before they pay.",
+      "choices": {
+        "none": {
+          "label": "No stated policy",
+          "hint": "Decide each refund case by case. Renters are shown nothing."
+        },
+        "flexible": {
+          "label": "Flexible",
+          "hint": "Full refund up to 24 hours before pickup."
+        },
+        "standard": {
+          "label": "Standard",
+          "hint": "Full refund 14 days out, half from 7 days."
+        },
+        "nonRefundable": {
+          "label": "Non-refundable",
+          "hint": "Nothing is refunded once paid."
+        },
+        "custom": {
+          "label": "Custom",
+          "hint": "Set your own notice periods and refunds."
+        }
+      },
+      "customHint": "From the longest notice to the shortest. Closer to pickup than the last tier, nothing is refunded.",
+      "tier": {
+        "atLeast": "At least",
+        "daysBefore": "days before pickup, refund",
+        "percent": "%",
+        "daysLabel": "Tier {{number}}: days before pickup",
+        "percentLabel": "Tier {{number}}: refund percent",
+        "remove": "Remove tier {{number}}"
+      },
+      "problems": {
+        "days": "Enter whole days, from 0 to 365.",
+        "percent": "Enter a whole percent, from 1 to 100.",
+        "daysOrder": "Notice must be shorter than in the tier above.",
+        "percentOrder": "The refund must be lower than in the tier above."
+      },
+      "addTier": "Add tier",
+      "preview": "How renters will see it",
+      "appliesFrom": "Applies to bookings made from now on: a booking keeps the policy it was made under. You still choose the refund each time you cancel one."
     }
   }
 }

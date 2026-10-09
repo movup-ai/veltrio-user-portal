@@ -8,26 +8,23 @@ export function agreementTemplatePath(id: string): string {
   return `${AGREEMENTS_PATH}/${id}`
 }
 
-type Pickable = { id: string; isDefault: boolean }
-
-/** The template a picker shows selected: the one chosen while it still exists, else the default. */
-export function shownTemplateId(chosen: string | undefined, templates: Pickable[]): string | undefined {
-  return (templates.find((t) => t.id === chosen) ?? templates.find((t) => t.isDefault))?.id
+/** The template an older draft named, from when the booking form still picked the terms. */
+export function draftTemplateId(payload: Record<string, unknown> | undefined): string | undefined {
+  const saved = payload?.agreementTemplateId
+  return typeof saved === 'string' && saved ? saved : undefined
 }
 
 /**
- * The template to send with a new booking, or undefined to leave it on the company's default.
- * The default is never named: a booking left on it should follow the default if that moves.
+ * What such a draft's choice comes to now that every booking starts on the default terms:
+ * nothing when it named the default or a template since deleted, else the terms it loses.
+ * Unnamed while the list is not in: silence then could hide a real change of terms.
  */
-export function templateChoice(chosen: string | undefined, templates: Pickable[]): string | undefined {
-  const picked = templates.find((t) => t.id === chosen)
-  return picked && !picked.isDefault ? picked.id : undefined
-}
-
-/**
- * Whether a draft's choice still waits on the list. Sent unchecked it could pin the booking to
- * what is today's default; dropped, the booking is made on terms nobody picked.
- */
-export function isChoiceUnchecked(chosen: string | undefined, templates: Pickable[] | undefined): boolean {
-  return Boolean(chosen) && !templates
+export function lostDraftTerms(
+  savedId: string | undefined,
+  templates: { id: string; name: string; isDefault: boolean }[] | undefined,
+): { name?: string } | undefined {
+  if (!savedId) return undefined
+  if (!templates) return {}
+  const picked = templates.find((template) => template.id === savedId)
+  return picked && !picked.isDefault ? { name: picked.name } : undefined
 }

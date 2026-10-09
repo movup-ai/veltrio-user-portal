@@ -408,5 +408,6 @@ export function buildBookingDetails(
         ? { paymentPreference: booking.paymentPreference, notes: booking.notes }
         : undefined,
     declined: booking?.declined,
+    cancelled: booking?.cancelled,
   }
 }

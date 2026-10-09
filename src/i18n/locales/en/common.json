@@ -80,6 +80,18 @@
     "preview": "Preview {{label}}",
     "download": "Download {{label}}"
   },
+  "cancellationPolicy": {
+    "anyTime": "Any time before pickup",
+    "atLeast_one": "At least {{count}} day before pickup",
+    "atLeast_other": "At least {{count}} days before pickup",
+    "lessThan_one": "Less than {{count}} day before pickup",
+    "lessThan_other": "Less than {{count}} days before pickup",
+    "exactly_one": "{{count}} day before pickup",
+    "exactly_other": "{{count}} days before pickup",
+    "between": "{{from}} to {{to}} days before pickup",
+    "refund": "{{percent}}% refund",
+    "noRefund": "No refund"
+  },
   "calendar": {
     "title": "Calendar",
     "description": "Rentals across your fleet, by date",

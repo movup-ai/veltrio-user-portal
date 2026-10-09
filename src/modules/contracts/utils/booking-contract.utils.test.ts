@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { ApiError } from '@/types/api'
-import { isChoiceUnchecked, shownTemplateId, templateChoice } from './agreement-template.utils'
+import { draftTemplateId, lostDraftTerms } from './agreement-template.utils'
 import {
   agreementIssued,
   contractFileName,
@@ -60,31 +60,33 @@ describe('drawingProblem', () => {
   })
 })
 
-describe('picking a template for a booking', () => {
+describe('the terms an older draft was saved with', () => {
   const templates = [
-    { id: 'std', isDefault: true },
-    { id: 'vans', isDefault: false },
+    { id: 'std', name: 'Standard rental agreement', isDefault: true },
+    { id: 'vans', name: 'Vans', isDefault: false },
   ]
 
-  it('shows the chosen template, or the default when none is chosen or the choice is gone', () => {
-    expect(shownTemplateId('vans', templates)).toBe('vans')
-    expect(shownTemplateId('', templates)).toBe('std')
-    expect(shownTemplateId('deleted', templates)).toBe('std')
+  it('reads the choice off a draft saved when the booking form still picked the terms', () => {
+    expect(draftTemplateId({ agreementTemplateId: 'vans' })).toBe('vans')
+    expect(draftTemplateId({ agreementTemplateId: '' })).toBeUndefined()
+    expect(draftTemplateId({ agreementTemplateId: 7 })).toBeUndefined()
+    expect(draftTemplateId({})).toBeUndefined()
   })
 
-  it('sends only a choice that differs from the default, so a default booking follows it', () => {
-    expect(templateChoice('vans', templates)).toBe('vans')
-    expect(templateChoice('std', templates)).toBeUndefined()
-    expect(templateChoice('', templates)).toBeUndefined()
-    // A draft can outlive the template it named; the API would refuse the dead id.
-    expect(templateChoice('deleted', templates)).toBeUndefined()
+  it('names the terms the booking will no longer start on', () => {
+    expect(lostDraftTerms('vans', templates)).toEqual({ name: 'Vans' })
   })
 
-  it("holds a draft's choice until the list can check it, rather than send or drop it unseen", () => {
-    // Sent unchecked it could pin the booking to today's default; dropped, it changes the terms.
-    expect(isChoiceUnchecked('vans', undefined)).toBe(true)
-    expect(isChoiceUnchecked('vans', templates)).toBe(false)
-    expect(isChoiceUnchecked('', undefined)).toBe(false)
-    expect(isChoiceUnchecked(undefined, undefined)).toBe(false)
+  it('loses nothing when the draft named the default, or a template deleted since', () => {
+    // Either way the booking was going to be made on the default, as it is now.
+    expect(lostDraftTerms('std', templates)).toBeUndefined()
+    expect(lostDraftTerms('deleted', templates)).toBeUndefined()
+    expect(lostDraftTerms(undefined, templates)).toBeUndefined()
+  })
+
+  it('still warns, unnamed, while the templates cannot say which it was', () => {
+    // Silence here could hide a real change of terms behind a list that failed to load.
+    expect(lostDraftTerms('vans', undefined)).toEqual({})
+    expect(lostDraftTerms(undefined, undefined)).toBeUndefined()
   })
 })
