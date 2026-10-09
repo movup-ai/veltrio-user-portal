@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/api/client'
 import { ROLE_PERMISSIONS } from '@/utils/permissions'
+import type { AddressPin } from '@/modules/locations/types/location.types'
 import type { ID } from '@/types/common'
 import type { MembershipRole, OrganizationMembership, User } from '@/types/user'
 
@@ -30,6 +31,8 @@ export interface RegisterTenantPayload {
   country: string
   fleetSize: FleetSize
   website?: string
+  /** Becomes the address of the starter branch the API creates. */
+  companyAddress?: AddressPin & { address: string }
 }
 
 export interface RegisterTenantResponse {

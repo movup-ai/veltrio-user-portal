@@ -2,8 +2,8 @@ import { useAuth } from '@clerk/clerk-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TFunction } from 'i18next'
-import { useEffect, useMemo, useState } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { useMemo, useRef, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
@@ -13,26 +13,42 @@ import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { authApi, FLEET_SIZES } from '@/services/auth/auth.api'
+import { AddressPicker } from '@/modules/locations/components/AddressPicker'
+import type { AddressPin } from '@/modules/locations/types/location.types'
+import { authApi, FLEET_SIZES, type RegisterTenantPayload } from '@/services/auth/auth.api'
 import { ME_QUERY_KEY, useMe } from '@/services/auth/use-me'
 import { ApiError } from '@/types/api'
 import { countryOptions, isCountryCode } from '@/utils/countries'
 import { TIMEZONES } from '@/utils/dates'
-import { isReservedSubdomain, isValidSubdomain, isValidWebsite, slugify } from '@/utils/slug'
+import { isValidWebsite, SUBDOMAIN_ATTEMPTS, subdomainFor } from '@/utils/slug'
 
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+/**
+ * Registers under the company name's own subdomain, moving to -2, -3… while one is taken.
+ * The form has no subdomain field, so a clash is not something the user could fix.
+ */
+async function registerWithFreeSubdomain(payload: Omit<RegisterTenantPayload, 'subdomain'>) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await authApi.registerTenant({
+        ...payload,
+        subdomain: subdomainFor(payload.tenantName, attempt),
+      })
+    } catch (error) {
+      const taken = error instanceof ApiError && error.code === 'subdomain_taken'
+      if (!taken || attempt + 1 >= SUBDOMAIN_ATTEMPTS) throw error
+    }
+  }
+}
 
 function onboardingSchema(t: TFunction<'auth'>) {
   return z.object({
     ownerFullName: z.string().trim().min(1, t('errors.fullNameRequired')),
     tenantName: z.string().trim().min(1, t('errors.companyNameRequired')),
-    subdomain: z
-      .string()
-      .trim()
-      .min(1, t('errors.subdomainRequired'))
-      .refine(isValidSubdomain, t('errors.subdomainInvalid'))
-      .refine((value) => !isReservedSubdomain(value), t('errors.subdomainReserved')),
     website: z.string().trim().refine(isValidWebsite, t('errors.websiteInvalid')),
+    // Capped at the contact address's length, not a branch's 200: it is saved as both.
+    address: z.string().trim().min(1, t('errors.addressRequired')).max(160, t('errors.addressTooLong')),
     country: z.string().refine(isCountryCode, t('errors.countryRequired')),
     fleetSize: z.enum(FLEET_SIZES, t('errors.fleetSizeRequired')),
     timezone: z.string().min(1, t('errors.timezoneRequired')),
@@ -55,9 +71,11 @@ export function OnboardingPage() {
   const me = useMe()
 
   const [formError, setFormError] = useState<string | null>(null)
-  // Once the subdomain is edited by hand it stops tracking the company name.
-  // Clearing the field opts back in, so a mistyped edit is not a dead end.
-  const [subdomainEdited, setSubdomainEdited] = useState(false)
+  // Beside the form rather than in it: the parts are never typed, only replaced with the address.
+  const [pin, setPin] = useState<AddressPin>({})
+  // Once chosen by hand the country stops following the address: a company can be based in
+  // one country and operate in another.
+  const countryChosen = useRef(false)
 
   const countries = useMemo(() => countryOptions(i18n.resolvedLanguage ?? 'en'), [i18n.resolvedLanguage])
   const countryNames = useMemo(() => countries.map((c) => c.name), [countries])
@@ -69,38 +87,31 @@ export function OnboardingPage() {
     handleSubmit,
     setValue,
     setError,
-    formState: { errors, isSubmitting, isSubmitted },
+    formState: { errors, isSubmitting },
   } = useForm<OnboardingValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       ownerFullName: '',
       tenantName: '',
-      subdomain: '',
       website: '',
+      address: '',
       country: '',
       fleetSize: undefined,
       timezone: BROWSER_TIMEZONE,
     },
   })
 
-  const tenantName = useWatch({ control, name: 'tenantName' })
-
-  useEffect(() => {
-    if (subdomainEdited) return
-    setValue('subdomain', slugify(tenantName), { shouldValidate: isSubmitted })
-  }, [tenantName, subdomainEdited, setValue, isSubmitted])
-
   const onSubmit = async (values: OnboardingValues) => {
     setFormError(null)
     try {
-      await authApi.registerTenant({
+      await registerWithFreeSubdomain({
         tenantName: values.tenantName,
-        subdomain: values.subdomain,
         timezone: values.timezone,
         ownerFullName: values.ownerFullName,
         country: values.country,
         fleetSize: values.fleetSize,
         website: values.website || undefined,
+        companyAddress: { address: values.address, ...pin },
       })
       await queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY })
       navigate('/dashboard', { replace: true })
@@ -140,27 +151,7 @@ export function OnboardingPage() {
         </FormField>
 
         <FormField label={t('onboarding.companyName')} error={errors.tenantName?.message} required>
-          {(fieldProps) => (
-            <Input autoComplete="organization" {...register('tenantName')} {...fieldProps} />
-          )}
-        </FormField>
-
-        <FormField
-          label={t('onboarding.subdomain')}
-          error={errors.subdomain?.message}
-          description={t('onboarding.subdomainHelp')}
-          required
-        >
-          {(fieldProps) => (
-            <Input
-              autoComplete="off"
-              spellCheck={false}
-              {...register('subdomain', {
-                onChange: (event) => setSubdomainEdited(event.target.value.trim() !== ''),
-              })}
-              {...fieldProps}
-            />
-          )}
+          {(fieldProps) => <Input autoComplete="organization" {...register('tenantName')} {...fieldProps} />}
         </FormField>
 
         <FormField label={t('onboarding.website')} error={errors.website?.message}>
@@ -170,6 +161,30 @@ export function OnboardingPage() {
               placeholder={t('onboarding.websitePlaceholder')}
               {...register('website')}
               {...fieldProps}
+            />
+          )}
+        </FormField>
+
+        <FormField label={t('onboarding.address')} error={errors.address?.message} required>
+          {({ id, invalid, 'aria-describedby': describedBy }) => (
+            <Controller
+              control={control}
+              name="address"
+              render={({ field }) => (
+                <AddressPicker
+                  id={id}
+                  invalid={invalid}
+                  describedBy={describedBy}
+                  value={field.value}
+                  onChange={(address, parts) => {
+                    field.onChange(address)
+                    setPin(parts)
+                    if (parts.country && isCountryCode(parts.country) && !countryChosen.current) {
+                      setValue('country', parts.country, { shouldValidate: true })
+                    }
+                  }}
+                />
+              )}
             />
           )}
         </FormField>
@@ -184,9 +199,10 @@ export function OnboardingPage() {
                   options={countryNames}
                   // The form holds the ISO code; the combobox shows the localized name.
                   value={countries.find((c) => c.code === field.value)?.name ?? ''}
-                  onChange={(name) =>
+                  onChange={(name) => {
+                    countryChosen.current = true
                     field.onChange(countries.find((c) => c.name === name)?.code ?? '')
-                  }
+                  }}
                   {...fieldProps}
                 />
               )}
@@ -223,12 +239,7 @@ export function OnboardingPage() {
               control={control}
               name="timezone"
               render={({ field }) => (
-                <Combobox
-                  options={TIMEZONES}
-                  value={field.value}
-                  onChange={field.onChange}
-                  {...fieldProps}
-                />
+                <Combobox options={TIMEZONES} value={field.value} onChange={field.onChange} {...fieldProps} />
               )}
             />
           )}
