@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   toBookingExtensions,
+  toCancellationQuote,
   toExtensionPayload,
   toExtensionQuote,
   type BookingExtensionsWire,
@@ -89,5 +90,55 @@ describe('toExtensionPayload', () => {
       returnAt: '2026-10-12T14:00:00Z',
       amountCents: 1999,
     })
+  })
+})
+
+describe('toCancellationQuote', () => {
+  const wire = {
+    cancel: { allowed: true, reason: null },
+    currency: 'USD',
+    paidCents: 23540,
+    paidByHandCents: 5000,
+    policy: [{ daysBefore: 7, refundPercent: 50 }],
+    refundPercent: 50,
+    policyRefundCents: 11770,
+    depositHeldCents: 35000,
+    withdrawsLink: true,
+    emailsRenter: true,
+  }
+
+  it('reads cents as currency units', () => {
+    expect(toCancellationQuote(wire)).toEqual({
+      cancel: { allowed: true, reason: undefined },
+      currency: 'USD',
+      paid: 235.4,
+      paidByHand: 50,
+      policy: [{ daysBefore: 7, refundPercent: 50 }],
+      refundPercent: 50,
+      policyRefund: 117.7,
+      depositHeld: 350,
+      withdrawsLink: true,
+      emailsRenter: true,
+    })
+  })
+
+  it('tells a booking with no policy from one whose policy refunds nothing', () => {
+    const none = toCancellationQuote({ ...wire, policy: null, refundPercent: null, policyRefundCents: null })
+    const nonRefundable = toCancellationQuote({ ...wire, policy: [], refundPercent: 0, policyRefundCents: 0 })
+
+    expect([none.policy, none.refundPercent, none.policyRefund]).toEqual([undefined, undefined, undefined])
+    expect([nonRefundable.policy, nonRefundable.refundPercent, nonRefundable.policyRefund]).toEqual([
+      [],
+      0,
+      0,
+    ])
+  })
+
+  it('keeps the button off but drops a reason it has no words for', () => {
+    const refused = (reason: string) =>
+      toCancellationQuote({ ...wire, cancel: { allowed: false, reason } }).cancel
+
+    expect(refused('vehicle_out')).toEqual({ allowed: false, reason: 'vehicle_out' })
+    expect(refused('something_new')).toEqual({ allowed: false, reason: undefined })
   })
 })

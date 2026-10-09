@@ -188,6 +188,50 @@
       "reconnectFailed": "No se pudo reconectar Stripe",
       "methodEnabled": "{{method}} activado",
       "methodFailed": "No se pudo cambiar el método de pago"
+    },
+    "cancellation": {
+      "title": "Política de cancelación",
+      "description": "Lo que recupera un cliente cuando se cancela una reserva antes de la recogida. Se muestra a los clientes antes de pagar.",
+      "choices": {
+        "none": {
+          "label": "Sin política declarada",
+          "hint": "Decide cada reembolso caso por caso. A los clientes no se les muestra nada."
+        },
+        "flexible": {
+          "label": "Flexible",
+          "hint": "Reembolso total hasta 24 horas antes de la recogida."
+        },
+        "standard": {
+          "label": "Estándar",
+          "hint": "Reembolso total con 14 días, la mitad desde 7 días."
+        },
+        "nonRefundable": {
+          "label": "No reembolsable",
+          "hint": "No se reembolsa nada una vez pagado."
+        },
+        "custom": {
+          "label": "Personalizada",
+          "hint": "Define tus propios plazos de aviso y reembolsos."
+        }
+      },
+      "customHint": "Del aviso más largo al más corto. Más cerca de la recogida que el último tramo, no se reembolsa nada.",
+      "tier": {
+        "atLeast": "Al menos",
+        "daysBefore": "días antes de la recogida, reembolso del",
+        "percent": "%",
+        "daysLabel": "Tramo {{number}}: días antes de la recogida",
+        "percentLabel": "Tramo {{number}}: porcentaje de reembolso",
+        "remove": "Quitar el tramo {{number}}"
+      },
+      "problems": {
+        "days": "Indica días enteros, de 0 a 365.",
+        "percent": "Indica un porcentaje entero, de 1 a 100.",
+        "daysOrder": "El aviso debe ser más corto que en el tramo anterior.",
+        "percentOrder": "El reembolso debe ser menor que en el tramo anterior."
+      },
+      "addTier": "Añadir tramo",
+      "preview": "Cómo lo verán los clientes",
+      "appliesFrom": "Se aplica a las reservas hechas desde ahora: cada reserva conserva la política con la que se hizo. Tú sigues eligiendo el reembolso cada vez que cancelas una."
     }
   }
 }

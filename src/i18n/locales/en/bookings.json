@@ -288,6 +288,12 @@
         "extend": "Push the return date back",
         "addDriver": "Name another driver on the agreement",
         "swapVehicle": "Put the renter in a different car"
+      },
+      "cancelOff": {
+        "not_confirmed": "Not accepted yet: decline the request instead.",
+        "vehicle_out": "The vehicle is out: take it back to end the rental.",
+        "rental_over": "The rental is over.",
+        "booking_cancelled": "Already cancelled."
       }
     },
     "renter": {
@@ -382,7 +388,40 @@
     },
     "cancelDialog": {
       "title": "Cancel this booking?",
-      "description": "{{reference}} for {{name}} will be released and the vehicle freed for other rentals.",
+      "description": "{{reference}} for {{name}} will be cancelled and the vehicle freed for other rentals. This can't be undone.",
+      "unavailable": "This booking can't be cancelled now.",
+      "reason": "Reason",
+      "reasonRequired": "Choose a reason.",
+      "paid": "Paid so far",
+      "nothingPaid": "Nothing has been paid on this booking, so there is nothing to refund.",
+      "policyNow": "Cancelling now, this booking's policy refunds {{percent}}%: {{amount}}.",
+      "policyNonRefundable": "This booking is non-refundable under its cancellation policy.",
+      "noPolicy": "This booking has no cancellation policy, so what to refund is your decision.",
+      "refund": "Refund",
+      "refundHint": "Up to {{max}}.",
+      "refundInvalid": "Enter the amount to refund.",
+      "refundOver": "That is more than was paid.",
+      "options": {
+        "full": "Full refund",
+        "policy": "Per policy · {{percent}}%",
+        "none": "No refund",
+        "custom": "Other amount"
+      },
+      "suggested": "Suggested",
+      "customAmount": "Amount to refund",
+      "effects": {
+        "title": "What cancelling does",
+        "toCard": "{{amount}} goes back to the card the renter paid with.",
+        "byHand": "{{amount}} was paid in person. Hand it back yourself; it is recorded as refunded.",
+        "kept": "{{amount}} is kept.",
+        "deposit": "The {{amount}} deposit hold is released.",
+        "link": "The payment link already sent stops working.",
+        "email": "{{name}} is emailed that the booking is cancelled, with the reason.",
+        "noEmail": "Email isn't set up, so {{name}} won't be told. Let them know yourself."
+      },
+      "message": "Message to the renter",
+      "messageHint": "Optional. Emailed to the renter with the reason.",
+      "messageHintNoEmail": "Optional. Kept on the booking; email isn't set up, so it is not sent.",
       "confirm": "Cancel booking"
     },
     "request": {
@@ -426,6 +465,18 @@
         "renter_not_verified": "Could not verify the renter",
         "other": "Other"
       }
+    },
+    "cancelled": {
+      "title": "Booking cancelled",
+      "subtitle": "Cancelled on {{date}}.",
+      "reason": "Reason",
+      "message": "Message to the renter",
+      "reasons": {
+        "renter_request": "Renter asked to cancel",
+        "no_show": "Renter did not show up",
+        "vehicle_unavailable": "We can't provide the vehicle",
+        "other": "Other"
+      }
     }
   },
   "toast": {
@@ -441,6 +492,10 @@
     "restored": "Reservation restored",
     "restoredEmailQueued": "An email is on its way to {{name}} saying it is under review again.",
     "restoreFailed": "Couldn't restore the reservation",
+    "cancelled": "Booking cancelled",
+    "cancelledEmailQueued": "An email is on its way to {{name}}.",
+    "cancelledByHand": "Hand {{amount}} back to the renter in person.",
+    "cancelFailed": "Couldn't cancel the booking",
     "pickedUp": "Vehicle handed over",
     "pickUpFailed": "Couldn't hand the vehicle over",
     "returned": "Vehicle returned",
@@ -563,12 +618,7 @@
       "noVerification": "No check run.",
       "drivers": "Additional drivers",
       "noDrivers": "No additional drivers.",
-      "fees": "Additional fees",
-      "agreement": "Rental agreement",
-      "agreementTemplate": "Terms",
-      "agreementHint": "The terms the renter will sign. They can be changed until the agreement is signed.",
-      "agreementDefault": "Your company's default terms will be used.",
-      "agreementUnchecked": "We couldn't load your agreement templates, so the terms saved with this draft can't be confirmed. Try again to continue."
+      "fees": "Additional fees"
     },
     "draft": {
       "save": "Save draft",

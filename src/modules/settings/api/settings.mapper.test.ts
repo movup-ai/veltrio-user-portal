@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { Company } from '../types/company.types'
-import { toBrandPayload, toCompanyPayload, toCompanyValues } from './settings.mapper'
+import {
+  toBrandPayload,
+  toCompany,
+  toCompanyPayload,
+  toCompanyValues,
+  type CompanyWire,
+} from './settings.mapper'
 
 describe('toCompanyPayload', () => {
   it('sends a cleared optional field as null, which is how the API clears it', () => {
@@ -22,7 +28,11 @@ describe('toCompanyPayload', () => {
 describe('social usernames', () => {
   it('sends the bare username the API stores, whatever form it was typed in', () => {
     expect(
-      toCompanyPayload({ instagramHandle: '@sunstate', tiktokHandle: 'https://www.tiktok.com/@sunstate', xHandle: ' ' }),
+      toCompanyPayload({
+        instagramHandle: '@sunstate',
+        tiktokHandle: 'https://www.tiktok.com/@sunstate',
+        xHandle: ' ',
+      }),
     ).toEqual({ instagramHandle: 'sunstate', tiktokHandle: 'sunstate', xHandle: null })
   })
 
@@ -44,5 +54,14 @@ describe('toBrandPayload', () => {
       primaryColor: '#E11D48',
       headline: null,
     })
+  })
+})
+
+describe('the cancellation policy', () => {
+  const wire = { name: 'Sunstate', cancellationPolicy: null } as CompanyWire
+
+  it('reads no stated policy as absent, and a non-refundable one as an empty schedule', () => {
+    expect(toCompany(wire).cancellationPolicy).toBeUndefined()
+    expect(toCompany({ ...wire, cancellationPolicy: [] }).cancellationPolicy).toEqual([])
   })
 })

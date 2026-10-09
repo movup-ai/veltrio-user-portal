@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { toast } from '@/components/ui/use-toast'
-import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
@@ -18,6 +17,8 @@ import { useFormatters } from '@/i18n'
 import { formatDay } from '@/utils/dates'
 import { BookingActivity } from '@/modules/bookings/components/BookingActivity'
 import { BookingAgreementSection } from '@/modules/bookings/components/BookingAgreementSection'
+import { BookingCancelDialog } from '@/modules/bookings/components/BookingCancelDialog'
+import { BookingCancelledBanner } from '@/modules/bookings/components/BookingCancelledBanner'
 import { BookingChecklist } from '@/modules/bookings/components/BookingChecklist'
 import { BookingDeclinedBanner } from '@/modules/bookings/components/BookingDeclinedBanner'
 import { BookingExtensionNotice } from '@/modules/bookings/components/BookingExtensionNotice'
@@ -30,6 +31,7 @@ import { BookingRequestBanner } from '@/modules/bookings/components/BookingReque
 import { BookingRestoreAction } from '@/modules/bookings/components/BookingRestoreAction'
 import { BookingTripCard } from '@/modules/bookings/components/BookingTripCard'
 import { RentalProgress } from '@/modules/bookings/components/RentalProgress'
+import { useCancelBooking } from '@/modules/bookings/hooks/use-booking-request'
 import { useBookingDetails } from '@/modules/bookings/hooks/use-bookings'
 import { useConditionPhotos } from '@/modules/bookings/hooks/use-condition-photos'
 import {
@@ -46,6 +48,7 @@ import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLink
 import { useBookingContract, useContractPdfOpener } from '@/modules/contracts/hooks/use-booking-contract'
 import { agreementIssued } from '@/modules/contracts/utils/booking-contract.utils'
 import { useBookingExtensions } from '@/modules/payments/hooks/use-booking-extensions'
+import { useBookingPayments } from '@/modules/payments/hooks/use-booking-payments'
 import { extendUnavailable } from '@/modules/payments/utils/booking-extension.utils'
 import type { InsuranceOrderWire } from '@/modules/bookings/api/booking.mapper'
 import {
@@ -85,13 +88,12 @@ function VehicleCover({ src }: { src?: string }) {
 
 export function BookingDetailsPage() {
   const { t } = useTranslation('bookings')
-  const { t: tCommon } = useTranslation('common')
   const { t: tVehicles } = useTranslation('vehicles')
   const { t: tPayments } = useTranslation('payments')
   const format = useFormatters()
   const navigate = useNavigate()
   const { bookingId } = useParams()
-  const [confirmCancel, setConfirmCancel] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const [extending, setExtending] = useState(false)
 
   const { data: booking, isLoading, isError, refetch } = useBookingDetails(bookingId)
@@ -108,6 +110,11 @@ export function BookingDetailsPage() {
   const { data: contract } = useBookingContract(bookingId ?? '')
   // Shared with the extension notice, which owns the dialog this page's manage row opens.
   const { data: extensions, isError: extensionsFailed } = useBookingExtensions(bookingId)
+  // The payment card's own query, so asking whether it can be cancelled costs no second request.
+  const { data: payments } = useBookingPayments(bookingId)
+  const cancelBooking = useCancelBooking(bookingId ?? '', booking?.renter.name ?? '', (amount) =>
+    format.currency(amount),
+  )
   // Only once a handover is recorded: before that the booking has no photos to ask for.
   const { data: conditionPhotos = [] } = useConditionPhotos(
     bookingId ?? '',
@@ -182,6 +189,12 @@ export function BookingDetailsPage() {
   const closed = !stillOpen
   const awaitingAnswer = booking.status === 'Pending'
   const extendOff = extendUnavailable(extensions, extensionsFailed)
+  const cancelRule = payments?.actions.cancel
+  // A request is declined, and a car that is out is taken back: the row says which.
+  const cancelOff =
+    cancelRule && !cancelRule.allowed
+      ? { reason: cancelRule.reason && t(`details.manage.cancelOff.${cancelRule.reason}`) }
+      : undefined
 
   const miles = (value: number) => t('details.condition.miles', { miles: format.number(value) })
   const driven =
@@ -288,6 +301,7 @@ export function BookingDetailsPage() {
           }
         />
       )}
+      {booking.cancelled && <BookingCancelledBanner cancelled={booking.cancelled} />}
 
       <BookingExtensionNotice
         reference={booking.reference}
@@ -420,9 +434,10 @@ export function BookingDetailsPage() {
                 extend: extendOff && {
                   reason: extendOff.reason && tPayments(`extension.errors.${extendOff.reason}`),
                 },
+                cancel: cancelOff,
               }}
               onAction={(action) => {
-                if (action === 'cancel') return setConfirmCancel(true)
+                if (action === 'cancel') return setCancelling(true)
                 if (action === 'extend') return setExtending(true)
                 pending(t(`details.manage.${action}`))
               }}
@@ -431,20 +446,15 @@ export function BookingDetailsPage() {
         </div>
       </div>
 
-      <ConfirmDialog
-        open={confirmCancel}
-        onOpenChange={setConfirmCancel}
-        title={t('details.cancelDialog.title')}
-        description={t('details.cancelDialog.description', {
-          reference: booking.reference,
-          name: booking.renter.name,
-        })}
-        confirmLabel={t('details.cancelDialog.confirm')}
-        cancelLabel={tCommon('actions.back')}
-        onConfirm={() => {
-          setConfirmCancel(false)
-          pending(t('details.manage.cancel'))
-        }}
+      <BookingCancelDialog
+        open={cancelling}
+        onOpenChange={setCancelling}
+        reference={booking.reference}
+        renterName={booking.renter.name}
+        cancellable={Boolean(cancelRule?.allowed)}
+        loading={cancelBooking.isPending}
+        // Left open on a refusal, so the reason and the amount are still there to send again.
+        onCancel={(input) => cancelBooking.mutate(input, { onSuccess: () => setCancelling(false) })}
       />
 
       <InsuranceLinkDialog

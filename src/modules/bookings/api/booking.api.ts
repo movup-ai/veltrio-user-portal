@@ -7,6 +7,7 @@ import type {
   BookingInput,
   BookingTuple,
   ConditionInput,
+  CancelInput,
   DeclineInput,
 } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
@@ -19,12 +20,15 @@ import {
   toBookingPayload,
   toBookingStats,
   toConditionPayload,
+  toCancelPayload,
+  toCancelledBooking,
   toDeclinePayload,
   toInterval,
   toNotifiedBooking,
   toTabCounts,
   type BookedIntervalWire,
   type BookingListParams,
+  type BookingCancelledWire,
   type BookingNotifiedWire,
   type BookingStatsWire,
   type BookingTabCountsWire,
@@ -112,6 +116,12 @@ export const bookingApi = {
     apiClient
       .post<BookingNotifiedWire>(`/bookings/${reference}/decline`, toDeclinePayload(input))
       .then((r) => toNotifiedBooking(r.data)),
+
+  /** Cancels before pickup: links withdrawn, the deposit released, the rest above `keep` refunded. */
+  cancel: (reference: string, input: CancelInput) =>
+    apiClient
+      .post<BookingCancelledWire>(`/bookings/${reference}/cancel`, toCancelPayload(input))
+      .then((r) => toCancelledBooking(r.data)),
 
   /** Undoes a decline: pending again, not accepted. Refused once the pickup time has passed. */
   restore: (reference: string) =>

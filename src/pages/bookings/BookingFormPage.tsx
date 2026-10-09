@@ -26,12 +26,6 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
-import { useAgreementTemplates } from '@/modules/contracts/hooks/use-agreement-templates'
-import {
-  isChoiceUnchecked,
-  shownTemplateId,
-  templateChoice,
-} from '@/modules/contracts/utils/agreement-template.utils'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import {
   customerKeys,
@@ -122,7 +116,6 @@ function blankValues(): BookingFormValues {
     verifications: [],
     additionalDrivers: [],
     fees: [],
-    agreementTemplateId: '',
   }
 }
 
@@ -210,7 +203,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const { t: tCommon } = useTranslation('common')
   const { t: tValidation } = useTranslation('validation')
   const { t: tVehicles } = useTranslation('vehicles')
-  const { t: tContracts } = useTranslation('contracts')
   const format = useFormatters()
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
@@ -218,7 +210,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const deleteDraft = useDeleteBookingDraft({ silent: true })
   const queryClient = useQueryClient()
   const locations = useLocationNames()
-  const { data: templates, isError: templatesFailed, refetch: refetchTemplates } = useAgreementTemplates()
 
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
@@ -546,8 +537,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
   const onSubmit = (submitted: BookingFormValues) =>
     new Promise<void>((settle) => {
       if (!selectedVehicle || !pricing) return settle()
-      // Also the form's own submit handler, which a disabled Create button does not stop.
-      if (isChoiceUnchecked(submitted.agreementTemplateId, templates)) return settle()
 
       const input: BookingInput = {
         customerId: submitted.customerId || undefined,
@@ -568,7 +557,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
         additionalDrivers: submitted.additionalDrivers,
         fees: submitted.fees,
         verifications: submitted.verifications,
-        agreementTemplateId: templateChoice(submitted.agreementTemplateId, templates ?? []),
       }
 
       // Wrapped in a promise so the button stays busy through the uploads too — RHF keeps
@@ -1350,45 +1338,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                     </ul>
                   </ReviewSection>
                 )}
-
-                <ReviewSection title={t('form.review.agreement')}>
-                  {templates ? (
-                    <FormField
-                      label={t('form.review.agreementTemplate')}
-                      description={t('form.review.agreementHint')}
-                    >
-                      {(fieldProps) => (
-                        <Select
-                          value={shownTemplateId(values.agreementTemplateId, templates)}
-                          onValueChange={(id) => setValue('agreementTemplateId', id, { shouldDirty: true })}
-                        >
-                          <SelectTrigger {...fieldProps}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {templates.map((template) => (
-                              <SelectItem key={template.id} value={template.id}>
-                                {template.isDefault
-                                  ? tContracts('template.default', { name: template.name })
-                                  : template.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </FormField>
-                  ) : !isChoiceUnchecked(values.agreementTemplateId, templates) ? (
-                    <p className="text-fg-4 text-[14px]">{t('form.review.agreementDefault')}</p>
-                  ) : templatesFailed ? (
-                    <ErrorState
-                      description={t('form.review.agreementUnchecked')}
-                      onRetry={() => refetchTemplates()}
-                      className="py-6"
-                    />
-                  ) : (
-                    <LoadingState className="py-6" />
-                  )}
-                </ReviewSection>
               </div>
 
               <div className="flex flex-col gap-3.5">
@@ -1441,7 +1390,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
               <Button
                 type="button"
                 loading={isSubmitting || createBooking.isPending}
-                disabled={!pricing || isChoiceUnchecked(values.agreementTemplateId, templates)}
+                disabled={!pricing}
                 onClick={handleSubmit(onSubmit)}
                 className="gap-1.5"
               >

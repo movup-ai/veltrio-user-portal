@@ -64,7 +64,7 @@ describe('useRefreshPaymentAccount', () => {
     refreshAccount.mockResolvedValueOnce(AFTER)
     const { wrapper } = setup()
 
-    const list = renderHook(() => usePaymentMethods(), { wrapper })
+    const list = renderHook(() => usePaymentMethods(undefined), { wrapper })
     await waitFor(() => expect(list.result.current.isSuccess).toBe(true))
     const refresh = renderHook(() => useRefreshPaymentAccount(), { wrapper })
     await act(() => refresh.result.current.mutateAsync())

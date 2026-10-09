@@ -50,6 +50,7 @@ const ACTIONS: PaymentActions = {
   pickUp: { allowed: false, reason: 'not_fully_paid' },
   returnVehicle: { allowed: false, reason: 'not_on_rental' },
   close: { allowed: false, reason: 'not_awaiting_close' },
+  cancel: { allowed: true },
 }
 
 const LINK: PaymentLink = { token: 'secret-token', amount: 319, deposit: 0, currency: 'USD' }

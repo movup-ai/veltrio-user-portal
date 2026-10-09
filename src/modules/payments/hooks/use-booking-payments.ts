@@ -21,6 +21,20 @@ export function useBookingPayments(reference: string | undefined) {
   })
 }
 
+/**
+ * What cancelling would refund, read as the dialog opens and never kept: the policy's answer
+ * depends on the hour, and on payments that may have landed since the page loaded.
+ */
+export function useCancellationQuote(reference: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...bookingPaymentKeys.booking(reference), 'cancellation'],
+    queryFn: () => bookingPaymentApi.cancellationQuote(reference),
+    enabled,
+    staleTime: 0,
+    gcTime: 0,
+  })
+}
+
 /** The renter's link: the one already out when nothing has changed, so a sent text keeps working. */
 export function useCreatePaymentLink(reference: string) {
   return useLinkAction(

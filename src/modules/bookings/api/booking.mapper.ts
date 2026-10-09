@@ -17,6 +17,8 @@ import {
   type BookingSort,
   type BookingStats,
   type BookingStatus,
+  type CancelInput,
+  type CancelReason,
   type DeclineInput,
   type DeclineReason,
   type PaymentPreference,
@@ -128,6 +130,7 @@ export interface BookingWire {
   paymentPreference: PaymentPreference | null
   notes: string | null
   declined: { reason: DeclineReason; message: string | null; at: string; restorable: boolean } | null
+  cancelled: { reason: CancelReason; message: string | null; at: string } | null
   contract: { signedAt: string | null; version: string | null }
   verification: VerificationWire | null
   confirmedAt: string | null
@@ -347,6 +350,9 @@ export function toBooking(wire: BookingWire): Booking {
     paymentPreference: wire.paymentPreference ?? undefined,
     notes: wire.notes ?? undefined,
     declined: wire.declined ? { ...wire.declined, message: wire.declined.message ?? undefined } : undefined,
+    cancelled: wire.cancelled
+      ? { ...wire.cancelled, message: wire.cancelled.message ?? undefined }
+      : undefined,
     contract: {
       signedAt: wire.contract.signedAt ?? undefined,
       version: wire.contract.version ?? undefined,
@@ -455,6 +461,32 @@ export function toDeclinePayload(input: DeclineInput) {
   return { reason: input.reason, message: input.message.trim() || null }
 }
 
+/** A booking just cancelled, with what happened to its money. */
+export type BookingCancelledWire = BookingNotifiedWire & {
+  refundedCents: number
+  refundByHandCents: number
+  depositReleased: boolean
+}
+
+export function toCancelledBooking(wire: BookingCancelledWire) {
+  return {
+    ...toNotifiedBooking(wire),
+    refunded: fromCents(wire.refundedCents),
+    /** The part of the refund paid outside Stripe, which the counter hands back itself. */
+    refundByHand: fromCents(wire.refundByHandCents),
+    depositReleased: wire.depositReleased,
+  }
+}
+
+export function toCancelPayload(input: CancelInput) {
+  return {
+    reason: input.reason,
+    message: input.message.trim() || null,
+    keepCents: toCents(input.keep),
+    requestId: input.requestId,
+  }
+}
+
 export function toBookingPayload(input: BookingInput) {
   return {
     ...(input.customerId && { customerId: input.customerId }),
@@ -472,7 +504,6 @@ export function toBookingPayload(input: BookingInput) {
     })),
     fees: input.fees.map((f) => ({ id: f.id, label: f.label.trim(), amountCents: toCents(f.amount) })),
     verifications: input.verifications,
-    ...(input.agreementTemplateId && { agreementTemplateId: input.agreementTemplateId }),
   }
 }
 

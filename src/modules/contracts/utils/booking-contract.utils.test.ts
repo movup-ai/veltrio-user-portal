@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { siteUrl } from '@/modules/vehicles/utils/public-links'
 import { ApiError } from '@/types/api'
-import { isChoiceUnchecked, shownTemplateId, templateChoice } from './agreement-template.utils'
 import {
   agreementIssued,
   contractFileName,
@@ -57,34 +56,5 @@ describe('drawingProblem', () => {
     expect(drawingProblem(refusal('signature_blank'))).toBe('signatureRequired')
     expect(drawingProblem(refusal('signature_invalid'))).toBe('signatureUnreadable')
     expect(drawingProblem(refusal('already_signed'))).toBeUndefined()
-  })
-})
-
-describe('picking a template for a booking', () => {
-  const templates = [
-    { id: 'std', isDefault: true },
-    { id: 'vans', isDefault: false },
-  ]
-
-  it('shows the chosen template, or the default when none is chosen or the choice is gone', () => {
-    expect(shownTemplateId('vans', templates)).toBe('vans')
-    expect(shownTemplateId('', templates)).toBe('std')
-    expect(shownTemplateId('deleted', templates)).toBe('std')
-  })
-
-  it('sends only a choice that differs from the default, so a default booking follows it', () => {
-    expect(templateChoice('vans', templates)).toBe('vans')
-    expect(templateChoice('std', templates)).toBeUndefined()
-    expect(templateChoice('', templates)).toBeUndefined()
-    // A draft can outlive the template it named; the API would refuse the dead id.
-    expect(templateChoice('deleted', templates)).toBeUndefined()
-  })
-
-  it("holds a draft's choice until the list can check it, rather than send or drop it unseen", () => {
-    // Sent unchecked it could pin the booking to today's default; dropped, it changes the terms.
-    expect(isChoiceUnchecked('vans', undefined)).toBe(true)
-    expect(isChoiceUnchecked('vans', templates)).toBe(false)
-    expect(isChoiceUnchecked('', undefined)).toBe(false)
-    expect(isChoiceUnchecked(undefined, undefined)).toBe(false)
   })
 })

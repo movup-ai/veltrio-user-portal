@@ -1,5 +1,6 @@
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
-import type { PaymentRefusal } from '../constants/payment.constants'
+import type { CancellationPolicy } from '@/lib/cancellation-policy'
+import type { CancelRefusal, PaymentRefusal } from '../constants/payment.constants'
 
 export type BookingPaymentKind = 'charge' | 'deposit' | 'manual' | 'extension'
 
@@ -55,6 +56,34 @@ export interface PaymentActions {
   returnVehicle: PaymentActionRule
   /** Closing off after return: waits for the deposit, and for charges it did not cover. */
   close: PaymentActionRule
+  /** Cancelling before pickup, which refunds, releases the deposit and frees the dates. */
+  cancel: CancelRule
+}
+
+export interface CancelRule {
+  allowed: boolean
+  reason?: CancelRefusal
+}
+
+/** What cancelling a booking now would do with its money. Amounts in currency units. */
+export interface CancellationQuote {
+  cancel: CancelRule
+  currency: string
+  /** Rental money the company holds: paid and not refunded. A refund comes out of this. */
+  paid: number
+  /** The part of it taken outside Stripe, which is refunded last and by hand. */
+  paidByHand: number
+  /** The policy the booking was made under. Absent when the company had none. */
+  policy?: CancellationPolicy
+  /** What that policy gives back at this moment. Both absent without a policy. */
+  refundPercent?: number
+  policyRefund?: number
+  /** A deposit hold on the renter's card, which cancelling releases; 0 without one. */
+  depositHeld: number
+  /** A payment or deposit link is out, and cancelling withdraws it. */
+  withdrawsLink: boolean
+  /** False while the API's email is switched off: cancelling then tells the renter nothing. */
+  emailsRenter: boolean
 }
 
 /** Where a booking's money stands. */
