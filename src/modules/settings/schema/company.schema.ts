@@ -3,7 +3,12 @@ import { z } from 'zod'
 import { FLEET_SIZES } from '@/services/auth/auth.api'
 import { isCountryCode } from '@/utils/countries'
 import { isValidWebsite } from '@/utils/slug'
-import { DESCRIPTION_MAX, SOCIAL_DOMAINS, SUPPORTED_CURRENCIES } from '../constants/company.constants'
+import {
+  DESCRIPTION_MAX,
+  LISTING_LANGUAGES,
+  SOCIAL_DOMAINS,
+  SUPPORTED_CURRENCIES,
+} from '../constants/company.constants'
 import type { SocialField } from '../types/company.types'
 import { isPhoneNumber, isSocialHandle } from '../utils/company.utils'
 
@@ -26,6 +31,7 @@ export function companySchema(t: TFunction<'validation'>) {
     fleetSize: z.enum(FLEET_SIZES),
     country: z.string().refine(isCountryCode, t('company.countryRequired')),
     currency: z.enum(SUPPORTED_CURRENCIES, t('company.currencyRequired')),
+    listingLanguage: z.enum(LISTING_LANGUAGES),
     timezone: z.string().trim().min(1, t('company.timezoneRequired')),
     contactEmail: z
       .string()

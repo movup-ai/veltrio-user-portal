@@ -28,6 +28,7 @@ const COMPANY: Company = {
   currencyLocked: false,
   timezone: 'America/New_York',
   currency: 'USD',
+  listingLanguage: 'en',
   contactEmail: 'hello@sunstate.com',
 }
 
@@ -123,7 +124,9 @@ describe('CompanySettings', () => {
     await user.type(await screen.findByLabelText('Instagram'), 'facebook.com/sunstate')
     await user.click(within(card('Social links')).getByRole('button', { name: 'Save changes' }))
 
-    expect(await screen.findByText('Enter your username, or a link to your profile on instagram.com')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Enter your username, or a link to your profile on instagram.com'),
+    ).toBeInTheDocument()
     expect(update).not.toHaveBeenCalled()
   })
 
@@ -138,7 +141,9 @@ describe('CompanySettings', () => {
     await user.type(instagram, 'https://instagram.com/')
     await user.click(within(card('Social links')).getByRole('button', { name: 'Save changes' }))
 
-    expect(await screen.findByText('Enter your username, or a link to your profile on instagram.com')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Enter your username, or a link to your profile on instagram.com'),
+    ).toBeInTheDocument()
     expect(update).not.toHaveBeenCalled()
   })
 
@@ -197,6 +202,21 @@ describe('CompanySettings', () => {
     await user.click(within(card('Localization')).getByRole('button', { name: 'Save changes' }))
 
     await waitFor(() => expect(update).toHaveBeenCalledWith({ currency: 'EUR' }))
+  })
+
+  it('saves the language listings are written in', async () => {
+    get.mockResolvedValue(COMPANY)
+    update.mockImplementation(async (patch) => ({ ...COMPANY, ...patch }) as Company)
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const language = await screen.findByRole('combobox', { name: /Listing language/ })
+    expect(language).toHaveTextContent('English')
+    await user.click(language)
+    await user.click(await screen.findByRole('option', { name: 'Spanish' }))
+    await user.click(within(card('Localization')).getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ listingLanguage: 'es' }))
   })
 
   it('locks the currency once bookings exist, and says why', async () => {

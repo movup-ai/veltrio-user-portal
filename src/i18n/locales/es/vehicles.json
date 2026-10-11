@@ -274,7 +274,9 @@
       "shorten": "Acortar",
       "expand": "Ampliar",
       "failed": "No se pudo generar la descripción",
-      "failedDescription": "Algo salió mal al generar esta descripción."
+      "failedDescription": "Algo salió mal al generar esta descripción.",
+      "limitReached": "Se agotó el límite de hoy para descripciones generadas. Inténtalo mañana o escríbela a mano.",
+      "needsMakeAndModel": "Añade primero la marca y el modelo."
     },
     "nav": {
       "previousStep": "Paso anterior",

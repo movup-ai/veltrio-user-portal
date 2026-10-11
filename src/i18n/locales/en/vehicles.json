@@ -274,7 +274,9 @@
       "shorten": "Shorten",
       "expand": "Expand",
       "failed": "Couldn't generate description",
-      "failedDescription": "Something went wrong generating this description."
+      "failedDescription": "Something went wrong generating this description.",
+      "limitReached": "Today's limit for generated descriptions is used up. Try again tomorrow, or write this one by hand.",
+      "needsMakeAndModel": "Add the make and model first."
     },
     "nav": {
       "previousStep": "Previous step",

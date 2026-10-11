@@ -6,7 +6,7 @@ import { Combobox } from '@/components/ui/combobox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { countryOptions } from '@/utils/countries'
 import { TIMEZONES } from '@/utils/dates'
-import { SUPPORTED_CURRENCIES } from '../constants/company.constants'
+import { LISTING_LANGUAGES, SUPPORTED_CURRENCIES } from '../constants/company.constants'
 import { useCompanySection } from '../hooks/use-company-section'
 import { companySchema } from '../schema/company.schema'
 import type { Company } from '../types/company.types'
@@ -20,11 +20,20 @@ export function LocalizationCard({ company }: { company: Company }) {
   const countries = useMemo(() => countryOptions(language), [language])
   const countryNames = useMemo(() => countries.map((c) => c.name), [countries])
   const schema = useMemo(
-    () => companySchema(tValidation).pick({ country: true, timezone: true, currency: true }),
+    () =>
+      companySchema(tValidation).pick({
+        country: true,
+        timezone: true,
+        currency: true,
+        listingLanguage: true,
+      }),
     [tValidation],
   )
   const { form, submit, discard, saving } = useCompanySection(company, schema)
-  const { control, formState: { errors, isDirty } } = form
+  const {
+    control,
+    formState: { errors, isDirty },
+  } = form
 
   return (
     <SettingsCard
@@ -84,6 +93,33 @@ export function LocalizationCard({ company }: { company: Company }) {
                   {SUPPORTED_CURRENCIES.map((code) => (
                     <SelectItem key={code} value={code}>
                       {currencyLabel(code, language)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        )}
+      </FormField>
+
+      <FormField
+        label={t('company.localization.listingLanguage')}
+        description={t('company.localization.listingLanguageHint')}
+        required
+      >
+        {(fieldProps) => (
+          <Controller
+            control={control}
+            name="listingLanguage"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger {...fieldProps}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LISTING_LANGUAGES.map((code) => (
+                    <SelectItem key={code} value={code}>
+                      {t(`company.localization.languages.${code}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
