@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
@@ -55,9 +55,13 @@ export function CustomerFormDialog({ customer, open, onOpenChange }: Props) {
     defaultValues: customerFormValues(customer),
   })
 
+  // On opening, or on another customer: not whenever the same one is fetched again. A
+  // refetch hands over a new object, and resetting on it wiped whatever was being typed.
+  const startOver = useEffectEvent(() => reset(customerFormValues(customer)))
+  const customerId = customer?.id
   useEffect(() => {
-    if (open) reset(customerFormValues(customer))
-  }, [open, customer, reset])
+    if (open) startOver()
+  }, [open, customerId])
 
   // Asked as the renter is typed, so the counter sees who is on file before saving rather
   // than in the refusal afterwards.

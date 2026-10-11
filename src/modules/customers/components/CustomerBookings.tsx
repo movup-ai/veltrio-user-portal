@@ -28,6 +28,13 @@ export function CustomerBookings({ customerId }: Props) {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE)
+  // The page reuses this table between customers: page 3 of the last one's history is an
+  // empty page of the next one's, labelled page 1.
+  const [lastCustomerId, setLastCustomerId] = useState(customerId)
+  if (customerId !== lastCustomerId) {
+    setLastCustomerId(customerId)
+    setPage(1)
+  }
   const filters = useMemo(() => ({ ...NO_BOOKING_FILTERS, customerId }), [customerId])
 
   const { data, isLoading, isError, refetch, isStale } = useBookingPage({

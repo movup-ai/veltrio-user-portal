@@ -137,4 +137,12 @@ describe('DocumentOnFile', () => {
     await waitFor(() => expect(downloadUrl).toHaveBeenCalled())
     expect(invalidate).not.toHaveBeenCalled()
   })
+
+  it('offers no replace button to someone who has nothing to replace it with', () => {
+    // A viewer who may not edit gets no handler, and a button that does nothing misleads.
+    render(<DocumentOnFile customerId="c1" document={document()} />)
+
+    expect(screen.queryByRole('button', { name: /replace/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /download licence.pdf/i })).toBeInTheDocument()
+  })
 })

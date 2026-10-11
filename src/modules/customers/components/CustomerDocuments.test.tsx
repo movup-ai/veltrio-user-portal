@@ -1,22 +1,36 @@
-import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render as rtlRender, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { CustomerDocument } from '../types/customer.types'
+import type { CustomerDocument, DocumentKind } from '../types/customer.types'
 
-const upload = vi.fn()
+/** Each upload in flight, so a test decides when (and whether) it finishes. */
+const uploads: { kind: DocumentKind; file: File; finish: () => void }[] = []
 let documents: CustomerDocument[] = []
 
-vi.mock('../hooks/use-customers', () => ({
-  useCustomerDocuments: () => ({ data: documents, isLoading: false, isError: false, refetch: vi.fn() }),
-  useUploadCustomerDocument: () => ({ mutate: upload, isPending: false, variables: undefined }),
+// The real hooks run, so two uploads at once behave as they would on the page.
+vi.mock('../api/customer-document.api', () => ({
+  ACCEPTED_DOCUMENT_TYPES: ['image/jpeg', 'application/pdf'],
+  MAX_DOCUMENT_BYTES: 10 * 1024 * 1024,
+  customerDocumentApi: { list: () => Promise.resolve(documents) },
+  uploadCustomerDocuments: vi.fn(),
+  uploadCustomerDocument: (_: string, kind: DocumentKind, file: File) =>
+    new Promise<void>((resolve) => {
+      uploads.push({ kind, file, finish: resolve })
+    }),
 }))
 
-// The scan on file has its own tests; here it only needs to offer the replace button.
+// The scan on file has its own tests; here it only needs to offer what it was handed.
 vi.mock('./DocumentOnFile', () => ({
-  DocumentOnFile: ({ document, onReplace }: { document: CustomerDocument; onReplace: () => void }) => (
-    <button type="button" onClick={onReplace}>
-      Replace {document.name}
-    </button>
+  DocumentOnFile: ({ document, onReplace }: { document: CustomerDocument; onReplace?: () => void }) => (
+    <div>
+      <span>{document.name}</span>
+      {onReplace && (
+        <button type="button" onClick={onReplace}>
+          Replace {document.name}
+        </button>
+      )}
+    </div>
   ),
 }))
 
@@ -34,44 +48,74 @@ const LICENCE: CustomerDocument = {
 
 const scan = (name: string) => new File(['x'], name, { type: 'image/jpeg' })
 
+async function render(canEdit = true) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const view = rtlRender(
+    <QueryClientProvider client={client}>
+      <CustomerDocuments customerId="c1" canEdit={canEdit} />
+    </QueryClientProvider>,
+  )
+  await screen.findByText('licence.jpg')
+  return view
+}
+
+/** The empty slot's own input; the labelled one replaces the scan beside it. */
+const emptySlot = (container: HTMLElement) =>
+  container.querySelector<HTMLInputElement>('input[type="file"]:not([aria-label])')!
+
 describe('CustomerDocuments', () => {
   beforeEach(() => {
-    upload.mockReset()
+    uploads.length = 0
     documents = [LICENCE]
   })
 
   it('replaces a scan straight from the file picker, leaving it in place until one is chosen', async () => {
     const user = userEvent.setup({ delay: null })
-    render(<CustomerDocuments customerId="c1" canEdit />)
+    await render()
 
     // Pressing replace opens the picker: the scan stays on screen and no Cancel appears.
     await user.click(screen.getByRole('button', { name: 'Replace licence.jpg' }))
-    expect(screen.getByRole('button', { name: 'Replace licence.jpg' })).toBeInTheDocument()
+    expect(screen.getByText('licence.jpg')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
-    expect(upload).not.toHaveBeenCalled()
+    expect(uploads).toHaveLength(0)
 
     const file = scan('renewed.jpg')
     await user.upload(screen.getByLabelText('Replace Driver licence'), file)
 
-    expect(upload).toHaveBeenCalledWith({ kind: 'licence', file })
+    await waitFor(() => expect(uploads).toEqual([expect.objectContaining({ kind: 'licence', file })]))
   })
 
   it('offers a slot to add the scan a customer does not have yet', async () => {
     const user = userEvent.setup({ delay: null })
-    const { container } = render(<CustomerDocuments customerId="c1" canEdit />)
+    const { container } = await render()
 
-    // The empty slot's own input; the labelled one beside it replaces the licence.
-    const slot = container.querySelector<HTMLInputElement>('input[type="file"]:not([aria-label])')
     const file = scan('insurance.jpg')
-    await user.upload(slot!, file)
+    await user.upload(emptySlot(container), file)
 
-    expect(upload).toHaveBeenCalledWith({ kind: 'insurance', file })
+    await waitFor(() => expect(uploads).toEqual([expect.objectContaining({ kind: 'insurance', file })]))
   })
 
-  it('gives someone who cannot edit nothing to upload with', () => {
-    const { container } = render(<CustomerDocuments customerId="c1" canEdit={false} />)
+  it('keeps a slot busy until its own upload ends, whatever the other slot does', async () => {
+    const user = userEvent.setup({ delay: null })
+    const { container } = await render()
+
+    await user.upload(screen.getByLabelText('Replace Driver licence'), scan('renewed.jpg'))
+    await waitFor(() => expect(uploads).toHaveLength(1))
+    // A second upload starting must not make the first look finished: the licence could
+    // then be replaced again while its upload is still on the way.
+    await user.upload(emptySlot(container), scan('insurance.jpg'))
+    await waitFor(() => expect(uploads).toHaveLength(2))
+
+    expect(screen.getAllByText('Uploading…')).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: 'Replace licence.jpg' })).not.toBeInTheDocument()
+  })
+
+  it('gives someone who cannot edit nothing to upload or replace with', async () => {
+    const { container } = await render(false)
 
     expect(container.querySelector('input[type="file"]')).toBeNull()
+    // A replace button that opens nothing would be a button that silently does nothing.
+    expect(screen.queryByRole('button', { name: /replace/i })).not.toBeInTheDocument()
     expect(screen.getByText('None on file')).toBeInTheDocument()
   })
 })

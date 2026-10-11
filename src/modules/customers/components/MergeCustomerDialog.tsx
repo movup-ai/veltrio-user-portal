@@ -32,29 +32,32 @@ export function MergeCustomerDialog({ customer, duplicate, onClose, onMerged }: 
   const { t } = useTranslation('customers')
   const { t: tCommon } = useTranslation('common')
   const merge = useMergeCustomers()
-  const [keepId, setKeepId] = useState(customer.id)
-
-  function close() {
-    setKeepId(customer.id)
-    onClose()
+  // Which side to keep, not its id: the page reuses this dialog between customers, and a
+  // remembered id would go on naming the last one, merging the record on screen into it.
+  const [keepDuplicate, setKeepDuplicate] = useState(false)
+  const pair = duplicate ? `${customer.id}:${duplicate.id}` : undefined
+  const [lastPair, setLastPair] = useState(pair)
+  if (pair !== lastPair) {
+    setLastPair(pair)
+    setKeepDuplicate(false)
   }
 
   function confirm() {
     if (!duplicate) return
-    const sourceId = keepId === customer.id ? duplicate.id : customer.id
+    const [kept, merged] = keepDuplicate ? [duplicate, customer] : [customer, duplicate]
     merge.mutate(
-      { targetId: keepId, sourceId },
+      { targetId: kept.id, sourceId: merged.id },
       {
         onSuccess: () => {
-          close()
-          onMerged(keepId)
+          onClose()
+          onMerged(kept.id)
         },
       },
     )
   }
 
   return (
-    <Dialog open={Boolean(duplicate)} onOpenChange={(open) => !open && close()}>
+    <Dialog open={Boolean(duplicate)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-xl">
         {duplicate && (
           <>
@@ -63,8 +66,8 @@ export function MergeCustomerDialog({ customer, duplicate, onClose, onMerged }: 
               <DialogDescription className="whitespace-pre-line">{t('merge.description')}</DialogDescription>
             </DialogHeader>
             <RadioGroup
-              value={keepId}
-              onValueChange={setKeepId}
+              value={keepDuplicate ? duplicate.id : customer.id}
+              onValueChange={(id) => setKeepDuplicate(id === duplicate.id)}
               aria-label={t('merge.keepLabel')}
               className="flex flex-col gap-2"
             >
@@ -78,7 +81,7 @@ export function MergeCustomerDialog({ customer, duplicate, onClose, onMerged }: 
               ))}
             </RadioGroup>
             <DialogFooter>
-              <Button variant="outline" onClick={close} disabled={merge.isPending}>
+              <Button variant="outline" onClick={onClose} disabled={merge.isPending}>
                 {tCommon('actions.cancel')}
               </Button>
               <Button onClick={confirm} loading={merge.isPending}>

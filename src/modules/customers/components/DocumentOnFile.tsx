@@ -13,8 +13,8 @@ import type { CustomerDocument } from '../types/customer.types'
 interface DocumentOnFileProps {
   customerId: string
   document: CustomerDocument
-  /** Switches the slot back to the picker so a newer scan can replace this one. */
-  onReplace: () => void
+  /** Lets a newer scan replace this one. Absent for a viewer who may not, and so is the button. */
+  onReplace?: () => void
   className?: string
 }
 
@@ -138,14 +138,16 @@ export function DocumentOnFile({ customerId, document, onReplace, className }: D
               (a PDF) is handed to the browser to download. */}
           {isImage ? <Expand className="size-4" /> : <Download className="size-4" />}
         </button>
-        <button
-          type="button"
-          onClick={onReplace}
-          aria-label={t('form.documents.replace', { name: document.name })}
-          className="text-fg-4 hover:bg-surface-3 hover:text-foreground flex size-7 shrink-0 items-center justify-center rounded-[7px] transition-colors"
-        >
-          <RotateCcw className="size-4" />
-        </button>
+        {onReplace && (
+          <button
+            type="button"
+            onClick={onReplace}
+            aria-label={t('form.documents.replace', { name: document.name })}
+            className="text-fg-4 hover:bg-surface-3 hover:text-foreground flex size-7 shrink-0 items-center justify-center rounded-[7px] transition-colors"
+          >
+            <RotateCcw className="size-4" />
+          </button>
+        )}
       </div>
 
       <Dialog open={previewUrl != null} onOpenChange={(open) => !open && setPreviewUrl(null)}>
