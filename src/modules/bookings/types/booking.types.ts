@@ -1,5 +1,5 @@
 import type { DateRange } from '@/components/ui/date-range-picker'
-import type { Customer, CustomerInput } from '@/modules/customers/types/customer.types'
+import type { Customer, CustomerInput, CustomerMatch } from '@/modules/customers/types/customer.types'
 import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
 
 /** [customer, reference, vehicle, plate, rentalWindow, note, location, status, total] */
@@ -79,6 +79,27 @@ export interface BookingDecline {
   at: string
   /** The API's answer on whether it can still be undone: only until the pickup time asked for. */
   restorable: boolean
+}
+
+/** Why a booking the company had accepted was cancelled. Labels in `bookings:details.cancelled.reasons`. */
+export const CANCEL_REASONS = ['renter_request', 'no_show', 'vehicle_unavailable', 'other'] as const
+export type CancelReason = (typeof CANCEL_REASONS)[number]
+
+/** What the cancel dialog sends. The renter is emailed the reason and the message. */
+export interface CancelInput {
+  reason: CancelReason
+  message: string
+  /** What the company keeps of the money paid; the API refunds everything above it. */
+  keep: number
+  /** Stays the same if the same cancellation is sent again. */
+  requestId: string
+}
+
+/** A cancellation as the booking keeps it. */
+export interface BookingCancellation {
+  reason: CancelReason
+  message?: string
+  at: string
 }
 
 export interface BookingPayment {
@@ -208,6 +229,8 @@ export interface BookingFilters {
   make: string | 'All'
   durationBand: BookingDurationBand | 'Any'
   valueBands: BookingValueBand[]
+  /** Only this customer's bookings, for their own page. The bookings list never sets it. */
+  customerId?: string
 }
 
 /**
@@ -290,6 +313,8 @@ export interface BookingInput {
    */
   customerId?: string
   customer: BookingCustomer
+  /** The counter confirmed this renter is not the customer already holding that licence number. */
+  allowSharedLicence?: boolean
   /** No rate option: the cost engine picks the rates from the vehicle's card. */
   vehicleId: string
   pickupLocation: string
@@ -300,8 +325,6 @@ export interface BookingInput {
   additionalDrivers: AdditionalDriver[]
   fees: BookingFee[]
   verifications: VerificationKind[]
-  /** The terms the renter will sign. Absent, the booking follows the company's default. */
-  agreementTemplateId?: string
 }
 
 /** One rate the rental was billed at, as it was when booked: "Daily × 3". */
@@ -362,7 +385,13 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   payment: BookingPayment
   paymentPreference?: PaymentPreference
   notes?: string
+  /** What the renter typed, where it disagrees with `customer`. Gone once staff settle it. */
+  renterSubmitted?: CustomerInput
+  /** Other customers who look like this one. Loaded with the booking's own page only. */
+  possibleDuplicates: CustomerMatch[]
   declined?: BookingDecline
+  /** Set on a booking the company had accepted and then cancelled. */
+  cancelled?: BookingCancellation
   contract: BookingContract
   /** The background check, when one has been ordered. Absent means it was never started. */
   verification?: BookingVerification
@@ -524,6 +553,18 @@ export interface BookingRenter {
   since: number
 }
 
+/**
+ * A renter's own request whose details differ from the customer their email named. Nobody
+ * could ask them, so staff say who they are before the request can be accepted.
+ */
+export interface RenterMismatch {
+  onFile: Customer
+  submitted: CustomerInput
+}
+
+/** Who a mismatched renter is: a customer on file, or someone new under an email of their own. */
+export type RenterAnswer = { customerId: string } | { email: string }
+
 /** Everything the booking details page renders. Assembled by `booking.details.ts`. */
 export interface BookingDetails {
   reference: string
@@ -571,7 +612,11 @@ export interface BookingDetails {
   events: BookingEventEntry[]
   renter: BookingRenter
   request?: BookingRequest
+  renterMismatch?: RenterMismatch
+  /** Customers the renter may already be, when there is no mismatch still to settle first. */
+  renterDuplicates: CustomerMatch[]
   declined?: BookingDecline
+  cancelled?: BookingCancellation
 }
 
 /**

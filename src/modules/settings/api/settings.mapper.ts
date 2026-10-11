@@ -1,3 +1,4 @@
+import type { CancellationTier } from '@/lib/cancellation-policy'
 import type { FleetSize } from '@/services/auth/auth.api'
 import type { Brand, BrandValues } from '../types/brand.types'
 import {
@@ -34,6 +35,7 @@ export interface CompanyWire {
   facebookHandle: string | null
   xHandle: string | null
   tiktokHandle: string | null
+  cancellationPolicy: CancellationTier[] | null
 }
 
 type CompanyPayload = { [K in keyof CompanyValues]?: CompanyValues[K] | null }
@@ -74,6 +76,7 @@ export function toCompany(wire: CompanyWire): Company {
     facebookHandle: optional(wire.facebookHandle),
     xHandle: optional(wire.xHandle),
     tiktokHandle: optional(wire.tiktokHandle),
+    cancellationPolicy: optional(wire.cancellationPolicy),
   }
 }
 

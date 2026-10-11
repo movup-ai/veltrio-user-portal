@@ -2,7 +2,7 @@ import { apiClient } from '@/services/api/client'
 import { vehiclePhotoApi } from '@/modules/vehicles/api/vehicle-photo.api'
 import type { PresignedUpload } from '@/modules/vehicles/api/vehicle.mapper'
 import { toCustomerDocument, type CustomerDocumentWire, type DocumentUploadSlotWire } from './customer.mapper'
-import type { CustomerDocument, DocumentKind } from '../types/customer.types'
+import { DOCUMENT_KINDS, type CustomerDocument, type DocumentKind } from '../types/customer.types'
 
 /**
  * A renter's licence and insurance scans. Personal data, so unlike vehicle photos nothing here
@@ -98,4 +98,21 @@ export async function uploadCustomerDocument(
   const slot = await customerDocumentApi.requestUpload(customerId, kind, file)
   await customerDocumentApi.uploadToStorage(slot.upload, file, onProgress)
   return customerDocumentApi.completeUpload(customerId, slot.document.id)
+}
+
+/**
+ * Sends the scans picked for a customer who has just been saved, and says which did not go.
+ * Never throws: the customer already exists, and losing them over an upload would be worse.
+ */
+export async function uploadCustomerDocuments(
+  customerId: string,
+  documents: Partial<Record<DocumentKind, File>>,
+): Promise<DocumentKind[]> {
+  const failed: DocumentKind[] = []
+  for (const kind of DOCUMENT_KINDS) {
+    const file = documents[kind]
+    if (!file) continue
+    await uploadCustomerDocument(customerId, kind, file).catch(() => failed.push(kind))
+  }
+  return failed
 }

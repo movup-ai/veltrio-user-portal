@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { cn } from '@/lib/utils'
 
@@ -25,11 +26,26 @@ interface BookingManagePanelProps {
  * The four changes staff actually make to a live booking, as one list of rows. Each carries a
  * hint, so the card reads as actions with consequences rather than a toolbar of icons.
  *
- * Cancelling is not one of the four: it sits below the list, and is outlined rather than solid
- * so the rarest and most destructive action is not also the loudest.
+ * Cancelling is not one of the four: it sits below the list as the card's one red button, so
+ * the destructive action cannot be mistaken for another change to the rental.
  */
 export function BookingManagePanel({ unavailable = {}, onAction }: BookingManagePanelProps) {
   const { t } = useTranslation('bookings')
+
+  // The cancel dialog is what actually guards the click.
+  const cancel = (
+    <Button
+      type="button"
+      variant="destructive"
+      size="sm"
+      disabled={Boolean(unavailable.cancel)}
+      onClick={() => onAction('cancel')}
+      className="w-full gap-1.5"
+    >
+      <CircleX className="size-3.5" aria-hidden />
+      {t('details.manage.cancel')}
+    </Button>
+  )
 
   return (
     <Card as="section" className="flex flex-col p-[18px]">
@@ -82,18 +98,21 @@ export function BookingManagePanel({ unavailable = {}, onAction }: BookingManage
         })}
       </ul>
 
-      {/* Outline until hover: unmistakably destructive, but not the loudest thing on the card.
-          The ConfirmDialog is what actually guards the click. */}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => onAction('cancel')}
-        className="text-error border-error/40 hover:bg-error hover:border-error mt-3 w-full gap-1.5 hover:text-white"
-      >
-        <CircleX className="size-3.5" aria-hidden />
-        {t('details.manage.cancel')}
-      </Button>
+      <div className="mt-3">
+        {unavailable.cancel?.reason ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* The span is what makes the tooltip work: a disabled button fires no hover. */}
+              <span tabIndex={0} className="block rounded-md">
+                {cancel}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[260px]">{unavailable.cancel.reason}</TooltipContent>
+          </Tooltip>
+        ) : (
+          cancel
+        )}
+      </div>
     </Card>
   )
 }

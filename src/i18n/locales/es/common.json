@@ -80,6 +80,18 @@
     "preview": "Vista previa de {{label}}",
     "download": "Descargar {{label}}"
   },
+  "cancellationPolicy": {
+    "anyTime": "En cualquier momento antes de la recogida",
+    "atLeast_one": "Al menos {{count}} día antes de la recogida",
+    "atLeast_other": "Al menos {{count}} días antes de la recogida",
+    "lessThan_one": "Menos de {{count}} día antes de la recogida",
+    "lessThan_other": "Menos de {{count}} días antes de la recogida",
+    "exactly_one": "{{count}} día antes de la recogida",
+    "exactly_other": "{{count}} días antes de la recogida",
+    "between": "De {{from}} a {{to}} días antes de la recogida",
+    "refund": "Reembolso del {{percent}}%",
+    "noRefund": "Sin reembolso"
+  },
   "calendar": {
     "title": "Calendario",
     "description": "Alquileres de tu flota, por fecha",

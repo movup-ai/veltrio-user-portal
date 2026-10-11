@@ -1,4 +1,10 @@
-import { toCustomer, toCustomerPayload, type CustomerWire } from '@/modules/customers/api/customer.mapper'
+import {
+  toCustomer,
+  toCustomerMatch,
+  toCustomerPayload,
+  type CustomerMatchWire,
+  type CustomerWire,
+} from '@/modules/customers/api/customer.mapper'
 import type { PresignedUpload } from '@/modules/vehicles/api/vehicle.mapper'
 import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
 import { fromCents, toCents } from '@/lib/money'
@@ -17,6 +23,8 @@ import {
   type BookingSort,
   type BookingStats,
   type BookingStatus,
+  type CancelInput,
+  type CancelReason,
   type DeclineInput,
   type DeclineReason,
   type PaymentPreference,
@@ -127,7 +135,18 @@ export interface BookingWire {
   }
   paymentPreference: PaymentPreference | null
   notes: string | null
+  renterSubmitted: {
+    name: string
+    email: string
+    phone: string
+    dateOfBirth: string
+    address: string
+    licenceNumber: string
+    licenceExpiry: string | null
+  } | null
+  possibleDuplicates: CustomerMatchWire[]
   declined: { reason: DeclineReason; message: string | null; at: string; restorable: boolean } | null
+  cancelled: { reason: CancelReason; message: string | null; at: string } | null
   contract: { signedAt: string | null; version: string | null }
   verification: VerificationWire | null
   confirmedAt: string | null
@@ -346,7 +365,14 @@ export function toBooking(wire: BookingWire): Booking {
     },
     paymentPreference: wire.paymentPreference ?? undefined,
     notes: wire.notes ?? undefined,
+    renterSubmitted: wire.renterSubmitted
+      ? { ...wire.renterSubmitted, licenceExpiry: wire.renterSubmitted.licenceExpiry ?? undefined }
+      : undefined,
+    possibleDuplicates: wire.possibleDuplicates.map(toCustomerMatch),
     declined: wire.declined ? { ...wire.declined, message: wire.declined.message ?? undefined } : undefined,
+    cancelled: wire.cancelled
+      ? { ...wire.cancelled, message: wire.cancelled.message ?? undefined }
+      : undefined,
     contract: {
       signedAt: wire.contract.signedAt ?? undefined,
       version: wire.contract.version ?? undefined,
@@ -455,10 +481,37 @@ export function toDeclinePayload(input: DeclineInput) {
   return { reason: input.reason, message: input.message.trim() || null }
 }
 
+/** A booking just cancelled, with what happened to its money. */
+export type BookingCancelledWire = BookingNotifiedWire & {
+  refundedCents: number
+  refundByHandCents: number
+  depositReleased: boolean
+}
+
+export function toCancelledBooking(wire: BookingCancelledWire) {
+  return {
+    ...toNotifiedBooking(wire),
+    refunded: fromCents(wire.refundedCents),
+    /** The part of the refund paid outside Stripe, which the counter hands back itself. */
+    refundByHand: fromCents(wire.refundByHandCents),
+    depositReleased: wire.depositReleased,
+  }
+}
+
+export function toCancelPayload(input: CancelInput) {
+  return {
+    reason: input.reason,
+    message: input.message.trim() || null,
+    keepCents: toCents(input.keep),
+    requestId: input.requestId,
+  }
+}
+
 export function toBookingPayload(input: BookingInput) {
   return {
     ...(input.customerId && { customerId: input.customerId }),
     customer: toCustomerPayload(input.customer),
+    ...(input.allowSharedLicence && { allowSharedLicence: true }),
     vehicleId: input.vehicleId,
     pickupLocation: input.pickupLocation,
     returnLocation: input.returnLocation,
@@ -472,7 +525,6 @@ export function toBookingPayload(input: BookingInput) {
     })),
     fees: input.fees.map((f) => ({ id: f.id, label: f.label.trim(), amountCents: toCents(f.amount) })),
     verifications: input.verifications,
-    ...(input.agreementTemplateId && { agreementTemplateId: input.agreementTemplateId }),
   }
 }
 
@@ -541,6 +593,7 @@ export function toBookingListQuery(params: BookingListParams): Record<string, un
   if (filters.pickup.to) query.pickupTo = filters.pickup.to
   if (filters.durationBand !== 'Any') query.durationBand = filters.durationBand
   if (filters.valueBands.length > 0) query.valueBand = filters.valueBands
+  if (filters.customerId) query.customerId = filters.customerId
 
   return query
 }

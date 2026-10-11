@@ -66,3 +66,12 @@ describe('toBrandPayload', () => {
     })
   })
 })
+
+describe('the cancellation policy', () => {
+  const wire = { name: 'Sunstate', cancellationPolicy: null } as CompanyWire
+
+  it('reads no stated policy as absent, and a non-refundable one as an empty schedule', () => {
+    expect(toCompany(wire).cancellationPolicy).toBeUndefined()
+    expect(toCompany({ ...wire, cancellationPolicy: [] }).cancellationPolicy).toEqual([])
+  })
+})

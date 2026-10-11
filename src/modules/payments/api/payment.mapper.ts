@@ -1,10 +1,13 @@
+import type { CancellationTier } from '@/lib/cancellation-policy'
 import { fromCents, toCents } from '@/lib/money'
 import type { CheckoutMethod, CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
 import type { BookingWire } from '@/modules/bookings/api/booking.mapper'
 import {
+  CANCEL_REFUSALS,
   EXTENSION_REFUSALS,
   PAYMENT_REFUSALS,
+  type CancelRefusal,
   type ExtensionRefusal,
   type PaymentRefusal,
 } from '../constants/payment.constants'
@@ -20,6 +23,8 @@ import type {
   BookingPaymentRecord,
   BookingPayments,
   BookingPaymentStatus,
+  CancelRule,
+  CancellationQuote,
   PaymentActionRule,
   PaymentActions,
   PaymentLink,
@@ -112,6 +117,20 @@ export interface PaymentActionsWire {
   pickUp: PaymentActionWire
   returnVehicle: PaymentActionWire
   close: PaymentActionWire
+  cancel: PaymentActionWire
+}
+
+export interface CancellationQuoteWire {
+  cancel: PaymentActionWire
+  currency: string
+  paidCents: number
+  paidByHandCents: number
+  policy: CancellationTier[] | null
+  refundPercent: number | null
+  policyRefundCents: number | null
+  depositHeldCents: number
+  withdrawsLink: boolean
+  emailsRenter: boolean
 }
 
 export interface BookingPaymentsWire {
@@ -172,6 +191,27 @@ function toPaymentAction(wire: PaymentActionWire): PaymentActionRule {
   return { allowed: wire.allowed, reason: known ? (wire.reason as PaymentRefusal) : undefined }
 }
 
+/** As for the money actions: a reason with no words here leaves the button off, unexplained. */
+function toCancelRule(wire: PaymentActionWire): CancelRule {
+  const known = (CANCEL_REFUSALS as readonly string[]).includes(wire.reason ?? '')
+  return { allowed: wire.allowed, reason: known ? (wire.reason as CancelRefusal) : undefined }
+}
+
+export function toCancellationQuote(wire: CancellationQuoteWire): CancellationQuote {
+  return {
+    cancel: toCancelRule(wire.cancel),
+    currency: wire.currency,
+    paid: fromCents(wire.paidCents),
+    paidByHand: fromCents(wire.paidByHandCents),
+    policy: wire.policy ?? undefined,
+    refundPercent: wire.refundPercent ?? undefined,
+    policyRefund: wire.policyRefundCents === null ? undefined : fromCents(wire.policyRefundCents),
+    depositHeld: fromCents(wire.depositHeldCents),
+    withdrawsLink: wire.withdrawsLink,
+    emailsRenter: wire.emailsRenter,
+  }
+}
+
 export function toPaymentActions(wire: PaymentActionsWire): PaymentActions {
   return {
     sendLink: toPaymentAction(wire.sendLink),
@@ -183,6 +223,7 @@ export function toPaymentActions(wire: PaymentActionsWire): PaymentActions {
     pickUp: toPaymentAction(wire.pickUp),
     returnVehicle: toPaymentAction(wire.returnVehicle),
     close: toPaymentAction(wire.close),
+    cancel: toCancelRule(wire.cancel),
   }
 }
 

@@ -196,7 +196,7 @@ function ProcessorRow({ account, onConnect, connecting, onRefresh, refreshing }:
                     <Capability label={t('payments.capabilities.payouts')} status={account.payouts} />
                   </div>
                 )}
-                <CheckoutMethods canManage={canManage} />
+                <CheckoutMethods canManage={canManage} connectedAt={account.connectedAt} />
               </>
             ) : (
               // Disconnected has its own notice below; this line would contradict it.
@@ -302,9 +302,10 @@ function Capability({ label, status }: { label: string; status?: string }) {
 
 /** What renters can pay with, as the company's Stripe settings stand. A wallet that is off can
  *  be switched on here; switching off stays in the Stripe Dashboard, where the owner controls it. */
-function CheckoutMethods({ canManage }: { canManage: boolean }) {
+function CheckoutMethods({ canManage, connectedAt }: { canManage: boolean; connectedAt?: string }) {
   const { t } = useTranslation('settings')
-  const { data: methods } = usePaymentMethods()
+  // `remembered` is last visit's answer, shown until Stripe gives this one.
+  const { data: methods, isPlaceholderData: remembered } = usePaymentMethods(connectedAt)
   const enable = useEnablePaymentMethod()
 
   if (!methods || methods.length === 0) return null
@@ -326,7 +327,8 @@ function CheckoutMethods({ canManage }: { canManage: boolean }) {
             <button
               type="button"
               className="text-primary ml-0.5 font-semibold hover:underline disabled:opacity-50"
-              disabled={enable.isPending}
+              // Nothing is switched on from a list that may be out of date.
+              disabled={enable.isPending || remembered}
               onClick={() => enable.mutate(type)}
             >
               {t('payments.actions.turnOn')}

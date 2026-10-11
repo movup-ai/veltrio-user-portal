@@ -12,8 +12,8 @@ export const agreementTemplateKeys = {
   detail: (id: string) => ['agreement-templates', 'detail', id] as const,
 }
 
-export function useAgreementTemplates() {
-  return useQuery({ queryKey: agreementTemplateKeys.list, queryFn: agreementTemplateApi.list })
+export function useAgreementTemplates(enabled = true) {
+  return useQuery({ queryKey: agreementTemplateKeys.list, queryFn: agreementTemplateApi.list, enabled })
 }
 
 export function useAgreementTemplate(id: string) {

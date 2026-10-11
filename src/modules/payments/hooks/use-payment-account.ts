@@ -1,9 +1,12 @@
+import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
+import { useOrganizationStore } from '@/state/organization.store'
 import { paymentApi } from '../api/payment.api'
 import type { CheckoutMethod, PaymentAccount } from '../types/payment-account.types'
+import { methodsScope, recallMethods, rememberMethods } from '../utils/checkout-methods.memory'
 import { onboardingLinks } from '../utils/payment-account.utils'
 
 export const paymentAccountKeys = {
@@ -19,9 +22,24 @@ function failed(title: string) {
   return (error: unknown) => toast({ title, description: normalizeApiError(error).message, variant: 'error' })
 }
 
-/** Only for a linked account: the API refuses it otherwise. */
-export function usePaymentMethods() {
-  return useQuery({ queryKey: paymentAccountKeys.methods, queryFn: paymentApi.methods })
+/**
+ * Only for a linked account: the API refuses it otherwise. The API reads Stripe live, which
+ * takes about half a second, so the last answer for this account stands in until it lands.
+ */
+export function usePaymentMethods(connectedAt: string | undefined) {
+  const organizationId = useOrganizationStore((state) => state.membership?.organizationId)
+  const scope = methodsScope(organizationId, connectedAt)
+  const query = useQuery({
+    queryKey: paymentAccountKeys.methods,
+    queryFn: paymentApi.methods,
+    placeholderData: () => recallMethods(scope),
+  })
+  const { data, isPlaceholderData } = query
+  useEffect(() => {
+    // Only what Stripe said, including after a wallet is switched on: never the stand-in itself.
+    if (data && !isPlaceholderData) rememberMethods(scope, data)
+  }, [data, isPlaceholderData, scope])
+  return query
 }
 
 export function useEnablePaymentMethod() {

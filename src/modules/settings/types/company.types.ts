@@ -1,3 +1,4 @@
+import type { CancellationPolicy } from '@/lib/cancellation-policy'
 import type { FleetSize } from '@/services/auth/auth.api'
 
 import type { LISTING_LANGUAGES } from '../constants/company.constants'
@@ -30,6 +31,8 @@ export interface Company extends Partial<Record<SocialField, string>> {
   contactEmail?: string
   contactPhone?: string
   address?: string
+  /** What a renter who cancels gets back. Absent is no stated policy; empty is non-refundable. */
+  cancellationPolicy?: CancellationPolicy
 }
 
 /** Every editable field as the forms hold it: strings throughout, '' for unset. */

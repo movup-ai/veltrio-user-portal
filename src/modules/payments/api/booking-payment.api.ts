@@ -1,12 +1,20 @@
 import { toCents } from '@/lib/money'
 import { apiClient } from '@/services/api/client'
-import type { BookingPayments, PaymentLink, ReceiptLink, ReturnCharge } from '../types/booking-payment.types'
+import type {
+  BookingPayments,
+  CancellationQuote,
+  PaymentLink,
+  ReceiptLink,
+  ReturnCharge,
+} from '../types/booking-payment.types'
 import {
   toBookingPayments,
+  toCancellationQuote,
   toPaymentLink,
   toReceiptLink,
   toReturnChargesPayload,
   type BookingPaymentsWire,
+  type CancellationQuoteWire,
   type PaymentLinkWire,
   type ReceiptLinkWire,
 } from './payment.mapper'
@@ -77,6 +85,12 @@ export const bookingPaymentApi = {
   /** The invoice or receipt PDF, made by the API from the booking as it is now. */
   document: (reference: string, kind: 'invoice' | 'receipt'): Promise<Blob> =>
     apiClient.get<Blob>(`${base(reference)}/${kind}`, { responseType: 'blob' }).then((r) => r.data),
+
+  /** What cancelling now would refund under the booking's own policy. Asking changes nothing. */
+  cancellationQuote: (reference: string): Promise<CancellationQuote> =>
+    apiClient
+      .get<CancellationQuoteWire>(`/bookings/${reference}/cancellation`)
+      .then((r) => toCancellationQuote(r.data)),
 
   /** The renter's receipt link; the same every time. */
   receiptLink: (reference: string): Promise<ReceiptLink> =>

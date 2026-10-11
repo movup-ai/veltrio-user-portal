@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
+import { methodsScope, recallMethods, rememberMethods } from '../utils/checkout-methods.memory'
 import { onboardingLinks } from '../utils/payment-account.utils'
 import { StripeAccountCard } from './StripeAccountCard'
 
@@ -55,6 +56,7 @@ afterEach(() => {
   enableMethod.mockReset()
   newAccountLink.mockReset()
   useOrganizationStore.setState({ membership: null })
+  localStorage.clear()
 })
 
 describe('StripeAccountCard', () => {
@@ -128,6 +130,38 @@ describe('StripeAccountCard', () => {
 
     await waitFor(() => expect(enableMethod).toHaveBeenCalledWith('google_pay'))
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Turn on' })).not.toBeInTheDocument())
+  })
+
+  it('shows what the account accepted last time at once, while Stripe is asked again', async () => {
+    const linked = '2026-10-02T12:00:00Z'
+    const lastTime: CheckoutMethodStatus[] = [
+      { type: 'card', available: true },
+      { type: 'apple_pay', available: true },
+      { type: 'google_pay', available: false },
+    ]
+    rememberMethods(methodsScope('org_1', linked), lastTime)
+    account.mockResolvedValue({
+      available: true,
+      connected: true,
+      disconnected: false,
+      cardPayments: 'active',
+      payouts: 'active',
+      connectedAt: linked,
+    })
+    let answer: (methods: CheckoutMethodStatus[]) => void = () => {}
+    methods.mockReturnValue(new Promise((resolve) => (answer = resolve)))
+    renderAs('owner')
+
+    // Stripe has not answered, and the row is already there.
+    expect(await screen.findByText('Apple Pay')).toBeInTheDocument()
+    // Remembered is not confirmed: nothing is switched on from a list that may be out of date.
+    expect(screen.getByRole('button', { name: 'Turn on' })).toBeDisabled()
+
+    await act(async () => answer(lastTime.map((method) => ({ ...method, available: true }))))
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Turn on' })).not.toBeInTheDocument())
+    // What Stripe said is what the next visit starts from.
+    expect(recallMethods(methodsScope('org_1', linked))?.every((method) => method.available)).toBe(true)
   })
 
   it('sets up a different account only after the owner confirms', async () => {

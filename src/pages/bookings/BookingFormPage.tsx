@@ -23,23 +23,21 @@ import { FormField } from '@/components/forms/FormField'
 import { StepSidebar } from '@/components/forms/StepSidebar'
 import type { StepDef } from '@/components/forms/Stepper'
 import { PageContainer } from '@/components/layout/PageContainer'
+import { useAgreementTemplates } from '@/modules/contracts/hooks/use-agreement-templates'
+import { draftTemplateId, lostDraftTerms } from '@/modules/contracts/utils/agreement-template.utils'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
-import { useAgreementTemplates } from '@/modules/contracts/hooks/use-agreement-templates'
-import {
-  isChoiceUnchecked,
-  shownTemplateId,
-  templateChoice,
-} from '@/modules/contracts/utils/agreement-template.utils'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import {
   customerKeys,
   useCustomerDocuments,
   useCustomerSearch,
 } from '@/modules/customers/hooks/use-customers'
+import { toCustomerConflict } from '@/modules/customers/api/customer.mapper'
+import { CustomerConflictDialog } from '@/modules/customers/components/CustomerConflictDialog'
 import { DocumentOnFile } from '@/modules/customers/components/DocumentOnFile'
-import type { Customer, DocumentKind } from '@/modules/customers/types/customer.types'
+import type { Customer, CustomerConflict, DocumentKind } from '@/modules/customers/types/customer.types'
 import {
   ACCEPTED_DOCUMENT_TYPES,
   uploadCustomerDocument,
@@ -88,6 +86,9 @@ import { BOOKING_TIME_STEP_MINUTES } from '@/modules/bookings/constants/booking.
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
 
+/** The counter's answer to "is this the customer on file?", sent with the form again. */
+type CustomerAnswer = Pick<BookingInput, 'customerId' | 'allowSharedLicence'>
+
 /**
  * One page of the fleet to pick from. 100 is the most `GET /vehicles` allows — asking for more
  * is a 422, not a larger page — so a tenant past that many available cars at one branch will
@@ -122,7 +123,6 @@ function blankValues(): BookingFormValues {
     verifications: [],
     additionalDrivers: [],
     fees: [],
-    agreementTemplateId: '',
   }
 }
 
@@ -195,6 +195,7 @@ export function BookingFormPage() {
       key={draft?.id ?? 'new'}
       draftId={draft?.id}
       initialValues={draft ? fromDraftPayload(draft.payload) : null}
+      savedTemplateId={draftTemplateId(draft?.payload)}
     />
   )
 }
@@ -203,22 +204,28 @@ interface BookingWizardProps {
   draftId?: string
   /** Null for a fresh booking; the resumed draft's values otherwise. */
   initialValues: BookingFormValues | null
+  /** The terms an older draft picked here, before they were picked on the booking itself. */
+  savedTemplateId?: string
 }
 
-function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
+function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizardProps) {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
   const { t: tValidation } = useTranslation('validation')
   const { t: tVehicles } = useTranslation('vehicles')
-  const { t: tContracts } = useTranslation('contracts')
   const format = useFormatters()
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
+  // A save the API refused because the renter may already be on file, with the form as sent.
+  const [conflict, setConflict] = useState<{ conflict: CustomerConflict; submitted: BookingFormValues }>()
   const saveDraft = useSaveBookingDraft()
   const deleteDraft = useDeleteBookingDraft({ silent: true })
   const queryClient = useQueryClient()
   const locations = useLocationNames()
-  const { data: templates, isError: templatesFailed, refetch: refetchTemplates } = useAgreementTemplates()
+  // Read only for a draft that named its terms: the booking no longer starts on them, and
+  // the counter has to be told before creating it rather than find out on the agreement.
+  const { data: templates } = useAgreementTemplates(Boolean(savedTemplateId))
+  const lostTerms = lostDraftTerms(savedTemplateId, templates)
 
   const [stepIndex, setStepIndex] = useState(0)
   const [furthestIndex, setFurthestIndex] = useState(0)
@@ -543,19 +550,18 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
     }
   }
 
-  const onSubmit = (submitted: BookingFormValues) =>
+  const submitBooking = (submitted: BookingFormValues, answer: CustomerAnswer = {}) =>
     new Promise<void>((settle) => {
       if (!selectedVehicle || !pricing) return settle()
-      // Also the form's own submit handler, which a disabled Create button does not stop.
-      if (isChoiceUnchecked(submitted.agreementTemplateId, templates)) return settle()
 
       const input: BookingInput = {
-        customerId: submitted.customerId || undefined,
+        customerId: answer.customerId ?? (submitted.customerId || undefined),
+        allowSharedLicence: answer.allowSharedLicence,
         customer: {
           name: submitted.customerName,
           email: submitted.customerEmail,
           phone: submitted.customerPhone,
-          dateOfBirth: submitted.customerDob || undefined,
+          dateOfBirth: submitted.customerDob,
           address: submitted.customerAddress || undefined,
           licenceNumber: submitted.licenceNumber,
           licenceExpiry: submitted.licenceExpiry || undefined,
@@ -568,7 +574,6 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
         additionalDrivers: submitted.additionalDrivers,
         fees: submitted.fees,
         verifications: submitted.verifications,
-        agreementTemplateId: templateChoice(submitted.agreementTemplateId, templates ?? []),
       }
 
       // Wrapped in a promise so the button stays busy through the uploads too — RHF keeps
@@ -595,9 +600,16 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
           settle()
           navigate('/bookings')
         },
-        onError: () => settle(),
+        onError: (error) => {
+          const refused = toCustomerConflict(error)
+          setConflict(refused && { conflict: refused, submitted })
+          settle()
+        },
       })
     })
+
+  // Not `handleSubmit(submitBooking)`: RHF passes the event second, where the answer goes.
+  const onSubmit = (submitted: BookingFormValues) => submitBooking(submitted)
 
   return (
     <PageContainer>
@@ -1351,44 +1363,13 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
                   </ReviewSection>
                 )}
 
-                <ReviewSection title={t('form.review.agreement')}>
-                  {templates ? (
-                    <FormField
-                      label={t('form.review.agreementTemplate')}
-                      description={t('form.review.agreementHint')}
-                    >
-                      {(fieldProps) => (
-                        <Select
-                          value={shownTemplateId(values.agreementTemplateId, templates)}
-                          onValueChange={(id) => setValue('agreementTemplateId', id, { shouldDirty: true })}
-                        >
-                          <SelectTrigger {...fieldProps}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {templates.map((template) => (
-                              <SelectItem key={template.id} value={template.id}>
-                                {template.isDefault
-                                  ? tContracts('template.default', { name: template.name })
-                                  : template.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </FormField>
-                  ) : !isChoiceUnchecked(values.agreementTemplateId, templates) ? (
-                    <p className="text-fg-4 text-[14px]">{t('form.review.agreementDefault')}</p>
-                  ) : templatesFailed ? (
-                    <ErrorState
-                      description={t('form.review.agreementUnchecked')}
-                      onRetry={() => refetchTemplates()}
-                      className="py-6"
-                    />
-                  ) : (
-                    <LoadingState className="py-6" />
-                  )}
-                </ReviewSection>
+                {lostTerms && (
+                  <p role="status" className="bg-warning-tint m-0 rounded-[10px] px-3.5 py-3 text-[13px]">
+                    {lostTerms.name
+                      ? t('form.review.termsNotKept', { name: lostTerms.name })
+                      : t('form.review.termsNotKeptUnnamed')}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-3.5">
@@ -1441,7 +1422,7 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
               <Button
                 type="button"
                 loading={isSubmitting || createBooking.isPending}
-                disabled={!pricing || isChoiceUnchecked(values.agreementTemplateId, templates)}
+                disabled={!pricing}
                 onClick={handleSubmit(onSubmit)}
                 className="gap-1.5"
               >
@@ -1452,6 +1433,19 @@ function BookingWizard({ draftId, initialValues }: BookingWizardProps) {
           </Card>
         </form>
       </div>
+
+      <CustomerConflictDialog
+        conflict={conflict?.conflict}
+        onClose={() => setConflict(undefined)}
+        sameLabel={t('form.customerConflict.useCustomer')}
+        onSame={(onFile) => {
+          if (conflict) void submitBooking(conflict.submitted, { customerId: onFile.id })
+        }}
+        onDifferent={() => {
+          if (conflict) void submitBooking(conflict.submitted, { allowSharedLicence: true })
+        }}
+        pending={createBooking.isPending}
+      />
     </PageContainer>
   )
 }

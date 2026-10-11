@@ -53,7 +53,10 @@ export function ExtendRentalDialog({ open, onOpenChange, ...form }: ExtendRental
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-5 outline-none sm:max-w-[520px]" onOpenAutoFocus={focusDialogContent}>
+      <DialogContent
+        className="max-h-[92vh] gap-5 overflow-y-auto outline-none sm:max-w-[520px]"
+        onOpenAutoFocus={focusDialogContent}
+      >
         <DialogHeader>
           <DialogTitle>{t('extension.title')}</DialogTitle>
           <DialogDescription>{t('extension.description')}</DialogDescription>

@@ -39,7 +39,7 @@ export function isPlausibleDob(value: string): boolean {
  * A file the counter has picked but not yet sent. It carries the real `File`, which is what
  * gets uploaded once the booking exists and the renter has a customer id to attach it to.
  */
-const uploadedFileSchema = z.object({
+export const uploadedFileSchema = z.object({
   id: z.string(),
   name: z.string(),
   size: z.number(),
@@ -111,9 +111,6 @@ export function bookingFormSchema(t: ValidationT) {
 
       // Step 3 — Price
       fees: z.array(bookingFeeSchema(t)),
-
-      // Step 4 — Review. Empty or absent (a draft saved before this field) means the default terms.
-      agreementTemplateId: z.string().optional(),
     })
     .superRefine((values, ctx) => {
       if (!values.pickupDate || !values.returnDate || !TIME_PATTERN.test(values.returnTime)) return
