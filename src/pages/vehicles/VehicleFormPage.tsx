@@ -567,6 +567,7 @@ function VehicleForm({
                         name="make"
                         render={({ field }) => (
                           <Combobox
+                            ref={field.ref}
                             id={id}
                             aria-label={t('form.fields.make')}
                             value={field.value}
@@ -589,6 +590,7 @@ function VehicleForm({
                         name="model"
                         render={({ field }) => (
                           <Combobox
+                            ref={field.ref}
                             id={id}
                             aria-label={t('form.fields.model')}
                             value={field.value}
