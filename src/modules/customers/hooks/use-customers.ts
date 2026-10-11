@@ -1,4 +1,4 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
@@ -113,12 +113,33 @@ export function useSaveCustomer() {
   })
 }
 
+const documentUploadKey = (customerId: string) =>
+  [...customerKeys.all, customerId, 'documents', 'upload'] as const
+
+interface DocumentUpload {
+  kind: DocumentKind
+  file: File
+}
+
+/**
+ * Whether a scan of this kind is on its way up for this customer. Asked of the client, not
+ * of the hook that started it: the slot showing an upload can be unmounted and remade while
+ * the file is still going (a failed refresh, then a retry), and a new slot must still know.
+ */
+export function useIsUploadingCustomerDocument(customerId: string, kind: DocumentKind): boolean {
+  const inFlight = useIsMutating({
+    mutationKey: documentUploadKey(customerId),
+    predicate: (mutation) => (mutation.state.variables as DocumentUpload | undefined)?.kind === kind,
+  })
+  return inFlight > 0
+}
+
 /** Puts a scan on a customer's file, replacing the one of that kind already there. */
 export function useUploadCustomerDocument(customerId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ kind, file }: { kind: DocumentKind; file: File }) =>
-      uploadCustomerDocument(customerId, kind, file),
+    mutationKey: documentUploadKey(customerId),
+    mutationFn: ({ kind, file }: DocumentUpload) => uploadCustomerDocument(customerId, kind, file),
     onSuccess: () => toast({ title: i18n.t('customers:toast.documentUploaded'), variant: 'success' }),
     onError: (error) => {
       toast({

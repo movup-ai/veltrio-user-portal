@@ -7,12 +7,15 @@ import type { CustomerDocument, DocumentKind } from '../types/customer.types'
 /** Each upload in flight, so a test decides when (and whether) it finishes. */
 const uploads: { kind: DocumentKind; file: File; finish: () => void }[] = []
 let documents: CustomerDocument[] = []
+let listFails = false
 
 // The real hooks run, so two uploads at once behave as they would on the page.
 vi.mock('../api/customer-document.api', () => ({
   ACCEPTED_DOCUMENT_TYPES: ['image/jpeg', 'application/pdf'],
   MAX_DOCUMENT_BYTES: 10 * 1024 * 1024,
-  customerDocumentApi: { list: () => Promise.resolve(documents) },
+  customerDocumentApi: {
+    list: () => (listFails ? Promise.reject(new Error('offline')) : Promise.resolve(documents)),
+  },
   uploadCustomerDocuments: vi.fn(),
   uploadCustomerDocument: (_: string, kind: DocumentKind, file: File) =>
     new Promise<void>((resolve) => {
@@ -67,6 +70,30 @@ describe('CustomerDocuments', () => {
   beforeEach(() => {
     uploads.length = 0
     documents = [LICENCE]
+    listFails = false
+  })
+
+  it('still shows an upload as busy after the list failed to refresh and was retried', async () => {
+    const user = userEvent.setup({ delay: null })
+    const { container } = await render()
+
+    await user.upload(emptySlot(container), scan('insurance.jpg'))
+    await user.upload(screen.getByLabelText('Replace Driver licence'), scan('renewed.jpg'))
+    await waitFor(() => expect(uploads).toHaveLength(2))
+
+    // The licence finishes and refreshes the list, which fails: the slots give way to the
+    // error. The insurance upload is still on its way the whole time.
+    listFails = true
+    uploads.find((upload) => upload.kind === 'licence')!.finish()
+    const retry = await screen.findByRole('button', { name: 'Try again' })
+    listFails = false
+    await user.click(retry)
+    await screen.findByText('licence.jpg')
+
+    // A slot that forgot it would offer the picker again, and a second file could be sent
+    // over the first before it lands.
+    expect(screen.getByText('Uploading…')).toBeInTheDocument()
+    expect(emptySlot(container)).toBeNull()
   })
 
   it('replaces a scan straight from the file picker, leaving it in place until one is chosen', async () => {

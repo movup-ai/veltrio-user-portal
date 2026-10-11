@@ -6,7 +6,11 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { toast } from '@/components/ui/use-toast'
 import { ACCEPTED_DOCUMENT_TYPES, MAX_DOCUMENT_BYTES } from '../api/customer-document.api'
-import { useCustomerDocuments, useUploadCustomerDocument } from '../hooks/use-customers'
+import {
+  useCustomerDocuments,
+  useIsUploadingCustomerDocument,
+  useUploadCustomerDocument,
+} from '../hooks/use-customers'
 import { DOCUMENT_KINDS, type CustomerDocument, type DocumentKind } from '../types/customer.types'
 import { DocumentOnFile } from './DocumentOnFile'
 
@@ -60,6 +64,9 @@ function DocumentSlot({ customerId, kind, onFile, canEdit }: SlotProps) {
   const { t } = useTranslation('customers')
   const { t: tCommon } = useTranslation('common')
   const upload = useUploadCustomerDocument(customerId)
+  // Read from the client, not from `upload`: this slot is unmounted when a refresh fails and
+  // remade on retry, and the new one must still know its file is on the way.
+  const uploading = useIsUploadingCustomerDocument(customerId, kind)
   const picker = useRef<HTMLInputElement>(null)
   const label = t(`documents.kind.${kind}`)
 
@@ -79,7 +86,7 @@ function DocumentSlot({ customerId, kind, onFile, canEdit }: SlotProps) {
   return (
     <FormField label={label}>
       {({ id }) =>
-        upload.isPending ? (
+        uploading ? (
           <p className="text-fg-3 m-0 text-[13px]">{t('documents.uploading')}</p>
         ) : onFile ? (
           <>
