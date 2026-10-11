@@ -24,7 +24,9 @@ vi.mock('../api/brand.api', () => ({
     remove: (asset: BrandAsset) => remove(asset),
   },
 }))
-vi.mock('../api/company.api', () => ({ companyApi: { get: () => Promise.resolve(COMPANY), update: vi.fn() } }))
+vi.mock('../api/company.api', () => ({
+  companyApi: { get: () => Promise.resolve(COMPANY), update: vi.fn() },
+}))
 
 const COMPANY: Company = {
   id: 't_1',
@@ -35,6 +37,7 @@ const COMPANY: Company = {
   timezone: 'America/New_York',
   currency: 'USD',
   currencyLocked: false,
+  listingLanguage: 'en',
   description: 'Family-run rentals in Miami.',
 }
 
@@ -141,7 +144,10 @@ describe('BrandSettings', () => {
 
     finish({ ...BRAND, logoUrl: 'https://media.example/logo.webp' })
     await waitFor(() =>
-      expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute('src', 'https://media.example/logo.webp'),
+      expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute(
+        'src',
+        'https://media.example/logo.webp',
+      ),
     )
   })
 
@@ -155,7 +161,9 @@ describe('BrandSettings', () => {
     expect(screen.queryByRole('button', { name: 'Remove logo' })).not.toBeInTheDocument()
 
     expect(remove).toHaveBeenCalledWith('banner')
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Remove banner' })).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Remove banner' })).not.toBeInTheDocument(),
+    )
   })
 
   it('keeps a just-uploaded logo when an older colour save answers after it', async () => {
@@ -172,7 +180,10 @@ describe('BrandSettings', () => {
     await user.click(screen.getByRole('button', { name: 'Save changes' }))
     await user.upload(screen.getByLabelText(/^Logo$/), new File(['png'], 'logo.png', { type: 'image/png' }))
     await waitFor(() =>
-      expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute('src', 'https://media.example/logo.webp'),
+      expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute(
+        'src',
+        'https://media.example/logo.webp',
+      ),
     )
 
     // The save was handled before the upload, so its answer has no logo in it.
@@ -180,7 +191,10 @@ describe('BrandSettings', () => {
 
     // The toast fires once that answer has been applied to the cache.
     await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'success' })))
-    expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute('src', 'https://media.example/logo.webp')
+    expect(preview().getByRole('img', { name: 'Sunstate Car Co.' })).toHaveAttribute(
+      'src',
+      'https://media.example/logo.webp',
+    )
   })
 
   it('takes one image at a time, so a second pick cannot be clobbered by the first', async () => {
@@ -241,10 +255,15 @@ describe('BrandSettings', () => {
     const user = userEvent.setup({ delay: null, applyAccept: false })
     renderAs('owner')
 
-    await user.upload(await screen.findByLabelText(/^Banner$/), new File(['%PDF'], 'menu.pdf', { type: 'application/pdf' }))
+    await user.upload(
+      await screen.findByLabelText(/^Banner$/),
+      new File(['%PDF'], 'menu.pdf', { type: 'application/pdf' }),
+    )
 
     expect(upload).not.toHaveBeenCalled()
-    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Use a JPG, PNG, WebP, HEIC or AVIF image.' }))
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Use a JPG, PNG, WebP, HEIC or AVIF image.' }),
+    )
   })
 
   it('tells a non-owner who can change the brand, without asking the API', () => {

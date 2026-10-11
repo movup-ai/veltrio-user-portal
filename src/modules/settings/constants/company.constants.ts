@@ -25,11 +25,43 @@ export const DESCRIPTION_MAX = 500
  * only, since amounts are stored in hundredths and Stripe reads JPY or KWD in other units.
  */
 export const SUPPORTED_CURRENCIES = [
-  'USD', 'CAD', 'MXN', 'BRL', 'ARS', 'COP', 'PEN', 'CRC', 'DOP', 'GTQ',
-  'EUR', 'GBP', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'RON', 'TRY',
-  'AUD', 'NZD', 'SGD', 'HKD', 'INR', 'MYR', 'THB', 'PHP',
-  'AED', 'SAR', 'QAR', 'ILS', 'ZAR',
+  'USD',
+  'CAD',
+  'MXN',
+  'BRL',
+  'ARS',
+  'COP',
+  'PEN',
+  'CRC',
+  'DOP',
+  'GTQ',
+  'EUR',
+  'GBP',
+  'CHF',
+  'SEK',
+  'NOK',
+  'DKK',
+  'PLN',
+  'CZK',
+  'RON',
+  'TRY',
+  'AUD',
+  'NZD',
+  'SGD',
+  'HKD',
+  'INR',
+  'MYR',
+  'THB',
+  'PHP',
+  'AED',
+  'SAR',
+  'QAR',
+  'ILS',
+  'ZAR',
 ] as const
+
+/** Mirrors ListingLanguage in the API (app/modules/tenants/models.py). */
+export const LISTING_LANGUAGES = ['en', 'es'] as const
 
 /** Each network's domains, to recognise a pasted link as its own; the first is shown as the prefix. */
 export const SOCIAL_DOMAINS: Record<SocialField, readonly string[]> = {

@@ -15,6 +15,8 @@ export interface ComboboxProps {
   'aria-label'?: string
   id?: string
   className?: string
+  /** The text input, so a form can focus the field it has just marked invalid. */
+  ref?: React.Ref<HTMLInputElement>
 }
 
 /**
@@ -31,6 +33,7 @@ export function Combobox({
   disabled,
   className,
   id,
+  ref,
   ...aria
 }: ComboboxProps) {
   const { t } = useTranslation('common')
@@ -40,7 +43,6 @@ export function Combobox({
   // (browsing) instead of immediately filtering down to just the current value (searching).
   const [filterText, setFilterText] = React.useState('')
   const [highlighted, setHighlighted] = React.useState(0)
-  const inputRef = React.useRef<HTMLInputElement>(null)
   const listRef = React.useRef<HTMLDivElement>(null)
 
   const filtered = React.useMemo(() => {
@@ -89,7 +91,7 @@ export function Combobox({
           )}
         >
           <input
-            ref={inputRef}
+            ref={ref}
             id={id}
             role="combobox"
             aria-expanded={open}

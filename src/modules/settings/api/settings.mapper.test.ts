@@ -25,6 +25,16 @@ describe('toCompanyPayload', () => {
   })
 })
 
+describe('listing language', () => {
+  it('reads the language the company lists its fleet in', () => {
+    expect(toCompany({ listingLanguage: 'es' } as CompanyWire).listingLanguage).toBe('es')
+  })
+
+  it('reads as English from an API that does not send one yet', () => {
+    expect(toCompany({} as CompanyWire).listingLanguage).toBe('en')
+  })
+})
+
 describe('social usernames', () => {
   it('sends the bare username the API stores, whatever form it was typed in', () => {
     expect(

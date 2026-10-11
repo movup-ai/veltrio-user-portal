@@ -1,6 +1,10 @@
 import type { CancellationPolicy } from '@/lib/cancellation-policy'
 import type { FleetSize } from '@/services/auth/auth.api'
 
+import type { LISTING_LANGUAGES } from '../constants/company.constants'
+
+export type ListingLanguage = (typeof LISTING_LANGUAGES)[number]
+
 export const SOCIAL_FIELDS = ['instagramHandle', 'facebookHandle', 'xHandle', 'tiktokHandle'] as const
 export type SocialField = (typeof SOCIAL_FIELDS)[number]
 
@@ -22,6 +26,8 @@ export interface Company extends Partial<Record<SocialField, string>> {
   currency: string
   /** True once bookings exist: they are priced in bare amounts, which a switch would relabel. */
   currencyLocked: boolean
+  /** What renters read the fleet in, so what a generated vehicle description is written in. */
+  listingLanguage: ListingLanguage
   contactEmail?: string
   contactPhone?: string
   address?: string
@@ -39,6 +45,7 @@ export type CompanyValues = {
   fleetSize: FleetSize
   country: string
   currency: string
+  listingLanguage: ListingLanguage
   timezone: string
   contactEmail: string
   contactPhone: string

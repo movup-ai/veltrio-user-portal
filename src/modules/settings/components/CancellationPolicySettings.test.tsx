@@ -20,6 +20,7 @@ const COMPANY: Company = {
   currencyLocked: false,
   timezone: 'America/New_York',
   currency: 'USD',
+  listingLanguage: 'en',
   cancellationPolicy: [],
 }
 

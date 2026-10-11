@@ -29,7 +29,13 @@
       "country": "País",
       "timezone": "Zona horaria",
       "currency": "Moneda",
-      "currencyLocked": "No se puede cambiar cuando ya hay reservas, para que sus precios conserven su moneda."
+      "currencyLocked": "No se puede cambiar cuando ya hay reservas, para que sus precios conserven su moneda.",
+      "listingLanguage": "Idioma de los anuncios",
+      "listingLanguageHint": "El idioma en el que se redactan las descripciones generadas de los vehículos para tus clientes.",
+      "languages": {
+        "en": "Inglés",
+        "es": "Español"
+      }
     },
     "contact": {
       "title": "Contacto",

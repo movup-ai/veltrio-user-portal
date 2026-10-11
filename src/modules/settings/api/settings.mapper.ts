@@ -6,6 +6,7 @@ import {
   type Company,
   type CompanyPatch,
   type CompanyValues,
+  type ListingLanguage,
   type SocialField,
 } from '../types/company.types'
 import { toSocialHandle } from '../utils/company.utils'
@@ -25,6 +26,8 @@ export interface CompanyWire {
   timezone: string
   currency: string
   currencyLocked: boolean
+  /** Absent from an API build older than the field. */
+  listingLanguage?: ListingLanguage
   contactEmail: string | null
   contactPhone: string | null
   address: string | null
@@ -43,6 +46,7 @@ const REQUIRED: ReadonlySet<keyof CompanyValues> = new Set([
   'fleetSize',
   'country',
   'currency',
+  'listingLanguage',
   'timezone',
 ])
 
@@ -64,6 +68,7 @@ export function toCompany(wire: CompanyWire): Company {
     timezone: wire.timezone,
     currency: wire.currency,
     currencyLocked: wire.currencyLocked,
+    listingLanguage: wire.listingLanguage ?? 'en',
     contactEmail: optional(wire.contactEmail),
     contactPhone: optional(wire.contactPhone),
     address: optional(wire.address),
@@ -85,6 +90,7 @@ export function toCompanyValues(company: Company): CompanyValues {
     fleetSize: company.fleetSize,
     country: company.country,
     currency: company.currency,
+    listingLanguage: company.listingLanguage,
     timezone: company.timezone,
     contactEmail: company.contactEmail ?? '',
     contactPhone: company.contactPhone ?? '',

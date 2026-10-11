@@ -23,6 +23,7 @@ const COMPANY: Company = {
   currencyLocked: false,
   timezone: 'America/New_York',
   currency: 'USD',
+  listingLanguage: 'en',
 }
 const STANDARD: CancellationPolicy = [
   { daysBefore: 14, refundPercent: 100 },

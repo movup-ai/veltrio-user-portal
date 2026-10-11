@@ -29,7 +29,13 @@
       "country": "Country",
       "timezone": "Timezone",
       "currency": "Currency",
-      "currencyLocked": "Can't be changed once you have bookings, so their prices keep their currency."
+      "currencyLocked": "Can't be changed once you have bookings, so their prices keep their currency.",
+      "listingLanguage": "Listing language",
+      "listingLanguageHint": "The language generated vehicle descriptions are written in for your renters.",
+      "languages": {
+        "en": "English",
+        "es": "Spanish"
+      }
     },
     "contact": {
       "title": "Contact",

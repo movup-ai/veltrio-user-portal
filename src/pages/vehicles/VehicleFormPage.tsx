@@ -37,8 +37,18 @@ import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import { VEHICLE_COLORS, VEHICLE_MAKES, modelsForMake } from '@/modules/vehicles/data/vehicle-catalog'
 import { decodeVin } from '@/modules/vehicles/api/vin-decoder.api'
-import { descriptionAiApi, type DescriptionAiAction } from '@/modules/vehicles/api/description-ai.api'
-import { STEP_FIELDS, vehicleFormSchema, type VehicleFormValues } from '@/modules/vehicles/schema/vehicle.schema'
+import { descriptionAiApi } from '@/modules/vehicles/api/description-ai.api'
+import {
+  descriptionAiError,
+  descriptionRequest,
+  missingToGenerate,
+  type DescriptionAiAction,
+} from '@/modules/vehicles/utils/description-ai.utils'
+import {
+  STEP_FIELDS,
+  vehicleFormSchema,
+  type VehicleFormValues,
+} from '@/modules/vehicles/schema/vehicle.schema'
 import {
   FUEL_TYPES,
   TRANSMISSIONS,
@@ -70,14 +80,7 @@ const STEP_KEYS = ['details', 'photos', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
 
 /** The form fields a VIN lookup can populate — doubles as the key set under `form.vin.fields`. */
-type VinField =
-  | 'make'
-  | 'model'
-  | 'year'
-  | 'vehicleType'
-  | 'transmission'
-  | 'fuelType'
-  | 'doors'
+type VinField = 'make' | 'model' | 'year' | 'vehicleType' | 'transmission' | 'fuelType' | 'doors'
 
 const EMPTY_VALUES: VehicleFormValues = {
   make: '',
@@ -115,10 +118,18 @@ function sanitizeFormValues(values: VehicleFormValues): VehicleFormValues {
   return {
     ...EMPTY_VALUES,
     ...values,
-    vehicleType: (VEHICLE_TYPES as readonly string[]).includes(values.vehicleType) ? values.vehicleType : EMPTY_VALUES.vehicleType,
-    status: (SELECTABLE_VEHICLE_STATUSES as readonly string[]).includes(values.status) ? values.status : EMPTY_VALUES.status,
-    transmission: (TRANSMISSIONS as readonly string[]).includes(values.transmission) ? values.transmission : EMPTY_VALUES.transmission,
-    fuelType: (FUEL_TYPES as readonly string[]).includes(values.fuelType) ? values.fuelType : EMPTY_VALUES.fuelType,
+    vehicleType: (VEHICLE_TYPES as readonly string[]).includes(values.vehicleType)
+      ? values.vehicleType
+      : EMPTY_VALUES.vehicleType,
+    status: (SELECTABLE_VEHICLE_STATUSES as readonly string[]).includes(values.status)
+      ? values.status
+      : EMPTY_VALUES.status,
+    transmission: (TRANSMISSIONS as readonly string[]).includes(values.transmission)
+      ? values.transmission
+      : EMPTY_VALUES.transmission,
+    fuelType: (FUEL_TYPES as readonly string[]).includes(values.fuelType)
+      ? values.fuelType
+      : EMPTY_VALUES.fuelType,
     location: values.location || EMPTY_VALUES.location,
   }
 }
@@ -173,10 +184,7 @@ export function VehicleFormPage() {
   // Drafts are capped at one page, so the list doubles as the lookup — no per-draft endpoint.
   // Only fetched when a draft is actually being resumed: staff may edit a vehicle but not add
   // one, and the drafts endpoint answers them with a 403.
-  const { data: draftsData, isLoading: isLoadingDrafts } = useVehicleDrafts(
-    DRAFTS_PAGE,
-    Boolean(draftId),
-  )
+  const { data: draftsData, isLoading: isLoadingDrafts } = useVehicleDrafts(DRAFTS_PAGE, Boolean(draftId))
   const draft = draftId ? draftsData?.items.find((d) => d.id === draftId) : undefined
 
   if (draftId && isLoadingDrafts) {
@@ -272,7 +280,11 @@ function VehicleForm({
     setValue,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<VehicleFormValues>({ resolver: zodResolver(schema), defaultValues: initialValues, mode: 'onChange' })
+  } = useForm<VehicleFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: initialValues,
+    mode: 'onChange',
+  })
 
   const watchedValues = useWatch({ control }) as VehicleFormValues
   const capApplies = hourlyCapApplies(watchedValues.rateOptions ?? [])
@@ -317,7 +329,11 @@ function VehicleForm({
         })
       }
     } catch (error) {
-      toast({ title: t('photos.uploadFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: t('photos.uploadFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     }
   }
 
@@ -357,13 +373,34 @@ function VehicleForm({
       const opts = { shouldDirty: true, shouldValidate: true } as const
       const fieldName = (key: VinField) => t(`form.vin.fields.${key}`)
 
-      if (decoded.make) { setValue('make', decoded.make, opts); filled.push(fieldName('make')) }
-      if (decoded.model) { setValue('model', decoded.model, opts); filled.push(fieldName('model')) }
-      if (decoded.year) { setValue('year', decoded.year, opts); filled.push(fieldName('year')) }
-      if (decoded.vehicleType) { setValue('vehicleType', decoded.vehicleType, opts); filled.push(fieldName('vehicleType')) }
-      if (decoded.transmission) { setValue('transmission', decoded.transmission, opts); filled.push(fieldName('transmission')) }
-      if (decoded.fuelType) { setValue('fuelType', decoded.fuelType, opts); filled.push(fieldName('fuelType')) }
-      if (decoded.doors) { setValue('doors', decoded.doors, opts); filled.push(fieldName('doors')) }
+      if (decoded.make) {
+        setValue('make', decoded.make, opts)
+        filled.push(fieldName('make'))
+      }
+      if (decoded.model) {
+        setValue('model', decoded.model, opts)
+        filled.push(fieldName('model'))
+      }
+      if (decoded.year) {
+        setValue('year', decoded.year, opts)
+        filled.push(fieldName('year'))
+      }
+      if (decoded.vehicleType) {
+        setValue('vehicleType', decoded.vehicleType, opts)
+        filled.push(fieldName('vehicleType'))
+      }
+      if (decoded.transmission) {
+        setValue('transmission', decoded.transmission, opts)
+        filled.push(fieldName('transmission'))
+      }
+      if (decoded.fuelType) {
+        setValue('fuelType', decoded.fuelType, opts)
+        filled.push(fieldName('fuelType'))
+      }
+      if (decoded.doors) {
+        setValue('doors', decoded.doors, opts)
+        filled.push(fieldName('doors'))
+      }
       setValue('vin', vinToDecode.trim().toUpperCase(), opts)
 
       toast(
@@ -387,28 +424,21 @@ function VehicleForm({
   }
 
   const handleGenerateDescription = async (action: DescriptionAiAction) => {
+    const missing = missingToGenerate(watchedValues, action)
+    if (missing.length > 0) {
+      // Marks the fields themselves, so what to fill in is shown where it is filled in.
+      void trigger(missing, { shouldFocus: true })
+      toast({ title: t('form.ai.needsMakeAndModel') })
+      return
+    }
     setAiAction(action)
     try {
-      const description = await descriptionAiApi.generate(
-        {
-          make: watchedValues.make,
-          model: watchedValues.model,
-          year: watchedValues.year,
-          vehicleType: watchedValues.vehicleType,
-          color: watchedValues.color,
-          transmission: watchedValues.transmission,
-          fuelType: watchedValues.fuelType,
-          seats: watchedValues.seats,
-          doors: watchedValues.doors,
-          existingDescription: watchedValues.description || undefined,
-        },
-        action,
-      )
+      const description = await descriptionAiApi.generate(descriptionRequest(watchedValues, action))
       setValue('description', description, { shouldDirty: true, shouldValidate: true })
     } catch (err) {
       toast({
         title: t('form.ai.failed'),
-        description: err instanceof ApiError ? err.message : t('form.ai.failedDescription'),
+        description: t(descriptionAiError(err instanceof ApiError ? err.code : undefined)),
         variant: 'error',
       })
     } finally {
@@ -464,7 +494,10 @@ function VehicleForm({
 
   return (
     <PageContainer>
-      <PageHeader title={isEdit ? t('form.editTitle') : t('form.addTitle')} description={t('form.subtitle')} />
+      <PageHeader
+        title={isEdit ? t('form.editTitle') : t('form.addTitle')}
+        description={t('form.subtitle')}
+      />
 
       <Card as="section" className="p-[18px]">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
@@ -481,7 +514,11 @@ function VehicleForm({
           className="flex flex-col gap-5"
           onSubmit={handleSubmit(onSubmit)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && stepKey !== 'review' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+            if (
+              e.key === 'Enter' &&
+              stepKey !== 'review' &&
+              (e.target as HTMLElement).tagName !== 'TEXTAREA'
+            ) {
               e.preventDefault()
             }
           }}
@@ -530,6 +567,7 @@ function VehicleForm({
                         name="make"
                         render={({ field }) => (
                           <Combobox
+                            ref={field.ref}
                             id={id}
                             aria-label={t('form.fields.make')}
                             value={field.value}
@@ -552,13 +590,16 @@ function VehicleForm({
                         name="model"
                         render={({ field }) => (
                           <Combobox
+                            ref={field.ref}
                             id={id}
                             aria-label={t('form.fields.model')}
                             value={field.value}
                             onChange={field.onChange}
                             options={modelsForMake(watchedValues.make)}
                             placeholder={
-                              watchedValues.make ? t('form.fields.modelPlaceholder') : t('form.fields.modelPickMakeFirst')
+                              watchedValues.make
+                                ? t('form.fields.modelPlaceholder')
+                                : t('form.fields.modelPickMakeFirst')
                             }
                             invalid={Boolean(errors.model)}
                           />
@@ -576,7 +617,11 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.vehicleType')} error={errors.vehicleType?.message} required>
+                  <FormField
+                    label={t('form.fields.vehicleType')}
+                    error={errors.vehicleType?.message}
+                    required
+                  >
                     {({ id }) => (
                       <Controller
                         control={control}
@@ -619,11 +664,7 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField
-                    label={t('form.fields.location')}
-                    error={errors.location?.message}
-                    required
-                  >
+                  <FormField label={t('form.fields.location')} error={errors.location?.message} required>
                     {({ id }) => (
                       <Controller
                         control={control}
@@ -666,13 +707,9 @@ function VehicleForm({
                                 </button>
                               </p>
                             )}
-                            {!locations.isLoading &&
-                              !locations.isError &&
-                              locations.names.length === 0 && (
-                                <p className="text-fg-3 m-0 text-caption">
-                                  {t('form.fields.locationEmpty')}
-                                </p>
-                              )}
+                            {!locations.isLoading && !locations.isError && locations.names.length === 0 && (
+                              <p className="text-fg-3 m-0 text-caption">{t('form.fields.locationEmpty')}</p>
+                            )}
                           </div>
                         )}
                       />
@@ -743,7 +780,11 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.transmission')} error={errors.transmission?.message} required>
+                  <FormField
+                    label={t('form.fields.transmission')}
+                    error={errors.transmission?.message}
+                    required
+                  >
                     {({ id }) => (
                       <Controller
                         control={control}
@@ -793,10 +834,14 @@ function VehicleForm({
                     )}
                   </FormField>
                   <FormField label={t('form.fields.seats')} error={errors.seats?.message} required>
-                    {(fieldProps) => <Input type="number" {...register('seats', { valueAsNumber: true })} {...fieldProps} />}
+                    {(fieldProps) => (
+                      <Input type="number" {...register('seats', { valueAsNumber: true })} {...fieldProps} />
+                    )}
                   </FormField>
                   <FormField label={t('form.fields.doors')} error={errors.doors?.message} required>
-                    {(fieldProps) => <Input type="number" {...register('doors', { valueAsNumber: true })} {...fieldProps} />}
+                    {(fieldProps) => (
+                      <Input type="number" {...register('doors', { valueAsNumber: true })} {...fieldProps} />
+                    )}
                   </FormField>
                 </div>
               </div>
@@ -807,10 +852,7 @@ function VehicleForm({
                   control={control}
                   name="features"
                   render={({ field }) => (
-                    <VehicleFeaturesPicker
-                      selected={field.value ?? []}
-                      onChange={field.onChange}
-                    />
+                    <VehicleFeaturesPicker selected={field.value ?? []} onChange={field.onChange} />
                   )}
                 />
               </div>
@@ -840,7 +882,9 @@ function VehicleForm({
                           variant="outline"
                           size="sm"
                           loading={aiAction === 'improve'}
-                          disabled={!watchedValues.description || (aiAction !== null && aiAction !== 'improve')}
+                          disabled={
+                            !watchedValues.description || (aiAction !== null && aiAction !== 'improve')
+                          }
                           onClick={() => void handleGenerateDescription('improve')}
                         >
                           {t('form.ai.improve')}
@@ -850,7 +894,9 @@ function VehicleForm({
                           variant="outline"
                           size="sm"
                           loading={aiAction === 'shorten'}
-                          disabled={!watchedValues.description || (aiAction !== null && aiAction !== 'shorten')}
+                          disabled={
+                            !watchedValues.description || (aiAction !== null && aiAction !== 'shorten')
+                          }
                           onClick={() => void handleGenerateDescription('shorten')}
                         >
                           {t('form.ai.shorten')}
@@ -860,7 +906,9 @@ function VehicleForm({
                           variant="outline"
                           size="sm"
                           loading={aiAction === 'expand'}
-                          disabled={!watchedValues.description || (aiAction !== null && aiAction !== 'expand')}
+                          disabled={
+                            !watchedValues.description || (aiAction !== null && aiAction !== 'expand')
+                          }
                           onClick={() => void handleGenerateDescription('expand')}
                         >
                           {t('form.ai.expand')}
@@ -968,7 +1016,11 @@ function VehicleForm({
                 <p className="text-meta text-fg-3 mb-1">{t('form.sections.fees')}</p>
                 <p className="text-fg-4 mb-3.5 text-[12.5px]">{t('form.sections.feesHint')}</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <FormField label={t('form.fields.deposit', { currency: currencyCode })} error={errors.deposit?.message} required>
+                  <FormField
+                    label={t('form.fields.deposit', { currency: currencyCode })}
+                    error={errors.deposit?.message}
+                    required
+                  >
                     {(fieldProps) => (
                       <Input
                         type="number"
@@ -979,7 +1031,11 @@ function VehicleForm({
                       />
                     )}
                   </FormField>
-                  <FormField label={t('form.fields.overageRate')} error={errors.overageRatePerMile?.message} required>
+                  <FormField
+                    label={t('form.fields.overageRate')}
+                    error={errors.overageRatePerMile?.message}
+                    required
+                  >
                     {(fieldProps) => (
                       <Input
                         type="number"
@@ -992,11 +1048,23 @@ function VehicleForm({
                   </FormField>
                   <FormField label={t('form.fields.fuelCharge')} error={errors.fuelChargeRate?.message}>
                     {(fieldProps) => (
-                      <Input type="number" step="0.01" {...register('fuelChargeRate', { valueAsNumber: true })} {...fieldProps} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        {...register('fuelChargeRate', { valueAsNumber: true })}
+                        {...fieldProps}
+                      />
                     )}
                   </FormField>
                   <FormField label={t('form.fields.taxRate')} error={errors.taxRatePct?.message}>
-                    {(fieldProps) => <Input type="number" step="0.1" {...register('taxRatePct', { valueAsNumber: true })} {...fieldProps} />}
+                    {(fieldProps) => (
+                      <Input
+                        type="number"
+                        step="0.1"
+                        {...register('taxRatePct', { valueAsNumber: true })}
+                        {...fieldProps}
+                      />
+                    )}
                   </FormField>
                 </div>
               </div>
@@ -1031,7 +1099,12 @@ function VehicleForm({
                   {t('form.nav.nextStep')}
                 </Button>
               ) : (
-                <Button type="button" loading={isSubmitting} onClick={handleSubmit(onSubmit)} className="gap-1.5">
+                <Button
+                  type="button"
+                  loading={isSubmitting}
+                  onClick={handleSubmit(onSubmit)}
+                  className="gap-1.5"
+                >
                   {isEdit ? t('form.nav.saveChanges') : t('form.nav.publish')}
                   <ArrowRight className="size-4" aria-hidden />
                 </Button>
@@ -1111,13 +1184,19 @@ function ReviewStep({
             <ReviewRowGrid maxColumns={3}>
               <ReviewRow label={t('specs.plate')} value={values.plate || '—'} />
               <ReviewRow label={t('specs.vin')} value={values.vin || '—'} />
-              <ReviewRow label={t('specs.status')} value={values.status ? domain.status(values.status) : '—'} />
+              <ReviewRow
+                label={t('specs.status')}
+                value={values.status ? domain.status(values.status) : '—'}
+              />
             </ReviewRowGrid>
           </ReviewSection>
 
           <ReviewSection title={t('form.review.specs')} onEdit={editDetails}>
             <ReviewRowGrid maxColumns={3}>
-              <ReviewRow label={t('specs.currentMileage')} value={`${format.number(values.mileage ?? 0)} mi`} />
+              <ReviewRow
+                label={t('specs.currentMileage')}
+                value={`${format.number(values.mileage ?? 0)} mi`}
+              />
               <ReviewRow
                 label={t('specs.transmission')}
                 value={values.transmission ? domain.label('transmission', values.transmission) : '—'}
@@ -1155,7 +1234,10 @@ function ReviewStep({
             {photos.length > 0 ? (
               <div className="grid grid-cols-5 gap-2">
                 {photos.map((p, index) => (
-                  <div key={p.id} className="border-border relative aspect-square overflow-hidden rounded-[7px] border">
+                  <div
+                    key={p.id}
+                    className="border-border relative aspect-square overflow-hidden rounded-[7px] border"
+                  >
                     {p.url ? (
                       <img src={photoThumbnail(p)} alt={p.name} className="size-full object-cover" />
                     ) : (
@@ -1189,8 +1271,13 @@ function ReviewStep({
             {values.rateOptions.length > 0 ? (
               <div className="divide-y divide-[var(--color-border-soft)]">
                 {values.rateOptions.map((option) => (
-                  <div key={option.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2">
-                    <span className="text-[13px] font-semibold">{option.label || t('form.review.untitledOption')}</span>
+                  <div
+                    key={option.id}
+                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2"
+                  >
+                    <span className="text-[13px] font-semibold">
+                      {option.label || t('form.review.untitledOption')}
+                    </span>
                     <span className="text-fg-3 flex flex-wrap items-center gap-x-2 text-[12.5px]">
                       <span>{formatRateOptionBasis(option, t)}</span>
                       <span aria-hidden>·</span>
@@ -1234,7 +1321,10 @@ function ReviewStep({
                 <ReviewRow label={t('fees.securityDeposit')} value={format.currency(values.deposit)} />
               )}
               {hasValue(values.overageRatePerMile) && (
-                <ReviewRow label={t('fees.overageRate')} value={`${format.currency(values.overageRatePerMile)}/mi`} />
+                <ReviewRow
+                  label={t('fees.overageRate')}
+                  value={`${format.currency(values.overageRatePerMile)}/mi`}
+                />
               )}
               {hasValue(values.fuelChargeRate) && (
                 <ReviewRow
@@ -1242,7 +1332,9 @@ function ReviewStep({
                   value={`${format.currency(values.fuelChargeRate)} ${t('form.fields.fuelChargeUnit')}`}
                 />
               )}
-              {hasValue(values.taxRatePct) && <ReviewRow label={t('fees.taxRate')} value={`${values.taxRatePct}%`} />}
+              {hasValue(values.taxRatePct) && (
+                <ReviewRow label={t('fees.taxRate')} value={`${values.taxRatePct}%`} />
+              )}
             </ReviewRowGrid>
           </ReviewSection>
         </div>
