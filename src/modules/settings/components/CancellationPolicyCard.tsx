@@ -52,7 +52,7 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
   // The company is shown from cache and then read again. A card nobody has changed follows the
   // newer policy: left on the old one, it would read as an edit and Save would put it back.
   if (!samePolicy(saved, synced)) {
-    if (samePolicy(policy, synced)) showSaved()
+    if (samePolicy(policy, synced)) showSaved(choice !== 'custom')
     setSynced(saved)
   }
   const problems = choice === 'custom' ? tierProblems(tiers) : {}
@@ -85,10 +85,15 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
     )
   }
 
-  function showSaved() {
-    setChoice(policyChoice(saved))
-    setTiers(saved ?? [...POLICY_PRESETS.standard])
-    setOwn(policyChoice(saved) === 'custom')
+  function showSaved(keepHiddenTiers = false) {
+    const next = policyChoice(saved)
+    setChoice(next)
+    // Tiers edited and then left behind a preset are unsaved work the selection does not show:
+    // a refresh that only moves the selection to another preset must not take them with it.
+    if (!(keepHiddenTiers && own && next !== 'custom')) {
+      setTiers(saved ?? [...POLICY_PRESETS.standard])
+      setOwn(next === 'custom')
+    }
     setAttempted(false)
   }
 
@@ -97,7 +102,8 @@ export function CancellationPolicyCard({ company }: { company: Company }) {
       title={t('payments.cancellation.title')}
       description={t('payments.cancellation.description')}
       onSubmit={submit}
-      onDiscard={showSaved}
+      // Wrapped: the button would pass its click event in as "keep the hidden tiers".
+      onDiscard={() => showSaved()}
       dirty={!samePolicy(policy, saved)}
       saving={update.isPending}
       columns={1}

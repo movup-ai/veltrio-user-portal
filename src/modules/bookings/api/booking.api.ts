@@ -1,14 +1,21 @@
 import { apiClient } from '@/services/api/client'
 import { locationApi } from '@/modules/locations/api/location.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
-import { MAX_BOOKING_PAGES, MAX_PAGE_SIZE, toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
+import {
+  ExportTooLargeError,
+  MAX_BOOKING_PAGES,
+  MAX_PAGE_SIZE,
+  fetchEveryPage,
+  toPaginatedResult,
+  type ListEnvelope,
+} from '@/lib/pagination'
 import type {
   BookingFilters,
   BookingInput,
-  BookingTuple,
   ConditionInput,
   CancelInput,
   DeclineInput,
+  RenterAnswer,
 } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
@@ -35,18 +42,7 @@ import {
   type BookingWire,
 } from './booking.mapper'
 
-/** Raised instead of returning a partial CSV, so the caller can say what went wrong. */
-export class ExportTooLargeError extends Error {
-  readonly total: number
-  readonly limit: number
-
-  constructor(total: number, limit: number) {
-    super(`Cannot export ${total} bookings; the limit is ${limit}`)
-    this.name = 'ExportTooLargeError'
-    this.total = total
-    this.limit = limit
-  }
-}
+export { ExportTooLargeError }
 
 /**
  * The FastAPI /bookings endpoints. Wire shapes are translated in booking.mapper.ts — nothing
@@ -111,6 +107,12 @@ export const bookingApi = {
   confirm: (reference: string) =>
     apiClient.post<BookingWire>(`/bookings/${reference}/confirm`).then((r) => toBooking(r.data)),
 
+  /** Says who made a request whose details differ from the customer on file. */
+  settleRenter: (reference: string, answer: RenterAnswer, allowSharedLicence = false) =>
+    apiClient
+      .post<BookingWire>(`/bookings/${reference}/renter`, { ...answer, allowSharedLicence })
+      .then((r) => toBooking(r.data)),
+
   /** Withdraws a payment link nobody paid. Refused once money is taken or held on the booking. */
   decline: (reference: string, input: DeclineInput) =>
     apiClient
@@ -158,27 +160,10 @@ export const bookingApi = {
     ),
 
   /**
-   * Every row matching the filters, for the CSV — not just the page on screen. Paged because
-   * the endpoint caps at 100; capped in turn so a huge book cannot hang the browser.
+   * Every row matching the filters, for the CSV — not just the page on screen.
    */
-  exportAll: async (params: Omit<BookingListParams, 'page' | 'pageSize'>) => {
-    const limit = MAX_BOOKING_PAGES * MAX_PAGE_SIZE
-    const rows: BookingTuple[] = []
-    let total = 0
-    for (let page = 1; page <= MAX_BOOKING_PAGES; page++) {
-      const result = await bookingApi.page({ ...params, page, pageSize: MAX_PAGE_SIZE })
-      total = result.total
-      // The first response already says whether this can finish, so an oversized export costs
-      // one request rather than fetching and mapping every page only to refuse at the end.
-      if (total > limit) throw new ExportTooLargeError(total, limit)
-      rows.push(...result.items)
-      if (rows.length >= total) break
-    }
-    // A total that never arrives — pages short of what was promised — is refused too: a CSV
-    // claiming to be the whole export is worse than none, since nothing says rows are missing.
-    if (rows.length < total) throw new ExportTooLargeError(total, limit)
-    return rows
-  },
+  exportAll: (params: Omit<BookingListParams, 'page' | 'pageSize'>) =>
+    fetchEveryPage((page) => bookingApi.page({ ...params, ...page }), MAX_BOOKING_PAGES),
 
   /** Headline totals for the whole book — not narrowed by the list's filters. */
   stats: () => apiClient.get<BookingStatsWire>('/bookings/stats').then((r) => toBookingStats(r.data)),

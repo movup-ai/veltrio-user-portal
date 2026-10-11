@@ -18,6 +18,7 @@ export type Permission =
   | 'customers.read'
   | 'customers.create'
   | 'customers.update'
+  | 'customers.merge'
   | 'payments.read'
   | 'payments.refund'
   | 'locations.read'

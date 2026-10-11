@@ -1,4 +1,5 @@
-import type { BookingTab } from '../types/booking.types'
+import { EMPTY_DATE_RANGE } from '@/components/ui/date-range-picker'
+import type { BookingFilters, BookingTab } from '../types/booking.types'
 
 /** Spacing of the pickup and return time slots, and what a new booking's default rounds up to. */
 export const BOOKING_TIME_STEP_MINUTES = 30
@@ -15,6 +16,17 @@ export const CONDITION_PHOTO_TYPES: readonly string[] = ['image/jpeg', 'image/pn
 
 /** The Drafts tab sits beside the booking tabs but draws from its own resource. */
 export const DRAFTS_TAB = 'Drafts'
+
+/** Nothing narrowed: the whole book, for a list that filters on one thing of its own. */
+export const NO_BOOKING_FILTERS: BookingFilters = {
+  search: '',
+  status: 'Any',
+  location: 'All',
+  pickup: EMPTY_DATE_RANGE,
+  make: 'All',
+  durationBand: 'Any',
+  valueBands: [],
+}
 
 /** Shown while the counts load, so the tabs render without flickering through zero. */
 export const EMPTY_TAB_COUNTS: Record<BookingTab, number> = {

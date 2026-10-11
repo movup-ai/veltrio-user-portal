@@ -4,25 +4,34 @@
     "description": "Renter profiles, documents and rental history",
     "addCustomer": "Add customer",
     "export": "Export",
-    "searchPlaceholder": "Search name, email or licence",
-    "pageNote": "Showing 1–{{shown}} of {{total}} customers",
-    "tabs": {
-      "All": "All",
-      "Active": "Active",
-      "Needs review": "Needs review"
+    "exportFailed": "Export failed",
+    "exportTooLarge": "{{total}} customers match, and at most {{limit}} can be exported at once. Narrow the search and try again.",
+    "searchPlaceholder": "Search name, email, phone or licence",
+    "loading": "Loading customers…",
+    "loadError": "We couldn't load your customers.",
+    "emptyTitle": "No customers found",
+    "emptyDescription": "Customers appear here when a booking is taken, or when you add one.",
+    "possibleDuplicate": "Possible duplicate",
+    "rowActions": {
+      "view": "View customer"
     },
-    "filters": {
-      "status": "Status",
-      "joined": "Joined",
-      "joinedValue": "Last 12 mo"
+    "tableTitle": "All customers",
+    "sort": {
+      "label": "Sort customers",
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "name": "Name (A → Z)",
+      "valueDesc": "Lifetime value (high → low)",
+      "valueAsc": "Lifetime value (low → high)",
+      "rentalsDesc": "Most rentals"
     },
     "stats": {
       "total": "Total customers",
-      "totalNote": "46 new this month",
+      "totalNote": "Everyone in your customer book",
       "repeatRate": "Repeat rate",
-      "repeatRateNote": "2+ rentals in 12 months",
-      "docsToVerify": "Docs to verify",
-      "docsToVerifyNote": "Blocks pickup until cleared"
+      "repeatRateNote": "Of customers who have rented, those with 2+ rentals",
+      "possibleDuplicates": "Possible duplicates",
+      "possibleDuplicatesNote": "Same licence, or same name and birth date"
     }
   },
   "columns": {
@@ -34,9 +43,105 @@
     "lifetimeValue": "Lifetime value"
   },
   "details": {
-    "title": "Customer {{id}}",
-    "description": "Customer profile, bookings, and payment history",
-    "comingSoonTitle": "Customer details coming soon",
-    "comingSoonDescription": "This module is being built next."
+    "description": "Customer profile and possible duplicates",
+    "loading": "Loading customer…",
+    "loadError": "We couldn't load this customer.",
+    "backToList": "Back to customers",
+    "edit": "Edit customer",
+    "notSet": "Not set",
+    "profileTitle": "Profile",
+    "duplicatesTitle": "This may be the same person",
+    "duplicatesDescription": "These customers share identifying details with this one. If they are the same person, merge them so their bookings and checks sit in one place.",
+    "merge": "Merge"
+  },
+  "documents": {
+    "title": "Documents",
+    "description": "The licence and insurance scans on this customer's file.",
+    "loading": "Loading documents…",
+    "loadError": "We couldn't load this customer's documents.",
+    "uploading": "Uploading…",
+    "replace": "Replace {{document}}",
+    "none": "None on file",
+    "kind": {
+      "licence": "Driver licence",
+      "insurance": "Insurance"
+    }
+  },
+  "bookings": {
+    "title": "Booking history",
+    "loading": "Loading bookings…",
+    "loadError": "We couldn't load this customer's bookings.",
+    "emptyTitle": "No bookings yet",
+    "emptyDescription": "Bookings appear here once this customer rents a vehicle."
+  },
+  "form": {
+    "addTitle": "Add customer",
+    "editTitle": "Edit customer",
+    "add": "Add customer",
+    "name": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "dateOfBirth": "Date of birth",
+    "address": "Home address",
+    "licenceNumber": "Licence number",
+    "licenceExpiry": "Licence expiry",
+    "datePlaceholder": "Pick a date",
+    "matchesTitle": "Already on file?",
+    "matchesHint": "These customers share details with what you typed. Open one instead of adding the same person twice.",
+    "openCustomer": "Open customer",
+    "gender": "Gender",
+    "genderPlaceholder": "Select",
+    "licenceDocument": "Driving licence photo",
+    "licenceDocumentHint": "The front of the card.",
+    "insuranceDocument": "Insurance card photo",
+    "insuranceDocumentHint": "Their current auto policy."
+  },
+  "gender": {
+    "female": "Female",
+    "male": "Male",
+    "nonBinary": "Non-binary",
+    "undisclosed": "Prefer not to say"
+  },
+  "onFile": {
+    "born": "Born {{date}}",
+    "matchedOn": "Same {{reasons}}"
+  },
+  "matchReason": {
+    "email": "email",
+    "licence": "licence number",
+    "nameAndDob": "name and date of birth",
+    "phone": "phone"
+  },
+  "conflict": {
+    "differentPerson": "Different person, continue",
+    "customer_email_taken": {
+      "title": "This email is already on file",
+      "description": "Each customer needs their own email. If this is the same person, open their record. If not, use a different email."
+    },
+    "customer_licence_on_file": {
+      "title": "This licence number is already on file",
+      "description": "A customer with the same licence number exists. Is this the same person?"
+    },
+    "customer_details_differ": {
+      "title": "Another renter is on file under this email",
+      "description": "The name, date of birth or licence you typed does not match the customer with this email. Is this the same person? If not, cancel and give this renter their own email."
+    }
+  },
+  "merge": {
+    "title": "Merge these customers?",
+    "description": "Pick the record to keep. The other's bookings, checks and documents move to it, and the other record is deleted.\n\nThe kept record's own details and licence scan stay as they are. This cannot be undone.",
+    "keepLabel": "Record to keep",
+    "confirm": "Merge customers"
+  },
+  "toast": {
+    "added": "Customer added",
+    "addFailed": "Could not add the customer",
+    "updated": "Customer updated",
+    "updateFailed": "Could not update the customer",
+    "merged": "Customers merged",
+    "mergeFailed": "Could not merge the customers",
+    "documentUploaded": "Document uploaded",
+    "documentUploadFailed": "Could not upload the document",
+    "documentsNotUploaded": "The customer was saved, but these did not upload: {{documents}}. Add them from the customer's page."
   }
 }
