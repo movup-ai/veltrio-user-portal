@@ -424,6 +424,26 @@
       "messageHintNoEmail": "Opcional. Se guarda en la reserva; el correo no está configurado, así que no se envía.",
       "confirm": "Cancelar reserva"
     },
+    "renterMismatch": {
+      "title": "¿Quién es este arrendatario?",
+      "subtitle": "Lo que escribió en línea no coincide con el cliente registrado con este correo. Acláralo antes de aceptar.",
+      "typed": "Escrito por el arrendatario",
+      "onFile": "Cliente registrado",
+      "born": "Nacimiento: {{date}}",
+      "samePerson": "Es la misma persona, actualizar su ficha",
+      "differentPerson": "Es otra persona",
+      "emailTitle": "Otra persona necesita su propio correo",
+      "emailDescription": "{{email}} pertenece al cliente registrado. Escribe el correo propio de este arrendatario para guardarlo como un cliente aparte.",
+      "emailLabel": "Correo del arrendatario",
+      "emailInvalid": "Introduce un correo electrónico válido",
+      "saveAsNew": "Guardar como cliente aparte",
+      "useThisCustomer": "Usar este cliente"
+    },
+    "renterDuplicates": {
+      "title": "Este arrendatario podría ser ya un cliente",
+      "subtitle": "Otro cliente tiene el mismo número de licencia, o el mismo nombre y fecha de nacimiento. Si son la misma persona, fusiona las dos fichas desde la página del cliente antes de hacer verificaciones.",
+      "openRenter": "Abrir este arrendatario"
+    },
     "request": {
       "title": "Solicitud del arrendatario",
       "subtitle": "Lo que pidió el arrendatario al reservar en línea.",
@@ -492,6 +512,8 @@
     "restored": "Reserva restaurada",
     "restoredEmailQueued": "Se está enviando a {{name}} un correo avisando de que vuelve a estar en revisión.",
     "restoreFailed": "No se pudo restaurar la reserva",
+    "renterSettled": "Arrendatario confirmado",
+    "renterSettleFailed": "No se pudo guardar quién es el arrendatario",
     "cancelled": "Reserva cancelada",
     "cancelledEmailQueued": "Se está enviando un correo a {{name}}.",
     "cancelledByHand": "Devuelve {{amount}} al arrendatario en persona.",
@@ -639,6 +661,9 @@
       "startFresh": "Crear una reserva nueva",
       "notDiscardedTitle": "El borrador sigue en la lista",
       "notDiscarded": "Se creó la reserva {{reference}}, pero no se pudo eliminar su borrador. Descártalo en la pestaña Borradores para no reservar dos veces."
+    },
+    "customerConflict": {
+      "useCustomer": "Es la misma persona, usar este cliente"
     },
     "nav": {
       "previousStep": "Atrás",

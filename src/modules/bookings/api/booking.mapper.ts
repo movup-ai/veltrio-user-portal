@@ -1,4 +1,10 @@
-import { toCustomer, toCustomerPayload, type CustomerWire } from '@/modules/customers/api/customer.mapper'
+import {
+  toCustomer,
+  toCustomerMatch,
+  toCustomerPayload,
+  type CustomerMatchWire,
+  type CustomerWire,
+} from '@/modules/customers/api/customer.mapper'
 import type { PresignedUpload } from '@/modules/vehicles/api/vehicle.mapper'
 import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
 import { fromCents, toCents } from '@/lib/money'
@@ -129,6 +135,16 @@ export interface BookingWire {
   }
   paymentPreference: PaymentPreference | null
   notes: string | null
+  renterSubmitted: {
+    name: string
+    email: string
+    phone: string
+    dateOfBirth: string
+    address: string
+    licenceNumber: string
+    licenceExpiry: string | null
+  } | null
+  possibleDuplicates: CustomerMatchWire[]
   declined: { reason: DeclineReason; message: string | null; at: string; restorable: boolean } | null
   cancelled: { reason: CancelReason; message: string | null; at: string } | null
   contract: { signedAt: string | null; version: string | null }
@@ -349,6 +365,10 @@ export function toBooking(wire: BookingWire): Booking {
     },
     paymentPreference: wire.paymentPreference ?? undefined,
     notes: wire.notes ?? undefined,
+    renterSubmitted: wire.renterSubmitted
+      ? { ...wire.renterSubmitted, licenceExpiry: wire.renterSubmitted.licenceExpiry ?? undefined }
+      : undefined,
+    possibleDuplicates: wire.possibleDuplicates.map(toCustomerMatch),
     declined: wire.declined ? { ...wire.declined, message: wire.declined.message ?? undefined } : undefined,
     cancelled: wire.cancelled
       ? { ...wire.cancelled, message: wire.cancelled.message ?? undefined }
@@ -491,6 +511,7 @@ export function toBookingPayload(input: BookingInput) {
   return {
     ...(input.customerId && { customerId: input.customerId }),
     customer: toCustomerPayload(input.customer),
+    ...(input.allowSharedLicence && { allowSharedLicence: true }),
     vehicleId: input.vehicleId,
     pickupLocation: input.pickupLocation,
     returnLocation: input.returnLocation,
@@ -572,6 +593,7 @@ export function toBookingListQuery(params: BookingListParams): Record<string, un
   if (filters.pickup.to) query.pickupTo = filters.pickup.to
   if (filters.durationBand !== 'Any') query.durationBand = filters.durationBand
   if (filters.valueBands.length > 0) query.valueBand = filters.valueBands
+  if (filters.customerId) query.customerId = filters.customerId
 
   return query
 }

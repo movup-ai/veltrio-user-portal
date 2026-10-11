@@ -4,8 +4,10 @@ import { toast } from '@/components/ui/use-toast'
 import { bookingContractKeys } from '@/modules/contracts/hooks/use-booking-contract'
 import { bookingPaymentKeys } from '@/modules/payments/hooks/use-booking-payments'
 import { normalizeApiError } from '@/services/api/errors'
+import { toCustomerConflict } from '@/modules/customers/api/customer.mapper'
+import { customerKeys } from '@/modules/customers/hooks/use-customers'
 import { bookingApi } from '../api/booking.api'
-import type { Booking, CancelInput, DeclineInput } from '../types/booking.types'
+import type { Booking, CancelInput, DeclineInput, RenterAnswer } from '../types/booking.types'
 import { bookingKeys } from './use-bookings'
 
 const TOASTS = {
@@ -47,6 +49,35 @@ function useAnswer<TInput, TResult>(
       if (STALE.includes(apiError.code ?? ''))
         void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
       toast({ title: i18n.t(TOASTS[answer].error), description: apiError.message, variant: 'error' })
+    },
+  })
+}
+
+/**
+ * Says who a mismatched renter is. A refusal naming a customer on file is left to the caller:
+ * it is another question for the counter, not a failure.
+ */
+export function useSettleRenter(reference: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ answer, allowSharedLicence }: { answer: RenterAnswer; allowSharedLicence?: boolean }) =>
+      bookingApi.settleRenter(reference, answer, allowSharedLicence),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+      void queryClient.invalidateQueries({ queryKey: customerKeys.all })
+      toast({ title: i18n.t('bookings:toast.renterSettled'), variant: 'success' })
+    },
+    onError: (error) => {
+      if (toCustomerConflict(error)) return
+      const apiError = normalizeApiError(error)
+      // Settled from another tab or by a colleague: reload so the banner goes away.
+      if (apiError.code === 'renter_settled')
+        void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+      toast({
+        title: i18n.t('bookings:toast.renterSettleFailed'),
+        description: apiError.message,
+        variant: 'error',
+      })
     },
   })
 }

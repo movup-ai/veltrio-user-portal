@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
+import { toCustomerConflict } from '@/modules/customers/api/customer.mapper'
 import { customerKeys } from '@/modules/customers/hooks/use-customers'
 import { bookingApi } from '../api/booking.api'
 import type { BookingListParams } from '../api/booking.mapper'
@@ -111,6 +112,8 @@ export function useCreateBooking() {
       })
     },
     onError: (error) => {
+      // Not a failure: the form asks the counter whether this is the customer on file.
+      if (toCustomerConflict(error)) return
       const apiError = normalizeApiError(error)
       // Someone else took the car while this form was open: refresh the schedule so the
       // vehicle list shows it as booked rather than inviting a second attempt.

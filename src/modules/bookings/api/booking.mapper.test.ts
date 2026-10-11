@@ -33,10 +33,11 @@ const wire: BookingWire = {
     name: 'Marisol Vega',
     email: 'marisol@example.com',
     phone: '+1 305 442 0118',
-    dateOfBirth: null,
+    dateOfBirth: '1991-04-17',
     address: null,
     licenceNumber: 'FL D-1204-889',
     licenceExpiry: '2029-03-01',
+    gender: null,
     createdAt: '2026-09-01T00:00:00Z',
     updatedAt: '2026-09-01T00:00:00Z',
   },
@@ -80,6 +81,8 @@ const wire: BookingWire = {
   },
   paymentPreference: null,
   notes: null,
+  renterSubmitted: null,
+  possibleDuplicates: [],
   declined: null,
   cancelled: null,
   contract: { signedAt: null, version: null },
@@ -104,7 +107,7 @@ describe('toBooking', () => {
       name: 'Marisol Vega',
       email: 'marisol@example.com',
       phone: '+1 305 442 0118',
-      dateOfBirth: undefined,
+      dateOfBirth: '1991-04-17',
       address: undefined,
       licenceNumber: 'FL D-1204-889',
       licenceExpiry: '2029-03-01',
@@ -352,6 +355,13 @@ describe('toBookingListQuery', () => {
       offset: 0,
       sort: 'newest',
     })
+  })
+
+  it('narrows to one customer for their own page, and never otherwise', () => {
+    const theirs = toBookingListQuery({ ...base, tab: 'All', filters: { ...NO_FILTERS, customerId: 'c1' } })
+
+    expect(theirs.customerId).toBe('c1')
+    expect(toBookingListQuery({ ...base, filters: NO_FILTERS })).not.toHaveProperty('customerId')
   })
 })
 
@@ -628,6 +638,7 @@ describe('toBookingPayload agreement template', () => {
       name: 'Marisol Vega',
       email: 'marisol@example.com',
       phone: '+1 305 442 0118',
+      dateOfBirth: '1991-04-17',
       licenceNumber: 'X',
     },
     vehicleId: 'v1',
@@ -689,5 +700,71 @@ describe('a cancelled booking', () => {
       keepCents: 1999,
       requestId: 'r1',
     })
+  })
+})
+
+describe('a renter whose details differ from the customer on file', () => {
+  const typed = {
+    name: 'Sam Okafor',
+    email: 'marisol@example.com',
+    phone: '+1 512 555 0188',
+    dateOfBirth: '1985-02-11',
+    address: '41 Rainey St',
+    licenceNumber: 'TX 1',
+    licenceExpiry: null,
+  }
+
+  it('reaches the details page beside the customer, for staff to settle', () => {
+    const booking = toBooking({ ...wire, status: 'pending', renterSubmitted: typed })
+
+    expect(buildBookingDetails(bookingToTuple(booking), booking).renterMismatch).toEqual({
+      onFile: booking.customer,
+      submitted: { ...typed, licenceExpiry: undefined },
+    })
+  })
+
+  it('is absent on every other booking', () => {
+    const booking = toBooking(wire)
+
+    expect(buildBookingDetails(bookingToTuple(booking), booking).renterMismatch).toBeUndefined()
+  })
+
+  it('holds back possible duplicates until the mismatch is settled', () => {
+    // Until staff say who booked, the customer on file may not be the renter at all.
+    const twin = { customer: { ...wire.customer, id: 'c2' }, reasons: ['licence' as const] }
+    const details = (renterSubmitted: typeof typed | null) => {
+      const booking = toBooking({ ...wire, renterSubmitted, possibleDuplicates: [twin] })
+      return buildBookingDetails(bookingToTuple(booking), booking)
+    }
+
+    expect(details(typed).renterDuplicates).toEqual([])
+    expect(details(null).renterDuplicates).toEqual([
+      { customer: expect.objectContaining({ id: 'c2' }), reasons: ['licence'] },
+    ])
+  })
+})
+
+describe('toBookingPayload shared licence', () => {
+  const input: BookingInput = {
+    customer: {
+      name: 'Marisol Vega',
+      email: 'marisol@example.com',
+      phone: '+1 305 442 0118',
+      dateOfBirth: '1991-04-17',
+      licenceNumber: 'X',
+    },
+    vehicleId: 'v1',
+    pickupLocation: 'Downtown',
+    returnLocation: 'Downtown',
+    pickupAt: '2026-10-01T13:30:00Z',
+    returnAt: '2026-10-05T13:30:00Z',
+    additionalDrivers: [],
+    fees: [],
+    verifications: [],
+  }
+
+  it('is sent only once the counter has confirmed a different person', () => {
+    expect('allowSharedLicence' in toBookingPayload(input)).toBe(false)
+    expect(toBookingPayload({ ...input, allowSharedLicence: true }).allowSharedLicence).toBe(true)
   })
 })

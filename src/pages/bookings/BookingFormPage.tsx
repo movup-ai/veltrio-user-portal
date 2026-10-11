@@ -34,8 +34,10 @@ import {
   useCustomerDocuments,
   useCustomerSearch,
 } from '@/modules/customers/hooks/use-customers'
+import { toCustomerConflict } from '@/modules/customers/api/customer.mapper'
+import { CustomerConflictDialog } from '@/modules/customers/components/CustomerConflictDialog'
 import { DocumentOnFile } from '@/modules/customers/components/DocumentOnFile'
-import type { Customer, DocumentKind } from '@/modules/customers/types/customer.types'
+import type { Customer, CustomerConflict, DocumentKind } from '@/modules/customers/types/customer.types'
 import {
   ACCEPTED_DOCUMENT_TYPES,
   uploadCustomerDocument,
@@ -83,6 +85,9 @@ import { BOOKING_TIME_STEP_MINUTES } from '@/modules/bookings/constants/booking.
 
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
+
+/** The counter's answer to "is this the customer on file?", sent with the form again. */
+type CustomerAnswer = Pick<BookingInput, 'customerId' | 'allowSharedLicence'>
 
 /**
  * One page of the fleet to pick from. 100 is the most `GET /vehicles` allows — asking for more
@@ -211,6 +216,8 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
   const format = useFormatters()
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
+  // A save the API refused because the renter may already be on file, with the form as sent.
+  const [conflict, setConflict] = useState<{ conflict: CustomerConflict; submitted: BookingFormValues }>()
   const saveDraft = useSaveBookingDraft()
   const deleteDraft = useDeleteBookingDraft({ silent: true })
   const queryClient = useQueryClient()
@@ -543,17 +550,18 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
     }
   }
 
-  const onSubmit = (submitted: BookingFormValues) =>
+  const submitBooking = (submitted: BookingFormValues, answer: CustomerAnswer = {}) =>
     new Promise<void>((settle) => {
       if (!selectedVehicle || !pricing) return settle()
 
       const input: BookingInput = {
-        customerId: submitted.customerId || undefined,
+        customerId: answer.customerId ?? (submitted.customerId || undefined),
+        allowSharedLicence: answer.allowSharedLicence,
         customer: {
           name: submitted.customerName,
           email: submitted.customerEmail,
           phone: submitted.customerPhone,
-          dateOfBirth: submitted.customerDob || undefined,
+          dateOfBirth: submitted.customerDob,
           address: submitted.customerAddress || undefined,
           licenceNumber: submitted.licenceNumber,
           licenceExpiry: submitted.licenceExpiry || undefined,
@@ -592,9 +600,16 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
           settle()
           navigate('/bookings')
         },
-        onError: () => settle(),
+        onError: (error) => {
+          const refused = toCustomerConflict(error)
+          setConflict(refused && { conflict: refused, submitted })
+          settle()
+        },
       })
     })
+
+  // Not `handleSubmit(submitBooking)`: RHF passes the event second, where the answer goes.
+  const onSubmit = (submitted: BookingFormValues) => submitBooking(submitted)
 
   return (
     <PageContainer>
@@ -1418,6 +1433,19 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
           </Card>
         </form>
       </div>
+
+      <CustomerConflictDialog
+        conflict={conflict?.conflict}
+        onClose={() => setConflict(undefined)}
+        sameLabel={t('form.customerConflict.useCustomer')}
+        onSame={(onFile) => {
+          if (conflict) void submitBooking(conflict.submitted, { customerId: onFile.id })
+        }}
+        onDifferent={() => {
+          if (conflict) void submitBooking(conflict.submitted, { allowSharedLicence: true })
+        }}
+        pending={createBooking.isPending}
+      />
     </PageContainer>
   )
 }

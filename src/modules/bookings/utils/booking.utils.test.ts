@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 import type { BookingTuple } from '../types/booking.types'
 import { intervalsForVehicle, parseRentalWindow } from './booking.schedule'
 import {
+  bookingColumns,
   bookingRow,
   bookingsForVehicle,
+  customerBookingColumns,
+  customerBookingRow,
   formatRentalDuration,
   formatRentalWindow,
   tripCount,
@@ -109,6 +112,39 @@ describe('isOver', () => {
     // was done, which a cancelled booking no longer is: its later steps are skipped.
     expect(['Completed', 'Cancelled'].map(isOver)).toEqual([true, true])
     expect(['Pending', 'Confirmed', 'On rental', 'Overdue', 'Returned'].some(isOver)).toBe(false)
+  })
+})
+
+describe("a customer's own booking history", () => {
+  const tuple = [
+    'Edward Thomas',
+    'BK-10001',
+    'Honda Accord',
+    'FL·7VC-283',
+    'Sep 24 · 09:30 → Sep 25 · 09:30',
+    '1 day',
+    'Miami Beach',
+    'Confirmed',
+    '$360',
+  ] as unknown as BookingTuple
+  const t = ((key: string) => key) as never
+  const isCustomerCell = (cell: unknown) =>
+    JSON.stringify(cell) === JSON.stringify({ kind: 'text', primary: 'Edward Thomas' })
+
+  it('is the bookings table without the Customer column, and nothing else moved', () => {
+    const all = bookingColumns(t).map((column) => column.label)
+
+    expect(all).toContain('columns.customer')
+    expect(customerBookingColumns(t).map((column) => column.label)).toEqual(
+      all.filter((label) => label !== 'columns.customer'),
+    )
+  })
+
+  it('drops the matching cell from each row', () => {
+    const full = bookingRow(tuple).cells
+
+    expect(full.some(isCustomerCell)).toBe(true)
+    expect(customerBookingRow(tuple).cells).toEqual(full.filter((cell) => !isCustomerCell(cell)))
   })
 })
 

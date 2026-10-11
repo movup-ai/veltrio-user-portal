@@ -1,5 +1,5 @@
 import type { DateRange } from '@/components/ui/date-range-picker'
-import type { Customer, CustomerInput } from '@/modules/customers/types/customer.types'
+import type { Customer, CustomerInput, CustomerMatch } from '@/modules/customers/types/customer.types'
 import type { BillingBasis } from '@/modules/vehicles/types/vehicle.types'
 
 /** [customer, reference, vehicle, plate, rentalWindow, note, location, status, total] */
@@ -229,6 +229,8 @@ export interface BookingFilters {
   make: string | 'All'
   durationBand: BookingDurationBand | 'Any'
   valueBands: BookingValueBand[]
+  /** Only this customer's bookings, for their own page. The bookings list never sets it. */
+  customerId?: string
 }
 
 /**
@@ -311,6 +313,8 @@ export interface BookingInput {
    */
   customerId?: string
   customer: BookingCustomer
+  /** The counter confirmed this renter is not the customer already holding that licence number. */
+  allowSharedLicence?: boolean
   /** No rate option: the cost engine picks the rates from the vehicle's card. */
   vehicleId: string
   pickupLocation: string
@@ -381,6 +385,10 @@ export interface Booking extends Omit<BookingInput, 'customerId' | 'customer' | 
   payment: BookingPayment
   paymentPreference?: PaymentPreference
   notes?: string
+  /** What the renter typed, where it disagrees with `customer`. Gone once staff settle it. */
+  renterSubmitted?: CustomerInput
+  /** Other customers who look like this one. Loaded with the booking's own page only. */
+  possibleDuplicates: CustomerMatch[]
   declined?: BookingDecline
   /** Set on a booking the company had accepted and then cancelled. */
   cancelled?: BookingCancellation
@@ -545,6 +553,18 @@ export interface BookingRenter {
   since: number
 }
 
+/**
+ * A renter's own request whose details differ from the customer their email named. Nobody
+ * could ask them, so staff say who they are before the request can be accepted.
+ */
+export interface RenterMismatch {
+  onFile: Customer
+  submitted: CustomerInput
+}
+
+/** Who a mismatched renter is: a customer on file, or someone new under an email of their own. */
+export type RenterAnswer = { customerId: string } | { email: string }
+
 /** Everything the booking details page renders. Assembled by `booking.details.ts`. */
 export interface BookingDetails {
   reference: string
@@ -592,6 +612,9 @@ export interface BookingDetails {
   events: BookingEventEntry[]
   renter: BookingRenter
   request?: BookingRequest
+  renterMismatch?: RenterMismatch
+  /** Customers the renter may already be, when there is no mismatch still to settle first. */
+  renterDuplicates: CustomerMatch[]
   declined?: BookingDecline
   cancelled?: BookingCancellation
 }

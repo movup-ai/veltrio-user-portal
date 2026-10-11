@@ -424,6 +424,26 @@
       "messageHintNoEmail": "Optional. Kept on the booking; email isn't set up, so it is not sent.",
       "confirm": "Cancel booking"
     },
+    "renterMismatch": {
+      "title": "Who is this renter?",
+      "subtitle": "What they typed online differs from the customer on file with this email. Settle it before accepting.",
+      "typed": "Typed by the renter",
+      "onFile": "Customer on file",
+      "born": "Born {{date}}",
+      "samePerson": "Same person, update their record",
+      "differentPerson": "Different person",
+      "emailTitle": "A different person needs their own email",
+      "emailDescription": "{{email}} belongs to the customer on file. Enter this renter's own email to save them as a separate customer.",
+      "emailLabel": "Renter's email",
+      "emailInvalid": "Enter a valid email address",
+      "saveAsNew": "Save as a separate customer",
+      "useThisCustomer": "Use this customer"
+    },
+    "renterDuplicates": {
+      "title": "This renter may already be a customer",
+      "subtitle": "Another customer has the same licence number, or the same name and date of birth. If they are the same person, merge the two from the customer page before running checks.",
+      "openRenter": "Open this renter"
+    },
     "request": {
       "title": "Renter's request",
       "subtitle": "What the renter asked for when they reserved online.",
@@ -492,6 +512,8 @@
     "restored": "Reservation restored",
     "restoredEmailQueued": "An email is on its way to {{name}} saying it is under review again.",
     "restoreFailed": "Couldn't restore the reservation",
+    "renterSettled": "Renter confirmed",
+    "renterSettleFailed": "Couldn't save who the renter is",
     "cancelled": "Booking cancelled",
     "cancelledEmailQueued": "An email is on its way to {{name}}.",
     "cancelledByHand": "Hand {{amount}} back to the renter in person.",
@@ -639,6 +661,9 @@
       "startFresh": "Start a new booking",
       "notDiscardedTitle": "Draft still in the list",
       "notDiscarded": "Booking {{reference}} was created, but its draft could not be removed. Discard it from the Drafts tab so it is not booked twice."
+    },
+    "customerConflict": {
+      "useCustomer": "Same person, use this customer"
     },
     "nav": {
       "previousStep": "Back",

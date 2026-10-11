@@ -2,6 +2,7 @@ import { Car } from 'lucide-react'
 import type { TFunction } from 'i18next'
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
 import { formatCurrencyIn, formatDateIn } from '@/i18n/formatters'
+import { downloadCsv } from '@/lib/csv'
 import { durationHours } from './booking.pricing'
 import {
   isReadyForPickup,
@@ -103,10 +104,6 @@ function csvHeader(t: TFunction<'bookings'>): string[] {
   ]
 }
 
-function toCsvCell(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`
-}
-
 /** Builds a CSV from booking tuples and triggers a browser download — no backend export endpoint yet. */
 export function downloadBookingsCsv(
   bookings: BookingTuple[],
@@ -116,17 +113,7 @@ export function downloadBookingsCsv(
   // Only the nine display columns the header names: the tuple also carries the raw pickup and
   // return instants, which are there for filtering, not for the exported file.
   const rows = bookings.map((row) => row.slice(0, 9) as string[])
-  const csv = [csvHeader(t), ...rows].map((row) => row.map(toCsvCell).join(',')).join('\r\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  downloadCsv([csvHeader(t), ...rows], filename)
 }
 
 /**
@@ -213,6 +200,19 @@ export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
       { kind: 'actions', align: 'right', items: actions },
     ],
   }
+}
+
+/** Where the customer sits in `bookingColumns` and in `bookingRow`'s cells. */
+const CUSTOMER_COLUMN = 2
+
+/** The bookings table minus Customer: redundant on a page already scoped to one customer. */
+export function customerBookingColumns(t: TFunction<'bookings'>) {
+  return bookingColumns(t).filter((_, index) => index !== CUSTOMER_COLUMN)
+}
+
+export function customerBookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
+  const row = bookingRow(b, actions)
+  return { ...row, cells: row.cells.filter((_, index) => index !== CUSTOMER_COLUMN) }
 }
 
 /** The Drafts tab's own columns — a draft has no reference, status or total to show. */

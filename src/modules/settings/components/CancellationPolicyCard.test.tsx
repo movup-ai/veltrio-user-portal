@@ -197,6 +197,38 @@ describe('CancellationPolicyCard', () => {
     expect(screen.getByRole('radio', { name: /Flexible/ })).toBeChecked()
   })
 
+  it('keeps tiers edited behind a ready-made schedule when the fresh policy arrives', async () => {
+    const { user, freshArrives } = renderStaleThenFresh(STANDARD)
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+    const half = () => screen.getByRole('spinbutton', { name: 'Tier 2: refund percent' })
+    await user.clear(half())
+    await user.type(half(), '30')
+    // Back on what was saved, so the card looks untouched: the edit is out of sight, not gone.
+    await user.click(screen.getByRole('radio', { name: /Standard/ }))
+
+    freshArrives([{ daysBefore: 1, refundPercent: 100 }])
+
+    // The selection follows the newer policy, with nothing to save.
+    expect(screen.getByRole('radio', { name: /Flexible/ })).toBeChecked()
+    expect(save()).toBeDisabled()
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+    expect(half()).toHaveValue(30)
+    expect(screen.getByRole('spinbutton', { name: 'Tier 1: days before pickup' })).toHaveValue(14)
+  })
+
+  it('drops those hidden tiers on discard, which is asked for', async () => {
+    const user = renderCard(STANDARD)
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+    const half = () => screen.getByRole('spinbutton', { name: 'Tier 2: refund percent' })
+    await user.clear(half())
+    await user.type(half(), '30')
+
+    await user.click(screen.getByRole('button', { name: 'Discard' }))
+    await user.click(screen.getByRole('radio', { name: /Custom/ }))
+
+    expect(half()).toHaveValue(50)
+  })
+
   it('goes back to the saved policy on discard', async () => {
     const user = renderCard(STANDARD)
 

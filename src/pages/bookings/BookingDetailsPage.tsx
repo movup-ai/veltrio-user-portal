@@ -26,6 +26,8 @@ import { BookingHandoverAction } from '@/modules/bookings/components/BookingHand
 import { BookingManagePanel } from '@/modules/bookings/components/BookingManagePanel'
 import { BookingPaymentSection } from '@/modules/bookings/components/BookingPaymentSection'
 import { BookingRenterCard } from '@/modules/bookings/components/BookingRenterCard'
+import { BookingRenterDuplicates } from '@/modules/bookings/components/BookingRenterDuplicates'
+import { BookingRenterMismatch } from '@/modules/bookings/components/BookingRenterMismatch'
 import { BookingRequestActions } from '@/modules/bookings/components/BookingRequestActions'
 import { BookingRequestBanner } from '@/modules/bookings/components/BookingRequestBanner'
 import { BookingRestoreAction } from '@/modules/bookings/components/BookingRestoreAction'
@@ -285,6 +287,12 @@ export function BookingDetailsPage() {
         }
       />
 
+      {booking.renterMismatch && (
+        <BookingRenterMismatch reference={booking.reference} mismatch={booking.renterMismatch} />
+      )}
+      {booking.renterDuplicates.length > 0 && (
+        <BookingRenterDuplicates customerId={booking.renter.id} duplicates={booking.renterDuplicates} />
+      )}
       {awaitingAnswer && (
         <BookingRequestBanner
           request={booking.request}

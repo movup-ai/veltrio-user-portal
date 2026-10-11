@@ -407,6 +407,11 @@ export function buildBookingDetails(
       status === 'Pending' && (booking?.paymentPreference || booking?.notes)
         ? { paymentPreference: booking.paymentPreference, notes: booking.notes }
         : undefined,
+    renterMismatch: booking?.renterSubmitted
+      ? { onFile: booking.customer, submitted: booking.renterSubmitted }
+      : undefined,
+    // Held back while a mismatch is open: until then the customer on file may not be the renter.
+    renterDuplicates: booking && !booking.renterSubmitted ? booking.possibleDuplicates : [],
     declined: booking?.declined,
     cancelled: booking?.cancelled,
   }
