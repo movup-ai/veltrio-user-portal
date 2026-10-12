@@ -326,4 +326,16 @@ describe('bookingApi.calendar', () => {
 
     expect(get).toHaveBeenCalledTimes(3)
   })
+
+  it('fails rather than draw a calendar with bookings missing', async () => {
+    // 250 promised, but the last page comes back empty: 50 rentals would vanish without a word.
+    get.mockImplementation((_url, config) => {
+      const offset = (config?.params as { offset?: number } | undefined)?.offset ?? 0
+      return Promise.resolve(offset < 200 ? page(offset, 250) : { data: { items: [], total: 250 } })
+    })
+
+    await expect(bookingApi.calendar('2026-09-01T04:00:00.000Z', '2026-10-01T04:00:00.000Z')).rejects.toThrow(
+      '200 of 250',
+    )
+  })
 })

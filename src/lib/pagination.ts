@@ -78,6 +78,11 @@ export async function fetchWholeList<T>(
   for (let page = 2; page <= pages; page++) {
     rows.push(...(await fetchPage({ page, pageSize: MAX_PAGE_SIZE })).items)
   }
+  // Short of what was promised is refused, as the export refuses it: a screen missing rows
+  // looks complete, whereas an error can be retried.
+  if (rows.length < first.total) {
+    throw new Error(`Incomplete list: read ${rows.length} of ${first.total} rows`)
+  }
   return rows
 }
 
