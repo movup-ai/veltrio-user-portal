@@ -1,15 +1,48 @@
 import { apiClient } from '@/services/api/client'
+import { toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { CheckoutMethod, CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
+import type { DateRange } from '@/components/ui/date-range-picker'
+import type { PaymentListParams, PaymentStats, Payout } from '../types/payment.types'
 import {
   toCheckoutMethods,
   toPaymentAccount,
+  toPaymentListQuery,
+  toPaymentRow,
+  toPaymentStats,
+  toPayout,
+  toPeriodQuery,
   type OnboardingLinksWire,
   type OnboardingLinkWire,
   type PaymentAccountWire,
   type PaymentMethodsWire,
+  type PaymentRowWire,
+  type PaymentStatsWire,
+  type PayoutWire,
 } from './payment.mapper'
 
 export const paymentApi = {
+  /** Every payment across the company's bookings, newest first. Withdrawn links are left out. */
+  page: (params: PaymentListParams) =>
+    apiClient
+      .get<ListEnvelope<PaymentRowWire>>('/payments', { params: toPaymentListQuery(params) })
+      .then((r) => toPaginatedResult(r.data.items.map(toPaymentRow), r.data.total, params)),
+
+  stats: (): Promise<PaymentStats> =>
+    apiClient.get<PaymentStatsWire>('/payments/stats').then((r) => toPaymentStats(r.data)),
+
+  /** One payment's own receipt as a PDF: that payment alone, not the booking's invoice. */
+  receipt: (paymentId: string): Promise<Blob> =>
+    apiClient.get<Blob>(`/payments/${paymentId}/receipt`, { responseType: 'blob' }).then((r) => r.data),
+
+  /** What the listed payments were paid with: `card` for every card, then the rest by name. */
+  methodsInUse: (): Promise<string[]> => apiClient.get<string[]>('/payments/methods').then((r) => r.data),
+
+  /** Payouts to the company's bank in the period, read live from its Stripe account. */
+  payouts: (period: DateRange): Promise<Payout[]> =>
+    apiClient
+      .get<PayoutWire[]>('/payments/payouts', { params: toPeriodQuery(period) })
+      .then((r) => r.data.map(toPayout)),
+
   account: (): Promise<PaymentAccount> =>
     apiClient.get<PaymentAccountWire>('/payments/account').then((r) => toPaymentAccount(r.data)),
 

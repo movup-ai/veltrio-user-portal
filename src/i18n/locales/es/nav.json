@@ -24,7 +24,12 @@
     "lightMode": "Modo claro",
     "darkMode": "Modo oscuro",
     "toggleDarkMode": "Alternar modo oscuro",
-    "userRole": "Propietario · {{organization}}"
+    "userRole": "{{role}} · {{organization}}",
+    "roles": {
+      "owner": "Propietario",
+      "manager": "Gerente",
+      "staff": "Personal"
+    }
   },
   "header": {
     "openMenu": "Abrir menú",

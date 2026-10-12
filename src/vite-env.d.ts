@@ -3,7 +3,6 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string
-  readonly VITE_USE_MOCKS: string
   readonly VITE_CLERK_PUBLISHABLE_KEY: string
   /** Root domain company sites hang off, for vehicle and payment links, e.g. `veltrio.autos`. */
   readonly VITE_CUSTOMER_PORTAL_DOMAIN?: string

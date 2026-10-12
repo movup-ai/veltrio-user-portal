@@ -1,11 +1,50 @@
 {
   "list": {
     "title": "Pagos",
-    "description": "Facturas, cobros, reembolsos y cargos fallidos",
-    "recordPayment": "Registrar pago",
+    "description": "Pagos, depósitos, reembolsos y tarjetas rechazadas de tus reservas",
     "payoutReport": "Informe de liquidación",
-    "searchPlaceholder": "Buscar factura, cliente o reserva",
-    "pageNote": "Mostrando 1–{{shown}} de {{total}} pagos",
+    "searchPlaceholder": "Buscar cliente, reserva o método",
+    "loading": "Cargando pagos…",
+    "loadError": "No pudimos cargar tus pagos.",
+    "emptyTitle": "No se encontraron pagos",
+    "emptyDescription": "Los pagos aparecen aquí al enviar un enlace o al registrar dinero en una reserva.",
+    "partlyRefunded": "Reembolsado {{amount}}",
+    "rowActions": {
+      "viewBooking": "Ver reserva",
+      "downloadReceipt": "Descargar recibo"
+    },
+    "filters": {
+      "status": "Estado",
+      "method": "Método",
+      "period": "Periodo",
+      "periodAny": "Cualquier fecha"
+    },
+    "state": {
+      "held": "Retenido",
+      "released": "Liberado",
+      "partly_refunded": "Reembolso parcial"
+    },
+    "methodCard": "Tarjeta",
+    "report": {
+      "header": {
+        "arrivalDate": "Fecha de llegada",
+        "status": "Estado",
+        "amount": "Importe",
+        "bank": "Cuenta bancaria",
+        "note": "Nota",
+        "id": "ID de liquidación"
+      },
+      "status": {
+        "paid": "Pagada",
+        "pending": "Pendiente",
+        "in_transit": "En tránsito",
+        "canceled": "Cancelada",
+        "failed": "Fallida"
+      },
+      "empty": "No hay liquidaciones que informar",
+      "emptyDescription": "Stripe no ha enviado liquidaciones en este periodo.",
+      "failed": "No se pudo crear el informe de liquidaciones"
+    },
     "tabs": {
       "All": "Todos",
       "Paid": "Pagados",
@@ -13,24 +52,21 @@
       "Failed": "Fallidos",
       "Refunded": "Reembolsados"
     },
-    "filters": {
-      "status": "Estado",
-      "method": "Método",
-      "period": "Periodo"
-    },
     "stats": {
       "collected": "Cobrado (mes en curso)",
-      "collectedNote": "Neto de $1,240 en reembolsos",
+      "collectedNote": "Neto de {{amount}} en reembolsos",
       "outstanding": "Pendiente de cobro",
-      "outstandingNote": "2 facturas sin pagar",
+      "outstandingNote_one": "{{count}} reserva con saldo pendiente",
+      "outstandingNote_other": "{{count}} reservas con saldo pendiente",
       "failed": "Cargos fallidos",
-      "failedNote": "Reintento programado para esta noche",
-      "nextPayout": "Próxima liquidación",
-      "nextPayoutNote": "16 sept. · Chase ·· 8821"
+      "failedNote": "Tarjeta rechazada en un enlace aún abierto",
+      "held": "Depósitos retenidos",
+      "heldNote_one": "{{count}} depósito retenido",
+      "heldNote_other": "{{count}} depósitos retenidos"
     }
   },
   "columns": {
-    "invoice": "Factura",
+    "payment": "Pago",
     "customer": "Cliente",
     "method": "Método",
     "status": "Estado",

@@ -1,12 +1,22 @@
 import type { CancellationTier } from '@/lib/cancellation-policy'
 import { fromCents, toCents } from '@/lib/money'
+import { toLimitOffset } from '@/lib/pagination'
 import type { CheckoutMethod, CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
+import type { DateRange } from '@/components/ui/date-range-picker'
+import type {
+  PaymentListParams,
+  PaymentRow,
+  PaymentRowState,
+  PaymentStats,
+  Payout,
+} from '../types/payment.types'
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
 import type { BookingWire } from '@/modules/bookings/api/booking.mapper'
 import {
   CANCEL_REFUSALS,
   EXTENSION_REFUSALS,
   PAYMENT_REFUSALS,
+  PAYMENT_SEARCH_MAX,
   type CancelRefusal,
   type ExtensionRefusal,
   type PaymentRefusal,
@@ -166,6 +176,95 @@ export interface ReceiptLinkWire {
 
 export function toReceiptLink(wire: ReceiptLinkWire): ReceiptLink {
   return { bookingId: wire.bookingId, token: wire.token }
+}
+
+export interface PaymentRowWire {
+  id: string
+  kind: BookingPaymentKind
+  state: PaymentRowState
+  amountCents: number
+  refundedCents: number
+  currency: string
+  method: string | null
+  at: string
+  bookingReference: string
+  customerName: string
+}
+
+export interface PaymentStatsWire {
+  collectedCents: number
+  refundedCents: number
+  outstandingCents: number
+  outstandingBookings: number
+  failed: number
+  heldCents: number
+  held: number
+}
+
+export function toPaymentRow(wire: PaymentRowWire): PaymentRow {
+  return {
+    id: wire.id,
+    kind: wire.kind,
+    state: wire.state,
+    amount: fromCents(wire.amountCents),
+    refunded: fromCents(wire.refundedCents),
+    currency: wire.currency,
+    method: wire.method ?? undefined,
+    at: wire.at,
+    bookingReference: wire.bookingReference,
+    customerName: wire.customerName,
+  }
+}
+
+export function toPaymentStats(wire: PaymentStatsWire): PaymentStats {
+  return {
+    collected: fromCents(wire.collectedCents),
+    refunded: fromCents(wire.refundedCents),
+    outstanding: fromCents(wire.outstandingCents),
+    outstandingBookings: wire.outstandingBookings,
+    failed: wire.failed,
+    held: fromCents(wire.heldCents),
+    heldCount: wire.held,
+  }
+}
+
+export function toPaymentListQuery(params: PaymentListParams) {
+  return {
+    ...toLimitOffset(params),
+    // Cut to what the API takes: past it the answer is a 422, shown as a failed load.
+    search: params.search.trim().slice(0, PAYMENT_SEARCH_MAX) || undefined,
+    tab: params.tab === 'All' ? undefined : params.tab.toLowerCase(),
+    state: params.state === 'Any' ? undefined : params.state,
+    method: params.method === 'All' ? undefined : params.method,
+    ...toPeriodQuery(params.period),
+  }
+}
+
+export interface PayoutWire {
+  id: string
+  status: string
+  amountCents: number
+  currency: string
+  arrivalDate: string
+  destination: string | null
+  failureMessage: string | null
+}
+
+export function toPayout(wire: PayoutWire): Payout {
+  return {
+    id: wire.id,
+    status: wire.status,
+    amount: fromCents(wire.amountCents),
+    currency: wire.currency,
+    arrivalDate: wire.arrivalDate,
+    destination: wire.destination ?? undefined,
+    failureMessage: wire.failureMessage ?? undefined,
+  }
+}
+
+/** A range end left open is not sent, so the API leaves that side unbounded. */
+export function toPeriodQuery(period: DateRange) {
+  return { dateFrom: period.from || undefined, dateTo: period.to || undefined }
 }
 
 export function toBookingPaymentRecord(wire: BookingPaymentWire): BookingPaymentRecord {

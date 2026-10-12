@@ -43,6 +43,9 @@ export const CAPABILITY_DOT: Record<string, string> = {
   unsupported: 'bg-error',
 }
 
+/** Mirrors `max_length` on the search of `GET /payments` (app/modules/payments/router.py). */
+export const PAYMENT_SEARCH_MAX = 80
+
 /** How the counter can say money reached them outside Stripe; labels live in the translations. */
 export const MANUAL_METHODS = [
   'cash',

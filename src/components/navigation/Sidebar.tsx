@@ -3,7 +3,15 @@ import { useTranslation } from 'react-i18next'
 import { CarFront, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/state/ui.store'
+import type { MembershipRole } from '@/types/user'
+import { initials } from '@/utils/formatting'
 import { NAV_ITEMS, type NavLinkKey } from './nav-items'
+
+export interface SidebarAccount {
+  name: string
+  role: MembershipRole
+  organization: string
+}
 
 interface SidebarProps {
   /** Renders as an overlay drawer on mobile; hidden until opened. */
@@ -11,9 +19,11 @@ interface SidebarProps {
   onMobileClose?: () => void
   /** Live counts beside a link, such as reservations waiting for an answer. */
   badges?: Partial<Record<NavLinkKey, string>>
+  /** Who is signed in; the card is left out until it is known. */
+  account?: SidebarAccount
 }
 
-export function Sidebar({ mobileOpen = false, onMobileClose, badges }: SidebarProps) {
+export function Sidebar({ mobileOpen = false, onMobileClose, badges, account }: SidebarProps) {
   const { t } = useTranslation(['nav', 'common'])
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
@@ -21,11 +31,14 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges }: SidebarPr
   const setTheme = useUIStore((state) => state.setTheme)
   const expanded = !collapsed
 
-  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const isDark =
+    theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
   return (
     <>
-      {mobileOpen && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onMobileClose} aria-hidden />}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onMobileClose} aria-hidden />
+      )}
 
       <aside
         className={cn(
@@ -46,17 +59,23 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges }: SidebarPr
           )}
         </div>
 
-        <nav className="vx-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden p-3" aria-label={t('nav:sidebar.primary')}>
+        <nav
+          className="vx-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden p-3"
+          aria-label={t('nav:sidebar.primary')}
+        >
           {NAV_ITEMS.map((item) => {
             if (item.type === 'group') {
               return expanded ? (
-                <div key={item.key} className="text-fg-4 px-[9px] pt-3.5 pb-1.5 text-[10.5px] font-semibold tracking-wider uppercase">
+                <div
+                  key={item.key}
+                  className="text-fg-4 px-[9px] pt-3.5 pb-1.5 text-[10.5px] font-semibold tracking-wider uppercase"
+                >
                   {t(`nav:groups.${item.key}`)}
                 </div>
               ) : null
             }
 
-            const badge = badges?.[item.key] ?? item.badge
+            const badge = badges?.[item.key]
             return (
               <NavLink
                 key={item.to}
@@ -72,15 +91,13 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges }: SidebarPr
                 }
               >
                 <item.icon className="size-[17px] shrink-0" />
-                {expanded && <span className="flex-1 overflow-hidden whitespace-nowrap">{t(`nav:links.${item.key}`)}</span>}
+                {expanded && (
+                  <span className="flex-1 overflow-hidden whitespace-nowrap">
+                    {t(`nav:links.${item.key}`)}
+                  </span>
+                )}
                 {badge && expanded && (
-                  <span
-                    className="min-w-5 shrink-0 rounded-full px-1.5 py-px text-center font-mono text-[11px] font-semibold"
-                    style={{
-                      background: item.urgent ? 'var(--color-error-tint)' : 'var(--color-surface-3)',
-                      color: item.urgent ? 'var(--color-error)' : 'var(--color-fg-3)',
-                    }}
-                  >
+                  <span className="bg-surface-3 text-fg-3 min-w-5 shrink-0 rounded-full px-1.5 py-px text-center font-mono text-[11px] font-semibold">
                     {badge}
                   </span>
                 )}
@@ -105,20 +122,31 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges }: SidebarPr
             onClick={toggleSidebar}
             className="text-fg-3 hover:bg-surface-3 hover:text-foreground flex w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-[13px] transition-colors"
           >
-            {collapsed ? <PanelLeftOpen className="size-[17px] shrink-0" /> : <PanelLeftClose className="size-[17px] shrink-0" />}
+            {collapsed ? (
+              <PanelLeftOpen className="size-[17px] shrink-0" />
+            ) : (
+              <PanelLeftClose className="size-[17px] shrink-0" />
+            )}
             {expanded && <span>{t('nav:sidebar.collapse')}</span>}
           </button>
-          <div className="hover:bg-surface-3 mt-0.5 flex items-center gap-2.5 rounded-[9px] px-[9px] py-2 transition-colors">
-            <span className="bg-tint text-primary flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
-              DR
-            </span>
-            {expanded && (
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] font-semibold">Diego Rivas</span>
-                <span className="text-fg-4 block text-[11px]">{t('nav:sidebar.userRole', { organization: 'Sunstate Car Co.' })}</span>
+          {account && (
+            <div className="hover:bg-surface-3 mt-0.5 flex items-center gap-2.5 rounded-[9px] px-[9px] py-2 transition-colors">
+              <span className="bg-tint text-primary flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
+                {initials(account.name)}
               </span>
-            )}
-          </div>
+              {expanded && (
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[12.5px] font-semibold">{account.name}</span>
+                  <span className="text-fg-4 block truncate text-[11px]">
+                    {t('nav:sidebar.userRole', {
+                      role: t(`nav:sidebar.roles.${account.role}`),
+                      organization: account.organization,
+                    })}
+                  </span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </aside>
     </>

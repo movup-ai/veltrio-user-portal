@@ -32,3 +32,21 @@ describe('Sidebar badges', () => {
     expect(bookings()).toHaveTextContent(/^Bookings$/)
   })
 })
+
+describe('Sidebar account', () => {
+  beforeEach(() => useUIStore.setState({ theme: 'light', sidebarCollapsed: false }))
+
+  it('shows the signed-in account it is given', () => {
+    // It used to read a fixed "Diego Rivas, Owner", whoever was signed in.
+    render(
+      <MemoryRouter>
+        <Sidebar account={{ name: 'Ana López', role: 'manager', organization: 'Coastline Rentals' }} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Ana López')).toBeInTheDocument()
+    expect(screen.getByText('AL')).toBeInTheDocument()
+    expect(screen.getByText('Manager · Coastline Rentals')).toBeInTheDocument()
+    expect(screen.queryByText('Diego Rivas')).not.toBeInTheDocument()
+  })
+})
