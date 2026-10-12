@@ -35,7 +35,8 @@ function wallClock(instant: number, zone: string): number {
 
 /**
  * The instant the company's clock shows `date` (`YYYY-MM-DD`) and `time` (`HH:mm`). An hour the
- * clocks repeat is taken as the first of the two, the choice the API makes for a renter's booking.
+ * clocks repeat is taken as the first of the two, and one they skip is invalid: both as the API
+ * treats a renter's booking.
  */
 export function zonedInstant(date: string, time: string, zone = companyTimeZone()): Date {
   const wall = Date.parse(`${date}T${time || '00:00'}:00Z`)
@@ -43,23 +44,21 @@ export function zonedInstant(date: string, time: string, zone = companyTimeZone(
   // The offsets on either side of any clock change near this time.
   const candidates = [wall - DAY_MS, wall + DAY_MS].map((near) => wall - (wallClock(near, zone) - near))
   const real = candidates.filter((instant) => wallClock(instant, zone) === wall)
-  return new Date(real.length > 0 ? Math.min(...real) : candidates[0])
+  return new Date(real.length > 0 ? Math.min(...real) : NaN)
 }
 
 /**
- * An instant as a Date whose own fields (`getHours()`, `getDate()`...) read the company's clock,
- * for filling date and time inputs. Not an instant any more: never send it or compare it to one.
+ * An instant as a Date whose UTC fields (`getUTCHours()`, `getUTCDate()`...) read the company's
+ * clock, for filling date and time inputs. UTC because it skips no hour, as this browser's own
+ * zone may. Not an instant any more: never send it or compare it to one.
  */
 export function companyWall(at: Date | string | number, zone = companyTimeZone()): Date {
-  const wall = new Date(wallClock(new Date(at).getTime(), zone))
-  return new Date(
-    wall.getUTCFullYear(),
-    wall.getUTCMonth(),
-    wall.getUTCDate(),
-    wall.getUTCHours(),
-    wall.getUTCMinutes(),
-    wall.getUTCSeconds(),
-  )
+  return new Date(wallClock(new Date(at).getTime(), zone))
+}
+
+/** The calendar day (`YYYY-MM-DD`) an instant falls on at the company. */
+export function companyDay(at: Date | string | number, zone = companyTimeZone()): string {
+  return companyWall(at, zone).toISOString().slice(0, 10)
 }
 
 /** Hours between two instants as the company's clock counts them, so a clock change adds none. */
@@ -76,7 +75,7 @@ export function zoneName(at: Date | string | number, zone = companyTimeZone()): 
   )
 }
 
-/** True when this browser's clock reads differently from the company's right now. */
-export function awayFromCompanyTime(now = Date.now(), zone = companyTimeZone()): boolean {
-  return wallClock(now, zone) !== wallClock(now, browserTimeZone())
+/** True when this browser's clock reads differently from the company's at `at`: now, by default. */
+export function awayFromCompanyTime(at = Date.now(), zone = companyTimeZone()): boolean {
+  return wallClock(at, zone) !== wallClock(at, browserTimeZone())
 }

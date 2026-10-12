@@ -32,6 +32,7 @@
     "returnDateRequired": "Elija una fecha de devolución",
     "timeRequired": "Introduzca una hora válida",
     "returnBeforePickup": "La devolución debe ser posterior a la recogida",
+    "timeSkipped": "El reloj se adelanta en ese momento, así que esta hora no existe. Elige otra.",
     "vehicleRequired": "Seleccione un vehículo",
     "customerNameRequired": "El nombre del cliente es obligatorio",
     "customerEmailInvalid": "Introduzca una dirección de correo válida",

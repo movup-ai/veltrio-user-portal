@@ -76,6 +76,7 @@ import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
   combineDateTime,
+  combineIso,
   type BookingFormValues,
 } from '@/modules/bookings/schema/booking.schema'
 import type { BookedInterval, BookingInput } from '@/modules/bookings/types/booking.types'
@@ -288,8 +289,8 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
     toast({ title: t('form.draft.restored'), description: t('form.draft.restoredDescription') })
   }, [restoredDraft, t])
 
-  const pickupAt = combineDateTime(values.pickupDate, values.pickupTime).toISOString()
-  const returnAt = combineDateTime(values.returnDate, values.returnTime).toISOString()
+  const pickupAt = combineIso(values.pickupDate, values.pickupTime)
+  const returnAt = combineIso(values.returnDate, values.returnTime)
   const hours = durationHours(pickupAt, returnAt)
 
   // Only vehicles that can actually be rented: published, Available, and sitting at the pickup

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { defaultTripWindow } from './booking.trip-defaults'
 
-// Local-time constructors: the form's date and time inputs are wall-clock, not UTC.
-const at = (h: number, m: number, s = 0) => new Date(2026, 9, 1, h, m, s)
+// The company's clock as `companyWall` hands it over: read from the Date's UTC fields.
+const at = (h: number, m: number, s = 0) => new Date(Date.UTC(2026, 9, 1, h, m, s))
 
 describe('defaultTripWindow', () => {
   it('starts at the next half-hour slot and runs one day', () => {
@@ -21,6 +21,11 @@ describe('defaultTripWindow', () => {
   it('moves on from a slot that has already begun', () => {
     // 09:30:01 is past 09:30; offering 09:30 would default the pickup into the past.
     expect(defaultTripWindow(at(9, 30, 1)).pickupTime).toBe('10:00')
+  })
+
+  it('offers an hour this browser itself skips', () => {
+    // 02:10 on the night New York's clocks go forward, for a company that keeps its own.
+    expect(defaultTripWindow(new Date(Date.UTC(2026, 2, 8, 2, 10))).pickupTime).toBe('02:30')
   })
 
   it('rolls into tomorrow late at night', () => {

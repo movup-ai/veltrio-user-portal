@@ -32,6 +32,7 @@
     "returnDateRequired": "Pick a return date",
     "timeRequired": "Enter a valid time",
     "returnBeforePickup": "Return must be after pickup",
+    "timeSkipped": "The clocks go forward then, so this time does not exist. Pick another.",
     "vehicleRequired": "Select a vehicle",
     "customerNameRequired": "Customer name is required",
     "customerEmailInvalid": "Enter a valid email address",

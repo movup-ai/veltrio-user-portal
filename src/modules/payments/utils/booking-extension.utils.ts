@@ -1,10 +1,9 @@
 import { combineDateTime } from '@/modules/bookings/schema/booking.schema'
 import { normalizeApiError } from '@/services/api/errors'
-import { formatDay } from '@/utils/dates'
 import { EXTENSION_ERRORS, type ExtensionError } from '../constants/payment.constants'
 import type { BookingPaymentRecord } from '../types/booking-payment.types'
 import type { BookingExtension, BookingExtensions } from '../types/booking-extension.types'
-import { companyWall } from '@/utils/company-time'
+import { companyDay, companyWall } from '@/utils/company-time'
 
 const MS_PER_HOUR = 3_600_000
 
@@ -16,12 +15,9 @@ interface ReturnChoice {
   time: string
 }
 
-function pad(n: number): string {
-  return String(n).padStart(2, '0')
-}
-
+/** `at` is a `companyWall` Date: the company's clock, in its UTC fields. */
 function toChoice(at: Date): ReturnChoice {
-  return { date: formatDay(at), time: `${pad(at.getHours())}:${pad(at.getMinutes())}` }
+  return { date: at.toISOString().slice(0, 10), time: at.toISOString().slice(11, 16) }
 }
 
 /**
@@ -33,8 +29,7 @@ export function suggestedReturn(returnAt: string, now: Date, availableUntil?: st
   const due = companyWall(returnAt)
   const current = companyWall(now)
   const next = new Date(due)
-  // setDate rather than +24h, so a clock change overnight keeps the same wall time.
-  do next.setDate(next.getDate() + 1)
+  do next.setUTCDate(next.getUTCDate() + 1)
   while (next <= current)
   // Not past where the next booking begins, when that still leaves the car some extra time.
   const limit = availableUntil ? companyWall(availableUntil) : undefined
@@ -66,10 +61,9 @@ export function returnProblem(
 
 /** The first and last days the calendar offers; the time of day is checked by `returnProblem`. */
 export function returnDayBounds(returnAt: string, availableUntil: string | undefined, now: Date) {
-  const earliest = companyWall(Math.max(Date.parse(returnAt), now.getTime()))
   return {
-    min: formatDay(earliest),
-    max: availableUntil ? formatDay(companyWall(availableUntil)) : undefined,
+    min: companyDay(Math.max(Date.parse(returnAt), now.getTime())),
+    max: availableUntil ? companyDay(availableUntil) : undefined,
   }
 }
 
@@ -102,7 +96,7 @@ export function extensionWarnings(
     warnings.push('depositLapses')
   }
   // Compared as calendar days: cover is through the end of its last day.
-  if (coverValidUntil && coverValidUntil < formatDay(companyWall(chosen))) warnings.push('insuranceEnds')
+  if (coverValidUntil && coverValidUntil < companyDay(chosen)) warnings.push('insuranceEnds')
   return warnings
 }
 

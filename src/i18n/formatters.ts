@@ -101,8 +101,12 @@ export function useFormatters() {
           },
           timeZone,
         )
-        // Named only for someone whose own clock differs, who could otherwise read it as theirs.
-        return typeof date === 'string' && awayFromCompanyTime() ? `${shown} ${zoneName(date)}` : shown
+        if (typeof date !== 'string' || !INSTANT.test(date)) return shown
+        // Named only for someone whose own clock differs at that moment, not merely today: two
+        // zones can agree now and be an hour apart by the booking.
+        return awayFromCompanyTime(Date.parse(date), timeZone)
+          ? `${shown} ${zoneName(date, timeZone)}`
+          : shown
       },
       /** "Sep 14" / "14 sept." — the compact form used in availability and timeline strips. */
       shortDate: (date: Date | string) =>

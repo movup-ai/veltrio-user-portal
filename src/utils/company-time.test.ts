@@ -5,10 +5,18 @@ import { formatRentalWindow } from '@/modules/bookings/utils/booking.utils'
 import { formatMomentIn } from '@/i18n/formatters'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { OrganizationMembership } from '@/types/user'
-import { awayFromCompanyTime, companyWall, wallClockHours, zoneName, zonedInstant } from './company-time'
+import {
+  awayFromCompanyTime,
+  companyDay,
+  companyWall,
+  wallClockHours,
+  zoneName,
+  zonedInstant,
+} from './company-time'
 
 const NEW_YORK = 'America/New_York'
 const HONOLULU = 'Pacific/Honolulu'
+const PHOENIX = 'America/Phoenix'
 
 function companyIn(timezone: string) {
   useOrganizationStore.setState({ membership: { timezone } as OrganizationMembership })
@@ -27,19 +35,35 @@ describe('zonedInstant', () => {
     expect(zonedInstant('2026-11-01', '01:30', NEW_YORK).toISOString()).toBe('2026-11-01T05:30:00.000Z')
   })
 
+  it('is invalid for a time the clocks skip, as the API refuses it for a renter', () => {
+    // 02:00 to 03:00 does not happen in New York on the night the clocks go forward.
+    expect(Number.isNaN(zonedInstant('2026-03-08', '02:30', NEW_YORK).getTime())).toBe(true)
+    expect(zonedInstant('2026-03-08', '03:00', NEW_YORK).toISOString()).toBe('2026-03-08T07:00:00.000Z')
+  })
+
   it('is invalid while the date is missing', () => {
     expect(Number.isNaN(zonedInstant('', '10:00', NEW_YORK).getTime())).toBe(true)
   })
 })
 
 describe('companyWall', () => {
-  it("gives a Date whose own fields read the zone's clock", () => {
+  it("gives a Date whose UTC fields read the zone's clock", () => {
     const wall = companyWall('2026-10-10T14:30:00Z', NEW_YORK)
-    expect([wall.getFullYear(), wall.getMonth(), wall.getDate(), wall.getHours(), wall.getMinutes()]).toEqual(
-      [2026, 9, 10, 10, 30],
-    )
+    expect(wall.toISOString()).toBe('2026-10-10T10:30:00.000Z')
     // Late evening in New York is still the day before in Honolulu.
-    expect(companyWall('2026-10-11T03:00:00Z', HONOLULU).getDate()).toBe(10)
+    expect(companyWall('2026-10-11T03:00:00Z', HONOLULU).getUTCDate()).toBe(10)
+  })
+
+  it('keeps an hour this browser itself skips', () => {
+    // 02:30 in Phoenix on the night New York's clocks go forward: a local Date reads 03:30 there.
+    expect(companyWall('2026-03-08T09:30:00Z', PHOENIX).getUTCHours()).toBe(2)
+  })
+})
+
+describe('companyDay', () => {
+  it("is the calendar day on the zone's clock", () => {
+    expect(companyDay('2026-10-11T03:00:00Z', NEW_YORK)).toBe('2026-10-10')
+    expect(companyDay('2026-10-11T03:00:00Z', 'Europe/Madrid')).toBe('2026-10-11')
   })
 })
 

@@ -16,6 +16,12 @@ export function combineDateTime(date: string, time: string): Date {
   return zonedInstant(date, time)
 }
 
+/** The same as an ISO string, or '' while the inputs name no instant: `toISOString()` would throw. */
+export function combineIso(date: string, time: string): string {
+  const at = combineDateTime(date, time)
+  return Number.isNaN(at.getTime()) ? '' : at.toISOString()
+}
+
 /** Mirrors the API's own bounds, so a date it will refuse is caught before the request. */
 const MIN_RENTER_AGE = 18
 const MAX_RENTER_AGE = 110
@@ -118,6 +124,16 @@ export function bookingFormSchema(t: ValidationT) {
 
       const pickup = combineDateTime(values.pickupDate, values.pickupTime)
       const dropoff = combineDateTime(values.returnDate, values.returnTime)
+      // Both halves are filled in, so the only instant they cannot name is an hour the clocks skip.
+      const ends = [
+        ['pickupTime', values.pickupTime, pickup],
+        ['returnTime', values.returnTime, dropoff],
+      ] as const
+      for (const [path, time, at] of ends) {
+        if (TIME_PATTERN.test(time) && Number.isNaN(at.getTime())) {
+          ctx.addIssue({ code: 'custom', path: [path], message: t('booking.timeSkipped') })
+        }
+      }
       if (Number.isNaN(pickup.getTime()) || Number.isNaN(dropoff.getTime())) return
 
       // Anchored on the return date: that's the field the user adjusts to resolve the conflict.
