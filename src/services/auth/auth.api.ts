@@ -14,6 +14,7 @@ export interface TenantMembership {
   tenantName: string
   subdomain: string
   currency: string
+  timezone: string
   role: MembershipRole
 }
 
@@ -48,6 +49,7 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
     organizationName: membership.tenantName,
     subdomain: membership.subdomain,
     currency: membership.currency,
+    timezone: membership.timezone,
     role: membership.role,
     permissions: ROLE_PERMISSIONS[membership.role],
   }

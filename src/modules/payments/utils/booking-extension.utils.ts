@@ -4,6 +4,7 @@ import { formatDay } from '@/utils/dates'
 import { EXTENSION_ERRORS, type ExtensionError } from '../constants/payment.constants'
 import type { BookingPaymentRecord } from '../types/booking-payment.types'
 import type { BookingExtension, BookingExtensions } from '../types/booking-extension.types'
+import { companyWall } from '@/utils/company-time'
 
 const MS_PER_HOUR = 3_600_000
 
@@ -28,13 +29,16 @@ function toChoice(at: Date): ReturnChoice {
  * that is the first such hour still ahead, since an extension cannot end in the past.
  */
 export function suggestedReturn(returnAt: string, now: Date, availableUntil?: string): ReturnChoice {
-  const next = new Date(returnAt)
+  // Every time here is the company's clock, so the choice reads the same from any browser.
+  const due = companyWall(returnAt)
+  const current = companyWall(now)
+  const next = new Date(due)
   // setDate rather than +24h, so a clock change overnight keeps the same wall time.
   do next.setDate(next.getDate() + 1)
-  while (next <= now)
+  while (next <= current)
   // Not past where the next booking begins, when that still leaves the car some extra time.
-  const limit = availableUntil ? new Date(availableUntil) : undefined
-  const fits = limit && limit < next && limit.getTime() > Math.max(Date.parse(returnAt), now.getTime())
+  const limit = availableUntil ? companyWall(availableUntil) : undefined
+  const fits = limit && limit < next && limit.getTime() > Math.max(due.getTime(), current.getTime())
   return toChoice(fits ? limit : next)
 }
 
@@ -62,8 +66,11 @@ export function returnProblem(
 
 /** The first and last days the calendar offers; the time of day is checked by `returnProblem`. */
 export function returnDayBounds(returnAt: string, availableUntil: string | undefined, now: Date) {
-  const earliest = new Date(Math.max(Date.parse(returnAt), now.getTime()))
-  return { min: formatDay(earliest), max: availableUntil ? formatDay(new Date(availableUntil)) : undefined }
+  const earliest = companyWall(Math.max(Date.parse(returnAt), now.getTime()))
+  return {
+    min: formatDay(earliest),
+    max: availableUntil ? formatDay(companyWall(availableUntil)) : undefined,
+  }
 }
 
 /** The extra time as whole days and hours, the way a rental's own length is shown. */
@@ -95,7 +102,7 @@ export function extensionWarnings(
     warnings.push('depositLapses')
   }
   // Compared as calendar days: cover is through the end of its last day.
-  if (coverValidUntil && coverValidUntil < formatDay(chosen)) warnings.push('insuranceEnds')
+  if (coverValidUntil && coverValidUntil < formatDay(companyWall(chosen))) warnings.push('insuranceEnds')
   return warnings
 }
 

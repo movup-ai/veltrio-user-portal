@@ -1,6 +1,7 @@
 import { fromCents, percentOfCents, toCents } from '@/lib/money'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
 import { planRental, planTotal, type RatePlan } from '@/modules/vehicles/utils/rate-plan'
+import { wallClockHours } from '@/utils/company-time'
 
 const MS_PER_HOUR = 1000 * 60 * 60
 
@@ -52,12 +53,17 @@ export interface BookingPricing {
   includedMiles: number | null
 }
 
-/** Hours between two ISO timestamps. Returns 0 for a missing, unparseable or reversed range. */
+/**
+ * Hours between two ISO timestamps on the company's clock, which is what the API bills: 10:00 to
+ * 10:00 is whole days even across a clock change. 0 for a missing, unparseable or reversed range.
+ */
 export function durationHours(pickupAt: string, returnAt: string): number {
   const from = new Date(pickupAt).getTime()
   const to = new Date(returnAt).getTime()
   if (Number.isNaN(from) || Number.isNaN(to) || to <= from) return 0
-  return (to - from) / MS_PER_HOUR
+  const wall = wallClockHours(pickupAt, returnAt)
+  // Inside the hour the clocks repeat the wall clock runs backwards; elapsed time does not.
+  return wall > 0 ? wall : (to - from) / MS_PER_HOUR
 }
 
 interface PriceBookingArgs {

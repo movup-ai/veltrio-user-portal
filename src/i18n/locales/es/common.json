@@ -1,5 +1,6 @@
 {
   "brand": "Veltrio",
+  "companyTime": "Las horas son las del reloj de la empresa ({{zone}}), no las de tu dispositivo.",
   "actions": {
     "apply": "Aplicar",
     "back": "Volver",

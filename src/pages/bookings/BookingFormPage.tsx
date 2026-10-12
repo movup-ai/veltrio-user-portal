@@ -82,6 +82,8 @@ import type { BookedInterval, BookingInput } from '@/modules/bookings/types/book
 import { durationHours, priceBooking } from '@/modules/bookings/utils/booking.pricing'
 import { defaultTripWindow, toDateInput } from '@/modules/bookings/utils/booking.trip-defaults'
 import { BOOKING_TIME_STEP_MINUTES } from '@/modules/bookings/constants/booking.constants'
+import { CompanyTimeHint } from '@/components/feedback/CompanyTimeHint'
+import { companyWall } from '@/utils/company-time'
 
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
@@ -108,7 +110,7 @@ function blankValues(): BookingFormValues {
   return {
     pickupLocation: '',
     returnLocation: '',
-    ...defaultTripWindow(new Date()),
+    ...defaultTripWindow(companyWall(new Date())),
     vehicleId: '',
     customerId: '',
     customerName: '',
@@ -761,6 +763,8 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
                       />
                     )}
                   </FormField>
+
+                  <CompanyTimeHint />
 
                   {/* Date and time split per side, so each column stays a self-contained pickup/return block. */}
                   <div className="grid grid-cols-2 gap-3">

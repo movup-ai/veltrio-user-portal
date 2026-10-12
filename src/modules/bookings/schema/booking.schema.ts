@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next'
 import { z } from 'zod'
 import { MAX_RENTAL_DAYS } from '@/modules/vehicles/constants/rate-plan.constants'
 import { VERIFICATION_KINDS } from '../types/booking.types'
+import { zonedInstant } from '@/utils/company-time'
 
 const MS_PER_DAY = 86_400_000
 
@@ -10,9 +11,9 @@ type ValidationT = TFunction<'validation'>
 /** `<input type="time">` always yields HH:MM (24h), independent of the displayed locale. */
 const TIME_PATTERN = /^\d{2}:\d{2}$/
 
-/** Combines the split date and time inputs into a local Date — the branch's wall clock is what matters. */
+/** The instant the split date and time inputs name on the company's clock, not this browser's. */
 export function combineDateTime(date: string, time: string): Date {
-  return new Date(`${date}T${time || '00:00'}:00`)
+  return zonedInstant(date, time)
 }
 
 /** Mirrors the API's own bounds, so a date it will refuse is caught before the request. */

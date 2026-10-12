@@ -59,6 +59,7 @@ import {
   type BookingVerification,
   type ProviderKind,
 } from '@/modules/bookings/types/booking.types'
+import { companyWall } from '@/utils/company-time'
 
 /**
  * Cover shot for the booked car, with the placeholder sitting underneath rather than swapped in
@@ -412,7 +413,7 @@ export function BookingDetailsPage() {
                 onShare={handleShare}
                 sharing={insuranceLink.sharing ? 'insurance' : undefined}
                 closed={closed}
-                returnOn={formatDay(new Date(booking.returnAt))}
+                returnOn={formatDay(companyWall(booking.returnAt))}
                 onAction={(kind) => pending(t(`details.checks.${kind}`))}
               />
             }

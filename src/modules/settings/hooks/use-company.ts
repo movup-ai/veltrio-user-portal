@@ -24,8 +24,8 @@ export function useUpdateCompany() {
     mutationFn: (patch: CompanyPatch) => companyApi.update(patch),
     onSuccess: (company, patch) => {
       queryClient.setQueryData(companyKeys.detail, company)
-      // The header reads the name, and every price the currency, off `/auth/me`.
-      if (patch.name !== undefined || patch.currency !== undefined) {
+      // The header reads the name, every price the currency and every time the zone, off `/auth/me`.
+      if (patch.name !== undefined || patch.currency !== undefined || patch.timezone !== undefined) {
         void queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY })
       }
       toast({ title: i18n.t('settings:company.toast.saved'), variant: 'success' })
