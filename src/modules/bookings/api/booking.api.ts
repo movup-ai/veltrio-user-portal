@@ -26,6 +26,7 @@ import {
   toBookingLists,
   toBookingPayload,
   toBookingStats,
+  toCalendarQuery,
   toConditionPayload,
   toCancelPayload,
   toCancelledBooking,
@@ -164,6 +165,16 @@ export const bookingApi = {
    */
   exportAll: (params: Omit<BookingListParams, 'page' | 'pageSize'>) =>
     fetchEveryPage((page) => bookingApi.page({ ...params, ...page }), MAX_BOOKING_PAGES),
+
+  /** Whole bookings, not intervals: the calendar draws pending and finished rentals as well. */
+  calendar: (from: string, to: string) =>
+    fetchEveryPage(
+      (page) =>
+        apiClient
+          .get<ListEnvelope<BookingWire>>('/bookings', { params: toCalendarQuery(from, to, page) })
+          .then((r) => toPaginatedResult(r.data.items.map(toBooking), r.data.total, page)),
+      MAX_BOOKING_PAGES,
+    ),
 
   /** Headline totals for the whole book — not narrowed by the list's filters. */
   stats: () => apiClient.get<BookingStatsWire>('/bookings/stats').then((r) => toBookingStats(r.data)),

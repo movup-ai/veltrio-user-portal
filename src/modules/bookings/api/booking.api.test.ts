@@ -274,3 +274,30 @@ describe('bookingApi.exportAll', () => {
     })
   })
 })
+
+describe('bookingApi.calendar', () => {
+  beforeEach(() => get.mockReset())
+
+  it('asks for the rentals under way in the window, every page of them', async () => {
+    get.mockImplementation((_url, config) => {
+      const offset = (config?.params as { offset?: number } | undefined)?.offset ?? 0
+      return Promise.resolve(page(offset, 150))
+    })
+
+    const bookings = await bookingApi.calendar('2026-09-01T04:00:00.000Z', '2026-10-01T04:00:00.000Z')
+
+    expect(bookings).toHaveLength(150)
+    // Whole bookings, not list rows: a bar needs the renter and the status.
+    expect(bookings[0]).toMatchObject({ reference: 'BK-0', status: 'Confirmed' })
+    expect(get.mock.calls.map((call) => call[1]?.params)).toEqual([
+      {
+        limit: 100,
+        offset: 0,
+        sort: 'pickupAsc',
+        overlapFrom: '2026-09-01T04:00:00.000Z',
+        overlapTo: '2026-10-01T04:00:00.000Z',
+      },
+      expect.objectContaining({ offset: 100 }),
+    ])
+  })
+})

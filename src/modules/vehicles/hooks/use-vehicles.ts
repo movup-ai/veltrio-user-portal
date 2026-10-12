@@ -35,10 +35,10 @@ export function useVehicles(params: VehicleListParams) {
 }
 
 /**
- * The whole fleet, for the lookups below. One query so the two hooks share a single fetch, and
- * paged through because a fleet past 100 would otherwise be cut off mid-list.
+ * The whole fleet, for the lookups below and the calendar's rows. One query, so they all share
+ * a single fetch, and paged through because a fleet past 100 would otherwise be cut off mid-list.
  */
-function useWholeFleet() {
+export function useWholeFleet() {
   return useQuery({
     queryKey: vehicleKeys.allVehicles(),
     queryFn: () => vehicleApi.listAll(),
@@ -116,7 +116,11 @@ export function useCreateVehicle() {
       })
     },
     onError: (error) => {
-      toast({ title: i18n.t('vehicles:toast.addFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: i18n.t('vehicles:toast.addFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     },
   })
 }
@@ -136,7 +140,11 @@ export function useUpdateVehicle(id: string) {
       })
     },
     onError: (error) => {
-      toast({ title: i18n.t('vehicles:toast.updateFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: i18n.t('vehicles:toast.updateFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     },
   })
 }
@@ -174,7 +182,11 @@ export function useArchiveVehicle() {
       })
     },
     onError: (error) => {
-      toast({ title: i18n.t('vehicles:toast.archiveFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: i18n.t('vehicles:toast.archiveFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     },
   })
 }
@@ -193,7 +205,11 @@ export function useRestoreVehicle() {
       })
     },
     onError: (error) => {
-      toast({ title: i18n.t('vehicles:toast.restoreFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: i18n.t('vehicles:toast.restoreFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     },
   })
 }
@@ -216,7 +232,11 @@ export function useSendToService() {
       })
     },
     onError: (error) => {
-      toast({ title: i18n.t('vehicles:toast.sendToServiceFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: i18n.t('vehicles:toast.sendToServiceFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     },
   })
 }
@@ -235,7 +255,11 @@ export function useReturnFromService() {
       })
     },
     onError: (error) => {
-      toast({ title: i18n.t('vehicles:toast.returnFromServiceFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: i18n.t('vehicles:toast.returnFromServiceFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     },
   })
 }

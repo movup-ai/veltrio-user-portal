@@ -1,3 +1,5 @@
+import { enUS, es, type Locale } from 'date-fns/locale'
+
 export const LANGUAGES = [
   { code: 'en', label: 'English', short: 'EN' },
   { code: 'es', label: 'Español', short: 'ES' },
@@ -17,6 +19,14 @@ export const LANGUAGE_STORAGE_KEY = 'veltrio.language'
 export const INTL_LOCALES: Record<Language, string> = {
   en: 'en-US',
   es: 'es-US',
+}
+
+/** For the pickers and grids that lay weeks out, which Intl cannot do on its own. */
+export const DATE_FNS_LOCALES: Record<Language, Locale> = { en: enUS, es }
+
+/** Sunday or Monday: the same day the date picker starts its weeks on. */
+export function weekStartsOn(language: Language): 0 | 1 {
+  return DATE_FNS_LOCALES[language].options?.weekStartsOn === 1 ? 1 : 0
 }
 
 export function isLanguage(value: unknown): value is Language {

@@ -56,6 +56,60 @@
     "exportFailed": "Error al exportar",
     "exportTooLarge": "Coinciden {{total}} reservas y solo se pueden exportar {{limit}} a la vez. Ajusta los filtros e inténtalo de nuevo."
   },
+  "calendar": {
+    "title": "Calendario",
+    "description": "Alquileres de tu flota, por fecha",
+    "listView": "Vista de lista",
+    "loading": "Cargando el calendario…",
+    "loadError": "No pudimos cargar el calendario.",
+    "searchPlaceholder": "Buscar vehículo, matrícula, cliente, referencia",
+    "viewsLabel": "Vista del calendario",
+    "views": {
+      "day": "Día",
+      "week": "Semana",
+      "month": "Mes",
+      "year": "Año"
+    },
+    "nav": {
+      "today": "Hoy",
+      "previous": {
+        "day": "Día anterior",
+        "week": "Semana anterior",
+        "month": "Mes anterior",
+        "year": "Año anterior"
+      },
+      "next": {
+        "day": "Día siguiente",
+        "week": "Semana siguiente",
+        "month": "Mes siguiente",
+        "year": "Año siguiente"
+      }
+    },
+    "openDay": "Abrir {{date}}",
+    "openMonth": "Abrir {{month}}",
+    "bar": "{{reference}}: {{customer}}, {{vehicle}}, {{status}}, del {{from}} al {{to}}",
+    "openBooking": "Abrir reserva",
+    "legend": "Mostrar u ocultar reservas por estado",
+    "count_one": "{{count}} reserva a la vista",
+    "count_other": "{{count}} reservas a la vista",
+    "year": {
+      "booked_one": "{{date}}: {{count}} de {{total}} vehículos alquilado",
+      "booked_other": "{{date}}: {{count}} de {{total}} vehículos alquilados",
+      "idle": "{{date}}: sin alquileres",
+      "legend": "Parte de la flota alquilada cada día",
+      "less": "Menos",
+      "more": "Más"
+    },
+    "noVehicles": {
+      "title": "Aún no hay vehículos que programar",
+      "description": "Añade un vehículo y sus alquileres aparecerán aquí por fecha.",
+      "action": "Añadir vehículo"
+    },
+    "noMatches": {
+      "title": "Sin coincidencias",
+      "description": "Prueba con otro nombre, matrícula o referencia, o elige otra sucursal."
+    }
+  },
   "filters": {
     "status": "Estado",
     "location": "Sucursal",

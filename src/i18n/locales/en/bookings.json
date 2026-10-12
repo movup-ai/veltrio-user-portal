@@ -56,6 +56,60 @@
     "exportFailed": "Export failed",
     "exportTooLarge": "{{total}} bookings match, and at most {{limit}} can be exported at once. Narrow the filters and try again."
   },
+  "calendar": {
+    "title": "Calendar",
+    "description": "Rentals across your fleet, by date",
+    "listView": "List view",
+    "loading": "Loading the calendar…",
+    "loadError": "We couldn't load the calendar.",
+    "searchPlaceholder": "Search vehicle, plate, customer, reference",
+    "viewsLabel": "Calendar view",
+    "views": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "nav": {
+      "today": "Today",
+      "previous": {
+        "day": "Previous day",
+        "week": "Previous week",
+        "month": "Previous month",
+        "year": "Previous year"
+      },
+      "next": {
+        "day": "Next day",
+        "week": "Next week",
+        "month": "Next month",
+        "year": "Next year"
+      }
+    },
+    "openDay": "Open {{date}}",
+    "openMonth": "Open {{month}}",
+    "bar": "{{reference}}: {{customer}}, {{vehicle}}, {{status}}, {{from}} to {{to}}",
+    "openBooking": "Open booking",
+    "legend": "Show or hide bookings by status",
+    "count_one": "{{count}} booking in view",
+    "count_other": "{{count}} bookings in view",
+    "year": {
+      "booked_one": "{{date}}: {{count}} of {{total}} vehicles out",
+      "booked_other": "{{date}}: {{count}} of {{total}} vehicles out",
+      "idle": "{{date}}: no rentals",
+      "legend": "Share of the fleet out each day",
+      "less": "Less",
+      "more": "More"
+    },
+    "noVehicles": {
+      "title": "No vehicles to schedule yet",
+      "description": "Add a vehicle and its rentals will be laid out here by date.",
+      "action": "Add vehicle"
+    },
+    "noMatches": {
+      "title": "Nothing matches",
+      "description": "Try another name, plate or reference, or pick a different branch."
+    }
+  },
   "filters": {
     "status": "Status",
     "location": "Location",
