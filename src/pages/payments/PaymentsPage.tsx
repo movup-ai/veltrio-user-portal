@@ -33,6 +33,7 @@ import {
   PAYMENT_TABS,
   PAYOUT_STATUSES,
   type PaymentRowState,
+  type PaymentStats,
   type PaymentTab,
 } from '@/modules/payments/types/payment.types'
 import {
@@ -74,6 +75,7 @@ export function PaymentsPage() {
     data: pageData,
     isLoading,
     isError,
+    isFetching,
     refetch,
     isStale,
   } = usePaymentPage({
@@ -85,7 +87,13 @@ export function PaymentsPage() {
     page,
     pageSize,
   })
-  const { data: stats } = usePaymentStats()
+  // A link withdrawn elsewhere can leave the page asked for past the end, empty while earlier
+  // ones hold rows. Only a settled answer says so: the previous page's rows are a placeholder.
+  if (pageData && !isStale && !isFetching && pageData.page < page) setPage(pageData.page)
+
+  const { data: stats, isError: statsFailed, refetch: refetchStats } = usePaymentStats()
+  // A dash until the totals load: a zero would say nothing was collected or is owed.
+  const figure = (show: (loaded: PaymentStats) => string) => (stats ? show(stats) : '—')
   const { data: methods = [] } = usePaymentMethodsInUse()
   const receipt = usePaymentReceipt()
   const [reporting, setReporting] = useState(false)
@@ -211,34 +219,38 @@ export function PaymentsPage() {
         ]}
       />
 
-      <StatStrip
-        stats={[
-          {
-            icon: Banknote,
-            label: t('list.stats.collected'),
-            value: format.currency(stats?.collected ?? 0),
-            note: t('list.stats.collectedNote', { amount: format.currency(stats?.refunded ?? 0) }),
-          },
-          {
-            icon: ReceiptText,
-            label: t('list.stats.outstanding'),
-            value: format.currency(stats?.outstanding ?? 0),
-            note: t('list.stats.outstandingNote', { count: stats?.outstandingBookings ?? 0 }),
-          },
-          {
-            icon: CreditCard,
-            label: t('list.stats.failed'),
-            value: format.number(stats?.failed ?? 0),
-            note: t('list.stats.failedNote'),
-          },
-          {
-            icon: ShieldCheck,
-            label: t('list.stats.held'),
-            value: format.currency(stats?.held ?? 0),
-            note: t('list.stats.heldNote', { count: stats?.heldCount ?? 0 }),
-          },
-        ]}
-      />
+      {statsFailed && !stats ? (
+        <ErrorState className="py-6" description={t('list.statsError')} onRetry={() => refetchStats()} />
+      ) : (
+        <StatStrip
+          stats={[
+            {
+              icon: Banknote,
+              label: t('list.stats.collected'),
+              value: figure((s) => format.currency(s.collected)),
+              note: figure((s) => t('list.stats.collectedNote', { amount: format.currency(s.refunded) })),
+            },
+            {
+              icon: ReceiptText,
+              label: t('list.stats.outstanding'),
+              value: figure((s) => format.currency(s.outstanding)),
+              note: figure((s) => t('list.stats.outstandingNote', { count: s.outstandingBookings })),
+            },
+            {
+              icon: CreditCard,
+              label: t('list.stats.failed'),
+              value: figure((s) => format.number(s.failed)),
+              note: t('list.stats.failedNote'),
+            },
+            {
+              icon: ShieldCheck,
+              label: t('list.stats.held'),
+              value: figure((s) => format.currency(s.held)),
+              note: figure((s) => t('list.stats.heldNote', { count: s.heldCount })),
+            },
+          ]}
+        />
+      )}
 
       {isLoading && !pageData ? (
         <LoadingState label={t('list.loading')} />

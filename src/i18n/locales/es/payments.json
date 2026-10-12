@@ -6,6 +6,7 @@
     "searchPlaceholder": "Buscar cliente, reserva o método",
     "loading": "Cargando pagos…",
     "loadError": "No pudimos cargar tus pagos.",
+    "statsError": "No pudimos cargar los totales de tus pagos.",
     "emptyTitle": "No se encontraron pagos",
     "emptyDescription": "Los pagos aparecen aquí al enviar un enlace o al registrar dinero en una reserva.",
     "partlyRefunded": "Reembolsado {{amount}}",

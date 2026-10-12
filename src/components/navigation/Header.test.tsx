@@ -31,4 +31,29 @@ describe('Header breadcrumb', () => {
     expect(breadcrumb).toHaveTextContent('Coastline Rentals/Customers')
     expect(breadcrumb).not.toHaveTextContent('Sunstate')
   })
+
+  it('keeps a long company name from pushing the header controls away', () => {
+    // A name may run to 200 characters, and the breadcrumb neither wraps nor shrinks.
+    const name = 'Coastline Premium Car and Van Rentals of the Greater Bay Area'
+    useOrganizationStore.setState({
+      membership: {
+        organizationId: 'org-1',
+        organizationName: name,
+        subdomain: 'coastline',
+        currency: 'USD',
+        role: 'owner',
+        permissions: [],
+      },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/customers']}>
+        <Header onMobileMenuClick={() => {}} />
+      </MemoryRouter>,
+    )
+
+    const company = screen.getByText(name)
+    expect(company).toHaveClass('truncate')
+    expect(company).toHaveAttribute('title', name)
+  })
 })

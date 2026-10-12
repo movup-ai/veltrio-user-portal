@@ -6,6 +6,7 @@
     "searchPlaceholder": "Search customer, booking or method",
     "loading": "Loading payments…",
     "loadError": "We couldn't load your payments.",
+    "statsError": "We couldn't load your payment totals.",
     "emptyTitle": "No payments found",
     "emptyDescription": "Payments appear here when a link is sent or money is recorded on a booking.",
     "partlyRefunded": "Refunded {{amount}}",
