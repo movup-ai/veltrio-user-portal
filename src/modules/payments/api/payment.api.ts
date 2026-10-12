@@ -22,10 +22,22 @@ import {
 
 export const paymentApi = {
   /** Every payment across the company's bookings, newest first. Withdrawn links are left out. */
-  page: (params: PaymentListParams) =>
-    apiClient
-      .get<ListEnvelope<PaymentRowWire>>('/payments', { params: toPaymentListQuery(params) })
-      .then((r) => toPaginatedResult(r.data.items.map(toPaymentRow), r.data.total, params)),
+  page: async (params: PaymentListParams) => {
+    let requested = params
+    let r = await apiClient.get<ListEnvelope<PaymentRowWire>>('/payments', {
+      params: toPaymentListQuery(requested),
+    })
+    let lastPage = Math.max(1, Math.ceil(r.data.total / requested.pageSize))
+    // Refetch the clamped page so its rows agree with the pagination metadata.
+    while (requested.page > lastPage) {
+      requested = { ...requested, page: lastPage }
+      r = await apiClient.get<ListEnvelope<PaymentRowWire>>('/payments', {
+        params: toPaymentListQuery(requested),
+      })
+      lastPage = Math.max(1, Math.ceil(r.data.total / requested.pageSize))
+    }
+    return toPaginatedResult(r.data.items.map(toPaymentRow), r.data.total, requested)
+  },
 
   stats: (): Promise<PaymentStats> =>
     apiClient.get<PaymentStatsWire>('/payments/stats').then((r) => toPaymentStats(r.data)),
