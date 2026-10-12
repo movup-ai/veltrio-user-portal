@@ -21,23 +21,21 @@ React · TypeScript · Vite · React Router · TanStack Query · TanStack Table 
 
 ```bash
 npm install
-cp .env.example .env   # set VITE_API_URL once the FastAPI backend is available
+cp .env.example .env   # set VITE_API_URL to the FastAPI backend
 npm run dev
 ```
 
-By default `VITE_USE_MOCKS=true`, so every module serves local fixtures (`modules/*/mock/`) instead of calling the backend — the UI is fully explorable before any FastAPI endpoint exists. Flip a module to real data by setting `VITE_USE_MOCKS=false` once its endpoints land; each module's `*.api.ts` branches on this flag.
-
-Authentication is the exception: it always runs for real, so Clerk must be configured and the backend reachable to get past the login screen.
+Every module calls the backend at `VITE_API_URL`, and Clerk must be configured to get past the login screen. The dashboard and pricing pages are the exception: their endpoints do not exist yet, so they still render local fixtures (`modules/*/mock/`).
 
 ## Scripts
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Type-check (`tsc -b`) and build for production |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier, write mode |
-| `npm test` | Vitest (unit/component tests, `src/**/*.test.tsx`) |
+| Command            | Purpose                                                   |
+| ------------------ | --------------------------------------------------------- |
+| `npm run dev`      | Start the Vite dev server                                 |
+| `npm run build`    | Type-check (`tsc -b`) and build for production            |
+| `npm run lint`     | ESLint                                                    |
+| `npm run format`   | Prettier, write mode                                      |
+| `npm test`         | Vitest (unit/component tests, `src/**/*.test.tsx`)        |
 | `npm run test:e2e` | Playwright (`e2e/`) — starts the dev server automatically |
 
 ## Architecture

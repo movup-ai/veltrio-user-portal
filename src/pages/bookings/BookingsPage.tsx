@@ -23,15 +23,11 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { toast } from '@/components/ui/use-toast'
-import { EMPTY_DATE_RANGE, fromDateValue, type DateRange } from '@/components/ui/date-range-picker'
+import { EMPTY_DATE_RANGE, type DateRange } from '@/components/ui/date-range-picker'
 import { useFormatters } from '@/i18n'
 import { useDomainLabels } from '@/i18n/domain'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
-import {
-  useBookingPage,
-  useBookingStats,
-  useBookingTabCounts,
-} from '@/modules/bookings/hooks/use-bookings'
+import { useBookingPage, useBookingStats, useBookingTabCounts } from '@/modules/bookings/hooks/use-bookings'
 import { useBookingDrafts, useDeleteBookingDraft } from '@/modules/bookings/hooks/use-booking-drafts'
 import {
   BOOKING_DURATION_BANDS,
@@ -57,6 +53,7 @@ import {
 } from '@/modules/bookings/utils/booking.utils'
 import { useVehicleMakes, useVehicleThumbnails } from '@/modules/vehicles/hooks/use-vehicles'
 import { resultSetKey } from '@/modules/bookings/utils/booking.paging'
+import { dateRangeLabel } from '@/lib/date-range'
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { useDebounced } from '@/lib/use-debounced'
 import { bookingApi, ExportTooLargeError } from '@/modules/bookings/api/booking.api'
@@ -99,15 +96,7 @@ export function BookingsPage() {
       durationBand: durationFilter,
       valueBands,
     }),
-    [
-      debouncedSearch,
-      statusFilter,
-      locationFilter,
-      pickupFilter,
-      makeFilter,
-      durationFilter,
-      valueBands,
-    ],
+    [debouncedSearch, statusFilter, locationFilter, pickupFilter, makeFilter, durationFilter, valueBands],
   )
 
   const showingDrafts = tab === DRAFTS_TAB
@@ -145,14 +134,7 @@ export function BookingsPage() {
   // happens to show would hide the rest of the book.
   const makes = useVehicleMakes()
 
-  /** "Sep 10 – Sep 20", or the single day when both ends match. Falls back to the "any" placeholder. */
-  const pickupLabel = (() => {
-    const from = fromDateValue(pickupFilter.from)
-    const to = fromDateValue(pickupFilter.to)
-    if (!from && !to) return t('filters.pickupAny')
-    const parts = [from, to].filter((d) => d != null).map((d) => format.shortDate(d))
-    return parts[0] === parts[1] ? parts[0] : parts.join(' – ')
-  })()
+  const pickupLabel = dateRangeLabel(pickupFilter, format.shortDate, t('filters.pickupAny'))
 
   const moreFiltersActiveCount =
     (makeFilter !== 'All' ? 1 : 0) + (durationFilter !== 'Any' ? 1 : 0) + (valueBands.length > 0 ? 1 : 0)
@@ -401,76 +383,76 @@ export function BookingsPage() {
           className={cn('transition-opacity', rowsAreStale && 'pointer-events-none opacity-60')}
           aria-busy={rowsAreStale}
         >
-        <RecordTable
-          tabs={[
-            ...BOOKING_TABS.map((value) => ({
-              key: value,
-              label: t(`list.tabs.${value}`),
-              count: tabCounts[value],
-              selected: tab === value,
-              onClick: () => setTab(value),
-            })),
-            {
-              key: DRAFTS_TAB,
-              label: t('list.tabs.Drafts'),
-              count: drafts.length,
-              selected: tab === DRAFTS_TAB,
-              onClick: () => setTab(DRAFTS_TAB),
-            },
-          ]}
-          columns={showingDrafts ? draftColumns(t) : bookingColumns(t)}
-          rows={showingDrafts ? draftRows : rows}
-          actions={
-            // Drafts are not sortable: they are ordered by what was touched last, which is
-            // the only order a half-finished form has.
-            showingDrafts ? undefined : (
-              <SortSelect
-                label={t('list.sort.label')}
-                value={sort}
-                options={BOOKING_SORTS.map((value) => ({ value, label: t(`list.sort.${value}`) }))}
-                onChange={(value) => setSort(value as BookingSort)}
-              />
-            )
-          }
-          pageNote={
-            showingDrafts
-              ? t('list.draftsNote', { count: drafts.length })
-              : rows.length === 0
-                ? t('list.noneFound')
+          <RecordTable
+            tabs={[
+              ...BOOKING_TABS.map((value) => ({
+                key: value,
+                label: t(`list.tabs.${value}`),
+                count: tabCounts[value],
+                selected: tab === value,
+                onClick: () => setTab(value),
+              })),
+              {
+                key: DRAFTS_TAB,
+                label: t('list.tabs.Drafts'),
+                count: drafts.length,
+                selected: tab === DRAFTS_TAB,
+                onClick: () => setTab(DRAFTS_TAB),
+              },
+            ]}
+            columns={showingDrafts ? draftColumns(t) : bookingColumns(t)}
+            rows={showingDrafts ? draftRows : rows}
+            actions={
+              // Drafts are not sortable: they are ordered by what was touched last, which is
+              // the only order a half-finished form has.
+              showingDrafts ? undefined : (
+                <SortSelect
+                  label={t('list.sort.label')}
+                  value={sort}
+                  options={BOOKING_SORTS.map((value) => ({ value, label: t(`list.sort.${value}`) }))}
+                  onChange={(value) => setSort(value as BookingSort)}
+                />
+              )
+            }
+            pageNote={
+              showingDrafts
+                ? t('list.draftsNote', { count: drafts.length })
+                : rows.length === 0
+                  ? t('list.noneFound')
+                  : undefined
+            }
+            pagination={
+              // Drafts are capped well under one page, so they never paginate.
+              !showingDrafts && pageData
+                ? {
+                    page: pageData.page,
+                    pageSize,
+                    total: pageData.total,
+                    onPageChange: setPage,
+                    onPageSizeChange: setPageSize,
+                  }
                 : undefined
-          }
-          pagination={
-            // Drafts are capped well under one page, so they never paginate.
-            !showingDrafts && pageData
-              ? {
-                  page: pageData.page,
-                  pageSize,
-                  total: pageData.total,
-                  onPageChange: setPage,
-                  onPageSizeChange: setPageSize,
-                }
-              : undefined
-          }
-          minWidth="800px"
-          onRowClick={(key) =>
-            showingDrafts ? navigate(`/bookings/new?draft=${key}`) : navigate(`/bookings/${key}`)
-          }
-          emptyState={
-            showingDrafts ? (
-              <EmptyState
-                icon={FileEdit}
-                title={t('list.draftsEmptyTitle')}
-                description={t('list.draftsEmptyDescription')}
-              />
-            ) : (
-              <EmptyState
-                icon={CalendarX2}
-                title={t('list.emptyTitle')}
-                description={t('list.emptyDescription')}
-              />
-            )
-          }
-        />
+            }
+            minWidth="800px"
+            onRowClick={(key) =>
+              showingDrafts ? navigate(`/bookings/new?draft=${key}`) : navigate(`/bookings/${key}`)
+            }
+            emptyState={
+              showingDrafts ? (
+                <EmptyState
+                  icon={FileEdit}
+                  title={t('list.draftsEmptyTitle')}
+                  description={t('list.draftsEmptyDescription')}
+                />
+              ) : (
+                <EmptyState
+                  icon={CalendarX2}
+                  title={t('list.emptyTitle')}
+                  description={t('list.emptyDescription')}
+                />
+              )
+            }
+          />
         </div>
       )}
     </PageContainer>

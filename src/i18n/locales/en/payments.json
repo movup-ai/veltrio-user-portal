@@ -1,11 +1,51 @@
 {
   "list": {
     "title": "Payments",
-    "description": "Invoices, captures, refunds and failed charges",
-    "recordPayment": "Record payment",
+    "description": "Payments, deposits, refunds and declined cards across your bookings",
     "payoutReport": "Payout report",
-    "searchPlaceholder": "Search invoice, customer or booking",
-    "pageNote": "Showing 1–{{shown}} of {{total}} payments",
+    "searchPlaceholder": "Search customer, booking or method",
+    "loading": "Loading payments…",
+    "loadError": "We couldn't load your payments.",
+    "statsError": "We couldn't load your payment totals.",
+    "emptyTitle": "No payments found",
+    "emptyDescription": "Payments appear here when a link is sent or money is recorded on a booking.",
+    "partlyRefunded": "Refunded {{amount}}",
+    "rowActions": {
+      "viewBooking": "View booking",
+      "downloadReceipt": "Download receipt"
+    },
+    "filters": {
+      "status": "Status",
+      "method": "Method",
+      "period": "Period",
+      "periodAny": "Any dates"
+    },
+    "state": {
+      "held": "On hold",
+      "released": "Released",
+      "partly_refunded": "Partly refunded"
+    },
+    "methodCard": "Card",
+    "report": {
+      "header": {
+        "arrivalDate": "Arrival date",
+        "status": "Status",
+        "amount": "Amount",
+        "bank": "Bank account",
+        "note": "Note",
+        "id": "Payout ID"
+      },
+      "status": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "in_transit": "In transit",
+        "canceled": "Canceled",
+        "failed": "Failed"
+      },
+      "empty": "No payouts to report",
+      "emptyDescription": "Stripe has sent no payouts in this period.",
+      "failed": "Couldn't create the payout report"
+    },
     "tabs": {
       "All": "All",
       "Paid": "Paid",
@@ -13,24 +53,21 @@
       "Failed": "Failed",
       "Refunded": "Refunded"
     },
-    "filters": {
-      "status": "Status",
-      "method": "Method",
-      "period": "Period"
-    },
     "stats": {
       "collected": "Collected (MTD)",
-      "collectedNote": "Net of $1,240 refunds",
+      "collectedNote": "Net of {{amount}} in refunds",
       "outstanding": "Outstanding",
-      "outstandingNote": "2 invoices unpaid",
+      "outstandingNote_one": "{{count}} booking with a balance",
+      "outstandingNote_other": "{{count}} bookings with a balance",
       "failed": "Failed charges",
-      "failedNote": "Retry scheduled tonight",
-      "nextPayout": "Next payout",
-      "nextPayoutNote": "Sep 16 · Chase ·· 8821"
+      "failedNote": "Card declined on a link still open",
+      "held": "Deposits on hold",
+      "heldNote_one": "{{count}} deposit held",
+      "heldNote_other": "{{count}} deposits held"
     }
   },
   "columns": {
-    "invoice": "Invoice",
+    "payment": "Payment",
     "customer": "Customer",
     "method": "Method",
     "status": "Status",

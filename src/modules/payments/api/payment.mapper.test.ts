@@ -4,8 +4,152 @@ import {
   toCancellationQuote,
   toExtensionPayload,
   toExtensionQuote,
+  toPaymentListQuery,
+  toPaymentRow,
+  toPaymentStats,
+  toPayout,
+  toPeriodQuery,
   type BookingExtensionsWire,
 } from './payment.mapper'
+
+describe('toPaymentRow', () => {
+  it('reads cents as currency units and a link with no method as absent', () => {
+    const row = toPaymentRow({
+      id: 'p1',
+      kind: 'charge',
+      state: 'pending',
+      amountCents: 23540,
+      refundedCents: 0,
+      currency: 'USD',
+      method: null,
+      at: '2026-10-08T13:15:25Z',
+      bookingReference: 'BK-10005',
+      customerName: 'Marisol Vega',
+    })
+
+    expect(row).toEqual({
+      id: 'p1',
+      kind: 'charge',
+      state: 'pending',
+      amount: 235.4,
+      refunded: 0,
+      currency: 'USD',
+      method: undefined,
+      at: '2026-10-08T13:15:25Z',
+      bookingReference: 'BK-10005',
+      customerName: 'Marisol Vega',
+    })
+  })
+})
+
+describe('toPaymentListQuery', () => {
+  it('pages by limit and offset and names the tab as the API spells it', () => {
+    const query = toPaymentListQuery({
+      search: ' vega ',
+      tab: 'Refunded',
+      state: 'held',
+      method: 'card',
+      period: { from: '2026-10-01', to: '2026-10-31' },
+      page: 3,
+      pageSize: 25,
+    })
+
+    expect(query).toEqual({
+      limit: 25,
+      offset: 50,
+      search: 'vega',
+      tab: 'refunded',
+      state: 'held',
+      method: 'card',
+      dateFrom: '2026-10-01',
+      dateTo: '2026-10-31',
+    })
+  })
+
+  it('sends nothing for a filter left on its "any" value', () => {
+    const query = toPaymentListQuery({
+      search: '  ',
+      tab: 'All',
+      state: 'Any',
+      method: 'All',
+      period: { from: '', to: '' },
+      page: 1,
+      pageSize: 10,
+    })
+
+    expect(query).toEqual({ limit: 10, offset: 0 })
+  })
+
+  it('cuts a search at the length the API accepts', () => {
+    // Longer, and the API answers 422, which the page could only show as a failed load.
+    const query = toPaymentListQuery({
+      search: 'x'.repeat(200),
+      tab: 'All',
+      state: 'Any',
+      method: 'All',
+      period: { from: '', to: '' },
+      page: 1,
+      pageSize: 10,
+    })
+
+    expect(query.search).toHaveLength(80)
+  })
+})
+
+describe('toPeriodQuery', () => {
+  it('sends only the ends of the range that are set', () => {
+    expect(toPeriodQuery({ from: '2026-10-01', to: '' })).toEqual({ dateFrom: '2026-10-01' })
+    expect(toPeriodQuery({ from: '', to: '' })).toEqual({})
+  })
+})
+
+describe('toPayout', () => {
+  it('reads cents as currency units and what Stripe left out as absent', () => {
+    const payout = toPayout({
+      id: 'po_1',
+      status: 'failed',
+      amountCents: 382318,
+      currency: 'USD',
+      arrivalDate: '2026-10-09',
+      destination: null,
+      failureMessage: null,
+    })
+
+    expect(payout).toEqual({
+      id: 'po_1',
+      status: 'failed',
+      amount: 3823.18,
+      currency: 'USD',
+      arrivalDate: '2026-10-09',
+      destination: undefined,
+      failureMessage: undefined,
+    })
+  })
+})
+
+describe('toPaymentStats', () => {
+  it('reads the money in currency units and leaves the counts alone', () => {
+    const stats = toPaymentStats({
+      collectedCents: 123450,
+      refundedCents: 5000,
+      outstandingCents: 23540,
+      outstandingBookings: 1,
+      failed: 2,
+      heldCents: 400000,
+      held: 2,
+    })
+
+    expect(stats).toEqual({
+      collected: 1234.5,
+      refunded: 50,
+      outstanding: 235.4,
+      outstandingBookings: 1,
+      failed: 2,
+      held: 4000,
+      heldCount: 2,
+    })
+  })
+})
 
 const PENDING: BookingExtensionsWire['history'][number] = {
   id: 'e1',

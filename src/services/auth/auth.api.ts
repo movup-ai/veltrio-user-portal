@@ -59,9 +59,6 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
  * resolves it to a user and their company, and `/auth/register-tenant` creates
  * both at the end of onboarding. Signup is the owner's route in and an owner
  * owns one company; staff arrive by invitation, which is not built yet.
- *
- * Both always hit the real backend: VITE_USE_MOCKS covers business data, not the
- * session the rest of the app is gated on.
  */
 export const authApi = {
   getMe: () => apiClient.get<MeResponse>('/auth/me').then((r) => r.data),

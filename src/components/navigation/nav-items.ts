@@ -15,11 +15,21 @@ import {
 
 /** Canonical English keys — they index into the `nav` namespace, they are not display text. */
 export type NavGroupKey = 'Operations' | 'Revenue' | 'Setup'
-export type NavLinkKey = 'Dashboard' | 'Bookings' | 'Calendar' | 'Vehicles' | 'Customers' | 'Verification' | 'Payments' | 'Pricing' | 'Locations' | 'Agreements' | 'Settings'
+export type NavLinkKey =
+  | 'Dashboard'
+  | 'Bookings'
+  | 'Calendar'
+  | 'Vehicles'
+  | 'Customers'
+  | 'Verification'
+  | 'Payments'
+  | 'Pricing'
+  | 'Locations'
+  | 'Agreements'
+  | 'Settings'
 
 export type NavEntry =
-  | { type: 'group'; key: NavGroupKey }
-  | { type: 'link'; key: NavLinkKey; to: string; icon: LucideIcon; badge?: string; urgent?: boolean }
+  { type: 'group'; key: NavGroupKey } | { type: 'link'; key: NavLinkKey; to: string; icon: LucideIcon }
 
 export const NAV_ITEMS: NavEntry[] = [
   { type: 'group', key: 'Operations' },
@@ -30,7 +40,7 @@ export const NAV_ITEMS: NavEntry[] = [
   { type: 'link', key: 'Customers', to: '/customers', icon: Users },
   { type: 'link', key: 'Verification', to: '/verification', icon: ShieldCheck },
   { type: 'group', key: 'Revenue' },
-  { type: 'link', key: 'Payments', to: '/payments', icon: CreditCard, badge: '2', urgent: true },
+  { type: 'link', key: 'Payments', to: '/payments', icon: CreditCard },
   { type: 'link', key: 'Pricing', to: '/pricing', icon: Tag },
   { type: 'group', key: 'Setup' },
   { type: 'link', key: 'Locations', to: '/locations', icon: MapPin },
