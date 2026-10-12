@@ -1,4 +1,5 @@
 import { EMPTY_DATE_RANGE } from '@/components/ui/date-range-picker'
+import type { CalendarStatus, CalendarView } from '../types/booking-calendar.types'
 import type { BookingFilters, BookingTab } from '../types/booking.types'
 
 /** Spacing of the pickup and return time slots, and what a new booking's default rounds up to. */
@@ -27,6 +28,12 @@ export const NO_BOOKING_FILTERS: BookingFilters = {
   durationBand: 'Any',
   valueBands: [],
 }
+
+/** A month is the widest view that still shows each rental as its own bar. */
+export const DEFAULT_CALENDAR_VIEW: CalendarView = 'month'
+
+/** Off until asked for: a cancelled booking holds no car, so it would only crowd the rows. */
+export const CALENDAR_HIDDEN_BY_DEFAULT: readonly CalendarStatus[] = ['Cancelled']
 
 /** Shown while the counts load, so the tabs render without flickering through zero. */
 export const EMPTY_TAB_COUNTS: Record<BookingTab, number> = {

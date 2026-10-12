@@ -7,6 +7,7 @@ import { durationHours } from './booking.pricing'
 import {
   isReadyForPickup,
   type Booking,
+  type BookingDetails,
   type BookingDraft,
   type BookingLists,
   type BookingTuple,
@@ -60,6 +61,21 @@ export function formatRentalDuration(pickupAt: string, returnAt: string): string
   if (days > 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`)
   if (hours > 0) parts.push(`${hours}h`)
   return parts.join(' ')
+}
+
+/** "3 days 2h 30m" in the viewer's language, leaving out the parts that are zero. */
+export function durationLabel(
+  { days, hours, minutes }: BookingDetails['duration'],
+  t: TFunction<'bookings'>,
+): string {
+  return [
+    days > 0 && t('details.return.days', { count: days }),
+    hours > 0 && t('details.return.hours', { count: hours }),
+    // Also when it is all there is: a car back within the minute still has a length to show.
+    (minutes > 0 || days + hours === 0) && t('details.return.minutes', { count: minutes }),
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 /** Flattens a Booking into the tuple the list table renders. */
@@ -157,12 +173,20 @@ export function shownStatus(status: string, declined: boolean): string {
   return declined ? 'Declined' : status
 }
 
+/**
+ * One badge: a booking still ahead of pickup that is paid and signed reads Ready, which already
+ * says it is confirmed. Readiness is derived, so it cannot contradict the status.
+ */
+export function badgeStatus(status: string, ready: boolean, declined: boolean): string {
+  const shown = shownStatus(status, declined)
+  return ready && PRE_PICKUP.includes(shown) ? READY : shown
+}
+
 /** `actions` is optional — read-only tables (dashboard, vehicle history) render the inert "…" button. */
 export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
   const [customer, reference, vehicle, plate, window, note, location, , total] = b
   const vehicleImage = b[11]
-  const ready = b[13]
-  const status = shownStatus(b[7], Boolean(b[14]))
+  const status = badgeStatus(b[7], Boolean(b[13]), Boolean(b[14]))
 
   return {
     key: reference,
@@ -188,9 +212,7 @@ export function bookingRow(b: BookingTuple, actions?: RowActionItem[]): Row {
       { kind: 'text', primary: customer },
       { kind: 'stack', primary: window, secondary: note, weight: 500, subFontMono: false },
       { kind: 'text', primary: location },
-      // One badge: once a booking still ahead of pickup is paid and signed it reads Ready, which
-      // already says it is confirmed. Readiness is derived, so it cannot contradict the row.
-      { kind: 'badges', statuses: [ready && PRE_PICKUP.includes(status) ? READY : status] },
+      { kind: 'badges', statuses: [status] },
       {
         kind: 'amount',
         primary: total,

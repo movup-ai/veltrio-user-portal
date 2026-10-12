@@ -91,14 +91,5 @@
     "between": "De {{from}} a {{to}} días antes de la recogida",
     "refund": "Reembolso del {{percent}}%",
     "noRefund": "Sin reembolso"
-  },
-  "calendar": {
-    "title": "Calendario",
-    "description": "Alquileres de tu flota, por fecha",
-    "empty": {
-      "title": "La vista de calendario está en camino",
-      "description": "Por ahora todas las reservas están en la lista; esta página las mostrará organizadas por fecha.",
-      "action": "Ir a reservas"
-    }
   }
 }

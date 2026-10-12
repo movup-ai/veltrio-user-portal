@@ -77,13 +77,32 @@ export function useFormatters() {
         }),
       /** "Sep 14" / "14 sept." — the compact form used in availability and timeline strips. */
       shortDate: (date: Date | string) =>
-        formatDateIn(language, typeof date === 'string' ? new Date(date) : date, { month: 'short', day: 'numeric' }),
+        formatDateIn(language, typeof date === 'string' ? new Date(date) : date, {
+          month: 'short',
+          day: 'numeric',
+        }),
       /** "Sep 2024" / "sept. 2024" — used for "in fleet since". */
       monthYear: (date: Date | string) =>
-        formatDateIn(language, typeof date === 'string' ? new Date(date) : date, { month: 'short', year: 'numeric' }),
+        formatDateIn(language, typeof date === 'string' ? new Date(date) : date, {
+          month: 'short',
+          year: 'numeric',
+        }),
     }),
     [language, currencyCode],
   )
+}
+
+/**
+ * One formatter kept across renders, for a grid that formats hundreds of dates at once: building
+ * an `Intl.DateTimeFormat` per call is the slow part. `options` must be a constant, not a literal.
+ */
+export function useDateFormat(options: Intl.DateTimeFormatOptions): (date: Date) => string {
+  const { locale } = useFormatters()
+
+  return useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, options)
+    return (date: Date) => formatter.format(date)
+  }, [locale, options])
 }
 
 /** Non-React callers (query mutations, api error mapping) that still need locale-aware money. */
