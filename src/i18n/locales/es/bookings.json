@@ -93,8 +93,8 @@
     "count_one": "{{count}} reserva a la vista",
     "count_other": "{{count}} reservas a la vista",
     "year": {
-      "booked_one": "{{date}}: {{count}} de {{total}} vehículos alquilado",
-      "booked_other": "{{date}}: {{count}} de {{total}} vehículos alquilados",
+      "booked_one": "{{date}}: {{count}} vehículo alquilado de {{total}}",
+      "booked_other": "{{date}}: {{count}} vehículos alquilados de {{total}}",
       "idle": "{{date}}: sin alquileres",
       "legend": "Parte de la flota alquilada cada día",
       "less": "Menos",

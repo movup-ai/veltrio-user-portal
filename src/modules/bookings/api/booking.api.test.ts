@@ -300,4 +300,30 @@ describe('bookingApi.calendar', () => {
       expect.objectContaining({ offset: 100 }),
     ])
   })
+
+  it('draws a window the CSV export would refuse as too large', async () => {
+    // The cap protects an export from being short without saying so. A calendar that errors
+    // instead shows a busy company no bookings at all.
+    get.mockImplementation((_url, config) => {
+      const offset = (config?.params as { offset?: number } | undefined)?.offset ?? 0
+      return Promise.resolve(page(offset, 5_200))
+    })
+
+    const bookings = await bookingApi.calendar('2026-01-01T05:00:00.000Z', '2027-01-01T05:00:00.000Z')
+
+    expect(bookings).toHaveLength(5_200)
+    expect(get).toHaveBeenCalledTimes(52)
+  })
+
+  it('stops at the length the first page reported, however the pages after it come back', async () => {
+    // A total that kept growing, or pages that never emptied, must not keep the calendar reading.
+    get.mockImplementation((_url, config) => {
+      const offset = (config?.params as { offset?: number } | undefined)?.offset ?? 0
+      return Promise.resolve(page(offset, offset === 0 ? 250 : 10_000))
+    })
+
+    await bookingApi.calendar('2026-09-01T04:00:00.000Z', '2026-10-01T04:00:00.000Z')
+
+    expect(get).toHaveBeenCalledTimes(3)
+  })
 })

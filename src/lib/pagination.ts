@@ -65,6 +65,23 @@ export class ExportTooLargeError extends Error {
 }
 
 /**
+ * Every row of a paged list, for a screen that draws them all. No ceiling: an error in place of
+ * a busy calendar helps nobody. The page count is fixed by the first response, so a total that
+ * moves while the pages are read cannot keep the loop going.
+ */
+export async function fetchWholeList<T>(
+  fetchPage: (page: PaginationParams) => Promise<PaginatedResult<T>>,
+): Promise<T[]> {
+  const first = await fetchPage({ page: 1, pageSize: MAX_PAGE_SIZE })
+  const rows = [...first.items]
+  const pages = Math.ceil(first.total / MAX_PAGE_SIZE)
+  for (let page = 2; page <= pages; page++) {
+    rows.push(...(await fetchPage({ page, pageSize: MAX_PAGE_SIZE })).items)
+  }
+  return rows
+}
+
+/**
  * Every row of a paged list, for an export: not just the page on screen. Paged because the
  * API caps a page at 100, and capped in turn so a huge list cannot hang the browser.
  */
