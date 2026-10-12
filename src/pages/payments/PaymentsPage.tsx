@@ -85,7 +85,9 @@ export function PaymentsPage() {
     page,
     pageSize,
   })
-  const { data: stats } = usePaymentStats()
+  const { data: stats, isLoading: statsLoading, isError: statsError } = usePaymentStats()
+  const availableStats = !statsLoading && !statsError ? stats : undefined
+  const statsPlaceholder = tCommon(statsLoading ? 'states.loading' : 'filters.unavailable')
   const { data: methods = [] } = usePaymentMethodsInUse()
   const receipt = usePaymentReceipt()
   const [reporting, setReporting] = useState(false)
@@ -216,26 +218,32 @@ export function PaymentsPage() {
           {
             icon: Banknote,
             label: t('list.stats.collected'),
-            value: format.currency(stats?.collected ?? 0),
-            note: t('list.stats.collectedNote', { amount: format.currency(stats?.refunded ?? 0) }),
+            value: availableStats ? format.currency(availableStats.collected) : statsPlaceholder,
+            note: availableStats
+              ? t('list.stats.collectedNote', { amount: format.currency(availableStats.refunded) })
+              : statsPlaceholder,
           },
           {
             icon: ReceiptText,
             label: t('list.stats.outstanding'),
-            value: format.currency(stats?.outstanding ?? 0),
-            note: t('list.stats.outstandingNote', { count: stats?.outstandingBookings ?? 0 }),
+            value: availableStats ? format.currency(availableStats.outstanding) : statsPlaceholder,
+            note: availableStats
+              ? t('list.stats.outstandingNote', { count: availableStats.outstandingBookings })
+              : statsPlaceholder,
           },
           {
             icon: CreditCard,
             label: t('list.stats.failed'),
-            value: format.number(stats?.failed ?? 0),
+            value: availableStats ? format.number(availableStats.failed) : statsPlaceholder,
             note: t('list.stats.failedNote'),
           },
           {
             icon: ShieldCheck,
             label: t('list.stats.held'),
-            value: format.currency(stats?.held ?? 0),
-            note: t('list.stats.heldNote', { count: stats?.heldCount ?? 0 }),
+            value: availableStats ? format.currency(availableStats.held) : statsPlaceholder,
+            note: availableStats
+              ? t('list.stats.heldNote', { count: availableStats.heldCount })
+              : statsPlaceholder,
           },
         ]}
       />

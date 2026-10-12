@@ -34,7 +34,9 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
       >
         {organizationName && (
           <>
-            <span>{organizationName}</span>
+            <span className="max-w-[220px] truncate" title={organizationName}>
+              {organizationName}
+            </span>
             <span>/</span>
           </>
         )}
