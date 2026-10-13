@@ -12,6 +12,7 @@ import {
 import { statusColors } from '@/components/data-display/status-colors'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
 import { photoThumbnail } from '@/modules/vehicles/utils/vehicle.utils'
+import { companyLocal } from '@/utils/company-time'
 import { formatDay, parseDay } from '@/utils/dates'
 import { DEFAULT_CALENDAR_VIEW } from '../constants/booking.constants'
 import {
@@ -40,7 +41,10 @@ const STEP: Record<CalendarView, (date: Date, amount: number) => Date> = {
   year: addYears,
 }
 
-/** The span a view shows around `anchor`, in the viewer's own clock like every other booking time. */
+/**
+ * The span a view shows around `anchor`. The grid is plain local dates standing for the company's
+ * clock: whatever is drawn on it is brought onto that clock first (`companyLocal`).
+ */
 export function calendarRange(view: CalendarView, anchor: Date, weekStartsOn: WeekStart): CalendarRange {
   const from =
     view === 'day'
@@ -126,11 +130,14 @@ export function calendarLook(status: string): CalendarLook {
 }
 
 /**
- * Exactly the booked window. A car still out is not stretched to now: the bar would then end
- * where the booking does not, and its colour already says the rental is overdue.
+ * Exactly the booked window, on the grid's clock. A car still out is not stretched to now: the
+ * bar would then end where the booking does not, and its colour already says the rental is overdue.
  */
 function bookingSpan(booking: Booking): { from: number; to: number } {
-  return { from: Date.parse(booking.pickupAt), to: Date.parse(booking.returnAt) }
+  return {
+    from: companyLocal(booking.pickupAt).getTime(),
+    to: companyLocal(booking.returnAt).getTime(),
+  }
 }
 
 /** By id, never plate: plates are not unique. A deleted car has only its name and plate left. */

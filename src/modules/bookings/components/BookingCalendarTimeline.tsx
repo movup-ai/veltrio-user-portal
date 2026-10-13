@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Car } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDateFormat } from '@/i18n/formatters'
+import { companyLocal } from '@/utils/company-time'
 import type {
   CalendarColumn,
   CalendarRow,
@@ -89,7 +90,7 @@ export function BookingCalendarTimeline({
   useLayoutEffect(() => {
     const element = scroller.current
     if (!element) return
-    const at = timelineFraction(columns, Date.now())
+    const at = timelineFraction(columns, companyLocal(Date.now()).getTime())
     const label = element.querySelector<HTMLElement>('[data-calendar-label]')?.offsetWidth ?? 0
     // A third of the way in: what is coming matters more than what has just passed.
     const lead = (element.clientWidth - label) / 3

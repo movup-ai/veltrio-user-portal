@@ -57,6 +57,23 @@ export function companyWall(at: Date | string | number, zone = companyTimeZone()
 }
 
 /**
+ * An instant as a Date whose *local* fields read the company's clock, for a grid laid out with
+ * local-date maths (the calendar, the availability strip). An hour this browser's own zone skips
+ * lands an hour on: fine for where a bar is drawn, wrong for a value to submit (`companyWall`).
+ */
+export function companyLocal(at: Date | string | number, zone = companyTimeZone()): Date {
+  const wall = companyWall(at, zone)
+  return new Date(
+    wall.getUTCFullYear(),
+    wall.getUTCMonth(),
+    wall.getUTCDate(),
+    wall.getUTCHours(),
+    wall.getUTCMinutes(),
+    wall.getUTCSeconds(),
+  )
+}
+
+/**
  * A `companyWall` time moved on, `stepMinutes` at a time, past any hour the clocks skip: a
  * default landing there would be refused the moment it was submitted. Others come back as given.
  */
@@ -69,6 +86,18 @@ export function realWall(wall: Date, stepMinutes: number, zone = companyTimeZone
     at.setUTCMinutes(at.getUTCMinutes() + stepMinutes)
   }
   return at
+}
+
+/** The instant a point on a `companyLocal` grid stands for, to ask the API about that stretch of it. */
+export function instantOfCompanyLocal(local: Date, zone = companyTimeZone()): Date {
+  const wall = realWall(
+    new Date(
+      Date.UTC(local.getFullYear(), local.getMonth(), local.getDate(), local.getHours(), local.getMinutes()),
+    ),
+    30,
+    zone,
+  )
+  return zonedInstant(wall.toISOString().slice(0, 10), wall.toISOString().slice(11, 16), zone)
 }
 
 /** The calendar day (`YYYY-MM-DD`) an instant falls on at the company. */

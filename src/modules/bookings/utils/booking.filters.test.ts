@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { useOrganizationStore } from '@/state/organization.store'
+import type { OrganizationMembership } from '@/types/user'
 import type { BookingTuple } from '../types/booking.types'
 import { bookingDurationDays, bookingPickupOrdinal, bookingsForTab, filterBookings } from './booking.filters'
 import { EMPTY_BOOKING_LISTS } from './booking.filters'
@@ -102,5 +104,18 @@ describe('todayOrdinal', () => {
     const todayRow = row({ pickupAt: TODAY.toISOString(), returnAt: '2026-09-25T09:30:00Z' })
 
     expect(bookingPickupOrdinal(todayRow)).toBe(todayOrdinal(TODAY))
+  })
+})
+
+describe("days on the company's clock", () => {
+  afterEach(() => useOrganizationStore.setState({ membership: null }))
+
+  it('puts an evening pickup on the day the company calls today', async () => {
+    const { todayOrdinal } = await import('./booking.filters')
+    useOrganizationStore.setState({ membership: { timezone: 'Pacific/Honolulu' } as OrganizationMembership })
+    // 10:00 and 17:00 on 10 October in Honolulu: one day there, two in UTC.
+    const morning = row({ pickupAt: '2026-10-10T20:00:00Z', returnAt: '2026-10-12T20:00:00Z' })
+
+    expect(bookingPickupOrdinal(morning)).toBe(todayOrdinal(new Date('2026-10-11T03:00:00Z')))
   })
 })

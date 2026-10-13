@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { useOrganizationStore } from '@/state/organization.store'
+import type { OrganizationMembership } from '@/types/user'
 import type {
   CalendarFilters,
   CalendarVehicle,
@@ -23,6 +25,12 @@ import {
   timelineFraction,
   yearMonths,
 } from './booking.calendar'
+
+function companyIn(timezone: string) {
+  useOrganizationStore.setState({ membership: { timezone } as OrganizationMembership })
+}
+
+afterEach(() => useOrganizationStore.setState({ membership: null }))
 
 /** Local time throughout, as the calendar draws it, so the run-time zone cannot move a day. */
 const at = (day: number, hour = 0, month = 8) => new Date(2026, month, day, hour)
@@ -418,5 +426,35 @@ describe('address bar', () => {
     expect(parseCalendarDay('2026-09-20', fallback)).toEqual(at(20))
     expect(parseCalendarDay('2026-02-31', fallback)).toBe(fallback)
     expect(parseCalendarDay('next week', fallback)).toBe(fallback)
+  })
+})
+
+describe("the company's clock", () => {
+  // 10:00 to 14:00 on 10 October in Honolulu, whatever zone the staff are reading it from.
+  const trip = {
+    ...booking({ from: at(1), to: at(2) }),
+    pickupAt: '2026-10-10T20:00:00Z',
+    returnAt: '2026-10-11T00:00:00Z',
+  }
+  const tenth = new Date(2026, 9, 10)
+
+  it('draws a bar at the hour the company reads, not the hour on this machine', () => {
+    companyIn('Pacific/Honolulu')
+    const hours = calendarColumns('day', calendarRange('day', tenth, 0))
+
+    const [bar] = calendarRows([ACCORD], [trip], hours, NOW)[0].bars
+
+    expect(bar.start).toBeCloseTo(10 / 24)
+    expect(bar.end).toBeCloseTo(14 / 24)
+  })
+
+  it("counts a rental on the company's day, not the one it spills into elsewhere", () => {
+    companyIn('Pacific/Honolulu')
+    // 17:00 to 19:00 on the 10th in Honolulu is already the 11th in New York and in UTC.
+    const evening = { ...trip, pickupAt: '2026-10-11T03:00:00Z', returnAt: '2026-10-11T05:00:00Z' }
+
+    const days = bookedVehiclesByDay([evening], calendarRange('month', tenth, 0))
+
+    expect(Object.fromEntries(days)).toEqual({ '2026-10-10': 1 })
   })
 })

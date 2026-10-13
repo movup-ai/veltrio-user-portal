@@ -8,7 +8,9 @@ import type { OrganizationMembership } from '@/types/user'
 import {
   awayFromCompanyTime,
   companyDay,
+  companyLocal,
   companyWall,
+  instantOfCompanyLocal,
   realWall,
   wallClockHours,
   zoneName,
@@ -58,6 +60,30 @@ describe('companyWall', () => {
   it('keeps an hour this browser itself skips', () => {
     // 02:30 in Phoenix on the night New York's clocks go forward: a local Date reads 03:30 there.
     expect(companyWall('2026-03-08T09:30:00Z', PHOENIX).getUTCHours()).toBe(2)
+  })
+})
+
+describe('companyLocal', () => {
+  it("gives a Date whose local fields read the zone's clock, for a grid laid out in local dates", () => {
+    const local = companyLocal('2026-10-11T03:30:00Z', HONOLULU)
+    expect([
+      local.getFullYear(),
+      local.getMonth(),
+      local.getDate(),
+      local.getHours(),
+      local.getMinutes(),
+    ]).toEqual([2026, 9, 10, 17, 30])
+  })
+})
+
+describe('instantOfCompanyLocal', () => {
+  it('turns a point on such a grid back into the instant it stands for', () => {
+    // Midnight on 10 October in Honolulu, whatever midnight is on this machine.
+    expect(instantOfCompanyLocal(new Date(2026, 9, 10), HONOLULU).toISOString()).toBe(
+      '2026-10-10T10:00:00.000Z',
+    )
+    const instant = '2026-10-11T03:30:00.000Z'
+    expect(instantOfCompanyLocal(companyLocal(instant, HONOLULU), HONOLULU).toISOString()).toBe(instant)
   })
 })
 
