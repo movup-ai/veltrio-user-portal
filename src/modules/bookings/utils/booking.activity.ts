@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next'
 import {
   CANCEL_REASONS,
   DECLINE_REASONS,
+  FUEL_LEVELS,
   type BookingActivityEvent,
   type CancelReason,
   type DeclineReason,
@@ -84,7 +85,8 @@ const text = (value: unknown) => (typeof value === 'string' && value.trim() ? va
 const figure = (value: unknown) => (typeof value === 'number' ? value : undefined)
 const names = (value: unknown) =>
   Array.isArray(value) ? value.filter((name): name is string => typeof name === 'string') : []
-const among = <K extends string>(known: readonly K[], value: unknown) => known.find((one) => one === value)
+const among = <K extends string | number>(known: readonly K[], value: unknown) =>
+  known.find((one) => one === value)
 
 /**
  * What an event says beside its title, in the order it reads. Each fact is there only when the
@@ -113,13 +115,14 @@ export function activityFacts(
     return t('details.activity.facts.totalMoved', { from: format.currency(was), to: format.currency(now) })
   }
   const readings = () => {
-    const [odometer, level] = [figure(d.odometer), figure(d.fuelLevel)]
+    // Only a level there are words for: any other number would print its own key.
+    const [odometer, level] = [figure(d.odometer), among(FUEL_LEVELS, d.fuelLevel)]
     return [
       odometer !== undefined && t('details.condition.miles', { miles: format.number(odometer) }),
       level !== undefined &&
         t('details.activity.facts.level', {
           label: t(`details.condition.level.${electric ? 'charge' : 'fuel'}.short`),
-          level: t(`details.condition.fuelLevels.${level}` as 'details.condition.fuelLevels.8'),
+          level: t(`details.condition.fuelLevels.${level}`),
         }),
     ]
   }

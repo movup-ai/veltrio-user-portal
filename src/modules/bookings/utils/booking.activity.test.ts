@@ -146,6 +146,14 @@ describe('activityFacts', () => {
     expect(facts('returned', { odometer: 12120, fuelLevel: 6 }, true)).toEqual(['12,120 mi', 'Charge 3/4'])
   })
 
+  it('leaves out a level there are no words for, where it would print the key instead', () => {
+    for (const fuelLevel of [9, -1, 4.5, '8', null]) {
+      expect(facts('picked_up', { odometer: 12000, fuelLevel }), String(fuelLevel)).toEqual(['12,000 mi'])
+    }
+    // Empty is a level like any other, not a missing one.
+    expect(facts('returned', { odometer: 12120, fuelLevel: 0 })).toEqual(['12,120 mi', 'Fuel Empty'])
+  })
+
   it('says why a booking was declined or cancelled, with what the renter was told', () => {
     expect(facts('declined', { reason: 'dates_unavailable', message: null })).toEqual([
       'Dates no longer available',

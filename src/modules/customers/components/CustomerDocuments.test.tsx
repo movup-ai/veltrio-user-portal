@@ -128,6 +128,20 @@ describe('CustomerDocuments', () => {
     expect(emptySlot(container)).toBeNull()
   })
 
+  it('shows the last scan that finished, not a newer one still on its way', async () => {
+    const policy = { ...LICENCE, id: 'doc7', kind: 'insurance' as const, name: 'policy.pdf' }
+    sent = [
+      { ...policy, id: 'doc9', name: 'half-sent.pdf', status: 'uploading', bookingReference: 'BK-10020' },
+      { ...policy, bookingReference: 'BK-10016' },
+    ]
+    await render()
+
+    // The one still uploading cannot be opened, and would hide the one that can.
+    expect(await screen.findByText('policy.pdf')).toBeInTheDocument()
+    expect(screen.getByText('from BK-10016')).toBeInTheDocument()
+    expect(screen.queryByText('half-sent.pdf')).not.toBeInTheDocument()
+  })
+
   it('puts a scan on file from the row of the one the renter sent', async () => {
     sent = [{ ...LICENCE, id: 'doc7', kind: 'insurance', name: 'policy.pdf', bookingReference: 'BK-10016' }]
     const user = userEvent.setup({ delay: null })

@@ -56,8 +56,8 @@ export function CustomerDocuments({ customerId, canEdit }: Props) {
             customerId={customerId}
             kind={kind}
             onFile={documents.find((d) => d.kind === kind && d.status === 'ready')}
-            // Newest first, so this is the one from their latest reservation.
-            sent={sent.find((d) => d.kind === kind)}
+            // Newest first, so this is the one from their latest reservation that finished.
+            sent={sent.find((d) => d.kind === kind && d.status === 'ready')}
             canEdit={canEdit}
           />
         ))}
