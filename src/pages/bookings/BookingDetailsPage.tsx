@@ -44,7 +44,7 @@ import {
 } from '@/modules/bookings/hooks/use-verification'
 import { awaitsReturnReadings, recordedStages } from '@/modules/bookings/utils/booking.condition'
 import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
-import { isOver, shownStatus } from '@/modules/bookings/utils/booking.utils'
+import { durationLabel, isOver, shownStatus } from '@/modules/bookings/utils/booking.utils'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
 import { useBookingContract, useContractPdfOpener } from '@/modules/contracts/hooks/use-booking-contract'
 import { agreementIssued } from '@/modules/contracts/utils/booking-contract.utils'
@@ -230,15 +230,7 @@ export function BookingDetailsPage() {
     const entry = condition.find((recorded) => recorded.stage === stage)
     return entry && { ...entry, label: t(`details.condition.notes.${stage}`) }
   }
-  const { days, hours, minutes } = booking.duration
-  const duration = [
-    days > 0 && t('details.return.days', { count: days }),
-    hours > 0 && t('details.return.hours', { count: hours }),
-    // Also when it is all there is: a car back within the minute still has a length to show.
-    (minutes > 0 || days + hours === 0) && t('details.return.minutes', { count: minutes }),
-  ]
-    .filter(Boolean)
-    .join(' ')
+  const duration = durationLabel(booking.duration, t)
 
   return (
     <PageContainer>

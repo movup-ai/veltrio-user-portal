@@ -598,6 +598,14 @@ export function toBookingListQuery(params: BookingListParams): Record<string, un
   return query
 }
 
+/**
+ * Every rental under way in the window, whatever its status. Earliest pickup first, which with
+ * the API's id tie-break keeps the pages stable while they are read one after another.
+ */
+export function toCalendarQuery(from: string, to: string, page: PaginationParams): Record<string, unknown> {
+  return { ...toLimitOffset(page), sort: 'pickupAsc' satisfies BookingSort, overlapFrom: from, overlapTo: to }
+}
+
 /** The same filters without paging, for the endpoints that only narrow. */
 export function toBookingFilterQuery(filters: BookingFilters): Record<string, unknown> {
   const query = toBookingListQuery({ filters, tab: 'Upcoming', sort: 'newest', page: 1, pageSize: 1 })

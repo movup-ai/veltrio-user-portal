@@ -6,7 +6,12 @@ import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
 import { cn } from '@/lib/utils'
-import { availabilityForVehicle, nextAvailableDay, type BusyInterval, type DayState } from '../utils/availability'
+import {
+  availabilityForVehicle,
+  nextAvailableDay,
+  type BusyInterval,
+  type DayState,
+} from '../utils/availability'
 import type { Vehicle } from '../types/vehicle.types'
 
 const STATE_STYLES: Record<DayState, string> = {
@@ -44,7 +49,7 @@ export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; bu
           icon={CalendarDays}
           label={t('availability.openCalendar')}
           className="!text-[11.5px]"
-          onClick={() => navigate('/bookings', { state: { vehicleId: vehicle.id } })}
+          onClick={() => navigate(`/calendar?${new URLSearchParams({ q: vehicle.plate })}`)}
         />
       </div>
 

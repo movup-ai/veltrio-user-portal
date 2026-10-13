@@ -119,6 +119,19 @@ export function useFormatters() {
   )
 }
 
+/**
+ * One formatter kept across renders, for a grid that formats hundreds of dates at once: building
+ * an `Intl.DateTimeFormat` per call is the slow part. `options` must be a constant, not a literal.
+ */
+export function useDateFormat(options: Intl.DateTimeFormatOptions): (date: Date) => string {
+  const { locale } = useFormatters()
+
+  return useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, options)
+    return (date: Date) => formatter.format(date)
+  }, [locale, options])
+}
+
 /** Non-React callers (query mutations, api error mapping) that still need locale-aware money. */
 export function formatCurrency(amount: number): string {
   return formatCurrencyIn(currentLanguage(), amount)

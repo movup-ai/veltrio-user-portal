@@ -6,6 +6,7 @@ import {
   MAX_BOOKING_PAGES,
   MAX_PAGE_SIZE,
   fetchEveryPage,
+  fetchWholeList,
   toPaginatedResult,
   type ListEnvelope,
 } from '@/lib/pagination'
@@ -26,6 +27,7 @@ import {
   toBookingLists,
   toBookingPayload,
   toBookingStats,
+  toCalendarQuery,
   toConditionPayload,
   toCancelPayload,
   toCancelledBooking,
@@ -164,6 +166,17 @@ export const bookingApi = {
    */
   exportAll: (params: Omit<BookingListParams, 'page' | 'pageSize'>) =>
     fetchEveryPage((page) => bookingApi.page({ ...params, ...page }), MAX_BOOKING_PAGES),
+
+  /**
+   * Whole bookings, not intervals: the calendar draws pending and finished rentals as well. Not
+   * capped as the export is: past the cap that would be an error where a busy year should be.
+   */
+  calendar: (from: string, to: string) =>
+    fetchWholeList((page) =>
+      apiClient
+        .get<ListEnvelope<BookingWire>>('/bookings', { params: toCalendarQuery(from, to, page) })
+        .then((r) => toPaginatedResult(r.data.items.map(toBooking), r.data.total, page)),
+    ),
 
   /** Headline totals for the whole book — not narrowed by the list's filters. */
   stats: () => apiClient.get<BookingStatsWire>('/bookings/stats').then((r) => toBookingStats(r.data)),

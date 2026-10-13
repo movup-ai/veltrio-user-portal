@@ -16,6 +16,7 @@ export const bookingKeys = {
   tabCounts: (filters: BookingFilters) => [...bookingKeys.all, 'tabCounts', filters] as const,
   detail: (reference: string) => [...bookingKeys.all, 'detail', reference] as const,
   schedule: (from: string, to: string) => [...bookingKeys.all, 'schedule', from, to] as const,
+  calendar: (from: string, to: string) => [...bookingKeys.all, 'calendar', from, to] as const,
 }
 
 export function useBookings() {
@@ -90,6 +91,21 @@ export function useBookingSchedule(from: string, to: string, enabled: boolean) {
     isStale: query.isPlaceholderData,
     isReady: enabled && query.data !== undefined && !query.isPlaceholderData,
   }
+}
+
+/**
+ * Every booking under way in the window. The previous window's stay on screen while the next
+ * loads: bars are placed by their own times, so they are incomplete then, never misplaced.
+ */
+export function useBookingCalendar(from: Date, to: Date) {
+  const span = [from.toISOString(), to.toISOString()] as const
+  const query = useQuery({
+    queryKey: bookingKeys.calendar(...span),
+    queryFn: () => bookingApi.calendar(...span),
+    placeholderData: keepPreviousData,
+  })
+
+  return { ...query, isStale: query.isPlaceholderData }
 }
 
 export function useCreateBooking() {
