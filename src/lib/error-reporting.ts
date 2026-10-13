@@ -26,12 +26,29 @@ export function initErrorReporting(): void {
       httpBodies: [],
       urlQueryParams: false,
     },
+    beforeSend(event, hint) {
+      const error = hint.originalException
+      if (error instanceof ApiError) {
+        for (const exception of event.exception?.values ?? []) {
+          if (exception.type === error.name) exception.value = apiFaultMessage(error)
+        }
+      }
+      return event
+    },
   })
 
   // Which company an error happened in. Its subdomain is public; staff names and emails are not sent.
   const tagCompany = (subdomain: string | undefined) => Sentry.setTag('company', subdomain)
   tagCompany(useOrganizationStore.getState().membership?.subdomain)
   useOrganizationStore.subscribe((state) => tagCompany(state.membership?.subdomain))
+}
+
+/**
+ * How an API fault reads in a report: by status and code. Its own message is written by the API
+ * for the person at the screen, and can name a renter or quote what they typed.
+ */
+function apiFaultMessage(error: ApiError): string {
+  return ['API', error.status ?? error.kind, error.code].filter(Boolean).join(' ')
 }
 
 /**

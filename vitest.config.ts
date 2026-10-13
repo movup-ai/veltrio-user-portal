@@ -1,9 +1,9 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config.ts'
 
-export default mergeConfig(
-  viteConfig,
-  defineConfig({
+// The app's config is a function of the mode (it reads the .env files), so it is called first.
+export default defineConfig((env) =>
+  mergeConfig(viteConfig(env), {
     test: {
       environment: 'jsdom',
       // One jsdom per worker instead of per file: environment setup was ~70% of the run.
