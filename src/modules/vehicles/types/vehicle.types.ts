@@ -1,10 +1,4 @@
-export const VEHICLE_STATUSES = [
-  'Available',
-  'On rent',
-  'Maintenance',
-  'Out of service',
-  'Archived',
-] as const
+export const VEHICLE_STATUSES = ['Available', 'On rent', 'Maintenance', 'Out of service', 'Archived'] as const
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number]
 
 /**
@@ -175,7 +169,7 @@ export interface VehicleStats {
 /** Payload shape for create/update — server assigns id/createdAt/utilization/uri. */
 export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'utilization' | 'uri'>
 
-// No `utilization`: the API does not compute it, so offering it only sorted by name.
+// No `utilization`: the API works it out after reading the page, so it cannot order one.
 export const VEHICLE_SORTS = ['manual', 'newest', 'dailyRate', 'name'] as const
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
 

@@ -185,6 +185,17 @@ describe('toBookingLists', () => {
     expect(lists.schedule.map((i) => i.reference)).toEqual(['BK-10000', 'BK-2'])
   })
 
+  it('says which windows are only asked for, so a strip can tell a request from a booking', () => {
+    const asked = toBooking({ ...wire, reference: 'BK-4', status: 'pending' })
+
+    const lists = toBookingLists([toBooking(wire), asked], now)
+
+    expect(lists.schedule.map((i) => [i.reference, i.pending])).toEqual([
+      ['BK-10000', false],
+      ['BK-4', true],
+    ])
+  })
+
   it('renders a tuple the list can filter on', () => {
     const [row] = toBookingLists([toBooking(wire)], now).upcoming
 

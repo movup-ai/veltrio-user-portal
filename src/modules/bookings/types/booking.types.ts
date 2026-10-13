@@ -280,6 +280,8 @@ export interface BookedInterval {
   plate: string
   from: string
   to: string
+  /** A request staff have not accepted: it holds nothing yet. Only the bookings list sets it. */
+  pending?: boolean
 }
 
 /**

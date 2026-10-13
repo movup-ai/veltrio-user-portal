@@ -462,6 +462,7 @@ export function toBookingLists(bookings: Booking[], now = new Date()): BookingLi
         plate: b.vehiclePlate,
         from: b.pickupAt,
         to: b.returnAt,
+        pending: b.status === 'Pending',
       })),
   }
 }

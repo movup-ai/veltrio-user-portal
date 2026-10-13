@@ -1,6 +1,6 @@
 import type { Vehicle } from '../types/vehicle.types'
 
-export type DayState = 'booked' | 'available' | 'disabled'
+export type DayState = 'booked' | 'pending' | 'available' | 'disabled'
 
 export interface AvailabilityDay {
   date: Date
@@ -15,6 +15,8 @@ export interface AvailabilityDay {
 export interface BusyInterval {
   from: string
   to: string
+  /** Asked for and not accepted yet: it holds nothing, so the days are still there to sell. */
+  pending?: boolean
 }
 
 const DAYS_AHEAD = 14
@@ -33,11 +35,15 @@ function startOfDay(date: Date): Date {
  * A day counts as booked when any rental covers part of it. Status still wins: a vehicle in
  * maintenance or out of service can't be booked whatever the calendar says.
  */
-export function availabilityForVehicle(vehicle: Vehicle, busy: BusyInterval[] = [], from = new Date()): AvailabilityDay[] {
+export function availabilityForVehicle(
+  vehicle: Vehicle,
+  busy: BusyInterval[] = [],
+  from = new Date(),
+): AvailabilityDay[] {
   const start = startOfDay(from)
 
   // Parsed once rather than per day — 14 days x every interval adds up quickly on a big fleet.
-  const windows = busy.map((i) => ({ from: Date.parse(i.from), to: Date.parse(i.to) }))
+  const windows = busy.map((i) => ({ from: Date.parse(i.from), to: Date.parse(i.to), pending: i.pending }))
 
   return Array.from({ length: DAYS_AHEAD }, (_, offset) => {
     const date = new Date(start.getTime() + offset * MS_PER_DAY)
@@ -47,7 +53,12 @@ export function availabilityForVehicle(vehicle: Vehicle, busy: BusyInterval[] = 
     let state: DayState
     if (vehicle.status === 'Out of service') state = 'disabled'
     else if (vehicle.status === 'Maintenance' && offset < MAINTENANCE_DAYS) state = 'disabled'
-    else state = windows.some((w) => w.from < dayEnd && dayStart < w.to) ? 'booked' : 'available'
+    else {
+      const covering = windows.filter((w) => w.from < dayEnd && dayStart < w.to)
+      // A held booking wins the day it shares with a request: the request cannot have it.
+      if (covering.some((w) => !w.pending)) state = 'booked'
+      else state = covering.length ? 'pending' : 'available'
+    }
 
     return { date, state, isToday: offset === 0 }
   })

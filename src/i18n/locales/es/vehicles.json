@@ -139,8 +139,10 @@
     "nextGap": "próximo hueco {{date}}",
     "fullyBooked": "sin disponibilidad",
     "dayInitials": "D,L,M,X,J,V,S",
+    "legend": "Leyenda",
     "state": {
       "booked": "Reservado",
+      "pending": "Pendiente",
       "available": "Disponible",
       "disabled": "No disponible"
     }

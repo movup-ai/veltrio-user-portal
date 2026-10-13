@@ -12,7 +12,7 @@ function cell(plain?: boolean) {
 }
 
 describe('ReviewRowGrid', () => {
-  it('rules off each cell, as the vehicle page’s specifications are', () => {
+  it('rules off each cell by default', () => {
     expect(cell()).toHaveClass('border-b', 'pb-2.5')
   })
 
