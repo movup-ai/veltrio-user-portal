@@ -69,3 +69,11 @@ The backend grants a role per tenant — `owner`, `manager` or `staff` — not p
 `VITE_CLERK_PUBLISHABLE_KEY` must point at the same Clerk instance as the backend's `CLERK_ISSUER`, and the backend's `CLERK_AUTHORIZED_PARTIES` must contain this app's origin (`http://localhost:5173` in development).
 
 Multi-tenancy and permissions are modeled from the start (`state/organization.store.ts`, `utils/permissions.ts`, `components/feedback/Can.tsx`) — frontend permission checks are UX only, the backend is the actual authorization boundary.
+
+## Error reporting
+
+Errors go to Sentry from `lib/error-reporting.ts` when `VITE_SENTRY_DSN` is set; without it nothing is sent, which is how development and CI run. Errors only: no performance tracing and no session replay.
+
+- **What is reported:** uncaught errors and rejections, render crashes (through React's root error hooks), and failed requests that are a fault: a 5xx or an unrecognised failure. A 4xx the user is shown and acts on, and a dropped connection, are not.
+- **What is not sent:** user details, cookies, request headers and bodies, and URL query strings. Each event is tagged with the company's subdomain and nothing about the person.
+- **Source maps:** a build given `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` uploads its source maps and then deletes them from `dist/`, so stack traces name real files without the maps being served. A build without the token makes no maps and uploads nothing.
