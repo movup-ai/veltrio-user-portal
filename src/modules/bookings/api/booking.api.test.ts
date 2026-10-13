@@ -339,3 +339,56 @@ describe('bookingApi.calendar', () => {
     )
   })
 })
+
+describe('bookingApi.schedule', () => {
+  const interval = {
+    reference: 'BK-10002',
+    vehicleId: 'v1',
+    vehiclePlate: 'ABC1234',
+    pickupAt: '2026-10-26T14:00:00Z',
+    returnAt: '2026-10-29T14:00:00Z',
+  }
+
+  it('asks for one vehicle alone when given one, and for the fleet otherwise', async () => {
+    get.mockResolvedValue({ data: [interval] })
+    const [from, to] = ['2026-10-13T04:00:00.000Z', '2028-10-13T04:00:00.000Z']
+
+    const held = await bookingApi.schedule(from, to, 'v1')
+    await bookingApi.schedule(from, to)
+
+    expect(get).toHaveBeenNthCalledWith(1, '/bookings/schedule', { params: { from, to, vehicleId: 'v1' } })
+    expect(get).toHaveBeenNthCalledWith(2, '/bookings/schedule', {
+      params: { from, to, vehicleId: undefined },
+    })
+    expect(held).toEqual([
+      {
+        reference: 'BK-10002',
+        vehicleId: 'v1',
+        plate: 'ABC1234',
+        from: interval.pickupAt,
+        to: interval.returnAt,
+      },
+    ])
+  })
+})
+
+describe('bookingApi.activity', () => {
+  it('reads the booking’s own activity, with its amounts in currency units', async () => {
+    get.mockResolvedValue({
+      data: [
+        {
+          id: 'e1',
+          type: 'payment_recorded',
+          at: '2026-10-14T03:44:00Z',
+          actor: { kind: 'staff', name: 'Pat Owner' },
+          detail: { amountCents: 10000, method: 'Cash' },
+        },
+      ],
+    })
+
+    const events = await bookingApi.activity('BK-10001')
+
+    expect(get).toHaveBeenCalledWith('/bookings/BK-10001/activity')
+    expect(events[0].detail).toEqual({ amount: 100, method: 'Cash' })
+  })
+})

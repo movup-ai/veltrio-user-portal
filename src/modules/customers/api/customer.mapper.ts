@@ -8,6 +8,7 @@ import {
   type Customer,
   type CustomerConflict,
   type CustomerDetail,
+  type CustomerBookingDocument,
   type CustomerDocument,
   type CustomerInput,
   type CustomerListParams,
@@ -156,6 +157,12 @@ export function toCustomerDocument(wire: CustomerDocumentWire): CustomerDocument
     sizeBytes: wire.sizeBytes,
     createdAt: wire.createdAt,
   }
+}
+
+export type CustomerBookingDocumentWire = CustomerDocumentWire & { bookingReference: string }
+
+export function toCustomerBookingDocument(wire: CustomerBookingDocumentWire): CustomerBookingDocument {
+  return { ...toCustomerDocument(wire), bookingReference: wire.bookingReference }
 }
 
 // --- Writes --------------------------------------------------------------------------------

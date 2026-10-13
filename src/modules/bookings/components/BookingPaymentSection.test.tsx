@@ -51,6 +51,7 @@ const ACTIONS: PaymentActions = {
   returnVehicle: { allowed: false, reason: 'not_on_rental' },
   close: { allowed: false, reason: 'not_awaiting_close' },
   cancel: { allowed: true },
+  change: { allowed: true },
 }
 
 const LINK: PaymentLink = { token: 'secret-token', amount: 319, deposit: 0, currency: 'USD' }
@@ -60,6 +61,7 @@ const UNPAID: BookingPayments = {
   state: 'unpaid',
   currency: 'USD',
   total: 319,
+  overpaid: 0,
   paid: 0,
   refunded: 0,
   balance: 319,
@@ -395,6 +397,17 @@ describe('BookingPaymentSection', () => {
     // What was taken is a plain line beside it, not part of the callout.
     expect(due).not.toHaveTextContent('$100')
     expect(screen.getByText('Paid')).toBeInTheDocument()
+  })
+
+  it('closes with what is owed back when a change made the booking cheaper than was paid', async () => {
+    get.mockResolvedValue({ ...RENTAL_PAID, total: 200, overpaid: 119 })
+    renderAs([])
+
+    const owed = (await screen.findByText('To refund')).closest('dl')
+    expect(owed).toHaveTextContent('$119')
+    // What was taken stands beside it, so the two figures explain each other.
+    expect(screen.getByText('Paid').parentElement).toHaveTextContent('$319')
+    expect(screen.queryByText('Balance due')).not.toBeInTheDocument()
   })
 
   it('does not repeat the total as a balance when nothing has been paid yet', async () => {

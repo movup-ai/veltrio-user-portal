@@ -81,6 +81,7 @@ import {
 import type { BookedInterval, BookingInput } from '@/modules/bookings/types/booking.types'
 import { durationHours, priceBooking } from '@/modules/bookings/utils/booking.pricing'
 import { defaultTripWindow, toDateInput } from '@/modules/bookings/utils/booking.trip-defaults'
+import { returnsElsewhere } from '@/modules/bookings/utils/booking.utils'
 import { BOOKING_TIME_STEP_MINUTES } from '@/modules/bookings/constants/booking.constants'
 
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
@@ -246,11 +247,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
   )
 
   const [returnElsewhere, setReturnElsewhere] = useState(
-    Boolean(
-      restoredDraft &&
-      restoredDraft.returnLocation &&
-      restoredDraft.returnLocation !== restoredDraft.pickupLocation,
-    ),
+    Boolean(restoredDraft && returnsElsewhere(restoredDraft)),
   )
 
   const steps: StepDef[] = STEP_KEYS.map((key) => ({
@@ -1231,13 +1228,16 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
             <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px]">
               <div className="flex flex-col gap-3.5">
                 <ReviewSection title={t('form.review.trip')} onEdit={() => setStepIndex(0)}>
-                  <ReviewRowGrid>
+                  <ReviewRowGrid plain>
                     <ReviewRow label={t('form.fields.pickupLocation')} value={values.pickupLocation || '—'} />
                     <ReviewRow
                       label={t('form.review.pickupAt')}
                       value={format.date(pickupAt, { dateStyle: 'medium', timeStyle: 'short' })}
                     />
-                    <ReviewRow label={t('form.fields.returnLocation')} value={values.returnLocation || '—'} />
+                    {/* The same branch both ways is the rule: a second field would only repeat the first. */}
+                    {returnsElsewhere(values) && (
+                      <ReviewRow label={t('form.fields.returnLocation')} value={values.returnLocation} />
+                    )}
                     <ReviewRow
                       label={t('form.review.returnAt')}
                       value={format.date(returnAt, { dateStyle: 'medium', timeStyle: 'short' })}
@@ -1247,7 +1247,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
 
                 <ReviewSection title={t('form.review.vehicle')} onEdit={() => setStepIndex(0)}>
                   {selectedVehicle ? (
-                    <ReviewRowGrid>
+                    <ReviewRowGrid plain>
                       <ReviewRow
                         label={t('form.review.vehicleName')}
                         value={vehicleDisplayName(selectedVehicle)}
@@ -1266,7 +1266,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
 
                 <ReviewSection title={t('form.review.customer')} onEdit={() => setStepIndex(1)}>
                   {/* Three across, not four — an email needs the extra width to stay on one line. */}
-                  <ReviewRowGrid maxColumns={3}>
+                  <ReviewRowGrid maxColumns={3} plain>
                     <ReviewRow label={t('form.fields.customerName')} value={values.customerName || '—'} />
                     <ReviewRow label={t('form.fields.customerEmail')} value={values.customerEmail || '—'} />
                     <ReviewRow label={t('form.fields.customerPhone')} value={values.customerPhone || '—'} />

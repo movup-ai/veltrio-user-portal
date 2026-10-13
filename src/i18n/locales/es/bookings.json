@@ -327,7 +327,9 @@
       "resendLink": "Reenviar enlace de pago",
       "resendDeposit": "Reenviar enlace del depósito",
       "holdTiming": "Una retención en tarjeta dura unos 7 días: pídela cerca de la recogida para cubrir todo el alquiler.",
-      "holdStarts": "La retención dura unos 7 días desde que el cliente la autoriza."
+      "holdStarts": "La retención dura unos 7 días desde que el cliente la autoriza.",
+      "overpaid": "A reembolsar",
+      "overpaidHint": "Pagado por encima del total tras un cambio. Reembólsalo abajo."
     },
     "manage": {
       "title": "Gestionar reserva",
@@ -348,6 +350,10 @@
         "vehicle_out": "El vehículo está fuera: recíbelo para terminar el alquiler.",
         "rental_over": "El alquiler ya terminó.",
         "booking_cancelled": "Ya está cancelada."
+      },
+      "changeOff": {
+        "not_before_pickup": "El vehículo ya salió: amplía el alquiler o recíbelo de vuelta.",
+        "booking_cancelled": "La reserva está cancelada."
       }
     },
     "renter": {
@@ -359,7 +365,8 @@
       "email": "Correo",
       "phone": "Teléfono",
       "licence": "Licencia",
-      "lifetimeValue": "Valor de por vida"
+      "lifetimeValue": "Valor de por vida",
+      "drivers": "Conductores adicionales"
     },
     "checklist": {
       "title": "Lista de verificación",
@@ -412,14 +419,83 @@
       }
     },
     "activity": {
-      "title": "Actividad"
-    },
-    "events": {
-      "created": "Reserva creada",
-      "depositHold": "Retención de depósito autorizada",
-      "licenceUploaded": "Licencia subida",
-      "confirmationSent": "Correo de confirmación enviado",
-      "vehicleAssigned": "Vehículo asignado"
+      "title": "Actividad",
+      "loadError": "No pudimos cargar la actividad.",
+      "empty": "Aún no ha pasado nada en esta reserva.",
+      "showEarlier_one": "Ver {{count}} evento anterior",
+      "showEarlier_other": "Ver {{count}} eventos anteriores",
+      "showFewer": "Ver menos",
+      "actors": {
+        "staff": "Personal",
+        "renter": "Arrendatario",
+        "system": "Automático"
+      },
+      "events": {
+        "created": "Reserva creada",
+        "requested": "Reserva solicitada",
+        "confirmed": "Reserva confirmada",
+        "declined": "Reserva rechazada",
+        "restored": "Reserva restablecida",
+        "cancelled": "Reserva cancelada",
+        "renter_settled": "Arrendatario confirmado",
+        "dates_changed": "Fechas modificadas",
+        "vehicle_swapped": "Vehículo cambiado",
+        "drivers_changed": "Conductores modificados",
+        "extended": "Alquiler ampliado",
+        "extension_requested": "Ampliación solicitada",
+        "extension_cancelled": "Solicitud de ampliación retirada",
+        "extension_accepted": "Ampliación aceptada por el arrendatario",
+        "picked_up": "Vehículo entregado",
+        "returned": "Vehículo devuelto",
+        "closed": "Reserva cerrada",
+        "payment_link_created": "Enlace de pago creado",
+        "payment_link_shared": "Enlace de pago enviado de nuevo",
+        "deposit_requested": "Depósito solicitado",
+        "deposit_link_shared": "Enlace de depósito enviado de nuevo",
+        "payment_recorded": "Pago registrado",
+        "payment_received": "Pago recibido",
+        "payment_processing": "Pago en camino",
+        "payment_failed": "Pago fallido",
+        "deposit_held": "Retención del depósito autorizada",
+        "deposit_lapsed": "Retención del depósito vencida",
+        "deposit_captured": "Depósito cobrado",
+        "deposit_released": "Depósito liberado",
+        "return_charges_set": "Cargos de devolución guardados",
+        "payment_refunded": "Reembolso emitido",
+        "contract_template_changed": "Términos del contrato cambiados",
+        "contract_issued": "Contrato emitido",
+        "contract_signed": "Contrato firmado",
+        "contract_voided": "Contrato anulado",
+        "other": "Reserva actualizada"
+      },
+      "facts": {
+        "pickupMoved": "Entrega {{from}} → {{to}}",
+        "returnMoved": "Devolución {{from}} → {{to}}",
+        "returnTo": "Devolución {{when}}",
+        "totalMoved": "Total {{from}} → {{to}}",
+        "vehicle": "{{from}} → {{to}} ({{plate}})",
+        "driversAdded": "Añadido {{names}}",
+        "driversRemoved": "Quitado {{names}}",
+        "added": "{{amount}} añadidos",
+        "toPay": "{{amount}} por pagar",
+        "level": "{{label}} {{level}}",
+        "plusDeposit": "+ {{amount}} de depósito",
+        "forExtension": "por la ampliación",
+        "byHand": "devuelto en persona",
+        "charges_one": "{{count}} cargo",
+        "charges_other": "{{count}} cargos",
+        "noCharges": "Sin cargos",
+        "quoted": "«{{message}}»",
+        "signed": {
+          "counter": "en el mostrador",
+          "e_signature": "en el enlace enviado"
+        },
+        "voided": {
+          "booking_changed": "la reserva cambió",
+          "rental_extended": "el alquiler se amplió",
+          "template_changed": "los términos cambiaron"
+        }
+      }
     },
     "actions": {
       "handOver": "Entregar vehículo",
@@ -551,6 +627,75 @@
         "vehicle_unavailable": "No podemos entregar el vehículo",
         "other": "Otro"
       }
+    },
+    "change": {
+      "quote": {
+        "length": "Duración",
+        "rates": "Tarifa",
+        "line": "{{label}} × {{count}}",
+        "priceKept": "Se mantiene el precio actual",
+        "currentTotal": "Total actual",
+        "newTotal": "Nuevo total",
+        "deposit": "Depósito de garantía",
+        "depositChange": "{{from}} → {{to}}",
+        "toPay": "Saldo pendiente",
+        "toRefund": "A reembolsar"
+      },
+      "effects": {
+        "title": "Qué más hace el cambio",
+        "agreement": "El contrato de alquiler se anula. Emítelo de nuevo para que se firme antes de la entrega.",
+        "link": "El enlace que ya se envió deja de funcionar. Envía uno nuevo.",
+        "hold": "Se libera la retención del depósito. Solicítala de nuevo por el nuevo importe.",
+        "refund": "Se le deben {{amount}} a {{name}}. Reembólsalos desde la tarjeta de pago.",
+        "noEmail": "El correo no está configurado, así que {{name}} no será avisado. Avísale tú."
+      },
+      "errors": {
+        "not_before_pickup": "El vehículo ya se entregó, así que las fechas y el vehículo ya no pueden cambiar.",
+        "booking_cancelled": "La reserva está cancelada.",
+        "vehicle_unavailable": "Otra reserva tiene este vehículo en esas fechas.",
+        "vehicle_archived": "Este vehículo está archivado.",
+        "vehicle_not_found": "Este vehículo ya no está en la flota.",
+        "vehicle_removed": "El vehículo de la reserva se eliminó, así que sus fechas no se pueden cotizar. Cambia primero a otro vehículo.",
+        "vehicle_has_no_rates": "Este vehículo no tiene tarifas con las que cotizar el alquiler.",
+        "window_not_ordered": "La devolución tiene que ser posterior a la entrega.",
+        "return_in_past": "Esa hora de devolución ya pasó.",
+        "rental_too_long": "Un alquiler puede durar como máximo 365 días.",
+        "nothing_changed": "La reserva ya está así.",
+        "quote_changed": "El precio cambió mientras esto estaba abierto. Revisa la nueva cifra y confirma de nuevo.",
+        "payment_processing": "El último pago del arrendatario aún se está procesando. Inténtalo de nuevo en un momento."
+      },
+      "dates": {
+        "title": "Modificar fechas",
+        "description": "Mueve la entrega, la devolución o ambas. Todo el alquiler se cotiza de nuevo para sus nuevas fechas.",
+        "pickupDate": "Fecha de entrega",
+        "pickupTime": "Hora de entrega",
+        "returnDate": "Fecha de devolución",
+        "returnTime": "Hora de devolución",
+        "problems": {
+          "notOrdered": "La devolución tiene que ser posterior a la entrega.",
+          "inPast": "Esa hora de devolución ya pasó.",
+          "tooLong": "Un alquiler puede durar como máximo {{days}} días."
+        },
+        "clash": "{{reference}} tiene este vehículo del {{from}} al {{to}}.",
+        "submit": "Guardar fechas",
+        "clashOut": "{{reference}} aún tiene este vehículo fuera. Debía volver el {{to}}."
+      },
+      "swap": {
+        "title": "Cambiar vehículo",
+        "description": "Pon a {{name}} en otro auto para las mismas fechas.",
+        "keepPrice": "Mantener el precio actual",
+        "keepPriceHint": "Para una mejora sin costo, o un cambio que es cosa tuya. Si no, el alquiler se cotiza a las tarifas del nuevo vehículo.",
+        "noneTitle": "No hay otro vehículo al que cambiar",
+        "noneDescription": "Todos los demás vehículos están archivados, en servicio o fuera de circulación.",
+        "submit": "Cambiar vehículo",
+        "vehicle": "Nuevo vehículo",
+        "search": "Busca por nombre o matrícula",
+        "noMatch": "Ningún vehículo coincide."
+      },
+      "drivers": {
+        "title": "Conductores adicionales",
+        "submit": "Guardar conductores"
+      }
     }
   },
   "toast": {
@@ -577,7 +722,11 @@
     "returned": "Vehículo devuelto",
     "returnFailed": "No se pudo registrar la devolución",
     "closed": "Reserva cerrada",
-    "closeFailed": "No se pudo cerrar la reserva"
+    "closeFailed": "No se pudo cerrar la reserva",
+    "changed": "Reserva actualizada",
+    "changedAgreement": "El contrato se anuló: emítelo de nuevo.",
+    "changedDeposit": "La retención del depósito se liberó: solicítala de nuevo.",
+    "changedEmailQueued": "Va en camino un correo a {{name}} con lo que cambió."
   },
   "form": {
     "title": "Nueva reserva",
@@ -648,7 +797,8 @@
       "loadError": "No pudimos cargar la flota.",
       "noneTitle": "No hay vehículos en esta sucursal",
       "noneDescription": "Aquí no hay nada en playa. Pruebe con otra sucursal de recogida.",
-      "forTrip": "{{price}} por este viaje"
+      "forTrip": "{{price}} por este viaje",
+      "outOn": "Fuera con {{reference}}"
     },
     "rate": {
       "hint": "Elegidas según la duración: gana la tarifa que coincide exactamente; si no, la combinación más barata, menos cualquier descuento por duración.",
@@ -733,6 +883,7 @@
       "uploadFailed": "Reserva creada, pero un documento no se subió",
       "uploadFailedDescription": "No se pudo adjuntar: {{documents}}. Puede subirlo de nuevo desde la ficha del cliente.",
       "onFile": "Ya archivado · {{size}}",
+      "sentWith": "Enviado con {{reference}} · {{size}}",
       "view": "Ver {{name}}",
       "replace": "Reemplazar {{name}}",
       "openFailed": "No se pudo abrir el documento",

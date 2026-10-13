@@ -91,6 +91,11 @@ export const CANCEL_REFUSALS = ['not_confirmed', 'vehicle_out', 'rental_over', '
 
 export type CancelRefusal = (typeof CANCEL_REFUSALS)[number]
 
+/** Why the API will not move a booking's dates or vehicle; hints in `bookings:details.manage.changeOff`. */
+export const CHANGE_REFUSALS = ['not_before_pickup', 'booking_cancelled'] as const
+
+export type ChangeRefusal = (typeof CHANGE_REFUSALS)[number]
+
 /** Why the API will not take a request to extend; hints live in the translations. */
 export const EXTENSION_REFUSALS = [
   'not_confirmed',

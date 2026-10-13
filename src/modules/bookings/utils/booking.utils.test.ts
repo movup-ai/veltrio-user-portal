@@ -9,6 +9,8 @@ import {
   customerBookingRow,
   formatRentalDuration,
   formatRentalWindow,
+  renterProfilePath,
+  returnsElsewhere,
   tripCount,
   isOver,
   shownStatus,
@@ -24,7 +26,28 @@ describe('formatRentalWindow', () => {
     // A return with no hour reads as end-of-day, which is when the car is actually due back.
     const window = formatRentalWindow(at(24), at(27))
 
-    expect(window).toMatch(/^Sep 24 · \d{2}:\d{2} → Sep 27 · \d{2}:\d{2}$/)
+    expect(window).toMatch(/^Sep 24 · \d{1,2}:\d{2} [AP]M → Sep 27 · \d{1,2}:\d{2} [AP]M$/)
+  })
+
+  it('tells the morning from the afternoon, as the booking’s own page does', () => {
+    // Local parts, so the clock reads the same in any runner's zone.
+    const local = (day: number, hour: number, minute: number) =>
+      new Date(2026, 8, day, hour, minute).toISOString()
+
+    expect(formatRentalWindow(local(24, 9, 30), local(25, 14, 0))).toBe('Sep 24 · 9:30 AM → Sep 25 · 2:00 PM')
+    expect(formatRentalWindow(local(24, 0, 15), local(24, 12, 0))).toBe(
+      'Sep 24 · 12:15 AM → Sep 24 · 12:00 PM',
+    )
+  })
+
+  it('reads the hour back from either clock', () => {
+    const hour = (window: string) => parseRentalWindow(window)?.fromHour
+
+    expect(hour('Sep 24 · 2:30 PM → Sep 27 · 9:00 AM')).toBe(14)
+    expect(hour('Sep 24 · 12:15 AM → Sep 27 · 9:00 AM')).toBe(0)
+    expect(hour('Sep 24 · 12:00 PM → Sep 27 · 9:00 AM')).toBe(12)
+    // The seeded rows are still written on a 24-hour clock.
+    expect(hour('Sep 24 · 14:30 → Sep 27')).toBe(14)
   })
 
   it('stays readable by the filters that parse it back', () => {
@@ -32,6 +55,22 @@ describe('formatRentalWindow', () => {
     const parts = parseRentalWindow(formatRentalWindow(at(24), at(27)))
 
     expect(parts).toMatchObject({ fromMonth: 8, fromDay: 24, toMonth: 8, toDay: 27 })
+  })
+})
+
+describe('renterProfilePath', () => {
+  it('is the renter’s own page, and nothing for a renter with no customer behind them', () => {
+    expect(renterProfilePath({ id: 'c1' })).toBe('/customers/c1')
+    expect(renterProfilePath({})).toBeUndefined()
+  })
+})
+
+describe('returnsElsewhere', () => {
+  it('is only so when a return branch is named and is not the pickup one', () => {
+    expect(returnsElsewhere({ pickupLocation: 'Miami Beach', returnLocation: 'Orlando Intl.' })).toBe(true)
+    expect(returnsElsewhere({ pickupLocation: 'Miami Beach', returnLocation: 'Miami Beach' })).toBe(false)
+    // Ticked but not picked yet: nothing to show until there is a branch.
+    expect(returnsElsewhere({ pickupLocation: 'Miami Beach', returnLocation: '' })).toBe(false)
   })
 })
 

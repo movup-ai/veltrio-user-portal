@@ -327,7 +327,9 @@
       "resendLink": "Resend payment link",
       "resendDeposit": "Resend deposit link",
       "holdTiming": "A card hold lasts about 7 days, so request it close to pickup to cover the whole rental.",
-      "holdStarts": "The hold lasts about 7 days from when the renter authorises it."
+      "holdStarts": "The hold lasts about 7 days from when the renter authorises it.",
+      "overpaid": "To refund",
+      "overpaidHint": "Paid above the total after a change. Refund it below."
     },
     "manage": {
       "title": "Manage booking",
@@ -348,6 +350,10 @@
         "vehicle_out": "The vehicle is out: take it back to end the rental.",
         "rental_over": "The rental is over.",
         "booking_cancelled": "Already cancelled."
+      },
+      "changeOff": {
+        "not_before_pickup": "The vehicle is out: extend the rental or take it back instead.",
+        "booking_cancelled": "The booking is cancelled."
       }
     },
     "renter": {
@@ -359,7 +365,8 @@
       "email": "Email",
       "phone": "Phone",
       "licence": "Licence",
-      "lifetimeValue": "Lifetime value"
+      "lifetimeValue": "Lifetime value",
+      "drivers": "Additional drivers"
     },
     "checklist": {
       "title": "Checklist",
@@ -412,14 +419,83 @@
       }
     },
     "activity": {
-      "title": "Activity"
-    },
-    "events": {
-      "created": "Booking created",
-      "depositHold": "Deposit hold authorized",
-      "licenceUploaded": "Licence uploaded",
-      "confirmationSent": "Confirmation email sent",
-      "vehicleAssigned": "Vehicle assigned"
+      "title": "Activity",
+      "loadError": "We couldn't load the activity.",
+      "empty": "Nothing has happened on this booking yet.",
+      "showEarlier_one": "Show {{count}} earlier event",
+      "showEarlier_other": "Show {{count}} earlier events",
+      "showFewer": "Show fewer",
+      "actors": {
+        "staff": "Staff",
+        "renter": "Renter",
+        "system": "Automatic"
+      },
+      "events": {
+        "created": "Booking created",
+        "requested": "Reservation requested",
+        "confirmed": "Reservation confirmed",
+        "declined": "Reservation declined",
+        "restored": "Reservation restored",
+        "cancelled": "Booking cancelled",
+        "renter_settled": "Renter confirmed",
+        "dates_changed": "Dates changed",
+        "vehicle_swapped": "Vehicle swapped",
+        "drivers_changed": "Drivers changed",
+        "extended": "Rental extended",
+        "extension_requested": "Extension requested",
+        "extension_cancelled": "Extension request withdrawn",
+        "extension_accepted": "Extension agreed by the renter",
+        "picked_up": "Vehicle handed over",
+        "returned": "Vehicle returned",
+        "closed": "Booking closed",
+        "payment_link_created": "Payment link created",
+        "payment_link_shared": "Payment link sent again",
+        "deposit_requested": "Deposit requested",
+        "deposit_link_shared": "Deposit link sent again",
+        "payment_recorded": "Payment recorded",
+        "payment_received": "Payment received",
+        "payment_processing": "Payment on its way",
+        "payment_failed": "Payment failed",
+        "deposit_held": "Deposit hold authorized",
+        "deposit_lapsed": "Deposit hold lapsed",
+        "deposit_captured": "Deposit captured",
+        "deposit_released": "Deposit released",
+        "return_charges_set": "Return charges saved",
+        "payment_refunded": "Refund issued",
+        "contract_template_changed": "Agreement terms changed",
+        "contract_issued": "Agreement issued",
+        "contract_signed": "Agreement signed",
+        "contract_voided": "Agreement voided",
+        "other": "Booking updated"
+      },
+      "facts": {
+        "pickupMoved": "Pickup {{from}} → {{to}}",
+        "returnMoved": "Return {{from}} → {{to}}",
+        "returnTo": "Return {{when}}",
+        "totalMoved": "Total {{from}} → {{to}}",
+        "vehicle": "{{from}} → {{to}} ({{plate}})",
+        "driversAdded": "Added {{names}}",
+        "driversRemoved": "Removed {{names}}",
+        "added": "{{amount}} added",
+        "toPay": "{{amount}} to pay",
+        "level": "{{label}} {{level}}",
+        "plusDeposit": "+ {{amount}} deposit",
+        "forExtension": "for the extension",
+        "byHand": "handed back in person",
+        "charges_one": "{{count}} charge",
+        "charges_other": "{{count}} charges",
+        "noCharges": "No charges",
+        "quoted": "“{{message}}”",
+        "signed": {
+          "counter": "at the counter",
+          "e_signature": "on the link sent"
+        },
+        "voided": {
+          "booking_changed": "the booking changed",
+          "rental_extended": "the rental was extended",
+          "template_changed": "the terms changed"
+        }
+      }
     },
     "actions": {
       "handOver": "Hand over vehicle",
@@ -551,6 +627,75 @@
         "vehicle_unavailable": "We can't provide the vehicle",
         "other": "Other"
       }
+    },
+    "change": {
+      "quote": {
+        "length": "Duration",
+        "rates": "Rate",
+        "line": "{{label}} × {{count}}",
+        "priceKept": "Current price kept",
+        "currentTotal": "Current total",
+        "newTotal": "New total",
+        "deposit": "Security deposit",
+        "depositChange": "{{from}} → {{to}}",
+        "toPay": "Balance due",
+        "toRefund": "To refund"
+      },
+      "effects": {
+        "title": "What the change also does",
+        "agreement": "The rental agreement is voided. Issue it again to be signed before pickup.",
+        "link": "The link already sent stops working. Send a new one.",
+        "hold": "The deposit hold is released. Request it again for the new amount.",
+        "refund": "{{amount}} is owed back to {{name}}. Refund it from the payment card.",
+        "noEmail": "Email isn't set up, so {{name}} won't be told. Let them know yourself."
+      },
+      "errors": {
+        "not_before_pickup": "The vehicle has been picked up, so the dates and the vehicle can no longer change.",
+        "booking_cancelled": "The booking is cancelled.",
+        "vehicle_unavailable": "Another booking has this vehicle on those dates.",
+        "vehicle_archived": "This vehicle has been archived.",
+        "vehicle_not_found": "This vehicle is no longer in the fleet.",
+        "vehicle_removed": "The booking's vehicle was deleted, so its dates can't be priced. Swap in another vehicle first.",
+        "vehicle_has_no_rates": "This vehicle has no rates to price the rental at.",
+        "window_not_ordered": "The return has to be after the pickup.",
+        "return_in_past": "That return time has already passed.",
+        "rental_too_long": "A rental can be at most 365 days.",
+        "nothing_changed": "The booking is already like this.",
+        "quote_changed": "The price changed while this was open. Check the new figure and confirm again.",
+        "payment_processing": "The renter's last payment is still going through. Try again in a moment."
+      },
+      "dates": {
+        "title": "Modify dates",
+        "description": "Move the pickup, the return, or both. The whole rental is priced again for its new dates.",
+        "pickupDate": "Pickup date",
+        "pickupTime": "Pickup time",
+        "returnDate": "Return date",
+        "returnTime": "Return time",
+        "problems": {
+          "notOrdered": "The return has to be after the pickup.",
+          "inPast": "That return time has already passed.",
+          "tooLong": "A rental can be at most {{days}} days."
+        },
+        "clash": "{{reference}} has this vehicle from {{from}} to {{to}}.",
+        "submit": "Save new dates",
+        "clashOut": "{{reference}} still has this vehicle out. It was due back {{to}}."
+      },
+      "swap": {
+        "title": "Swap vehicle",
+        "description": "Put {{name}} in a different car for the same dates.",
+        "keepPrice": "Keep the current price",
+        "keepPriceHint": "For a free upgrade, or a swap that is your doing. Otherwise the rental is priced at the new vehicle's rates.",
+        "noneTitle": "No other vehicle to swap to",
+        "noneDescription": "Every other vehicle is archived, in service or off the road.",
+        "submit": "Swap vehicle",
+        "vehicle": "New vehicle",
+        "search": "Search by name or plate",
+        "noMatch": "No vehicle matches."
+      },
+      "drivers": {
+        "title": "Additional drivers",
+        "submit": "Save drivers"
+      }
     }
   },
   "toast": {
@@ -577,7 +722,11 @@
     "returned": "Vehicle returned",
     "returnFailed": "Couldn't return the vehicle",
     "closed": "Booking closed",
-    "closeFailed": "Couldn't close the booking"
+    "closeFailed": "Couldn't close the booking",
+    "changed": "Booking updated",
+    "changedAgreement": "The agreement was voided: issue it again.",
+    "changedDeposit": "The deposit hold was released: request it again.",
+    "changedEmailQueued": "An email is on its way to {{name}} with what changed."
   },
   "form": {
     "title": "New booking",
@@ -648,7 +797,8 @@
       "loadError": "We couldn't load the fleet.",
       "noneTitle": "No vehicles at this branch",
       "noneDescription": "Nothing is on the forecourt here. Try another pickup location.",
-      "forTrip": "{{price}} for this trip"
+      "forTrip": "{{price}} for this trip",
+      "outOn": "Out on {{reference}}"
     },
     "rate": {
       "hint": "Chosen for the trip length: a rate that fits it exactly wins, otherwise the cheapest combination, less any length-of-rental discount.",
@@ -733,6 +883,7 @@
       "uploadFailed": "Booking created, but a document did not upload",
       "uploadFailedDescription": "{{documents}} could not be attached. You can upload it again from the renter's record.",
       "onFile": "Already on file · {{size}}",
+      "sentWith": "Sent with {{reference}} · {{size}}",
       "view": "View {{name}}",
       "replace": "Replace {{name}}",
       "openFailed": "Could not open the document",

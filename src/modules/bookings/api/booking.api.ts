@@ -15,12 +15,14 @@ import type {
   BookingInput,
   ConditionInput,
   CancelInput,
+  ChangeRequest,
   DeclineInput,
   RenterAnswer,
 } from '../types/booking.types'
 import { buildBookingDetails } from '../utils/booking.details'
 import { bookingToTuple } from '../utils/booking.utils'
 import {
+  toActivityEvent,
   toBooking,
   toBookingFilterQuery,
   toBookingListQuery,
@@ -31,17 +33,24 @@ import {
   toConditionPayload,
   toCancelPayload,
   toCancelledBooking,
+  toChangePayload,
+  toChangeQuote,
+  toChangeQuotePayload,
+  toChangedBooking,
   toDeclinePayload,
   toInterval,
   toNotifiedBooking,
   toTabCounts,
   type BookedIntervalWire,
+  type BookingActivityWire,
   type BookingListParams,
   type BookingCancelledWire,
+  type BookingChangedWire,
   type BookingNotifiedWire,
   type BookingStatsWire,
   type BookingTabCountsWire,
   type BookingWire,
+  type ChangeQuoteWire,
 } from './booking.mapper'
 
 export { ExportTooLargeError }
@@ -127,6 +136,24 @@ export const bookingApi = {
       .post<BookingCancelledWire>(`/bookings/${reference}/cancel`, toCancelPayload(input))
       .then((r) => toCancelledBooking(r.data)),
 
+  /** What has happened to the booking, newest first, as the API's audit log has it. */
+  activity: (reference: string) =>
+    apiClient
+      .get<BookingActivityWire[]>(`/bookings/${reference}/activity`)
+      .then((r) => r.data.map(toActivityEvent)),
+
+  /** What other dates or another vehicle would cost. Changes nothing; refused when the car is taken. */
+  quoteChange: (reference: string, request: ChangeRequest) =>
+    apiClient
+      .post<ChangeQuoteWire>(`/bookings/${reference}/changes/quote`, toChangeQuotePayload(request))
+      .then((r) => toChangeQuote(r.data)),
+
+  /** Moves the dates or the vehicle before pickup, at the quote's `total` or not at all. */
+  change: (reference: string, request: ChangeRequest, total: number) =>
+    apiClient
+      .post<BookingChangedWire>(`/bookings/${reference}/changes`, toChangePayload(request, total))
+      .then((r) => toChangedBooking(r.data)),
+
   /** Undoes a decline: pending again, not accepted. Refused once the pickup time has passed. */
   restore: (reference: string) =>
     apiClient
@@ -187,9 +214,12 @@ export const bookingApi = {
       .get<BookingTabCountsWire>('/bookings/tab-counts', { params: toBookingFilterQuery(filters) })
       .then((r) => toTabCounts(r.data)),
 
-  /** Every live booking touching the window — what the form greys taken vehicles out with. */
-  schedule: (from: string, to: string) =>
+  /**
+   * Every live booking touching the window — what the form greys taken vehicles out with. For
+   * one vehicle when given: a calendar reads far too long a window to take the whole fleet's.
+   */
+  schedule: (from: string, to: string, vehicleId?: string) =>
     apiClient
-      .get<BookedIntervalWire[]>('/bookings/schedule', { params: { from, to } })
+      .get<BookedIntervalWire[]>('/bookings/schedule', { params: { from, to, vehicleId } })
       .then((r) => r.data.map(toInterval)),
 }

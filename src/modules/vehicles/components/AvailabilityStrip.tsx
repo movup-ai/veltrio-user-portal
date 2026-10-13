@@ -49,7 +49,7 @@ export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; bu
           icon={CalendarDays}
           label={t('availability.openCalendar')}
           className="!text-[11.5px]"
-          onClick={() => navigate(`/calendar?${new URLSearchParams({ q: vehicle.plate })}`)}
+          onClick={() => navigate('/calendar')}
         />
       </div>
 

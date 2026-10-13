@@ -42,12 +42,14 @@ const ACTIONS: PaymentActions = {
   returnVehicle: { allowed: false, reason: 'not_on_rental' },
   close: { allowed: false, reason: 'not_awaiting_close' },
   cancel: { allowed: true },
+  change: { allowed: true },
 }
 const UNPAID: BookingPayments = {
   available: true,
   state: 'unpaid',
   currency: 'USD',
   total: 319,
+  overpaid: 0,
   paid: 0,
   refunded: 0,
   balance: 319,

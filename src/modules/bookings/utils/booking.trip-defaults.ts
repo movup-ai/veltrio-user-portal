@@ -11,7 +11,7 @@ export function toDateInput(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-function toTimeInput(date: Date): string {
+export function toTimeInput(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 

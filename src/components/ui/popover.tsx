@@ -22,6 +22,10 @@ export function PopoverContent({
           'data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out',
           className,
         )}
+        // Kept from the page: a dialog's scroll lock cancels wheel and touch moves outside itself,
+        // and a popover opened from one is portalled out of it, so its list would not scroll.
+        onWheel={(event) => event.stopPropagation()}
+        onTouchMove={(event) => event.stopPropagation()}
         {...props}
       />
     </PopoverPrimitive.Portal>

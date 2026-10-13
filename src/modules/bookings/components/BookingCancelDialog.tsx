@@ -32,6 +32,7 @@ import {
 } from '@/modules/payments/utils/cancellation.utils'
 import { DECLINE_MESSAGE_MAX } from '../constants/booking.constants'
 import { CANCEL_REASONS, type CancelInput, type CancelReason } from '../types/booking.types'
+import { BookingEffects } from './BookingEffects'
 
 interface BookingCancelDialogProps {
   open: boolean
@@ -404,19 +405,5 @@ function Consequences({ quote, split, renterName }: ConsequencesProps) {
       : t('details.cancelDialog.effects.noEmail', { name: renterName }),
   ].filter((line): line is string => Boolean(line))
 
-  return (
-    <div className="flex flex-col gap-1.5">
-      <p className="text-fg-3 m-0 text-[11px] font-semibold tracking-wide uppercase">
-        {t('details.cancelDialog.effects.title')}
-      </p>
-      <ul
-        aria-label={t('details.cancelDialog.effects.title')}
-        className="m-0 flex list-disc flex-col gap-1 pl-5 text-[13px]"
-      >
-        {lines.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ul>
-    </div>
-  )
+  return <BookingEffects title={t('details.cancelDialog.effects.title')} lines={lines} />
 }

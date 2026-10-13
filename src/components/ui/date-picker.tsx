@@ -14,6 +14,8 @@ export interface DatePickerProps {
   min?: string
   /** Days after this date are struck through and unselectable. Also `YYYY-MM-DD`. */
   max?: string
+  /** Days in between that cannot be picked either, struck through the same way. Also `YYYY-MM-DD`. */
+  blocked?: string[]
   /**
    * Swaps the month label for month/year dropdowns, bounded by `fromYear`/`toYear`. Worth it
    * for dates far from today (a date of birth) where paging month by month is unusable.
@@ -49,6 +51,7 @@ export function DatePicker({
   onChange,
   min,
   max,
+  blocked,
   yearRange,
   placeholder,
   invalid,
@@ -68,6 +71,7 @@ export function DatePicker({
   const disabledDays = [
     ...(minDate ? [{ before: minDate }] : []),
     ...(maxDate ? [{ after: maxDate }] : []),
+    ...(blocked?.length ? [(date: Date) => blocked.includes(toValue(date))] : []),
   ]
 
   return (
@@ -88,7 +92,9 @@ export function DatePicker({
           {...aria}
         >
           <span className={cn('flex-1 text-left', !selected && 'text-muted-foreground')}>
-            {selected ? format.date(selected, { dateStyle: 'medium' }) : (placeholder ?? t('datePlaceholder'))}
+            {selected
+              ? format.date(selected, { dateStyle: 'medium' })
+              : (placeholder ?? t('datePlaceholder'))}
           </span>
           <CalendarDays className="text-fg-4 size-4 shrink-0" aria-hidden />
         </button>

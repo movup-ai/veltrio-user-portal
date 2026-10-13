@@ -116,3 +116,8 @@ export interface CustomerDocument {
   sizeBytes: number
   createdAt: string
 }
+
+/** A scan the customer sent with a reservation of their own: theirs, not the company's copy. */
+export interface CustomerBookingDocument extends CustomerDocument {
+  bookingReference: string
+}

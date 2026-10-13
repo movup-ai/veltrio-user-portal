@@ -208,6 +208,25 @@ describe('exactCharges', () => {
     expect(sum(lines.map((l) => l.amount))).toBe(booking.pricing.total)
   })
 
+  it('states what the drivers cost a day between them, not the first one’s rate', () => {
+    // One at $12 and one waived: quoting the first alone, or the second, would not add up to $48.
+    const booking = {
+      rate: { lines: [] },
+      pricing: { discount: null, drivers: 48, taxRatePct: 0, tax: 0, total: 48 },
+      additionalDrivers: [
+        { id: 'd1', name: 'Dana Ortiz', licenceNumber: 'FL 1', pricePerDay: 0 },
+        { id: 'd2', name: 'Sam Okafor', licenceNumber: 'FL 2', pricePerDay: 12 },
+      ],
+      fees: [],
+    } as unknown as Booking
+
+    expect(exactCharges(booking)[0]).toEqual({
+      key: 'additionalDriver',
+      meta: { count: 2, rate: 12 },
+      amount: 48,
+    })
+  })
+
   it('keeps the cap on an automatic hourly day, so the line can say so', () => {
     const booking = {
       rate: {

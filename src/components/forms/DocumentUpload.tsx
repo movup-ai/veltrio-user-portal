@@ -95,8 +95,8 @@ export function DocumentUpload({
           )}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] font-semibold">{value.name}</span>
-          <span className="text-fg-4 block text-[12px]">{formatSize(value.size)}</span>
+          <span className="block truncate text-[13px] font-semibold">{value.name}</span>
+          <span className="text-fg-4 block text-[11.5px]">{formatSize(value.size)}</span>
         </span>
         {/* An image opens full size; anything else (a PDF) is handed to the browser.
             The file is local, so this needs no network round trip. */}
@@ -170,8 +170,8 @@ export function DocumentUpload({
     >
       <Paperclip className="text-fg-4 size-4 shrink-0" aria-hidden />
       <span className="min-w-0">
-        <span className="block text-[13.5px] font-semibold">{t('upload.prompt')}</span>
-        <span className="text-fg-4 block text-[12px]">{t('upload.hint', { size: MAX_FILE_SIZE_MB })}</span>
+        <span className="block text-[13px] font-semibold">{t('upload.prompt')}</span>
+        <span className="text-fg-4 block text-[11.5px]">{t('upload.hint', { size: MAX_FILE_SIZE_MB })}</span>
       </span>
       <input
         ref={inputRef}

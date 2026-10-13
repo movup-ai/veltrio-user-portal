@@ -8,6 +8,25 @@ export const BOOKING_TIME_STEP_MINUTES = 30
 /** Mirrors DECLINE_MESSAGE_LENGTH in the API (app/modules/bookings/models.py). */
 export const DECLINE_MESSAGE_MAX = 500
 
+/** What the API answers a change of dates or vehicle it turns down with; words in `details.change.errors`. */
+export const CHANGE_ERRORS = [
+  'not_before_pickup',
+  'booking_cancelled',
+  'vehicle_unavailable',
+  'vehicle_archived',
+  'vehicle_not_found',
+  'vehicle_removed',
+  'vehicle_has_no_rates',
+  'window_not_ordered',
+  'return_in_past',
+  'rental_too_long',
+  'nothing_changed',
+  'quote_changed',
+  'payment_processing',
+] as const
+
+export type ChangeError = (typeof CHANGE_ERRORS)[number]
+
 /** Mirror the API's condition limits (app/modules/bookings/schemas.py and models.py). */
 export const CONDITION_NOTES_MAX = 2000
 export const MAX_CONDITION_PHOTO_BYTES = 10 * 1024 * 1024

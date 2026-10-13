@@ -15,7 +15,10 @@ export const bookingKeys = {
   stats: () => [...bookingKeys.all, 'stats'] as const,
   tabCounts: (filters: BookingFilters) => [...bookingKeys.all, 'tabCounts', filters] as const,
   detail: (reference: string) => [...bookingKeys.all, 'detail', reference] as const,
+  activity: (reference: string) => [...bookingKeys.all, 'activity', reference] as const,
   schedule: (from: string, to: string) => [...bookingKeys.all, 'schedule', from, to] as const,
+  vehicleHolds: (vehicleId: string, from: string, to: string) =>
+    [...bookingKeys.all, 'schedule', 'vehicle', vehicleId, from, to] as const,
   calendar: (from: string, to: string) => [...bookingKeys.all, 'calendar', from, to] as const,
 }
 
@@ -67,6 +70,14 @@ export function useBookingDetails(reference: string | undefined) {
   })
 }
 
+/** Under the bookings key: whatever acts on a booking re-reads it, and so what it just did. */
+export function useBookingActivity(reference: string) {
+  return useQuery({
+    queryKey: bookingKeys.activity(reference),
+    queryFn: () => bookingApi.activity(reference),
+  })
+}
+
 /**
  * Live bookings touching a window. Disabled until the window is real — a reversed or
  * half-entered range has nothing to check against.
@@ -91,6 +102,15 @@ export function useBookingSchedule(from: string, to: string, enabled: boolean) {
     isStale: query.isPlaceholderData,
     isReady: enabled && query.data !== undefined && !query.isPlaceholderData,
   }
+}
+
+/** One vehicle's live bookings over a long window: what a calendar strikes its taken days out with. */
+export function useVehicleHolds(vehicleId: string | undefined, from: string, to: string) {
+  return useQuery({
+    queryKey: bookingKeys.vehicleHolds(vehicleId ?? '', from, to),
+    queryFn: () => bookingApi.schedule(from, to, vehicleId),
+    enabled: Boolean(vehicleId),
+  })
 }
 
 /**

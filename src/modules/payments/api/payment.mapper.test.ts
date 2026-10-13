@@ -4,6 +4,7 @@ import {
   toCancellationQuote,
   toExtensionPayload,
   toExtensionQuote,
+  toPaymentActions,
   toPaymentListQuery,
   toPaymentRow,
   toPaymentStats,
@@ -234,6 +235,33 @@ describe('toExtensionPayload', () => {
       returnAt: '2026-10-12T14:00:00Z',
       amountCents: 1999,
     })
+  })
+})
+
+describe('toPaymentActions', () => {
+  const on = { allowed: true, reason: null }
+  const wire = {
+    sendLink: on,
+    linkIncludesDeposit: false,
+    markPaid: on,
+    requestDeposit: on,
+    releaseDeposit: on,
+    setReturnCharges: on,
+    pickUp: on,
+    returnVehicle: on,
+    close: on,
+    cancel: on,
+    change: on,
+  }
+
+  it('says whether the dates and the vehicle can still change, and why not', () => {
+    const change = (reason: string) =>
+      toPaymentActions({ ...wire, change: { allowed: false, reason } }).change
+
+    expect(toPaymentActions(wire).change).toEqual({ allowed: true, reason: undefined })
+    expect(change('not_before_pickup')).toEqual({ allowed: false, reason: 'not_before_pickup' })
+    // Off all the same, without words this portal does not have.
+    expect(change('something_new')).toEqual({ allowed: false, reason: undefined })
   })
 })
 

@@ -56,9 +56,10 @@
   },
   "documents": {
     "title": "Documentos",
-    "description": "La licencia y el seguro escaneados en la ficha de este cliente.",
+    "description": "Los escaneos de licencia y seguro en el expediente de este cliente, y los que envió con una reserva.",
     "loading": "Cargando documentos…",
     "loadError": "No pudimos cargar los documentos de este cliente.",
+    "sentLoadError": "No pudimos cargar los escaneos enviados con las reservas.",
     "uploading": "Subiendo…",
     "replace": "Reemplazar {{document}}",
     "none": "Ninguno registrado",

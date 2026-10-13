@@ -102,6 +102,43 @@ export interface BookingCancellation {
   at: string
 }
 
+/** Other dates, another vehicle, other drivers. What is left out stays as the booking has it. */
+export interface ChangeRequest {
+  pickupAt?: string
+  returnAt?: string
+  vehicleId?: string
+  /** The whole list as it should stand: an empty one takes every driver off. */
+  additionalDrivers?: AdditionalDriver[]
+  /** For a swap alone: the booking keeps its price, whatever the new vehicle's rates. */
+  keepPrice?: boolean
+}
+
+/** The booking as a change would leave it. Asking changes nothing. Amounts in currency units. */
+export interface ChangeQuote {
+  pickupAt: string
+  returnAt: string
+  vehicleId: string
+  vehicleName: string
+  vehiclePlate: string
+  previousTotal: number
+  total: number
+  /** The rates the rental would be billed at; the ones it has now when the price is kept. */
+  lines: BookingRateLine[]
+  previousDeposit: number
+  deposit: number
+  /** Still to pay before pickup, or paid above the new total. At most one is above zero. */
+  balance: number
+  overpaid: number
+  /** An agreement is in force and would be voided, to be issued again. */
+  voidsAgreement: boolean
+  /** A payment or deposit link is out for an amount that would no longer be right. */
+  withdrawsLink: boolean
+  /** A deposit hold is for another amount, so it would be let go. */
+  releasesDeposit: boolean
+  /** False while the API's email is switched off: the change then tells the renter nothing. */
+  emailsRenter: boolean
+}
+
 export interface BookingPayment {
   state: PaymentState
   paid: number
@@ -522,21 +559,22 @@ export interface BookingChargeLine {
   amount: number
 }
 
-/** Events on the booking's audit trail. Labels live in `bookings:details.events.<key>`. */
-export const BOOKING_EVENTS = [
-  'created',
-  'depositHold',
-  'licenceUploaded',
-  'confirmationSent',
-  'vehicleAssigned',
-] as const
-export type BookingEvent = (typeof BOOKING_EVENTS)[number]
+/** Who took an action on a booking: a member of staff, the renter, or nobody (the bank, a timer). */
+export interface ActivityActor {
+  kind: 'staff' | 'renter' | 'system'
+  /** A member of staff's name; absent for the other two, and for one since removed. */
+  name?: string
+}
 
-export interface BookingEventEntry {
-  key: BookingEvent
+/** One thing that happened to a booking, as the API's audit log has it. */
+export interface BookingActivityEvent {
+  id: string
+  /** The API's name for the action; `booking.activity.ts` knows which have words here. */
+  type: string
   at: string
-  /** Interpolation values for the event's detail line — channel, amount, plate, and so on. */
-  meta?: Record<string, string | number>
+  actor: ActivityActor
+  /** What the action needs said beside it, by `type`. Amounts in currency units. */
+  detail: Record<string, unknown>
 }
 
 export interface BookingRenter {
@@ -608,8 +646,9 @@ export interface BookingDetails {
 
   charges: BookingChargeLine[]
   total: number
+  /** Who else is named on the agreement to drive, besides the renter. */
+  additionalDrivers: AdditionalDriver[]
   checks: BookingCheckStep[]
-  events: BookingEventEntry[]
   renter: BookingRenter
   request?: BookingRequest
   renterMismatch?: RenterMismatch

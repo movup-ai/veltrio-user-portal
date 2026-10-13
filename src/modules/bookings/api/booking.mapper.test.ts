@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  toActivityEvent,
   toBooking,
   toBookingFilterQuery,
   toBookingListQuery,
@@ -8,6 +9,10 @@ import {
   toBookingStats,
   toCancelPayload,
   toCancelledBooking,
+  toChangePayload,
+  toChangeQuote,
+  toChangeQuotePayload,
+  toChangedBooking,
   toDeclinePayload,
   toInterval,
   toTabCounts,
@@ -189,7 +194,7 @@ describe('toBookingLists', () => {
       'Toyota Camry',
       'ABC1234',
       // Both ends carry a time; the run-time zone decides the clock, so it is not pinned here.
-      expect.stringMatching(/^Oct 1 · \d{2}:\d{2} → Oct 5 · \d{2}:\d{2}$/),
+      expect.stringMatching(/^Oct 1 · \d{1,2}:\d{2} [AP]M → Oct 5 · \d{1,2}:\d{2} [AP]M$/),
       '4 days',
       'Downtown',
       'Confirmed',
@@ -700,6 +705,126 @@ describe('a cancelled booking', () => {
       keepCents: 1999,
       requestId: 'r1',
     })
+  })
+})
+
+describe('toActivityEvent', () => {
+  it('reads every amount in currency units, whatever the action calls it', () => {
+    const event = toActivityEvent({
+      id: 'e1',
+      type: 'dates_changed',
+      at: '2026-10-14T03:44:00Z',
+      actor: { kind: 'staff', name: 'Pat Owner' },
+      detail: {
+        previousTotalCents: 23540,
+        totalCents: 35310,
+        returnAt: '2026-10-26T14:00:00Z',
+        added: ['Sam Okafor'],
+      },
+    })
+
+    expect(event).toEqual({
+      id: 'e1',
+      type: 'dates_changed',
+      at: '2026-10-14T03:44:00Z',
+      actor: { kind: 'staff', name: 'Pat Owner' },
+      detail: {
+        previousTotal: 235.4,
+        total: 353.1,
+        returnAt: '2026-10-26T14:00:00Z',
+        added: ['Sam Okafor'],
+      },
+    })
+  })
+
+  it('leaves the renter and the system without a name, and an old entry without a detail', () => {
+    const event = toActivityEvent({
+      id: 'e2',
+      type: 'payment_received',
+      at: '2026-10-14T03:44:00Z',
+      actor: { kind: 'renter', name: null },
+      detail: {},
+    })
+
+    expect(event.actor).toEqual({ kind: 'renter', name: undefined })
+    expect(event.detail).toEqual({})
+  })
+})
+
+describe('a change of dates or vehicle', () => {
+  it('reads the quote in currency units', () => {
+    const quote = toChangeQuote({
+      pickupAt: '2026-10-20T14:00:00Z',
+      returnAt: '2026-10-26T14:00:00Z',
+      vehicleId: 'v2',
+      vehicleName: 'Ford Explorer',
+      vehiclePlate: 'SUV4321',
+      previousTotalCents: 23540,
+      totalCents: 35310,
+      lines: [{ optionId: 'o1', label: 'Daily', basis: 'day', rateCents: 5500, count: 6, cappedHours: null }],
+      previousDepositCents: 35000,
+      depositCents: 20000,
+      balanceCents: 11770,
+      overpaidCents: 0,
+      voidsAgreement: true,
+      withdrawsLink: false,
+      releasesDeposit: true,
+      emailsRenter: true,
+    })
+
+    expect(quote).toMatchObject({
+      vehicleId: 'v2',
+      previousTotal: 235.4,
+      total: 353.1,
+      previousDeposit: 350,
+      deposit: 200,
+      balance: 117.7,
+      overpaid: 0,
+      voidsAgreement: true,
+      releasesDeposit: true,
+    })
+    expect(quote.lines).toEqual([
+      { optionId: 'o1', label: 'Daily', basis: 'day', rate: 55, count: 6, cappedHours: undefined },
+    ])
+  })
+
+  it('sends only what is changing, since the API refuses a field it does not know', () => {
+    expect(toChangeQuotePayload({ returnAt: '2026-10-26T14:00:00Z' })).toEqual({
+      returnAt: '2026-10-26T14:00:00Z',
+    })
+    expect(toChangeQuotePayload({ vehicleId: 'v2', keepPrice: true })).toEqual({
+      vehicleId: 'v2',
+      keepPrice: true,
+    })
+    expect(toChangeQuotePayload({ vehicleId: 'v2', keepPrice: false })).toEqual({ vehicleId: 'v2' })
+  })
+
+  it('sends the drivers as the whole list, in cents, and an empty one to take them all off', () => {
+    const sam = { id: 'd1', name: ' Sam Okafor ', licenceNumber: ' FL 9911 ', pricePerDay: 19.99 }
+
+    expect(toChangeQuotePayload({ additionalDrivers: [sam] })).toEqual({
+      additionalDrivers: [{ id: 'd1', name: 'Sam Okafor', licenceNumber: 'FL 9911', pricePerDayCents: 1999 }],
+    })
+    // Left out, the booking keeps its drivers; sent empty, it loses them.
+    expect(toChangeQuotePayload({ additionalDrivers: [] })).toEqual({ additionalDrivers: [] })
+    expect(toChangeQuotePayload({ returnAt: '2026-10-26T14:00:00Z' })).not.toHaveProperty('additionalDrivers')
+  })
+
+  it('sends the quoted total back in whole cents, so it matches what the API gave', () => {
+    // 19.99 * 100 is 1998.9999999999998 in floating point.
+    expect(toChangePayload({ vehicleId: 'v2' }, 19.99)).toEqual({ vehicleId: 'v2', totalCents: 1999 })
+  })
+
+  it('reads what the change took back with it', () => {
+    const result = toChangedBooking({
+      ...wire,
+      emailQueued: false,
+      agreementVoided: true,
+      depositReleased: true,
+    })
+
+    expect(result).toMatchObject({ emailQueued: false, agreementVoided: true, depositReleased: true })
+    expect(result.booking.reference).toBe('BK-10000')
   })
 })
 

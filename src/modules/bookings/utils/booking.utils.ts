@@ -28,24 +28,36 @@ export function bookingColumns(t: TFunction<'bookings'>) {
 
 /**
  * A BookingTuple stores pre-formatted display strings, and the dashboard's seeded ones are
- * English ("Sep 14 · 09:30 → Sep 18", "4 days", "$1,240"). API bookings are rendered the same
+ * English ("Sep 14 · 9:30 AM → Sep 18", "4 days", "$1,240"). API bookings are rendered the same
  * way so the ordinal/total parsers in booking.filters.ts keep working. The tuple goes away once
  * the list page reads Booking objects directly.
  */
 const TUPLE_LANGUAGE = 'en'
 
 /**
- * "Sep 14 · 09:30 → Sep 18 · 14:00". Both ends carry their time: a counter handing over a car
- * needs the return hour as much as the pickup one, and "→ Sep 18" alone reads as end-of-day.
+ * "Sep 14 · 9:30 AM → Sep 18 · 2:00 PM". Both ends carry their time: a counter handing over a
+ * car needs the return hour as much as the pickup one, and "→ Sep 18" alone reads as end-of-day.
  */
 export function formatRentalWindow(pickupAt: string, returnAt: string): string {
   const day = { month: 'short', day: 'numeric' } as const
-  const clock = { hour: '2-digit', minute: '2-digit', hour12: false } as const
+  const clock = { hour: 'numeric', minute: '2-digit', hour12: true } as const
   const endpoint = (iso: string) => {
     const at = new Date(iso)
-    return `${formatDateIn(TUPLE_LANGUAGE, at, day)} · ${formatDateIn(TUPLE_LANGUAGE, at, clock)}`
+    // Browsers put a narrow no-break space before AM/PM; a plain one keeps the text searchable.
+    const time = formatDateIn(TUPLE_LANGUAGE, at, clock).replace(/\s/g, ' ')
+    return `${formatDateIn(TUPLE_LANGUAGE, at, day)} · ${time}`
   }
   return `${endpoint(pickupAt)} → ${endpoint(returnAt)}`
+}
+
+/** The renter's own customer page; undefined for one with no customer behind them. */
+export function renterProfilePath(renter: { id?: string }): string | undefined {
+  return renter.id ? `/customers/${renter.id}` : undefined
+}
+
+/** Whether the car comes back to another branch than it leaves from, once that branch is named. */
+export function returnsElsewhere(trip: { pickupLocation: string; returnLocation: string }): boolean {
+  return Boolean(trip.returnLocation) && trip.returnLocation !== trip.pickupLocation
 }
 
 /**

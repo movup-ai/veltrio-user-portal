@@ -15,6 +15,8 @@ interface DocumentOnFileProps {
   document: CustomerDocument
   /** Lets a newer scan replace this one. Absent for a viewer who may not, and so is the button. */
   onReplace?: () => void
+  /** The reservation the renter sent it with, for a scan that is theirs and not on file. */
+  sentWith?: string
   className?: string
 }
 
@@ -31,7 +33,13 @@ function formatSize(bytes: number): string {
  * expires in minutes, and every issue is recorded in the audit log. An image gets a thumbnail
  * and opens full size in a dialog; a PDF gets an icon and downloads.
  */
-export function DocumentOnFile({ customerId, document, onReplace, className }: DocumentOnFileProps) {
+export function DocumentOnFile({
+  customerId,
+  document,
+  onReplace,
+  sentWith,
+  className,
+}: DocumentOnFileProps) {
   const { t } = useTranslation('bookings')
   const queryClient = useQueryClient()
   const isImage = isImageDocument(document.contentType)
@@ -117,9 +125,14 @@ export function DocumentOnFile({ customerId, document, onReplace, className }: D
         </button>
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] font-semibold">{document.name}</span>
-          <span className="text-fg-4 block text-[12px]">
-            {t('form.documents.onFile', { size: formatSize(document.sizeBytes) })}
+          <span className="block truncate text-[13px] font-semibold">{document.name}</span>
+          <span className="text-fg-4 block text-[11.5px]">
+            {sentWith
+              ? t('form.documents.sentWith', {
+                  reference: sentWith,
+                  size: formatSize(document.sizeBytes),
+                })
+              : t('form.documents.onFile', { size: formatSize(document.sizeBytes) })}
           </span>
         </span>
 

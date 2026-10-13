@@ -103,6 +103,20 @@ describe('BookingVehiclePicker', () => {
     expect(rowNames()[0]).toContain('Accord x1')
   })
 
+  it('says which rental a car is still out on, and keeps it out of reach', async () => {
+    const user = userEvent.setup({ delay: null })
+    const onSelect = vi.fn()
+    const mixed: VehicleOption[] = [{ vehicle: vehicle('late'), outOn: 'BK-10003' }, ...options(1)]
+    render(<BookingVehiclePicker options={mixed} selectedId="" onSelect={onSelect} hours={HOURS} />)
+
+    const [free, held] = screen.getAllByRole('radio')
+    expect(free).toHaveTextContent('Accord v1')
+    expect(held).toHaveTextContent('Out on BK-10003')
+    expect(held).toBeDisabled()
+    await user.click(held)
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
   it('lists booked vehicles last and refuses to select them', async () => {
     const user = userEvent.setup()
     const onSelect = vi.fn()

@@ -254,7 +254,11 @@ function QuoteSummary({
     : !pickedUp && 'beforePickup'
 
   return (
-    <div className={dimmed ? 'opacity-60 transition-opacity' : 'transition-opacity'} aria-busy={!quote}>
+    // Only a price slow to come dims the last one: fading at once, every change blinked.
+    <div
+      className={dimmed ? 'opacity-60 transition-opacity delay-300' : 'transition-opacity'}
+      aria-busy={!quote}
+    >
       <dl className="border-border-soft divide-border-soft m-0 flex flex-col divide-y rounded-[10px] border px-3.5">
         <Line label={t('extension.quote.added')} value={added} />
         <Line
