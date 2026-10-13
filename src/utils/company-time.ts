@@ -1,0 +1,103 @@
+import { useOrganizationStore } from '@/state/organization.store'
+
+const DAY_MS = 86_400_000
+
+function browserTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
+/**
+ * The zone booking times are read and entered in: the company's, wherever the staff sit, so
+ * the counter, the renter and every document name the same hour.
+ */
+export function companyTimeZone(): string {
+  return useOrganizationStore.getState().membership?.timezone ?? browserTimeZone()
+}
+
+/** The zone's clock at an instant, read as if it were UTC, in milliseconds. */
+function wallClock(instant: number, zone: string): number {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: zone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+      .formatToParts(instant)
+      .map((part) => [part.type, Number(part.value)]),
+  )
+  return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second)
+}
+
+/**
+ * The instant the company's clock shows `date` (`YYYY-MM-DD`) and `time` (`HH:mm`). An hour the
+ * clocks repeat is taken as the first of the two, and one they skip is invalid: both as the API
+ * treats a renter's booking.
+ */
+export function zonedInstant(date: string, time: string, zone = companyTimeZone()): Date {
+  const wall = Date.parse(`${date}T${time || '00:00'}:00Z`)
+  if (Number.isNaN(wall)) return new Date(NaN)
+  // The offsets on either side of any clock change near this time.
+  const candidates = [wall - DAY_MS, wall + DAY_MS].map((near) => wall - (wallClock(near, zone) - near))
+  const real = candidates.filter((instant) => wallClock(instant, zone) === wall)
+  return new Date(real.length > 0 ? Math.min(...real) : NaN)
+}
+
+/**
+ * An instant as a Date whose UTC fields (`getUTCHours()`, `getUTCDate()`...) read the company's
+ * clock, for filling inputs and laying out a calendar. UTC because it skips no hour, as this
+ * browser's own zone may. Not an instant any more: never send it or compare it to one.
+ */
+export function companyWall(at: Date | string | number, zone = companyTimeZone()): Date {
+  return new Date(wallClock(new Date(at).getTime(), zone))
+}
+
+/**
+ * A `companyWall` time moved on, `stepMinutes` at a time, past any hour the clocks skip: a
+ * default landing there would be refused the moment it was submitted. Others come back as given.
+ */
+export function realWall(wall: Date, stepMinutes: number, zone = companyTimeZone()): Date {
+  const at = new Date(wall)
+  const skipped = () =>
+    Number.isNaN(zonedInstant(at.toISOString().slice(0, 10), at.toISOString().slice(11, 16), zone).getTime())
+  // No zone skips more than a few hours, so a day of steps only ever ends early.
+  for (let moved = 0; moved < 1440 && skipped(); moved += stepMinutes) {
+    at.setUTCMinutes(at.getUTCMinutes() + stepMinutes)
+  }
+  return at
+}
+
+/** The instant a `companyWall` time names, to ask the API about a stretch of the calendar. */
+export function instantOfWall(wall: Date, zone = companyTimeZone()): Date {
+  // A range edge inside an hour the clocks skip starts where they pick up again.
+  const real = realWall(wall, 30, zone)
+  return zonedInstant(real.toISOString().slice(0, 10), real.toISOString().slice(11, 16), zone)
+}
+
+/** The calendar day (`YYYY-MM-DD`) an instant falls on at the company. */
+export function companyDay(at: Date | string | number, zone = companyTimeZone()): string {
+  return companyWall(at, zone).toISOString().slice(0, 10)
+}
+
+/** Hours between two instants as the company's clock counts them, so a clock change adds none. */
+export function wallClockHours(from: Date | string, to: Date | string, zone = companyTimeZone()): number {
+  return (wallClock(new Date(to).getTime(), zone) - wallClock(new Date(from).getTime(), zone)) / 3_600_000
+}
+
+/** The zone's short name at an instant, e.g. "EDT". English in every language: Spanish says "GMT-4". */
+export function zoneName(at: Date | string | number, zone = companyTimeZone()): string {
+  return (
+    new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'short' })
+      .formatToParts(new Date(at))
+      .find((part) => part.type === 'timeZoneName')?.value ?? ''
+  )
+}
+
+/** True when this browser's clock reads differently from the company's at `at`: now, by default. */
+export function awayFromCompanyTime(at = Date.now(), zone = companyTimeZone()): boolean {
+  return wallClock(at, zone) !== wallClock(at, browserTimeZone())
+}

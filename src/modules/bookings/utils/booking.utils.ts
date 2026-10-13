@@ -12,6 +12,7 @@ import {
   type BookingLists,
   type BookingTuple,
 } from '../types/booking.types'
+import { companyTimeZone } from '@/utils/company-time'
 
 export function bookingColumns(t: TFunction<'bookings'>) {
   return [

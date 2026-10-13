@@ -30,6 +30,7 @@ import {
   returnProblem,
   suggestedReturn,
 } from '../utils/booking-extension.utils'
+import { CompanyTimeHint } from '@/components/feedback/CompanyTimeHint'
 
 interface ExtendRentalDialogProps {
   open: boolean
@@ -118,6 +119,8 @@ function ExtendForm({
           <Line label={t('extension.availableUntil')} value={format.dateTime(availableUntil)} />
         )}
       </dl>
+
+      <CompanyTimeHint />
 
       <div className="grid grid-cols-[1fr_140px] gap-3">
         <FormField label={t('extension.newDate')}>

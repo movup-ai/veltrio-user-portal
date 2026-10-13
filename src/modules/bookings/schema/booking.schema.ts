@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next'
 import { z } from 'zod'
 import { MAX_RENTAL_DAYS } from '@/modules/vehicles/constants/rate-plan.constants'
 import { VERIFICATION_KINDS } from '../types/booking.types'
+import { zonedInstant } from '@/utils/company-time'
 
 const MS_PER_DAY = 86_400_000
 
@@ -10,9 +11,15 @@ type ValidationT = TFunction<'validation'>
 /** `<input type="time">` always yields HH:MM (24h), independent of the displayed locale. */
 const TIME_PATTERN = /^\d{2}:\d{2}$/
 
-/** Combines the split date and time inputs into a local Date — the branch's wall clock is what matters. */
+/** The instant the split date and time inputs name on the company's clock, not this browser's. */
 export function combineDateTime(date: string, time: string): Date {
-  return new Date(`${date}T${time || '00:00'}:00`)
+  return zonedInstant(date, time)
+}
+
+/** The same as an ISO string, or '' while the inputs name no instant: `toISOString()` would throw. */
+export function combineIso(date: string, time: string): string {
+  const at = combineDateTime(date, time)
+  return Number.isNaN(at.getTime()) ? '' : at.toISOString()
 }
 
 /** Mirrors the API's own bounds, so a date it will refuse is caught before the request. */
@@ -122,6 +129,16 @@ export function bookingFormSchema(t: ValidationT) {
 
       const pickup = combineDateTime(values.pickupDate, values.pickupTime)
       const dropoff = combineDateTime(values.returnDate, values.returnTime)
+      // Both halves are filled in, so the only instant they cannot name is an hour the clocks skip.
+      const ends = [
+        ['pickupTime', values.pickupTime, pickup],
+        ['returnTime', values.returnTime, dropoff],
+      ] as const
+      for (const [path, time, at] of ends) {
+        if (TIME_PATTERN.test(time) && Number.isNaN(at.getTime())) {
+          ctx.addIssue({ code: 'custom', path: [path], message: t('booking.timeSkipped') })
+        }
+      }
       if (Number.isNaN(pickup.getTime()) || Number.isNaN(dropoff.getTime())) return
 
       // Anchored on the return date: that's the field the user adjusts to resolve the conflict.

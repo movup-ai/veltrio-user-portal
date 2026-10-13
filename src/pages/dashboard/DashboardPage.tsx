@@ -27,7 +27,6 @@ export function DashboardPage() {
   const [range, setRange] = useState<(typeof RANGES)[number]>('30d')
   const [tab, setTab] = useState<BookingTab>('upcoming')
 
-
   const rows = (tab === 'upcoming' ? BOOKINGS_UPCOMING : BOOKINGS_RECENT).map((b) => bookingRow(b))
 
   return (
@@ -35,7 +34,8 @@ export function DashboardPage() {
       <PageHeader
         title={t('greeting', { name: 'Diego' })}
         description={t('subtitle', {
-          date: format.date(new Date(), { weekday: 'long', day: 'numeric', month: 'long' }),
+          // An instant, not a Date: the formatter then shows the company's day, not this browser's.
+          date: format.date(new Date().toISOString(), { weekday: 'long', day: 'numeric', month: 'long' }),
           pickups: 6,
           returns: 4,
         })}

@@ -76,6 +76,7 @@ import {
   BOOKING_STEP_FIELDS,
   bookingFormSchema,
   combineDateTime,
+  combineIso,
   type BookingFormValues,
 } from '@/modules/bookings/schema/booking.schema'
 import type { BookedInterval, BookingInput } from '@/modules/bookings/types/booking.types'
@@ -83,6 +84,8 @@ import { durationHours, priceBooking } from '@/modules/bookings/utils/booking.pr
 import { defaultTripWindow, toDateInput } from '@/modules/bookings/utils/booking.trip-defaults'
 import { returnsElsewhere } from '@/modules/bookings/utils/booking.utils'
 import { BOOKING_TIME_STEP_MINUTES } from '@/modules/bookings/constants/booking.constants'
+import { CompanyTimeHint } from '@/components/feedback/CompanyTimeHint'
+import { companyWall } from '@/utils/company-time'
 
 const STEP_KEYS = ['trip', 'renter', 'pricing', 'review'] as const
 type StepKey = (typeof STEP_KEYS)[number]
@@ -109,7 +112,7 @@ function blankValues(): BookingFormValues {
   return {
     pickupLocation: '',
     returnLocation: '',
-    ...defaultTripWindow(new Date()),
+    ...defaultTripWindow(companyWall(new Date())),
     vehicleId: '',
     customerId: '',
     customerName: '',
@@ -283,8 +286,8 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
     toast({ title: t('form.draft.restored'), description: t('form.draft.restoredDescription') })
   }, [restoredDraft, t])
 
-  const pickupAt = combineDateTime(values.pickupDate, values.pickupTime).toISOString()
-  const returnAt = combineDateTime(values.returnDate, values.returnTime).toISOString()
+  const pickupAt = combineIso(values.pickupDate, values.pickupTime)
+  const returnAt = combineIso(values.returnDate, values.returnTime)
   const hours = durationHours(pickupAt, returnAt)
 
   // Only vehicles that can actually be rented: published, Available, and sitting at the pickup
@@ -758,6 +761,8 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
                       />
                     )}
                   </FormField>
+
+                  <CompanyTimeHint />
 
                   {/* Date and time split per side, so each column stays a self-contained pickup/return block. */}
                   <div className="grid grid-cols-2 gap-3">

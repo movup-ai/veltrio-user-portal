@@ -8,6 +8,7 @@ import {
   type BookingTuple,
 } from '../types/booking.types'
 import type { DateRange } from '@/components/ui/date-range-picker'
+import { companyWall } from '@/utils/company-time'
 import { parseRentalWindow } from './booking.schedule'
 import { parseBookingTotal, shownStatus } from './booking.utils'
 
@@ -18,9 +19,10 @@ import { parseBookingTotal, shownStatus } from './booking.utils'
  */
 const MS_PER_DAY = 86_400_000
 
+/** The day an instant falls on at the company, as a number that compares across days. */
 function dayNumber(iso: string): number {
   const at = Date.parse(iso)
-  return Number.isNaN(at) ? Number.NaN : Math.floor(at / MS_PER_DAY)
+  return Number.isNaN(at) ? Number.NaN : Math.floor(companyWall(at).getTime() / MS_PER_DAY)
 }
 
 export function todayOrdinal(now = new Date()): number {

@@ -32,6 +32,9 @@ function stateFill(state: DayState) {
 // Disabled is added only for a car that is off the road: otherwise it names a colour never shown.
 const LEGEND: DayState[] = ['booked', 'pending', 'available']
 
+// Read in UTC: each day's date holds the company's calendar day there.
+const SHORT_DAY: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', timeZone: 'UTC' }
+
 export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; busy?: BusyInterval[] }) {
   const { t } = useTranslation('vehicles')
   const format = useFormatters()
@@ -48,7 +51,7 @@ export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; bu
     t('availability.next14Days'),
     t('availability.availableDays', { count: availableCount }),
     nextAvailable
-      ? t('availability.nextGap', { date: format.shortDate(nextAvailable.date) })
+      ? t('availability.nextGap', { date: format.date(nextAvailable.date, SHORT_DAY) })
       : t('availability.fullyBooked'),
   ].join(' · ')
 
@@ -68,9 +71,9 @@ export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; bu
         <div className="flex min-w-[700px] gap-2">
           {days.map((day) => (
             <div key={day.date.toISOString()} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-              <span className="text-fg-4 text-[11px]">{dayInitials[day.date.getDay()]}</span>
+              <span className="text-fg-4 text-[11px]">{dayInitials[day.date.getUTCDay()]}</span>
               <span
-                title={`${format.shortDate(day.date)} · ${t(`availability.state.${day.state}`)}`}
+                title={`${format.date(day.date, SHORT_DAY)} · ${t(`availability.state.${day.state}`)}`}
                 className={cn(
                   'flex aspect-square w-full items-center justify-center rounded-[9px] border text-[14px] font-semibold tabular-nums',
                   STATE_STYLES[day.state],
@@ -78,7 +81,7 @@ export function AvailabilityStrip({ vehicle, busy = [] }: { vehicle: Vehicle; bu
                 )}
                 style={stateFill(day.state)}
               >
-                {day.date.getDate()}
+                {day.date.getUTCDate()}
               </span>
             </div>
           ))}

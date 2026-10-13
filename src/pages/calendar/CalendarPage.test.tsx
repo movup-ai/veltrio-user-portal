@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +9,8 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { CALENDAR_STATUSES } from '@/modules/bookings/types/booking-calendar.types'
 import type { Booking } from '@/modules/bookings/types/booking.types'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
+import { useOrganizationStore } from '@/state/organization.store'
+import type { OrganizationMembership } from '@/types/user'
 
 const calendar = vi.fn<(from: string, to: string) => Promise<Booking[]>>()
 
@@ -81,7 +83,10 @@ beforeEach(() => {
   calendar.mockResolvedValue([booking('BK-1')])
 })
 
-afterEach(() => vi.useRealTimers())
+afterEach(() => {
+  vi.useRealTimers()
+  useOrganizationStore.setState({ membership: null })
+})
 
 describe('the booking calendar', () => {
   it('asks for the month on show and draws each rental on its car, idle cars included', async () => {
@@ -188,5 +193,21 @@ describe('the booking calendar', () => {
 
     expect(await screen.findByRole('heading', { name: 'Wed, September 16, 2026' })).toBeInTheDocument()
     expect(screen.getByTestId('address')).toHaveTextContent('?view=day&date=2026-09-16')
+  })
+
+  it("opens on the company's today once its zone is known, when the address names no day", async () => {
+    // 05:00 UTC on 1 October: already October in New York and UTC, still 30 September in Honolulu.
+    vi.setSystemTime(new Date('2026-10-01T05:00:00Z'))
+    useOrganizationStore.setState({ membership: { timezone: 'UTC' } as OrganizationMembership })
+    renderPage('')
+    expect(await screen.findByRole('heading', { name: 'October 2026' })).toBeInTheDocument()
+
+    act(() =>
+      useOrganizationStore.setState({
+        membership: { timezone: 'Pacific/Honolulu' } as OrganizationMembership,
+      }),
+    )
+
+    expect(await screen.findByRole('heading', { name: 'September 2026' })).toBeInTheDocument()
   })
 })

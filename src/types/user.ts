@@ -50,6 +50,8 @@ export interface OrganizationMembership {
   subdomain: string
   /** What the company prices and charges in; money without its own currency is shown in it. */
   currency: string
+  /** IANA zone booking times are shown and entered in; the browser's own until it is known. */
+  timezone?: string
   role: MembershipRole
   permissions: Permission[]
 }

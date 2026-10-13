@@ -14,7 +14,6 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { usePageBreadcrumb } from '@/components/navigation/usePageBreadcrumb'
 import { useFormatters } from '@/i18n'
-import { formatDay } from '@/utils/dates'
 import { BookingActivity } from '@/modules/bookings/components/BookingActivity'
 import { BookingAgreementSection } from '@/modules/bookings/components/BookingAgreementSection'
 import { BookingCancelDialog } from '@/modules/bookings/components/BookingCancelDialog'
@@ -62,6 +61,7 @@ import {
   type BookingVerification,
   type ProviderKind,
 } from '@/modules/bookings/types/booking.types'
+import { companyDay } from '@/utils/company-time'
 
 /**
  * Cover shot for the booked car, with the placeholder sitting underneath rather than swapped in
@@ -416,7 +416,7 @@ export function BookingDetailsPage() {
                 onShare={handleShare}
                 sharing={insuranceLink.sharing ? 'insurance' : undefined}
                 closed={closed}
-                returnOn={formatDay(new Date(booking.returnAt))}
+                returnOn={companyDay(booking.returnAt)}
                 onAction={(kind) => pending(t(`details.checks.${kind}`))}
               />
             }
