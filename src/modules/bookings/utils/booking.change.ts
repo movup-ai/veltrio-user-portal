@@ -2,11 +2,12 @@ import { MAX_RENTAL_DAYS } from '@/modules/vehicles/constants/rate-plan.constant
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
 import { toCents } from '@/lib/money'
 import { normalizeApiError } from '@/services/api/errors'
+import { companyDay, companyWall, instantOfWall } from '@/utils/company-time'
 import { BOOKING_TIME_STEP_MINUTES, CHANGE_ERRORS, type ChangeError } from '../constants/booking.constants'
 import { combineDateTime } from '../schema/booking.schema'
 import type { AdditionalDriver, BookedInterval, ChangeQuote, ChangeRequest } from '../types/booking.types'
 import { ADDITIONAL_DRIVER_PER_DAY } from './booking.pricing'
-import { toDateInput, toTimeInput } from './booking.trip-defaults'
+import { toTimeInput } from './booking.trip-defaults'
 
 const MS_PER_DAY = 86_400_000
 
@@ -23,14 +24,17 @@ interface Window {
   returnAt: string
 }
 
-/** Where the dates dialog starts: the window the booking has. */
+/**
+ * Where the dates dialog starts: the window the booking has. On the company's clock, as the
+ * fields are read back: filled from this browser's, an untouched hour was saved as another.
+ */
 export function tripChoice({ pickupAt, returnAt }: Window): TripChoice {
-  const [pickup, dropoff] = [new Date(pickupAt), new Date(returnAt)]
+  const [pickup, dropoff] = [companyWall(pickupAt).toISOString(), companyWall(returnAt).toISOString()]
   return {
-    pickupDate: toDateInput(pickup),
-    pickupTime: toTimeInput(pickup),
-    returnDate: toDateInput(dropoff),
-    returnTime: toTimeInput(dropoff),
+    pickupDate: pickup.slice(0, 10),
+    pickupTime: pickup.slice(11, 16),
+    returnDate: dropoff.slice(0, 10),
+    returnTime: dropoff.slice(11, 16),
   }
 }
 
@@ -89,12 +93,14 @@ export function windowClash(
 }
 
 /**
- * How far ahead a vehicle's rentals are read for the calendars: from the start of today, twice
- * the longest rental. Days past that are not struck out; the API still refuses a clash there.
+ * How far ahead a vehicle's rentals are read for the calendars: from the start of the company's
+ * today, twice the longest rental. Days past that are not struck out; the API still refuses a
+ * clash there.
  */
 export function holdsWindow(now: Date): { from: string; to: string } {
-  const from = new Date(now)
-  from.setHours(0, 0, 0, 0)
+  const today = companyWall(now)
+  today.setUTCHours(0, 0, 0, 0)
+  const from = instantOfWall(today)
   const to = new Date(from.getTime() + 2 * MAX_RENTAL_DAYS * MS_PER_DAY)
   return { from: from.toISOString(), to: to.toISOString() }
 }
@@ -140,9 +146,11 @@ export function returnBlocked(
 export function blockedPickupDays(holds: BookedInterval[]): string[] {
   const blocked = new Set<string>()
   for (const held of holds) {
-    const day = new Date(held.from)
-    for (day.setHours(0, 0, 0, 0); day.getTime() < Date.parse(held.to); day.setDate(day.getDate() + 1)) {
-      const date = toDateInput(day)
+    // The company's days, in the Date's UTC fields: the days the calendar itself shows.
+    const day = companyWall(held.from)
+    const until = companyWall(held.to).getTime()
+    for (day.setUTCHours(0, 0, 0, 0); day.getTime() < until; day.setUTCDate(day.getUTCDate() + 1)) {
+      const date = day.toISOString().slice(0, 10)
       if (SLOTS.every((time) => pickupBlocked(holds, date, time))) blocked.add(date)
     }
   }
@@ -158,7 +166,7 @@ export function lastReturnDay(holds: BookedInterval[], pickupAt: string): string
   const [next] = holds
     .filter((held) => Date.parse(held.to) > pickup)
     .sort((a, b) => Date.parse(a.from) - Date.parse(b.from))
-  return next && toDateInput(new Date(next.from))
+  return next && companyDay(next.from)
 }
 
 /** The free time closest to `time`; `time` itself when it is free, or when nothing is. */

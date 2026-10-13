@@ -114,9 +114,8 @@ describe('awayFromCompanyTime', () => {
   it('is false on the same clock and true on another', () => {
     const here = Intl.DateTimeFormat().resolvedOptions().timeZone
     expect(awayFromCompanyTime(Date.now(), here)).toBe(false)
-    // No zone is on both of these clocks at once.
+    // No zone is on both of these clocks at once, so wherever this runs one of them is another.
     const now = Date.parse('2026-10-10T12:00:00Z')
-    expect(awayFromCompanyTime(now, NEW_YORK) && awayFromCompanyTime(now, HONOLULU)).toBe(false)
     expect(awayFromCompanyTime(now, NEW_YORK) || awayFromCompanyTime(now, HONOLULU)).toBe(true)
   })
 })
@@ -137,7 +136,7 @@ describe("booking times on the company's clock", () => {
     companyIn(HONOLULU)
     expect(formatMomentIn('en', '2026-10-10T14:00:00Z', clock)).toBe('4:00 AM')
     expect(formatRentalWindow('2026-10-10T20:00:00Z', '2026-10-12T20:00:00Z')).toBe(
-      'Oct 10 · 10:00 → Oct 12 · 10:00',
+      'Oct 10 · 10:00 AM → Oct 12 · 10:00 AM',
     )
   })
 

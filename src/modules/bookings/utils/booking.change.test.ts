@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { VEHICLES_SEED } from '@/modules/vehicles/mock/vehicle.mock'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
+import { useOrganizationStore } from '@/state/organization.store'
 import { ApiError } from '@/types/api'
+import type { OrganizationMembership } from '@/types/user'
 import type { BookedInterval, ChangeQuote } from '../types/booking.types'
 import {
   blockedPickupDays,
@@ -11,6 +13,7 @@ import {
   chosenWindow,
   datesRequest,
   driversRequest,
+  holdsWindow,
   lastReturnDay,
   nearestFreeTime,
   otherHolds,
@@ -234,6 +237,65 @@ describe('the days another rental takes from the calendars', () => {
       returnTime: '10:00',
     })
     expect(withDate(late, 'return', '2026-10-25', [NEXT]).returnTime).toBe('15:00')
+  })
+})
+
+describe("a change of dates on the company's clock, from a browser on another", () => {
+  // Honolulu keeps one offset all year: 10:00 there is 20:00 UTC, whatever this machine is set to.
+  const hnl = (day: number, hour = 10) => new Date(Date.UTC(2026, 9, day, hour + 10)).toISOString()
+  const RENTAL = { reference: 'BK-1', vehicleId: 'v1', pickupAt: hnl(20), returnAt: hnl(24) }
+  const NEXT: BookedInterval = {
+    reference: 'BK-2',
+    vehicleId: 'v1',
+    plate: 'ABC1234',
+    from: hnl(26),
+    to: hnl(29),
+  }
+
+  const atTheCompany = () =>
+    useOrganizationStore.setState({ membership: { timezone: 'Pacific/Honolulu' } as OrganizationMembership })
+  afterEach(() => useOrganizationStore.setState({ membership: null }))
+
+  it('fills the fields with the hour at the company, and reads them back as the same instants', () => {
+    atTheCompany()
+    const choice = tripChoice(RENTAL)
+
+    expect(choice).toEqual({
+      pickupDate: '2026-10-20',
+      pickupTime: '10:00',
+      returnDate: '2026-10-24',
+      returnTime: '10:00',
+    })
+    expect(chosenWindow(choice)).toEqual({ pickupAt: RENTAL.pickupAt, returnAt: RENTAL.returnAt })
+  })
+
+  it('moves only the day when only the day is changed', () => {
+    atTheCompany()
+    const choice = tripChoice(RENTAL)
+
+    // Filled from one clock and saved on another, this also moved the hour.
+    expect(datesRequest({ ...choice, returnDate: '2026-10-26' }, RENTAL)).toEqual({ returnAt: hnl(26) })
+  })
+
+  it("ends the return calendar on the company's day the next rental begins", () => {
+    atTheCompany()
+
+    expect(lastReturnDay([NEXT], RENTAL.pickupAt)).toBe('2026-10-26')
+  })
+
+  it("strikes out the company's days a rental covers", () => {
+    atTheCompany()
+    const allDay = { ...NEXT, from: hnl(26, 0), to: hnl(27, 0) }
+
+    expect(blockedPickupDays([NEXT])).toEqual(['2026-10-27', '2026-10-28'])
+    expect(blockedPickupDays([allDay])).toEqual(['2026-10-26'])
+  })
+
+  it("reads rentals from the start of the company's today", () => {
+    atTheCompany()
+
+    // 22:00 on the 13th in Honolulu, already the 14th in UTC and further east.
+    expect(holdsWindow(new Date(hnl(13, 22))).from).toBe(hnl(13, 0))
   })
 })
 

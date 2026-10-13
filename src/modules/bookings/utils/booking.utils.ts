@@ -44,9 +44,10 @@ export function formatRentalWindow(pickupAt: string, returnAt: string): string {
   const clock = { hour: 'numeric', minute: '2-digit', hour12: true } as const
   const endpoint = (iso: string) => {
     const at = new Date(iso)
+    const timeZone = companyTimeZone()
     // Browsers put a narrow no-break space before AM/PM; a plain one keeps the text searchable.
-    const time = formatDateIn(TUPLE_LANGUAGE, at, clock).replace(/\s/g, ' ')
-    return `${formatDateIn(TUPLE_LANGUAGE, at, day)} · ${time}`
+    const time = formatDateIn(TUPLE_LANGUAGE, at, { ...clock, timeZone }).replace(/\s/g, ' ')
+    return `${formatDateIn(TUPLE_LANGUAGE, at, { ...day, timeZone })} · ${time}`
   }
   return `${endpoint(pickupAt)} → ${endpoint(returnAt)}`
 }
