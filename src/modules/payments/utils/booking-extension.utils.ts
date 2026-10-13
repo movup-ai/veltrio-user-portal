@@ -3,7 +3,7 @@ import { normalizeApiError } from '@/services/api/errors'
 import { EXTENSION_ERRORS, type ExtensionError } from '../constants/payment.constants'
 import type { BookingPaymentRecord } from '../types/booking-payment.types'
 import type { BookingExtension, BookingExtensions } from '../types/booking-extension.types'
-import { companyDay, companyWall } from '@/utils/company-time'
+import { companyDay, companyWall, realWall } from '@/utils/company-time'
 
 const MS_PER_HOUR = 3_600_000
 
@@ -34,7 +34,8 @@ export function suggestedReturn(returnAt: string, now: Date, availableUntil?: st
   // Not past where the next booking begins, when that still leaves the car some extra time.
   const limit = availableUntil ? companyWall(availableUntil) : undefined
   const fits = limit && limit < next && limit.getTime() > Math.max(due.getTime(), current.getTime())
-  return toChoice(fits ? limit : next)
+  // A day more can name an hour the clocks skip, which cannot be asked for; a real booking's start cannot.
+  return toChoice(fits ? limit : realWall(next, 1))
 }
 
 /** The instant a choice names, or undefined while either half is missing. */

@@ -59,6 +59,22 @@ describe('suggestedReturn', () => {
     expect(suggested).toEqual({ date: '2026-03-08', time: '02:30' })
   })
 
+  it("moves a day more off an hour the company's clocks skip, which could not be asked for", () => {
+    useOrganizationStore.setState({ membership: { timezone: 'America/New_York' } as OrganizationMembership })
+    // Due 02:30 in New York on 7 March; 02:30 on the 8th never happens, 03:00 is the first that does.
+    const suggested = suggestedReturn('2026-03-07T07:30:00Z', new Date('2026-03-06T12:00:00Z'))
+    // A next booking still wins when it starts sooner.
+    const limited = suggestedReturn(
+      '2026-03-07T07:30:00Z',
+      new Date('2026-03-06T12:00:00Z'),
+      '2026-03-07T20:00:00Z',
+    )
+    useOrganizationStore.setState({ membership: null })
+
+    expect(suggested).toEqual({ date: '2026-03-08', time: '03:00' })
+    expect(limited).toEqual({ date: '2026-03-07', time: '15:00' })
+  })
+
   it('stops where the next booking begins when a full day does not fit', () => {
     expect(suggestedReturn(iso(10), at(8), iso(10, 18))).toEqual({ date: '2026-10-10', time: '18:00' })
     // A booking that leaves no time at all is not a suggestion: the dialog says why instead.

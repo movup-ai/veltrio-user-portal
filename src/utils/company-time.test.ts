@@ -9,6 +9,7 @@ import {
   awayFromCompanyTime,
   companyDay,
   companyWall,
+  realWall,
   wallClockHours,
   zoneName,
   zonedInstant,
@@ -57,6 +58,15 @@ describe('companyWall', () => {
   it('keeps an hour this browser itself skips', () => {
     // 02:30 in Phoenix on the night New York's clocks go forward: a local Date reads 03:30 there.
     expect(companyWall('2026-03-08T09:30:00Z', PHOENIX).getUTCHours()).toBe(2)
+  })
+})
+
+describe('realWall', () => {
+  it("steps past an hour the zone's clocks skip, and leaves any other time alone", () => {
+    const skipped = new Date(Date.UTC(2026, 2, 8, 2, 30))
+    expect(realWall(skipped, 30, NEW_YORK).toISOString()).toBe('2026-03-08T03:00:00.000Z')
+    expect(realWall(skipped, 1, NEW_YORK).toISOString()).toBe('2026-03-08T03:00:00.000Z')
+    expect(realWall(skipped, 30, PHOENIX).toISOString()).toBe('2026-03-08T02:30:00.000Z')
   })
 })
 

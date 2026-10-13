@@ -56,6 +56,21 @@ export function companyWall(at: Date | string | number, zone = companyTimeZone()
   return new Date(wallClock(new Date(at).getTime(), zone))
 }
 
+/**
+ * A `companyWall` time moved on, `stepMinutes` at a time, past any hour the clocks skip: a
+ * default landing there would be refused the moment it was submitted. Others come back as given.
+ */
+export function realWall(wall: Date, stepMinutes: number, zone = companyTimeZone()): Date {
+  const at = new Date(wall)
+  const skipped = () =>
+    Number.isNaN(zonedInstant(at.toISOString().slice(0, 10), at.toISOString().slice(11, 16), zone).getTime())
+  // No zone skips more than a few hours, so a day of steps only ever ends early.
+  for (let moved = 0; moved < 1440 && skipped(); moved += stepMinutes) {
+    at.setUTCMinutes(at.getUTCMinutes() + stepMinutes)
+  }
+  return at
+}
+
 /** The calendar day (`YYYY-MM-DD`) an instant falls on at the company. */
 export function companyDay(at: Date | string | number, zone = companyTimeZone()): string {
   return companyWall(at, zone).toISOString().slice(0, 10)

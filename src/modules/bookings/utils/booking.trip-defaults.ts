@@ -1,3 +1,4 @@
+import { realWall } from '@/utils/company-time'
 import { BOOKING_TIME_STEP_MINUTES } from '../constants/booking.constants'
 
 const MS_PER_MINUTE = 60_000
@@ -24,9 +25,14 @@ export function defaultTripWindow(now: Date) {
     (now.getUTCSeconds() * 1000 + now.getUTCMilliseconds()) / MS_PER_MINUTE
   const slot = Math.ceil(minutes / BOOKING_TIME_STEP_MINUTES) * BOOKING_TIME_STEP_MINUTES
   // Date.UTC carries minutes past midnight into the next day.
-  const pickup = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, slot))
-  const dropoff = new Date(pickup)
-  dropoff.setUTCDate(dropoff.getUTCDate() + 1)
+  // Either end can round onto an hour the clocks skip, which the form refuses: moved to the next slot.
+  const pickup = realWall(
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, slot)),
+    BOOKING_TIME_STEP_MINUTES,
+  )
+  const nextDay = new Date(pickup)
+  nextDay.setUTCDate(nextDay.getUTCDate() + 1)
+  const dropoff = realWall(nextDay, BOOKING_TIME_STEP_MINUTES)
   const input = (at: Date) => ({ date: at.toISOString().slice(0, 10), time: at.toISOString().slice(11, 16) })
   return {
     pickupDate: input(pickup).date,
