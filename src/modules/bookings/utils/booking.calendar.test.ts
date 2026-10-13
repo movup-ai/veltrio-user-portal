@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { OrganizationMembership } from '@/types/user'
 import type {
@@ -30,10 +30,14 @@ function companyIn(timezone: string) {
   useOrganizationStore.setState({ membership: { timezone } as OrganizationMembership })
 }
 
+// A company on UTC, so a booking's instant and its place on the grid read the same below.
+beforeEach(() => companyIn('UTC'))
 afterEach(() => useOrganizationStore.setState({ membership: null }))
 
-/** Local time throughout, as the calendar draws it, so the run-time zone cannot move a day. */
-const at = (day: number, hour = 0, month = 8) => new Date(2026, month, day, hour)
+/** The grid's own dates: the company's clock in a Date's UTC fields, whatever zone this runs in. */
+const utc = (year: number, month: number, day: number, hour = 0, minute = 0) =>
+  new Date(Date.UTC(year, month, day, hour, minute))
+const at = (day: number, hour = 0, month = 8) => utc(2026, month, day, hour)
 
 const NOW = at(16, 12).getTime()
 
@@ -77,7 +81,7 @@ describe('calendarRange', () => {
   it('spans the whole unit around the anchor, half-open', () => {
     expect(calendarRange('day', at(16, 15), 0)).toEqual({ from: at(16), to: at(17) })
     expect(calendarRange('month', at(16), 0)).toEqual({ from: at(1), to: at(1, 0, 9) })
-    expect(calendarRange('year', at(16), 0)).toEqual({ from: new Date(2026, 0, 1), to: new Date(2027, 0, 1) })
+    expect(calendarRange('year', at(16), 0)).toEqual({ from: utc(2026, 0, 1), to: utc(2027, 0, 1) })
   })
 
   it('starts the week on the day the locale does', () => {
@@ -106,7 +110,7 @@ describe('shiftAnchor', () => {
   })
 
   it('lands on the last day when the next month is shorter', () => {
-    expect(shiftAnchor('month', new Date(2026, 0, 31), 1)).toEqual(new Date(2026, 1, 28))
+    expect(shiftAnchor('month', utc(2026, 0, 31), 1)).toEqual(utc(2026, 1, 28))
   })
 })
 
@@ -381,10 +385,7 @@ describe('bookedVehiclesByDay', () => {
   })
 
   it('stops at the edge of the year', () => {
-    const counts = bookedVehiclesByDay(
-      [booking({ from: new Date(2025, 11, 30), to: new Date(2026, 0, 2, 12) })],
-      year,
-    )
+    const counts = bookedVehiclesByDay([booking({ from: utc(2025, 11, 30), to: utc(2026, 0, 2, 12) })], year)
 
     expect([...counts.keys()]).toEqual(['2026-01-01', '2026-01-02'])
   })
@@ -402,10 +403,10 @@ describe('heatLevel', () => {
 
 describe('yearMonths', () => {
   it('pads each month to the weekday it starts on', () => {
-    const months = yearMonths(new Date(2026, 0, 1), 0)
+    const months = yearMonths(utc(2026, 0, 1), 0)
     // September 2026 starts on a Tuesday: two blanks from Sunday, one from Monday.
     const blanks = (starts: 0 | 1) =>
-      yearMonths(new Date(2026, 0, 1), starts)[8].cells.filter((cell) => cell === null).length
+      yearMonths(utc(2026, 0, 1), starts)[8].cells.filter((cell) => cell === null).length
 
     expect(months).toHaveLength(12)
     expect(months[1].cells.filter(Boolean)).toHaveLength(28)
@@ -436,7 +437,7 @@ describe("the company's clock", () => {
     pickupAt: '2026-10-10T20:00:00Z',
     returnAt: '2026-10-11T00:00:00Z',
   }
-  const tenth = new Date(2026, 9, 10)
+  const tenth = utc(2026, 9, 10)
 
   it('draws a bar at the hour the company reads, not the hour on this machine', () => {
     companyIn('Pacific/Honolulu')
@@ -456,5 +457,24 @@ describe("the company's clock", () => {
     const days = bookedVehiclesByDay([evening], calendarRange('month', tenth, 0))
 
     expect(Object.fromEntries(days)).toEqual({ '2026-10-10': 1 })
+  })
+})
+
+describe('a night this browser skips an hour', () => {
+  it('keeps 02:30 and 03:30 at the company apart, and the day at 24 hours', () => {
+    // Phoenix keeps one clock all year; New York's jumps from 02:00 to 03:00 on this night.
+    companyIn('America/Phoenix')
+    const hours = calendarColumns('day', calendarRange('day', utc(2026, 2, 8), 0))
+    const trip = {
+      ...booking({ from: at(1), to: at(2) }),
+      pickupAt: '2026-03-08T09:30:00Z',
+      returnAt: '2026-03-08T10:30:00Z',
+    }
+
+    const [bar] = calendarRows([ACCORD], [trip], hours, NOW)[0].bars
+
+    expect(hours).toHaveLength(24)
+    expect(bar.start).toBeCloseTo(2.5 / 24)
+    expect(bar.end).toBeCloseTo(3.5 / 24)
   })
 })

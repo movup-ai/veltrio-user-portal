@@ -8,9 +8,8 @@ import type { OrganizationMembership } from '@/types/user'
 import {
   awayFromCompanyTime,
   companyDay,
-  companyLocal,
   companyWall,
-  instantOfCompanyLocal,
+  instantOfWall,
   realWall,
   wallClockHours,
   zoneName,
@@ -63,27 +62,20 @@ describe('companyWall', () => {
   })
 })
 
-describe('companyLocal', () => {
-  it("gives a Date whose local fields read the zone's clock, for a grid laid out in local dates", () => {
-    const local = companyLocal('2026-10-11T03:30:00Z', HONOLULU)
-    expect([
-      local.getFullYear(),
-      local.getMonth(),
-      local.getDate(),
-      local.getHours(),
-      local.getMinutes(),
-    ]).toEqual([2026, 9, 10, 17, 30])
-  })
-})
-
-describe('instantOfCompanyLocal', () => {
-  it('turns a point on such a grid back into the instant it stands for', () => {
-    // Midnight on 10 October in Honolulu, whatever midnight is on this machine.
-    expect(instantOfCompanyLocal(new Date(2026, 9, 10), HONOLULU).toISOString()).toBe(
+describe('instantOfWall', () => {
+  it('turns a wall-clock time back into the instant it names at the company', () => {
+    // Midnight on 10 October in Honolulu.
+    expect(instantOfWall(new Date(Date.UTC(2026, 9, 10)), HONOLULU).toISOString()).toBe(
       '2026-10-10T10:00:00.000Z',
     )
     const instant = '2026-10-11T03:30:00.000Z'
-    expect(instantOfCompanyLocal(companyLocal(instant, HONOLULU), HONOLULU).toISOString()).toBe(instant)
+    expect(instantOfWall(companyWall(instant, HONOLULU), HONOLULU).toISOString()).toBe(instant)
+  })
+
+  it('moves on from a time the clocks skip, so a range can still be asked for', () => {
+    expect(instantOfWall(new Date(Date.UTC(2026, 2, 8, 2, 30)), NEW_YORK).toISOString()).toBe(
+      '2026-03-08T07:00:00.000Z',
+    )
   })
 })
 

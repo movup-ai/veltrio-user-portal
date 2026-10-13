@@ -1,15 +1,21 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import '@/i18n'
+import { useOrganizationStore } from '@/state/organization.store'
+import type { OrganizationMembership } from '@/types/user'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import type { CalendarVehicle } from '../types/booking-calendar.types'
 import type { Booking } from '../types/booking.types'
 import { calendarColumns, calendarRange, calendarRows } from '../utils/booking.calendar'
 import { BookingCalendarTimeline } from './BookingCalendarTimeline'
 
-/** Local time, as the calendar draws it. */
-const at = (day: number, hour = 0) => new Date(2026, 8, day, hour)
+// A company on UTC, so a booking's instant and its place on the grid read the same below.
+beforeEach(() => useOrganizationStore.setState({ membership: { timezone: 'UTC' } as OrganizationMembership }))
+afterEach(() => useOrganizationStore.setState({ membership: null }))
+
+/** The grid's own dates: the company's clock in a Date's UTC fields. */
+const at = (day: number, hour = 0) => new Date(Date.UTC(2026, 8, day, hour))
 
 const ACCORD: CalendarVehicle = { key: 'v1', id: 'v1', name: 'Honda Accord', plate: 'FL-AAA-1' }
 const columns = calendarColumns('month', calendarRange('month', at(16), 0))

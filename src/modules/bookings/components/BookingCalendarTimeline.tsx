@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Car } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDateFormat } from '@/i18n/formatters'
-import { companyLocal } from '@/utils/company-time'
+import { companyWall } from '@/utils/company-time'
 import type {
   CalendarColumn,
   CalendarRow,
@@ -23,9 +23,15 @@ const ROW_PAD_PX = 10
 /** Room for the vehicle's thumbnail, so an idle car's row is as tall as a booked one. */
 const MIN_ROW_PX = 56
 
-const HOUR: Intl.DateTimeFormatOptions = { hour: 'numeric' }
-const WEEKDAY: Intl.DateTimeFormatOptions = { weekday: 'short' }
-const FULL_DAY: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' }
+// Read in UTC: the grid's dates hold the company's clock there (`companyWall`).
+const HOUR: Intl.DateTimeFormatOptions = { hour: 'numeric', timeZone: 'UTC' }
+const WEEKDAY: Intl.DateTimeFormatOptions = { weekday: 'short', timeZone: 'UTC' }
+const FULL_DAY: Intl.DateTimeFormatOptions = {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+}
 
 const LABEL_CELL =
   'bg-surface border-border-soft sticky left-0 flex w-[var(--cal-label)] shrink-0 items-center border-r px-3 sm:px-4'
@@ -90,7 +96,7 @@ export function BookingCalendarTimeline({
   useLayoutEffect(() => {
     const element = scroller.current
     if (!element) return
-    const at = timelineFraction(columns, companyLocal(Date.now()).getTime())
+    const at = timelineFraction(columns, companyWall(Date.now()).getTime())
     const label = element.querySelector<HTMLElement>('[data-calendar-label]')?.offsetWidth ?? 0
     // A third of the way in: what is coming matters more than what has just passed.
     const lead = (element.clientWidth - label) / 3
@@ -157,7 +163,7 @@ export function BookingCalendarTimeline({
                       isCurrent(column) ? 'bg-primary text-primary-foreground' : 'text-fg-2',
                     )}
                   >
-                    {column.start.getDate()}
+                    {column.start.getUTCDate()}
                   </span>
                 </button>
               ),

@@ -49,28 +49,11 @@ export function zonedInstant(date: string, time: string, zone = companyTimeZone(
 
 /**
  * An instant as a Date whose UTC fields (`getUTCHours()`, `getUTCDate()`...) read the company's
- * clock, for filling date and time inputs. UTC because it skips no hour, as this browser's own
- * zone may. Not an instant any more: never send it or compare it to one.
+ * clock, for filling inputs and laying out a calendar. UTC because it skips no hour, as this
+ * browser's own zone may. Not an instant any more: never send it or compare it to one.
  */
 export function companyWall(at: Date | string | number, zone = companyTimeZone()): Date {
   return new Date(wallClock(new Date(at).getTime(), zone))
-}
-
-/**
- * An instant as a Date whose *local* fields read the company's clock, for a grid laid out with
- * local-date maths (the calendar, the availability strip). An hour this browser's own zone skips
- * lands an hour on: fine for where a bar is drawn, wrong for a value to submit (`companyWall`).
- */
-export function companyLocal(at: Date | string | number, zone = companyTimeZone()): Date {
-  const wall = companyWall(at, zone)
-  return new Date(
-    wall.getUTCFullYear(),
-    wall.getUTCMonth(),
-    wall.getUTCDate(),
-    wall.getUTCHours(),
-    wall.getUTCMinutes(),
-    wall.getUTCSeconds(),
-  )
 }
 
 /**
@@ -88,16 +71,11 @@ export function realWall(wall: Date, stepMinutes: number, zone = companyTimeZone
   return at
 }
 
-/** The instant a point on a `companyLocal` grid stands for, to ask the API about that stretch of it. */
-export function instantOfCompanyLocal(local: Date, zone = companyTimeZone()): Date {
-  const wall = realWall(
-    new Date(
-      Date.UTC(local.getFullYear(), local.getMonth(), local.getDate(), local.getHours(), local.getMinutes()),
-    ),
-    30,
-    zone,
-  )
-  return zonedInstant(wall.toISOString().slice(0, 10), wall.toISOString().slice(11, 16), zone)
+/** The instant a `companyWall` time names, to ask the API about a stretch of the calendar. */
+export function instantOfWall(wall: Date, zone = companyTimeZone()): Date {
+  // A range edge inside an hour the clocks skip starts where they pick up again.
+  const real = realWall(wall, 30, zone)
+  return zonedInstant(real.toISOString().slice(0, 10), real.toISOString().slice(11, 16), zone)
 }
 
 /** The calendar day (`YYYY-MM-DD`) an instant falls on at the company. */
