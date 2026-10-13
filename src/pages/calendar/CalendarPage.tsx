@@ -26,6 +26,7 @@ import type { CalendarStatus, CalendarView } from '@/modules/bookings/types/book
 import {
   bookedVehiclesByDay,
   calendarColumns,
+  calendarDay,
   calendarRange,
   calendarRows,
   calendarTitle,
@@ -38,7 +39,8 @@ import {
 } from '@/modules/bookings/utils/booking.calendar'
 import { useLocationNames } from '@/modules/locations/hooks/use-locations'
 import { useWholeFleet } from '@/modules/vehicles/hooks/use-vehicles'
-import { formatDay } from '@/utils/dates'
+import { useOrganizationStore } from '@/state/organization.store'
+import { companyWall, instantOfWall } from '@/utils/company-time'
 
 const HIDDEN_BY_DEFAULT: ReadonlySet<CalendarStatus> = new Set(CALENDAR_HIDDEN_BY_DEFAULT)
 
@@ -54,7 +56,11 @@ export function CalendarPage() {
   const [params, setParams] = useSearchParams()
   const view = parseCalendarView(params.get('view'))
   const day = params.get('date')
-  const anchor = useMemo(() => parseCalendarDay(day, new Date()), [day])
+  // Subscribed, so an undated calendar moves to the company's today once its zone is known.
+  const timeZone = useOrganizationStore((state) => state.membership?.timezone)
+  const anchor = useMemo(() => parseCalendarDay(day, companyWall(new Date(), timeZone)), [day, timeZone])
+  // Where the grid marks the present: the company's time of day, not this browser's.
+  const gridNow = companyWall(now, timeZone).getTime()
 
   // Typed into its own state: the address bar updates in a transition, which would drop keystrokes.
   const [search, setSearch] = useState(() => params.get('q') ?? '')
@@ -65,7 +71,8 @@ export function CalendarPage() {
   const range = useMemo(() => calendarRange(view, anchor, weekStart), [view, anchor, weekStart])
   const columns = useMemo(() => (view === 'year' ? [] : calendarColumns(view, range)), [view, range])
 
-  const bookings = useBookingCalendar(range.from, range.to)
+  // The grid's dates stand for the company's clock, so the stretch asked for is the company's too.
+  const bookings = useBookingCalendar(instantOfWall(range.from, timeZone), instantOfWall(range.to, timeZone))
   const fleet = useWholeFleet()
   const vehicles = useMemo(() => (fleet.data ?? []).map(toCalendarVehicle), [fleet.data])
 
@@ -94,7 +101,7 @@ export function CalendarPage() {
       (current) => {
         const updated = new URLSearchParams(current)
         if (next.view) updated.set('view', next.view)
-        if (next.date) updated.set('date', formatDay(next.date))
+        if (next.date) updated.set('date', calendarDay(next.date))
         if (next.search !== undefined) {
           if (next.search) updated.set('q', next.search)
           else updated.delete('q')
@@ -148,7 +155,7 @@ export function CalendarPage() {
           view={view}
           title={calendarTitle(view, range, format.locale)}
           onStep={(steps) => show({ date: shiftAnchor(view, anchor, steps) })}
-          onToday={() => show({ date: new Date() })}
+          onToday={() => show({ date: companyWall(new Date(), timeZone) })}
         />
 
         <FilterBar
@@ -213,7 +220,7 @@ export function CalendarPage() {
                   months={months}
                   booked={booked}
                   fleetSize={shown.vehicles.length}
-                  now={now}
+                  now={gridNow}
                   onOpenDay={(date) => show({ view: 'day', date })}
                   onOpenMonth={(date) => show({ view: 'month', date })}
                 />
@@ -223,7 +230,7 @@ export function CalendarPage() {
                     view={view}
                     columns={columns}
                     rows={rows}
-                    now={now}
+                    now={gridNow}
                     onOpenDay={(date) => show({ view: 'day', date })}
                   />
                   <BookingCalendarLegend

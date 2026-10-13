@@ -1,8 +1,10 @@
+import { companyWall } from '@/utils/company-time'
 import type { Vehicle } from '../types/vehicle.types'
 
 export type DayState = 'booked' | 'available' | 'disabled'
 
 export interface AvailabilityDay {
+  /** The company's day, in the Date's UTC fields (`companyWall`): read it with `getUTCDate()`. */
   date: Date
   state: DayState
   isToday: boolean
@@ -25,7 +27,7 @@ const MAINTENANCE_DAYS = 4
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
 }
 
 /**
@@ -33,11 +35,20 @@ function startOfDay(date: Date): Date {
  * A day counts as booked when any rental covers part of it. Status still wins: a vehicle in
  * maintenance or out of service can't be booked whatever the calendar says.
  */
-export function availabilityForVehicle(vehicle: Vehicle, busy: BusyInterval[] = [], from = new Date()): AvailabilityDay[] {
-  const start = startOfDay(from)
+export function availabilityForVehicle(
+  vehicle: Vehicle,
+  busy: BusyInterval[] = [],
+  from = new Date(),
+): AvailabilityDay[] {
+  // The days are the company's, so today and each rental are brought onto its clock first. Kept
+  // in UTC fields, where every day is 24 hours whatever this browser's own clocks do.
+  const start = startOfDay(companyWall(from))
 
   // Parsed once rather than per day — 14 days x every interval adds up quickly on a big fleet.
-  const windows = busy.map((i) => ({ from: Date.parse(i.from), to: Date.parse(i.to) }))
+  const windows = busy.map((i) => ({
+    from: companyWall(i.from).getTime(),
+    to: companyWall(i.to).getTime(),
+  }))
 
   return Array.from({ length: DAYS_AHEAD }, (_, offset) => {
     const date = new Date(start.getTime() + offset * MS_PER_DAY)

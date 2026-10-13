@@ -25,7 +25,14 @@ function meFor(tenantId: string, subdomain: string): MeResponse {
       isActive: true,
       createdAt: '2026-01-01T00:00:00Z',
     } as MeResponse['user'],
-    membership: { tenantId, tenantName: 'Their Company', subdomain, currency: 'USD', role: 'owner' },
+    membership: {
+      tenantId,
+      tenantName: 'Their Company',
+      subdomain,
+      currency: 'USD',
+      timezone: 'America/New_York',
+      role: 'owner',
+    },
   }
 }
 

@@ -1,9 +1,9 @@
 import { combineDateTime } from '@/modules/bookings/schema/booking.schema'
 import { normalizeApiError } from '@/services/api/errors'
-import { formatDay } from '@/utils/dates'
 import { EXTENSION_ERRORS, type ExtensionError } from '../constants/payment.constants'
 import type { BookingPaymentRecord } from '../types/booking-payment.types'
 import type { BookingExtension, BookingExtensions } from '../types/booking-extension.types'
+import { companyDay, companyWall, realWall } from '@/utils/company-time'
 
 const MS_PER_HOUR = 3_600_000
 
@@ -15,12 +15,9 @@ interface ReturnChoice {
   time: string
 }
 
-function pad(n: number): string {
-  return String(n).padStart(2, '0')
-}
-
+/** `at` is a `companyWall` Date: the company's clock, in its UTC fields. */
 function toChoice(at: Date): ReturnChoice {
-  return { date: formatDay(at), time: `${pad(at.getHours())}:${pad(at.getMinutes())}` }
+  return { date: at.toISOString().slice(0, 10), time: at.toISOString().slice(11, 16) }
 }
 
 /**
@@ -28,14 +25,17 @@ function toChoice(at: Date): ReturnChoice {
  * that is the first such hour still ahead, since an extension cannot end in the past.
  */
 export function suggestedReturn(returnAt: string, now: Date, availableUntil?: string): ReturnChoice {
-  const next = new Date(returnAt)
-  // setDate rather than +24h, so a clock change overnight keeps the same wall time.
-  do next.setDate(next.getDate() + 1)
-  while (next <= now)
+  // Every time here is the company's clock, so the choice reads the same from any browser.
+  const due = companyWall(returnAt)
+  const current = companyWall(now)
+  const next = new Date(due)
+  do next.setUTCDate(next.getUTCDate() + 1)
+  while (next <= current)
   // Not past where the next booking begins, when that still leaves the car some extra time.
-  const limit = availableUntil ? new Date(availableUntil) : undefined
-  const fits = limit && limit < next && limit.getTime() > Math.max(Date.parse(returnAt), now.getTime())
-  return toChoice(fits ? limit : next)
+  const limit = availableUntil ? companyWall(availableUntil) : undefined
+  const fits = limit && limit < next && limit.getTime() > Math.max(due.getTime(), current.getTime())
+  // A day more can name an hour the clocks skip, which cannot be asked for; a real booking's start cannot.
+  return toChoice(fits ? limit : realWall(next, 1))
 }
 
 /** The instant a choice names, or undefined while either half is missing. */
@@ -62,8 +62,10 @@ export function returnProblem(
 
 /** The first and last days the calendar offers; the time of day is checked by `returnProblem`. */
 export function returnDayBounds(returnAt: string, availableUntil: string | undefined, now: Date) {
-  const earliest = new Date(Math.max(Date.parse(returnAt), now.getTime()))
-  return { min: formatDay(earliest), max: availableUntil ? formatDay(new Date(availableUntil)) : undefined }
+  return {
+    min: companyDay(Math.max(Date.parse(returnAt), now.getTime())),
+    max: availableUntil ? companyDay(availableUntil) : undefined,
+  }
 }
 
 /** The extra time as whole days and hours, the way a rental's own length is shown. */
@@ -95,7 +97,7 @@ export function extensionWarnings(
     warnings.push('depositLapses')
   }
   // Compared as calendar days: cover is through the end of its last day.
-  if (coverValidUntil && coverValidUntil < formatDay(chosen)) warnings.push('insuranceEnds')
+  if (coverValidUntil && coverValidUntil < companyDay(chosen)) warnings.push('insuranceEnds')
   return warnings
 }
 

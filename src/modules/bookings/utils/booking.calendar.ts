@@ -1,18 +1,7 @@
-import {
-  addDays,
-  addHours,
-  addMonths,
-  addWeeks,
-  addYears,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-  startOfYear,
-} from 'date-fns'
 import { statusColors } from '@/components/data-display/status-colors'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
 import { photoThumbnail } from '@/modules/vehicles/utils/vehicle.utils'
-import { formatDay, parseDay } from '@/utils/dates'
+import { companyWall } from '@/utils/company-time'
 import { DEFAULT_CALENDAR_VIEW } from '../constants/booking.constants'
 import {
   CALENDAR_STATUSES,
@@ -33,6 +22,36 @@ import {
 import { isReadyForPickup, type Booking } from '../types/booking.types'
 import { badgeStatus } from './booking.utils'
 
+/*
+ * The grid's dates hold the company's clock in their UTC fields (`companyWall`), and all of its
+ * date maths is done there: UTC has no clock changes, so this browser's own cannot bend the grid.
+ */
+const HOUR_MS = 3_600_000
+const utcDate = (date: Date, month = date.getUTCMonth(), day = date.getUTCDate()) =>
+  new Date(Date.UTC(date.getUTCFullYear(), month, day))
+const startOfDay = (date: Date) => utcDate(date)
+const startOfMonth = (date: Date) => utcDate(date, date.getUTCMonth(), 1)
+const startOfYear = (date: Date) => utcDate(date, 0, 1)
+const startOfWeek = (date: Date, weekStartsOn: WeekStart) =>
+  addDays(startOfDay(date), -((date.getUTCDay() - weekStartsOn + 7) % 7))
+const addHours = (date: Date, amount: number) => new Date(date.getTime() + amount * HOUR_MS)
+const addDays = (date: Date, amount: number) => new Date(date.getTime() + amount * 24 * HOUR_MS)
+const addWeeks = (date: Date, amount: number) => addDays(date, amount * 7)
+const addYears = (date: Date, amount: number) => addMonths(date, amount * 12)
+function addMonths(date: Date, amount: number): Date {
+  const first = utcDate(date, date.getUTCMonth() + amount, 1)
+  // The 31st of a shorter month is its last day, not a day or three into the next.
+  const lastDay = utcDate(first, first.getUTCMonth() + 1, 0).getUTCDate()
+  return new Date(
+    addDays(first, Math.min(date.getUTCDate(), lastDay) - 1).getTime() + (date.getTime() % (24 * HOUR_MS)),
+  )
+}
+
+/** The day (`YYYY-MM-DD`) a date on the grid stands for. */
+export function calendarDay(date: Date): string {
+  return date.toISOString().slice(0, 10)
+}
+
 const STEP: Record<CalendarView, (date: Date, amount: number) => Date> = {
   day: addDays,
   week: addWeeks,
@@ -40,13 +59,13 @@ const STEP: Record<CalendarView, (date: Date, amount: number) => Date> = {
   year: addYears,
 }
 
-/** The span a view shows around `anchor`, in the viewer's own clock like every other booking time. */
+/** The span a view shows around `anchor`, on the company's clock like every other booking time. */
 export function calendarRange(view: CalendarView, anchor: Date, weekStartsOn: WeekStart): CalendarRange {
   const from =
     view === 'day'
       ? startOfDay(anchor)
       : view === 'week'
-        ? startOfWeek(anchor, { weekStartsOn })
+        ? startOfWeek(anchor, weekStartsOn)
         : view === 'month'
           ? startOfMonth(anchor)
           : startOfYear(anchor)
@@ -59,7 +78,8 @@ export function shiftAnchor(view: CalendarView, anchor: Date, steps: number): Da
 
 /** "Wed, September 16, 2026", "Sep 13 – 19, 2026", "September 2026" or "2026". */
 export function calendarTitle(view: CalendarView, range: CalendarRange, locale: string): string {
-  const format = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, options)
+  const format = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' })
   if (view === 'day') {
     return format({ weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }).format(range.from)
   }
@@ -72,7 +92,7 @@ export function calendarTitle(view: CalendarView, range: CalendarRange, locale: 
   return format({ year: 'numeric' }).format(range.from)
 }
 
-/** Hours of the day, or days of the week or month. A clock-change day has 23 or 25 hours. */
+/** Hours of the day, or days of the week or month. Every day is 24: the grid keeps no clock changes. */
 export function calendarColumns(view: TimelineView, range: CalendarRange): CalendarColumn[] {
   const step = view === 'day' ? addHours : addDays
   const columns: CalendarColumn[] = []
@@ -126,11 +146,14 @@ export function calendarLook(status: string): CalendarLook {
 }
 
 /**
- * Exactly the booked window. A car still out is not stretched to now: the bar would then end
- * where the booking does not, and its colour already says the rental is overdue.
+ * Exactly the booked window, on the grid's clock. A car still out is not stretched to now: the
+ * bar would then end where the booking does not, and its colour already says the rental is overdue.
  */
 function bookingSpan(booking: Booking): { from: number; to: number } {
-  return { from: Date.parse(booking.pickupAt), to: Date.parse(booking.returnAt) }
+  return {
+    from: companyWall(booking.pickupAt).getTime(),
+    to: companyWall(booking.returnAt).getTime(),
+  }
 }
 
 /** By id, never plate: plates are not unique. A deleted car has only its name and plate left. */
@@ -255,7 +278,7 @@ export function bookedVehiclesByDay(bookings: Booking[], range: CalendarRange): 
     let day = startOfDay(new Date(Math.max(span.from, range.from.getTime())))
     // Half-open: a rental returned at midnight does not count towards the day that starts then.
     while (day.getTime() < until) {
-      const key = formatDay(day)
+      const key = calendarDay(day)
       vehiclesByDay.set(key, (vehiclesByDay.get(key) ?? new Set()).add(vehicleKey(booking)))
       day = addDays(day, 1)
     }
@@ -274,7 +297,7 @@ export function heatLevel(booked: number, fleetSize: number): 0 | 1 | 2 | 3 | 4 
 export function yearMonths(yearStart: Date, weekStartsOn: WeekStart): CalendarMonth[] {
   return Array.from({ length: 12 }, (_, index) => {
     const start = addMonths(yearStart, index)
-    const blanks = (start.getDay() - weekStartsOn + 7) % 7
+    const blanks = (start.getUTCDay() - weekStartsOn + 7) % 7
     const days = calendarColumns('month', { from: start, to: addMonths(start, 1) }).map((c) => c.start)
     return { start, cells: [...Array<null>(blanks).fill(null), ...days] }
   })
@@ -288,6 +311,6 @@ export function parseCalendarView(value: string | null): CalendarView {
 /** `?date=YYYY-MM-DD`. A day that does not exist (Feb 31) falls back rather than rolling over. */
 export function parseCalendarDay(value: string | null, fallback: Date): Date {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback
-  const day = parseDay(value)
-  return formatDay(day) === value ? day : fallback
+  const day = new Date(`${value}T00:00:00Z`)
+  return !Number.isNaN(day.getTime()) && calendarDay(day) === value ? day : fallback
 }

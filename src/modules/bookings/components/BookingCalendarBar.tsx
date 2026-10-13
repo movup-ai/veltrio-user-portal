@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useFormatters } from '@/i18n'
 import { useDomainLabels } from '@/i18n/domain'
-import { formatDay } from '@/utils/dates'
+import { companyDay } from '@/utils/company-time'
 import { initials } from '@/utils/formatting'
 import type { CalendarBar, TimelineView } from '../types/booking-calendar.types'
 import { calendarLook } from '../utils/booking.calendar'
@@ -51,7 +51,7 @@ export const BookingCalendarBar = memo(function BookingCalendarBar({
   const due = format.dateTime(booking.returnAt)
 
   // Hours alone only where both ends share a day: "9 AM – 2 PM" on a four-day rental misleads.
-  const sameDay = formatDay(new Date(booking.pickupAt)) === formatDay(new Date(booking.returnAt))
+  const sameDay = companyDay(booking.pickupAt) === companyDay(booking.returnAt)
   const clock = (iso: string) => format.date(iso, { hour: 'numeric', minute: '2-digit' })
   const span = sameDay
     ? `${clock(booking.pickupAt)} – ${clock(booking.returnAt)}`

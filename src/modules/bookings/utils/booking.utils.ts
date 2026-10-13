@@ -12,6 +12,7 @@ import {
   type BookingLists,
   type BookingTuple,
 } from '../types/booking.types'
+import { companyTimeZone } from '@/utils/company-time'
 
 export function bookingColumns(t: TFunction<'bookings'>) {
   return [
@@ -43,7 +44,8 @@ export function formatRentalWindow(pickupAt: string, returnAt: string): string {
   const clock = { hour: '2-digit', minute: '2-digit', hour12: false } as const
   const endpoint = (iso: string) => {
     const at = new Date(iso)
-    return `${formatDateIn(TUPLE_LANGUAGE, at, day)} · ${formatDateIn(TUPLE_LANGUAGE, at, clock)}`
+    const timeZone = companyTimeZone()
+    return `${formatDateIn(TUPLE_LANGUAGE, at, { ...day, timeZone })} · ${formatDateIn(TUPLE_LANGUAGE, at, { ...clock, timeZone })}`
   }
   return `${endpoint(pickupAt)} → ${endpoint(returnAt)}`
 }

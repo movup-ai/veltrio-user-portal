@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { useOrganizationStore } from '@/state/organization.store'
 import { ApiError } from '@/types/api'
+import type { OrganizationMembership } from '@/types/user'
 import type { BookingExtension } from '../types/booking-extension.types'
 import {
   addedTime,
@@ -46,6 +48,31 @@ describe('suggestedReturn', () => {
     expect(suggestedReturn(iso(5, 9), at(8, 16))).toEqual({ date: '2026-10-09', time: '09:00' })
     // Later today still counts: the car was due at 18:00 days ago, and it is only 16:00.
     expect(suggestedReturn(iso(5, 18), at(8, 16))).toEqual({ date: '2026-10-08', time: '18:00' })
+  })
+
+  it("suggests the company's hour even when this browser's clocks skip it", () => {
+    useOrganizationStore.setState({ membership: { timezone: 'America/Phoenix' } as OrganizationMembership })
+    // Due 02:30 in Phoenix on 7 March; a day more is 02:30 on the 8th, which New York never has.
+    const suggested = suggestedReturn('2026-03-07T09:30:00Z', new Date('2026-03-06T12:00:00Z'))
+    useOrganizationStore.setState({ membership: null })
+
+    expect(suggested).toEqual({ date: '2026-03-08', time: '02:30' })
+  })
+
+  it("moves a day more off an hour the company's clocks skip, which could not be asked for", () => {
+    useOrganizationStore.setState({ membership: { timezone: 'America/New_York' } as OrganizationMembership })
+    // Due 02:30 in New York on 7 March; 02:30 on the 8th never happens, 03:00 is the first that does.
+    const suggested = suggestedReturn('2026-03-07T07:30:00Z', new Date('2026-03-06T12:00:00Z'))
+    // A next booking still wins when it starts sooner.
+    const limited = suggestedReturn(
+      '2026-03-07T07:30:00Z',
+      new Date('2026-03-06T12:00:00Z'),
+      '2026-03-07T20:00:00Z',
+    )
+    useOrganizationStore.setState({ membership: null })
+
+    expect(suggested).toEqual({ date: '2026-03-08', time: '03:00' })
+    expect(limited).toEqual({ date: '2026-03-07', time: '15:00' })
   })
 
   it('stops where the next booking begins when a full day does not fit', () => {
