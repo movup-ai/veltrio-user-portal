@@ -14,10 +14,12 @@ import type { PaymentState } from '@/modules/bookings/types/booking.types'
 import type { BookingWire } from '@/modules/bookings/api/booking.mapper'
 import {
   CANCEL_REFUSALS,
+  CHANGE_REFUSALS,
   EXTENSION_REFUSALS,
   PAYMENT_REFUSALS,
   PAYMENT_SEARCH_MAX,
   type CancelRefusal,
+  type ChangeRefusal,
   type ExtensionRefusal,
   type PaymentRefusal,
 } from '../constants/payment.constants'
@@ -35,6 +37,7 @@ import type {
   BookingPaymentStatus,
   CancelRule,
   CancellationQuote,
+  ChangeRule,
   PaymentActionRule,
   PaymentActions,
   PaymentLink,
@@ -128,6 +131,7 @@ export interface PaymentActionsWire {
   returnVehicle: PaymentActionWire
   close: PaymentActionWire
   cancel: PaymentActionWire
+  change: PaymentActionWire
 }
 
 export interface CancellationQuoteWire {
@@ -151,6 +155,7 @@ export interface BookingPaymentsWire {
   paidCents: number
   refundedCents: number
   balanceCents: number
+  overpaidCents: number
   returnCharges: ReturnChargeWire[]
   returnChargesCents: number
   returnChargesSaved: boolean
@@ -296,6 +301,11 @@ function toCancelRule(wire: PaymentActionWire): CancelRule {
   return { allowed: wire.allowed, reason: known ? (wire.reason as CancelRefusal) : undefined }
 }
 
+function toChangeRule(wire: PaymentActionWire): ChangeRule {
+  const known = (CHANGE_REFUSALS as readonly string[]).includes(wire.reason ?? '')
+  return { allowed: wire.allowed, reason: known ? (wire.reason as ChangeRefusal) : undefined }
+}
+
 export function toCancellationQuote(wire: CancellationQuoteWire): CancellationQuote {
   return {
     cancel: toCancelRule(wire.cancel),
@@ -323,6 +333,7 @@ export function toPaymentActions(wire: PaymentActionsWire): PaymentActions {
     returnVehicle: toPaymentAction(wire.returnVehicle),
     close: toPaymentAction(wire.close),
     cancel: toCancelRule(wire.cancel),
+    change: toChangeRule(wire.change),
   }
 }
 
@@ -335,6 +346,7 @@ export function toBookingPayments(wire: BookingPaymentsWire): BookingPayments {
     paid: fromCents(wire.paidCents),
     refunded: fromCents(wire.refundedCents),
     balance: fromCents(wire.balanceCents),
+    overpaid: fromCents(wire.overpaidCents),
     returnCharges: wire.returnCharges.map((charge) => ({
       kind: charge.kind,
       amount: fromCents(charge.amountCents),

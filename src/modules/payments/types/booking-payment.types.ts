@@ -1,6 +1,6 @@
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
 import type { CancellationPolicy } from '@/lib/cancellation-policy'
-import type { CancelRefusal, PaymentRefusal } from '../constants/payment.constants'
+import type { CancelRefusal, ChangeRefusal, PaymentRefusal } from '../constants/payment.constants'
 
 export type BookingPaymentKind = 'charge' | 'deposit' | 'manual' | 'extension'
 
@@ -58,11 +58,18 @@ export interface PaymentActions {
   close: PaymentActionRule
   /** Cancelling before pickup, which refunds, releases the deposit and frees the dates. */
   cancel: CancelRule
+  /** Other dates or another vehicle, which only a booking not yet picked up can take. */
+  change: ChangeRule
 }
 
 export interface CancelRule {
   allowed: boolean
   reason?: CancelRefusal
+}
+
+export interface ChangeRule {
+  allowed: boolean
+  reason?: ChangeRefusal
 }
 
 /** What cancelling a booking now would do with its money. Amounts in currency units. */
@@ -98,6 +105,8 @@ export interface BookingPayments {
   refunded: number
   /** Still to collect: the rental, and after the return any charges the deposit did not cover. */
   balance: number
+  /** Paid above what the booking now comes to, after a change made it cheaper. Staff refund it. */
+  overpaid: number
   returnCharges: ReturnCharge[]
   returnChargesTotal: number
   /** False until the counter saves the charges, even as none: a return nobody has settled. */

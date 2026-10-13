@@ -1,5 +1,6 @@
 import { BanknoteArrowUp, FileDown, Link2, Lock, LockOpen, Mail, SquarePen, Undo2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
@@ -60,16 +61,24 @@ function Line({ label, value }: { label: string; value: string }) {
 /**
  * What is still to collect, as the invoice's closing line: ruled off and set like the total,
  * in the amber of the Unpaid badge. As a plain line it read no louder than "Refunded".
+ * Money owed back to the renter closes the invoice the same way, in the blue of a notice.
  */
-function BalanceDue({ amount }: { amount: string }) {
+function BalanceDue({ amount, kind = 'balance' }: { amount: string; kind?: 'balance' | 'overpaid' }) {
   const { t } = useTranslation('bookings')
   return (
     <dl className="border-border m-0 mt-1 flex items-baseline justify-between gap-3 border-t pt-3">
       <dt>
-        <span className="block text-[13.5px] font-semibold">{t('details.payment.balance')}</span>
-        <span className="text-fg-4 mt-0.5 block text-[12px]">{t('details.payment.balanceHint')}</span>
+        <span className="block text-[13.5px] font-semibold">{t(`details.payment.${kind}`)}</span>
+        <span className="text-fg-4 mt-0.5 block text-[12px]">{t(`details.payment.${kind}Hint`)}</span>
       </dt>
-      <dd className="text-warning m-0 text-[18px] leading-none font-bold tabular-nums">{amount}</dd>
+      <dd
+        className={cn(
+          'm-0 text-[18px] leading-none font-bold tabular-nums',
+          kind === 'balance' ? 'text-warning' : 'text-info',
+        )}
+      >
+        {amount}
+      </dd>
     </dl>
   )
 }
@@ -102,6 +111,7 @@ export function BookingPaymentCard({
 
   const outstanding = payments.balance > 0
   const partlyPaid = outstanding && payments.paid > 0
+  const overpaid = payments.overpaid > 0
   // With nothing paid, refunded or added, the total is the balance: it is not said twice.
   const owesOtherThanTotal =
     outstanding && (partlyPaid || payments.refunded > 0 || payments.balance !== payments.total)
@@ -137,15 +147,18 @@ export function BookingPaymentCard({
       )}
 
       {/* Only what explains the balance earns a line: a part payment, and refunds. */}
-      {(partlyPaid || payments.refunded > 0) && (
+      {(partlyPaid || overpaid || payments.refunded > 0) && (
         <div className="border-border-soft divide-border-soft mt-3 flex flex-col divide-y border-t pt-1">
-          {partlyPaid && <Line label={t('details.payment.paid')} value={money(payments.paid)} />}
+          {(partlyPaid || overpaid) && (
+            <Line label={t('details.payment.paid')} value={money(payments.paid)} />
+          )}
           {payments.refunded > 0 && (
             <Line label={t('details.payment.refunded')} value={money(payments.refunded)} />
           )}
         </div>
       )}
       {owesOtherThanTotal && <BalanceDue amount={money(payments.balance)} />}
+      {overpaid && <BalanceDue kind="overpaid" amount={money(payments.overpaid)} />}
 
       {rental.length > 0 && <PaymentHistory payments={rental} currency={payments.currency} />}
 

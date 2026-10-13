@@ -17,9 +17,11 @@ interface SpecItem {
 
 function SpecCell({ label, value, mono, emphasize }: SpecItem) {
   return (
-    <div className="border-border-soft border-b pb-2.5">
+    <div>
       <p className="text-meta text-fg-3 mb-1">{label}</p>
-      <p className={cn('text-[13.5px]', emphasize ? 'font-semibold' : 'font-normal', mono && 'font-mono')}>{value}</p>
+      <p className={cn('text-[13.5px]', emphasize ? 'font-semibold' : 'font-normal', mono && 'font-mono')}>
+        {value}
+      </p>
     </div>
   )
 }
@@ -52,7 +54,10 @@ export function VehicleSpecs({ vehicle }: { vehicle: Vehicle }) {
   return (
     <Card className="flex flex-col gap-4 p-[18px]">
       <PanelHeading title={t('specs.title')} description={t('specs.description')} />
-      <div className="grid gap-x-6 gap-y-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+      <div
+        className="grid gap-x-6 gap-y-4"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}
+      >
         {items.map((item) => (
           <SpecCell key={item.label} {...item} />
         ))}

@@ -15,6 +15,7 @@ import {
   type AdditionalDriver,
   type BookedInterval,
   type Booking,
+  type BookingActivityEvent,
   type BookingDraft,
   type BookingFee,
   type BookingInput,
@@ -23,8 +24,11 @@ import {
   type BookingSort,
   type BookingStats,
   type BookingStatus,
+  type BookingRateLine,
   type CancelInput,
   type CancelReason,
+  type ChangeQuote,
+  type ChangeRequest,
   type DeclineInput,
   type DeclineReason,
   type PaymentPreference,
@@ -82,6 +86,15 @@ export interface ConditionPhotoSlotWire {
   upload: PresignedUpload
 }
 
+interface RateLineWire {
+  optionId: string
+  label: string
+  basis: BillingBasis
+  rateCents: number
+  count: number
+  cappedHours: number | null
+}
+
 export interface BookingWire {
   id: string
   reference: string
@@ -98,14 +111,7 @@ export interface BookingWire {
     units: number
     includedMiles: number | null
     overageRatePerMileCents: number | null
-    lines: {
-      optionId: string
-      label: string
-      basis: BillingBasis
-      rateCents: number
-      count: number
-      cappedHours: number | null
-    }[]
+    lines: RateLineWire[]
   }
   pickupLocation: string
   returnLocation: string
@@ -304,6 +310,17 @@ export function toConditionPhoto(wire: ConditionPhotoWire): ConditionPhoto {
   return { id: wire.id, stage: wire.stage, name: wire.name, url: wire.url }
 }
 
+function toRateLine(line: RateLineWire): BookingRateLine {
+  return {
+    optionId: line.optionId,
+    label: line.label,
+    basis: line.basis,
+    rate: fromCents(line.rateCents),
+    count: line.count,
+    cappedHours: line.cappedHours ?? undefined,
+  }
+}
+
 export function toBooking(wire: BookingWire): Booking {
   return {
     id: wire.id,
@@ -325,14 +342,7 @@ export function toBooking(wire: BookingWire): Booking {
       includedMiles: wire.rate.includedMiles,
       overageRatePerMile:
         wire.rate.overageRatePerMileCents == null ? undefined : fromCents(wire.rate.overageRatePerMileCents),
-      lines: wire.rate.lines.map((line) => ({
-        optionId: line.optionId,
-        label: line.label,
-        basis: line.basis,
-        rate: fromCents(line.rateCents),
-        count: line.count,
-        cappedHours: line.cappedHours ?? undefined,
-      })),
+      lines: wire.rate.lines.map(toRateLine),
     },
     pickupLocation: wire.pickupLocation,
     returnLocation: wire.returnLocation,
@@ -452,6 +462,7 @@ export function toBookingLists(bookings: Booking[], now = new Date()): BookingLi
         plate: b.vehiclePlate,
         from: b.pickupAt,
         to: b.returnAt,
+        pending: b.status === 'Pending',
       })),
   }
 }
@@ -498,6 +509,111 @@ export function toCancelledBooking(wire: BookingCancelledWire) {
   }
 }
 
+export interface BookingActivityWire {
+  id: string
+  type: string
+  at: string
+  actor: { kind: 'staff' | 'renter' | 'system'; name: string | null }
+  detail: Record<string, unknown>
+}
+
+/** Amounts arrive in cents under a `…Cents` key; here they are currency units, without the suffix. */
+export function toActivityEvent(wire: BookingActivityWire): BookingActivityEvent {
+  return {
+    id: wire.id,
+    type: wire.type,
+    at: wire.at,
+    actor: { kind: wire.actor.kind, name: wire.actor.name ?? undefined },
+    detail: Object.fromEntries(
+      Object.entries(wire.detail).map(([key, value]) =>
+        key.endsWith('Cents') && typeof value === 'number'
+          ? [key.slice(0, -'Cents'.length), fromCents(value)]
+          : [key, value],
+      ),
+    ),
+  }
+}
+
+export interface ChangeQuoteWire {
+  pickupAt: string
+  returnAt: string
+  vehicleId: string
+  vehicleName: string
+  vehiclePlate: string
+  previousTotalCents: number
+  totalCents: number
+  lines: RateLineWire[]
+  previousDepositCents: number
+  depositCents: number
+  balanceCents: number
+  overpaidCents: number
+  voidsAgreement: boolean
+  withdrawsLink: boolean
+  releasesDeposit: boolean
+  emailsRenter: boolean
+}
+
+export function toChangeQuote(wire: ChangeQuoteWire): ChangeQuote {
+  return {
+    pickupAt: wire.pickupAt,
+    returnAt: wire.returnAt,
+    vehicleId: wire.vehicleId,
+    vehicleName: wire.vehicleName,
+    vehiclePlate: wire.vehiclePlate,
+    previousTotal: fromCents(wire.previousTotalCents),
+    total: fromCents(wire.totalCents),
+    lines: wire.lines.map(toRateLine),
+    previousDeposit: fromCents(wire.previousDepositCents),
+    deposit: fromCents(wire.depositCents),
+    balance: fromCents(wire.balanceCents),
+    overpaid: fromCents(wire.overpaidCents),
+    voidsAgreement: wire.voidsAgreement,
+    withdrawsLink: wire.withdrawsLink,
+    releasesDeposit: wire.releasesDeposit,
+    emailsRenter: wire.emailsRenter,
+  }
+}
+
+function toDriverPayload(driver: AdditionalDriver): AdditionalDriverWire {
+  return {
+    id: driver.id,
+    name: driver.name.trim(),
+    licenceNumber: driver.licenceNumber.trim(),
+    pricePerDayCents: toCents(driver.pricePerDay),
+  }
+}
+
+/** Only what is changing is sent: the API refuses fields it does not know, and reads a missing one as kept. */
+export function toChangeQuotePayload(request: ChangeRequest) {
+  return {
+    ...(request.pickupAt && { pickupAt: request.pickupAt }),
+    ...(request.returnAt && { returnAt: request.returnAt }),
+    ...(request.vehicleId && { vehicleId: request.vehicleId }),
+    ...(request.keepPrice && { keepPrice: true }),
+    // Sent even when empty: that is how the last driver is taken off.
+    ...(request.additionalDrivers && { additionalDrivers: request.additionalDrivers.map(toDriverPayload) }),
+  }
+}
+
+/** `total` is the quote's own figure, in cents again, so the API can refuse a price that moved. */
+export function toChangePayload(request: ChangeRequest, total: number) {
+  return { ...toChangeQuotePayload(request), totalCents: toCents(total) }
+}
+
+/** A booking after its dates or vehicle changed, with what the change took back. */
+export type BookingChangedWire = BookingNotifiedWire & {
+  agreementVoided: boolean
+  depositReleased: boolean
+}
+
+export function toChangedBooking(wire: BookingChangedWire) {
+  return {
+    ...toNotifiedBooking(wire),
+    agreementVoided: wire.agreementVoided,
+    depositReleased: wire.depositReleased,
+  }
+}
+
 export function toCancelPayload(input: CancelInput) {
   return {
     reason: input.reason,
@@ -517,12 +633,7 @@ export function toBookingPayload(input: BookingInput) {
     returnLocation: input.returnLocation,
     pickupAt: input.pickupAt,
     returnAt: input.returnAt,
-    additionalDrivers: input.additionalDrivers.map((d) => ({
-      id: d.id,
-      name: d.name.trim(),
-      licenceNumber: d.licenceNumber.trim(),
-      pricePerDayCents: toCents(d.pricePerDay),
-    })),
+    additionalDrivers: input.additionalDrivers.map(toDriverPayload),
     fees: input.fees.map((f) => ({ id: f.id, label: f.label.trim(), amountCents: toCents(f.amount) })),
     verifications: input.verifications,
   }

@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -8,14 +9,18 @@ interface ReviewRowProps {
   value: React.ReactNode
 }
 
+/** Whether the cells of the grid around a row are ruled off underneath. */
+const RuledContext = createContext(true)
+
 /**
  * Label-above-value cell, mirroring the Specifications panel on the vehicle details page.
  * Stacked rather than label-left/value-right so the pair stays legible at any card width —
  * a justified row strands the value at the far edge once the card gets wide.
  */
 export function ReviewRow({ label, value }: ReviewRowProps) {
+  const ruled = useContext(RuledContext)
   return (
-    <div className="border-border-soft min-w-0 border-b pb-2.5">
+    <div className={cn('min-w-0', ruled && 'border-border-soft border-b pb-2.5')}>
       <p className="text-fg-3 mb-1 text-[13px] font-semibold">{label}</p>
       <p className="text-[13.5px] font-semibold break-words">{value}</p>
     </div>
@@ -29,6 +34,8 @@ interface ReviewRowGridProps {
   children: React.ReactNode
   /** Upper bound on columns. Past four, cells stretch so wide the label and value stop reading as a pair. */
   maxColumns?: number
+  /** Leaves out the rule under each cell, for a page that separates its fields by spacing alone. */
+  plain?: boolean
 }
 
 /**
@@ -37,15 +44,17 @@ interface ReviewRowGridProps {
  * container is what caps the count; below that the 140px floor takes over and auto-fit packs
  * in as many as genuinely fit.
  */
-export function ReviewRowGrid({ children, maxColumns = 4 }: ReviewRowGridProps) {
+export function ReviewRowGrid({ children, maxColumns = 4, plain = false }: ReviewRowGridProps) {
   const gutters = (maxColumns - 1) * COLUMN_GAP_PX
 
   return (
     <div
       className="grid gap-x-5 gap-y-3.5"
-      style={{ gridTemplateColumns: `repeat(auto-fit, minmax(max(140px, (100% - ${gutters}px) / ${maxColumns}), 1fr))` }}
+      style={{
+        gridTemplateColumns: `repeat(auto-fit, minmax(max(140px, (100% - ${gutters}px) / ${maxColumns}), 1fr))`,
+      }}
     >
-      {children}
+      <RuledContext.Provider value={!plain}>{children}</RuledContext.Provider>
     </div>
   )
 }

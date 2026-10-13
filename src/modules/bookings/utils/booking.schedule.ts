@@ -14,8 +14,14 @@ export interface RentalWindowParts {
   toDay: number
 }
 
-/** Matches "Sep 14" and "Sep 14 · 09:30" — the two shapes a rental window's endpoints take. */
-const WINDOW_ENDPOINT = /([A-Z][a-z]{2})\s+(\d{1,2})(?:\s*·\s*(\d{1,2}):(\d{2}))?/g
+/** Matches "Sep 14", "Sep 14 · 09:30" and "Sep 14 · 9:30 AM": the shapes a window's endpoints take. */
+const WINDOW_ENDPOINT = /([A-Z][a-z]{2})\s+(\d{1,2})(?:\s*·\s*(\d{1,2}):(\d{2})(?:\s*([AP])M)?)?/g
+
+/** The hour on a 24-hour clock, whichever clock the text was written on. */
+function hourOf(hour: string, meridiem?: string): number {
+  if (!meridiem) return Number(hour)
+  return (Number(hour) % 12) + (meridiem === 'P' ? 12 : 0)
+}
 
 /**
  * Pulls the endpoints out of a formatted window like "Sep 14 · 09:30 → Sep 18". Shared with
@@ -34,7 +40,7 @@ export function parseRentalWindow(rentalWindow: string): RentalWindowParts | nul
   return {
     fromMonth,
     fromDay: Number(first[2]),
-    fromHour: first[3] ? Number(first[3]) : DEFAULT_HOUR,
+    fromHour: first[3] ? hourOf(first[3], first[5]) : DEFAULT_HOUR,
     fromMinute: first[4] ? Number(first[4]) : 0,
     toMonth,
     toDay: Number(last[2]),

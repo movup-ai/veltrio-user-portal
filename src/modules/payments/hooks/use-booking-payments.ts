@@ -60,7 +60,11 @@ function useLinkAction(
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: action,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: bookingPaymentKeys.booking(reference) }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: bookingPaymentKeys.booking(reference) })
+      // Nothing on the booking changes, but the link is an entry in its activity.
+      void queryClient.invalidateQueries({ queryKey: bookingKeys.activity(reference) })
+    },
     onError: (error) =>
       toast({ title: i18n.t(errorTitle), description: normalizeApiError(error).message, variant: 'error' }),
   })

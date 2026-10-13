@@ -21,6 +21,7 @@ export const customerKeys = {
   all: ['customers'] as const,
   search: (search: string) => [...customerKeys.all, 'search', search] as const,
   documents: (customerId: string) => [...customerKeys.all, customerId, 'documents'] as const,
+  sentDocuments: (customerId: string) => [...customerKeys.all, customerId, 'documents', 'sent'] as const,
   page: (params: CustomerListParams) => [...customerKeys.all, 'page', params] as const,
   stats: () => [...customerKeys.all, 'stats'] as const,
   detail: (customerId: string) => [...customerKeys.all, customerId, 'detail'] as const,
@@ -194,6 +195,14 @@ export function useCustomerSearch(search: string) {
  * Disabled until a customer is actually chosen: a booking for a new renter has no id to ask
  * about, and querying with a blank one would be a request that can only 404.
  */
+/** The scans the customer sent with reservations. Under the documents key, so it refreshes with them. */
+export function useCustomerSentDocuments(customerId: string) {
+  return useQuery({
+    queryKey: customerKeys.sentDocuments(customerId),
+    queryFn: () => customerDocumentApi.listSent(customerId),
+  })
+}
+
 export function useCustomerDocuments(customerId: string | undefined) {
   return useQuery({
     queryKey: customerKeys.documents(customerId ?? ''),

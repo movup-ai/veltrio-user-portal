@@ -1,7 +1,7 @@
 import { companyWall } from '@/utils/company-time'
 import type { Vehicle } from '../types/vehicle.types'
 
-export type DayState = 'booked' | 'available' | 'disabled'
+export type DayState = 'booked' | 'pending' | 'available' | 'disabled'
 
 export interface AvailabilityDay {
   /** The company's day, in the Date's UTC fields (`companyWall`): read it with `getUTCDate()`. */
@@ -17,6 +17,8 @@ export interface AvailabilityDay {
 export interface BusyInterval {
   from: string
   to: string
+  /** Asked for and not accepted yet: it holds nothing, so the days are still there to sell. */
+  pending?: boolean
 }
 
 const DAYS_AHEAD = 14
@@ -48,6 +50,7 @@ export function availabilityForVehicle(
   const windows = busy.map((i) => ({
     from: companyWall(i.from).getTime(),
     to: companyWall(i.to).getTime(),
+    pending: i.pending,
   }))
 
   return Array.from({ length: DAYS_AHEAD }, (_, offset) => {
@@ -58,7 +61,12 @@ export function availabilityForVehicle(
     let state: DayState
     if (vehicle.status === 'Out of service') state = 'disabled'
     else if (vehicle.status === 'Maintenance' && offset < MAINTENANCE_DAYS) state = 'disabled'
-    else state = windows.some((w) => w.from < dayEnd && dayStart < w.to) ? 'booked' : 'available'
+    else {
+      const covering = windows.filter((w) => w.from < dayEnd && dayStart < w.to)
+      // A held booking wins the day it shares with a request: the request cannot have it.
+      if (covering.some((w) => !w.pending)) state = 'booked'
+      else state = covering.length ? 'pending' : 'available'
+    }
 
     return { date, state, isToday: offset === 0 }
   })

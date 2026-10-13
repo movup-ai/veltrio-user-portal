@@ -130,8 +130,8 @@ export function CustomerDetailsPage() {
         <dl className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
           {facts.map(([label, value]) => (
             <div key={label}>
-              <dt className="text-fg-3 text-[13px]">{label}</dt>
-              <dd className="m-0 mt-0.5 text-[15px] font-medium">{value}</dd>
+              <dt className="text-fg-3 text-[12px]">{label}</dt>
+              <dd className="m-0 mt-0.5 text-[13.5px] font-medium">{value}</dd>
             </div>
           ))}
         </dl>

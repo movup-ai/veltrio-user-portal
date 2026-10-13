@@ -19,7 +19,9 @@ import { BookingAgreementSection } from '@/modules/bookings/components/BookingAg
 import { BookingCancelDialog } from '@/modules/bookings/components/BookingCancelDialog'
 import { BookingCancelledBanner } from '@/modules/bookings/components/BookingCancelledBanner'
 import { BookingChecklist } from '@/modules/bookings/components/BookingChecklist'
+import { BookingDatesDialog } from '@/modules/bookings/components/BookingDatesDialog'
 import { BookingDeclinedBanner } from '@/modules/bookings/components/BookingDeclinedBanner'
+import { BookingDriversDialog } from '@/modules/bookings/components/BookingDriversDialog'
 import { BookingExtensionNotice } from '@/modules/bookings/components/BookingExtensionNotice'
 import { BookingHandoverAction } from '@/modules/bookings/components/BookingHandoverAction'
 import { BookingManagePanel } from '@/modules/bookings/components/BookingManagePanel'
@@ -30,6 +32,7 @@ import { BookingRenterMismatch } from '@/modules/bookings/components/BookingRent
 import { BookingRequestActions } from '@/modules/bookings/components/BookingRequestActions'
 import { BookingRequestBanner } from '@/modules/bookings/components/BookingRequestBanner'
 import { BookingRestoreAction } from '@/modules/bookings/components/BookingRestoreAction'
+import { BookingSwapDialog } from '@/modules/bookings/components/BookingSwapDialog'
 import { BookingTripCard } from '@/modules/bookings/components/BookingTripCard'
 import { RentalProgress } from '@/modules/bookings/components/RentalProgress'
 import { useCancelBooking } from '@/modules/bookings/hooks/use-booking-request'
@@ -44,7 +47,7 @@ import {
 } from '@/modules/bookings/hooks/use-verification'
 import { awaitsReturnReadings, recordedStages } from '@/modules/bookings/utils/booking.condition'
 import { insuranceReturnUri } from '@/modules/bookings/utils/booking.insurance-redirect'
-import { durationLabel, isOver, shownStatus } from '@/modules/bookings/utils/booking.utils'
+import { durationLabel, isOver, renterProfilePath, shownStatus } from '@/modules/bookings/utils/booking.utils'
 import { InsuranceLinkDialog } from '@/modules/bookings/components/InsuranceLinkDialog'
 import { useBookingContract, useContractPdfOpener } from '@/modules/contracts/hooks/use-booking-contract'
 import { agreementIssued } from '@/modules/contracts/utils/booking-contract.utils'
@@ -97,6 +100,7 @@ export function BookingDetailsPage() {
   const { bookingId } = useParams()
   const [cancelling, setCancelling] = useState(false)
   const [extending, setExtending] = useState(false)
+  const [changing, setChanging] = useState<'modify' | 'swapVehicle' | 'addDriver'>()
 
   const { data: booking, isLoading, isError, refetch } = useBookingDetails(bookingId)
   // Its own query, so a check that takes days can be polled without refetching the whole page.
@@ -198,6 +202,12 @@ export function BookingDetailsPage() {
       ? { reason: cancelRule.reason && t(`details.manage.cancelOff.${cancelRule.reason}`) }
       : undefined
 
+  const changeRule = payments?.actions.change
+  const changeOff =
+    changeRule && !changeRule.allowed
+      ? { reason: changeRule.reason && t(`details.manage.changeOff.${changeRule.reason}`) }
+      : undefined
+
   const miles = (value: number) => t('details.condition.miles', { miles: format.number(value) })
   const driven =
     booking.pickupCondition && booking.returnCondition
@@ -231,6 +241,7 @@ export function BookingDetailsPage() {
     return entry && { ...entry, label: t(`details.condition.notes.${stage}`) }
   }
   const duration = durationLabel(booking.duration, t)
+  const profilePath = renterProfilePath(booking.renter)
 
   return (
     <PageContainer>
@@ -391,7 +402,8 @@ export function BookingDetailsPage() {
 
           <BookingRenterCard
             renter={booking.renter}
-            onOpenProfile={() => navigate('/customers')}
+            drivers={booking.additionalDrivers}
+            onOpenProfile={profilePath ? () => navigate(profilePath) : undefined}
             checklist={
               <BookingChecklist
                 checks={booking.checks}
@@ -411,7 +423,7 @@ export function BookingDetailsPage() {
           />
 
           {/* Under the renter: the booking's history reads best at the width of the page. */}
-          <BookingActivity events={booking.events} />
+          <BookingActivity reference={booking.reference} electric={booking.vehicleElectric} />
         </div>
 
         <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-4">
@@ -435,11 +447,14 @@ export function BookingDetailsPage() {
                   reason: extendOff.reason && tPayments(`extension.errors.${extendOff.reason}`),
                 },
                 cancel: cancelOff,
+                modify: changeOff,
+                swapVehicle: changeOff,
+                addDriver: changeOff,
               }}
               onAction={(action) => {
                 if (action === 'cancel') return setCancelling(true)
                 if (action === 'extend') return setExtending(true)
-                pending(t(`details.manage.${action}`))
+                setChanging(action)
               }}
             />
           )}
@@ -455,6 +470,26 @@ export function BookingDetailsPage() {
         loading={cancelBooking.isPending}
         // Left open on a refusal, so the reason and the amount are still there to send again.
         onCancel={(input) => cancelBooking.mutate(input, { onSuccess: () => setCancelling(false) })}
+      />
+
+      <BookingDatesDialog
+        open={changing === 'modify'}
+        onOpenChange={(open) => setChanging(open ? 'modify' : undefined)}
+        booking={booking}
+        renterName={booking.renter.name}
+      />
+      <BookingSwapDialog
+        open={changing === 'swapVehicle'}
+        onOpenChange={(open) => setChanging(open ? 'swapVehicle' : undefined)}
+        booking={booking}
+        renterName={booking.renter.name}
+      />
+
+      <BookingDriversDialog
+        open={changing === 'addDriver'}
+        onOpenChange={(open) => setChanging(open ? 'addDriver' : undefined)}
+        booking={booking}
+        renterName={booking.renter.name}
       />
 
       <InsuranceLinkDialog

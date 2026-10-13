@@ -11,6 +11,8 @@ export interface TimePickerProps {
   onChange: (value: string) => void
   /** Minutes between slots. 30 gives 12:00 AM, 12:30 AM, 1:00 AM … */
   minuteStep?: number
+  /** Says which times, as `HH:mm`, cannot be picked: they are listed struck through. */
+  blocked?: (time: string) => boolean
   invalid?: boolean
   disabled?: boolean
   id?: string
@@ -44,6 +46,7 @@ export function TimePicker({
   value,
   onChange,
   minuteStep = 30,
+  blocked,
   invalid,
   disabled,
   id,
@@ -57,14 +60,20 @@ export function TimePicker({
   const selected = toMinutes(value)
 
   const slots = React.useMemo(() => {
-    const generated = Array.from({ length: Math.ceil(MINUTES_PER_DAY / minuteStep) }, (_, i) => i * minuteStep)
+    const generated = Array.from(
+      { length: Math.ceil(MINUTES_PER_DAY / minuteStep) },
+      (_, i) => i * minuteStep,
+    )
     // A value off the step grid (a restored draft, say) still deserves a row to highlight.
     return generated.includes(selected) ? generated : [...generated, selected].sort((a, b) => a - b)
   }, [minuteStep, selected])
 
   const label = React.useCallback(
     (minutes: number) =>
-      format.date(new Date(2000, 0, 1, Math.floor(minutes / 60), minutes % 60), { hour: 'numeric', minute: '2-digit' }),
+      format.date(new Date(2000, 0, 1, Math.floor(minutes / 60), minutes % 60), {
+        hour: 'numeric',
+        minute: '2-digit',
+      }),
     [format],
   )
 
@@ -90,10 +99,17 @@ export function TimePicker({
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-36 p-1">
-        <TimeList slots={slots} selected={selected} label={label} ariaLabel={t('time.select')} onSelect={(m) => {
-          onChange(toValue(m))
-          setOpen(false)
-        }} />
+        <TimeList
+          slots={slots}
+          selected={selected}
+          blocked={blocked}
+          label={label}
+          ariaLabel={t('time.select')}
+          onSelect={(m) => {
+            onChange(toValue(m))
+            setOpen(false)
+          }}
+        />
       </PopoverContent>
     </Popover>
   )
@@ -102,12 +118,14 @@ export function TimePicker({
 function TimeList({
   slots,
   selected,
+  blocked,
   label,
   ariaLabel,
   onSelect,
 }: {
   slots: number[]
   selected: number
+  blocked?: (time: string) => boolean
   label: (minutes: number) => string
   ariaLabel: string
   onSelect: (minutes: number) => void
@@ -123,6 +141,7 @@ function TimeList({
     <div role="listbox" aria-label={ariaLabel} className="vx-scroll max-h-60 overflow-y-auto">
       {slots.map((minutes) => {
         const isSelected = minutes === selected
+        const isBlocked = Boolean(blocked?.(toValue(minutes)))
         return (
           <button
             key={minutes}
@@ -130,10 +149,15 @@ function TimeList({
             type="button"
             role="option"
             aria-selected={isSelected}
+            disabled={isBlocked}
             onClick={() => onSelect(minutes)}
             className={cn(
               'block w-full rounded-sm px-2.5 py-1.5 text-left text-[13px] tabular-nums transition-colors',
-              isSelected ? 'bg-primary text-primary-foreground font-semibold' : 'text-fg-2 hover:bg-muted hover:text-foreground',
+              isSelected
+                ? 'bg-primary text-primary-foreground font-semibold'
+                : 'text-fg-2 hover:bg-muted hover:text-foreground',
+              // As the calendar strikes out a day that cannot be picked.
+              isBlocked && 'text-fg-4 pointer-events-none line-through opacity-40',
             )}
           >
             {label(minutes)}

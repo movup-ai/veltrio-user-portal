@@ -58,6 +58,13 @@ describe('DocumentOnFile', () => {
     expect(screen.getByText(/already on file/i)).toBeInTheDocument()
   })
 
+  it('says which reservation a scan came with, where it is not the company’s own copy', () => {
+    render(<DocumentOnFile customerId="c1" document={document()} sentWith="BK-10016" />)
+
+    expect(screen.getByText('Sent with BK-10016 · 2 KB')).toBeInTheDocument()
+    expect(screen.queryByText(/already on file/i)).not.toBeInTheDocument()
+  })
+
   it('shows a thumbnail for an image, asking for a link it can render inline', async () => {
     const { container } = render(<DocumentOnFile customerId="c1" document={IMAGE} onReplace={vi.fn()} />)
 

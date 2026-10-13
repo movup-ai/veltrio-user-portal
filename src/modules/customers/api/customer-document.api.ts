@@ -1,8 +1,19 @@
 import { apiClient } from '@/services/api/client'
 import { vehiclePhotoApi } from '@/modules/vehicles/api/vehicle-photo.api'
 import type { PresignedUpload } from '@/modules/vehicles/api/vehicle.mapper'
-import { toCustomerDocument, type CustomerDocumentWire, type DocumentUploadSlotWire } from './customer.mapper'
-import { DOCUMENT_KINDS, type CustomerDocument, type DocumentKind } from '../types/customer.types'
+import {
+  toCustomerBookingDocument,
+  toCustomerDocument,
+  type CustomerBookingDocumentWire,
+  type CustomerDocumentWire,
+  type DocumentUploadSlotWire,
+} from './customer.mapper'
+import {
+  DOCUMENT_KINDS,
+  type CustomerBookingDocument,
+  type CustomerDocument,
+  type DocumentKind,
+} from '../types/customer.types'
 
 /**
  * A renter's licence and insurance scans. Personal data, so unlike vehicle photos nothing here
@@ -47,6 +58,12 @@ export const customerDocumentApi = {
     apiClient
       .get<CustomerDocumentWire[]>(documentsUrl(customerId))
       .then((r) => r.data.map(toCustomerDocument)),
+
+  /** What the customer sent with reservations of their own, newest first: not part of the file. */
+  listSent: (customerId: string): Promise<CustomerBookingDocument[]> =>
+    apiClient
+      .get<CustomerBookingDocumentWire[]>(`/customers/${customerId}/booking-documents`)
+      .then((r) => r.data.map(toCustomerBookingDocument)),
 
   requestUpload: (customerId: string, kind: DocumentKind, file: File): Promise<DocumentUploadSlot> =>
     apiClient

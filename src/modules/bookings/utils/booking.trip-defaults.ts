@@ -12,6 +12,10 @@ export function toDateInput(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
+export function toTimeInput(date: Date): string {
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 /**
  * A new booking's trip: pickup at the next time slot from `now`, back the same time a day
  * later — a one-day rental, the most common booking, and an exact match for a daily rate.

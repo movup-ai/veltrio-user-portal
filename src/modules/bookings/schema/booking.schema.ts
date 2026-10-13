@@ -69,6 +69,11 @@ function additionalDriverSchema(t: ValidationT) {
   })
 }
 
+/** The drivers alone, for changing them on a booking already made. */
+export function additionalDriversSchema(t: ValidationT) {
+  return z.object({ additionalDrivers: z.array(additionalDriverSchema(t)) })
+}
+
 function bookingFeeSchema(t: ValidationT) {
   return z.object({
     id: z.string(),
@@ -151,6 +156,7 @@ export function bookingFormSchema(t: ValidationT) {
 
 export type BookingFormValues = z.infer<ReturnType<typeof bookingFormSchema>>
 export type AdditionalDriverValues = z.infer<ReturnType<typeof additionalDriverSchema>>
+export type AdditionalDriversValues = z.infer<ReturnType<typeof additionalDriversSchema>>
 export type BookingFeeValues = z.infer<ReturnType<typeof bookingFeeSchema>>
 
 export const BOOKING_STEP_FIELDS = {

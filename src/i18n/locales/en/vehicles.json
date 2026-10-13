@@ -139,8 +139,10 @@
     "nextGap": "next gap {{date}}",
     "fullyBooked": "fully booked",
     "dayInitials": "S,M,T,W,T,F,S",
+    "legend": "Legend",
     "state": {
       "booked": "Booked",
+      "pending": "Pending",
       "available": "Available",
       "disabled": "Disabled"
     }

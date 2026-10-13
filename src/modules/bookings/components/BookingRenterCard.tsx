@@ -3,11 +3,14 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useFormatters } from '@/i18n'
 import { initials } from '@/utils/formatting'
-import type { BookingRenter } from '../types/booking.types'
+import type { AdditionalDriver, BookingRenter } from '../types/booking.types'
 
 interface BookingRenterCardProps {
   renter: BookingRenter
-  onOpenProfile: () => void
+  /** Who else is named on the agreement to drive. Nothing is shown for a booking with none. */
+  drivers?: AdditionalDriver[]
+  /** Opens the renter's own page. Absent for a renter with no customer behind them. */
+  onOpenProfile?: () => void
   /**
    * The pre-handover checklist, rendered inside this card. Passed in rather than imported so
    * this stays a presentational card and the page keeps owning the verification wiring.
@@ -21,9 +24,7 @@ function Line({ label, value, mono }: { label: string; value: string; mono?: boo
     <div className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-fg-3 shrink-0 text-[13px]">{label}</span>
       {value ? (
-        <span
-          className={`min-w-0 truncate text-[13px] ${mono ? 'font-mono text-[12px]' : 'font-semibold'}`}
-        >
+        <span className={`min-w-0 truncate text-[13px] ${mono ? 'font-mono text-[12px]' : 'font-semibold'}`}>
           {value}
         </span>
       ) : (
@@ -34,7 +35,12 @@ function Line({ label, value, mono }: { label: string; value: string; mono?: boo
 }
 
 /** Who is renting, with just enough history to judge them at the counter. */
-export function BookingRenterCard({ renter, onOpenProfile, checklist }: BookingRenterCardProps) {
+export function BookingRenterCard({
+  renter,
+  drivers = [],
+  onOpenProfile,
+  checklist,
+}: BookingRenterCardProps) {
   const { t } = useTranslation('bookings')
   const format = useFormatters()
 
@@ -42,7 +48,7 @@ export function BookingRenterCard({ renter, onOpenProfile, checklist }: BookingR
     <Card className="flex flex-col p-[18px]">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-panel-title m-0">{t('details.renter.title')}</h2>
-        <Button type="button" variant="outline" size="sm" onClick={onOpenProfile}>
+        <Button type="button" variant="outline" size="sm" disabled={!onOpenProfile} onClick={onOpenProfile}>
           {t('details.renter.profile')}
         </Button>
       </div>
@@ -66,6 +72,25 @@ export function BookingRenterCard({ renter, onOpenProfile, checklist }: BookingR
         <Line label={t('details.renter.licence')} value={renter.licenceNumber} mono />
         <Line label={t('details.renter.lifetimeValue')} value={format.currency(renter.lifetimeValue)} />
       </div>
+
+      {drivers.length > 0 && (
+        <div className="border-border-soft mt-4 border-t pt-3.5">
+          <h3 className="text-fg-3 m-0 mb-1 text-[11px] font-bold tracking-wide uppercase">
+            {t('details.renter.drivers')}
+          </h3>
+          <ul className="divide-border-soft m-0 flex list-none flex-col divide-y p-0">
+            {drivers.map((driver) => (
+              <li key={driver.id} className="flex items-center justify-between gap-3 py-1.5">
+                <span className="min-w-0 truncate text-[13px] font-semibold">{driver.name}</span>
+                <span className="text-fg-3 shrink-0 text-[12px]">
+                  <span className="font-mono">{driver.licenceNumber}</span> ·{' '}
+                  {t('details.vehicle.perDay', { rate: format.currency(driver.pricePerDay) })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {checklist && (
         <div className="border-border-soft mt-4 border-t pt-3.5">

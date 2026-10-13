@@ -8,7 +8,6 @@ import {
   type BookingChargeLine,
   type BookingCheckStep,
   type BookingDetails,
-  type BookingEventEntry,
   type BookingRenter,
   type BookingStage,
   type BookingStageStep,
@@ -28,15 +27,6 @@ function addDays(date: Date, days: number): Date {
   const next = new Date(date)
   next.setDate(next.getDate() + days)
   return next
-}
-
-function addMinutes(date: Date, minutes: number): Date {
-  return new Date(date.getTime() + minutes * 60_000)
-}
-
-/** Digits of "BK-48210" — a stable number to vary the seeded flavour by, not a real identifier. */
-function sequence(reference: string): number {
-  return Number(reference.replace(/\D/g, '')) || 0
 }
 
 function findVehicle(plate: string): Vehicle | undefined {
@@ -171,50 +161,6 @@ function buildChecks(stageIndex: number): BookingCheckStep[] {
   ]
 }
 
-function buildEvents(
-  reference: string,
-  stages: BookingStageStep[],
-  renter: BookingRenter,
-  plate: string,
-  agent: string,
-  deposit: number,
-  depositHeld: boolean,
-): BookingEventEntry[] {
-  const reservedAt = stages[0].at ?? new Date().toISOString()
-  const confirmedAt = stages[1].at ?? reservedAt
-  const reserved = new Date(reservedAt)
-
-  // Offsets keep the trail from reading as one templated timestamp repeated down the card.
-  const licenceAt = addMinutes(addDays(reserved, 1), 41)
-
-  const events: BookingEventEntry[] = [
-    { key: 'created', at: reservedAt, meta: { channel: 'web', actor: renter.name } },
-    // Only once a hold actually exists — the payment card would otherwise contradict the trail.
-    ...(depositHeld
-      ? [
-          {
-            key: 'depositHold' as const,
-            at: confirmedAt,
-            meta: { amount: deposit, card: `Visa · ${4000 + (sequence(reference) % 1000)}` },
-          },
-        ]
-      : []),
-    { key: 'licenceUploaded', at: licenceAt.toISOString(), meta: { licence: renter.licenceNumber } },
-    { key: 'confirmationSent', at: addMinutes(licenceAt, 1).toISOString(), meta: { channel: 'auto' } },
-  ]
-
-  // Only once the car is actually spoken for — before that there is nothing to assign.
-  if (stages[1].state === 'done') {
-    events.push({
-      key: 'vehicleAssigned',
-      at: addMinutes(addDays(reserved, 4), 467).toISOString(),
-      meta: { plate, actor: agent },
-    })
-  }
-
-  return events
-}
-
 /**
  * An API booking carries its renter. Their history (rental count, lifetime value) has no
  * endpoint yet, so it reads as this one booking. Seeded rows fall back to the customer seed,
@@ -283,7 +229,11 @@ export function exactCharges(booking: Booking): BookingChargeLine[] {
       ? [
           {
             key: 'additionalDriver' as const,
-            meta: { count: additionalDrivers.length, rate: additionalDrivers[0].pricePerDay },
+            // What they cost a day between them: each has a rate of its own, and one may be waived.
+            meta: {
+              count: additionalDrivers.length,
+              rate: Math.round(additionalDrivers.reduce((sum, d) => sum + d.pricePerDay, 0) * 100) / 100,
+            },
             amount: pricing.drivers,
           },
         ]
@@ -346,17 +296,11 @@ export function buildBookingDetails(
   // Counted from the stages, so the placeholder checks cannot disagree with the progress strip.
   const stageIndex = stages.filter((stage) => stage.state === 'done').length
   const renter = buildRenter(customerName, total, booking)
-  const agent = branch?.manager ?? ''
-  const deposit = booking?.pricing.deposit ?? vehicle?.fees.deposit ?? 350
   const rateOption = vehicle?.rateOptions.find((o) => o.basis === 'day')
   const listDailyRate =
     booking && booking.rate.basis === 'day'
       ? booking.rate.rate
       : (rateOption?.rate ?? Math.round(total / days))
-  // Held on its own, or with the rental paid; the seeded rows have no payment, so their status says.
-  const depositHeld = booking
-    ? booking.payment.state === 'deposit_held' || booking.payment.state === 'paid'
-    : status === 'Completed'
 
   const includedMiles = booking
     ? booking.rate.includedMiles
@@ -400,7 +344,6 @@ export function buildBookingDetails(
     charges: booking ? exactCharges(booking) : buildCharges(total, days, listDailyRate, taxRatePct, []),
     total,
     checks: buildChecks(stageIndex),
-    events: buildEvents(reference, stages, renter, plate, agent, deposit, depositHeld),
     renter,
     // A prompt to answer the reservation, so it goes once that is done. Counter bookings carry neither.
     request:
@@ -412,6 +355,7 @@ export function buildBookingDetails(
       : undefined,
     // Held back while a mismatch is open: until then the customer on file may not be the renter.
     renterDuplicates: booking && !booking.renterSubmitted ? booking.possibleDuplicates : [],
+    additionalDrivers: booking?.additionalDrivers ?? [],
     declined: booking?.declined,
     cancelled: booking?.cancelled,
   }

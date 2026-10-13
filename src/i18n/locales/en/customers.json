@@ -56,9 +56,10 @@
   },
   "documents": {
     "title": "Documents",
-    "description": "The licence and insurance scans on this customer's file.",
+    "description": "The licence and insurance scans on this customer's file, and those they sent with a reservation.",
     "loading": "Loading documents…",
     "loadError": "We couldn't load this customer's documents.",
+    "sentLoadError": "We couldn't load the scans sent with reservations.",
     "uploading": "Uploading…",
     "replace": "Replace {{document}}",
     "none": "None on file",

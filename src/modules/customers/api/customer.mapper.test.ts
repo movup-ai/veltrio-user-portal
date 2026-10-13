@@ -2,6 +2,7 @@ import { AxiosError, type AxiosResponse } from 'axios'
 import { describe, expect, it } from 'vitest'
 import {
   toCustomer,
+  toCustomerBookingDocument,
   toCustomerConflict,
   toCustomerDetail,
   toCustomerListQuery,
@@ -105,5 +106,31 @@ describe('gender', () => {
 
   it('stays out of the booking form payload, where the API refuses it', () => {
     expect('gender' in toCustomerPayload(toCustomer(wire))).toBe(false)
+  })
+})
+
+describe('toCustomerBookingDocument', () => {
+  it('keeps the reservation a scan came with beside the scan itself', () => {
+    const document = toCustomerBookingDocument({
+      id: 'doc7',
+      kind: 'insurance',
+      status: 'ready',
+      name: 'policy.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 2048,
+      createdAt: '2026-10-13T02:06:22Z',
+      bookingReference: 'BK-10016',
+    })
+
+    expect(document).toEqual({
+      id: 'doc7',
+      kind: 'insurance',
+      status: 'ready',
+      name: 'policy.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 2048,
+      createdAt: '2026-10-13T02:06:22Z',
+      bookingReference: 'BK-10016',
+    })
   })
 })
