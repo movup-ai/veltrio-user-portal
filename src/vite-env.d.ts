@@ -15,6 +15,9 @@ interface ImportMetaEnv {
   readonly VITE_INSURANCE_LINK_DELIVERY?: string
   /** Where a company writes for an Enterprise quote. Absent, the plan offers no contact button. */
   readonly VITE_SALES_EMAIL?: string
+  /** The public Terms of Service and Privacy Policy. Until both are set, sign-up names neither. */
+  readonly VITE_TERMS_URL?: string
+  readonly VITE_PRIVACY_URL?: string
   /** Where errors are reported. Absent in development and in CI: nothing is sent. */
   readonly VITE_SENTRY_DSN?: string
   /** Names the deployment in Sentry, e.g. `staging`; the build mode when unset. */

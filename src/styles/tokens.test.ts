@@ -50,6 +50,13 @@ describe.each([
     },
   )
 
+  it.each(['solid-foreground', 'brand-mint', 'brand-amber'])(
+    'keeps %s readable on the auth brand panel',
+    (ink) => {
+      expect(contrast(theme['brand-deep'], theme[ink])).toBeGreaterThanOrEqual(4.5)
+    },
+  )
+
   it('dims the page behind a dialog, rather than washing it out', () => {
     expect(luminance(theme.scrim)).toBeLessThan(0.05)
   })

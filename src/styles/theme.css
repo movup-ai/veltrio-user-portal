@@ -63,6 +63,10 @@
 
   --color-bar-dim: var(--veltrio-bar-dim);
 
+  --color-brand-deep: var(--veltrio-brand-deep);
+  --color-brand-mint: var(--veltrio-brand-mint);
+  --color-brand-amber: var(--veltrio-brand-amber);
+
   /* Radius scale */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;

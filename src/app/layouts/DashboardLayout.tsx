@@ -1,3 +1,4 @@
+import { useClerk } from '@clerk/clerk-react'
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Header } from '@/components/navigation/Header'
@@ -14,6 +15,7 @@ export function DashboardLayout() {
   const pending = useBookingStats().data?.pending ?? 0
   const user = useMe().data?.user
   const membership = useOrganizationStore((state) => state.membership)
+  const clerk = useClerk()
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -23,7 +25,13 @@ export function DashboardLayout() {
         badges={{ Bookings: pending > 0 ? String(pending) : undefined }}
         account={
           user && membership
-            ? { name: user.fullName, role: membership.role, organization: membership.organizationName }
+            ? {
+                name: user.fullName,
+                role: membership.role,
+                organization: membership.organizationName,
+                onOpenProfile: () => clerk.openUserProfile(),
+                onSignOut: () => void clerk.signOut(),
+              }
             : undefined
         }
       />

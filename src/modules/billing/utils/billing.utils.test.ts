@@ -206,6 +206,18 @@ describe('checkoutLinks', () => {
       cancelUrl: 'https://portal.veltrio.test/settings/billing',
     })
   })
+
+  it('can return into onboarding instead, to the step after the plans or back to them', () => {
+    expect(
+      checkoutLinks('https://portal.veltrio.test', {
+        donePath: '/onboarding/ready',
+        cancelPath: '/onboarding/plan',
+      }),
+    ).toEqual({
+      successUrl: 'https://portal.veltrio.test/onboarding/ready?checkout=done',
+      cancelUrl: 'https://portal.veltrio.test/onboarding/plan',
+    })
+  })
 })
 
 describe('creditLevel', () => {

@@ -1,0 +1,3 @@
+@import '../../../src/styles/globals.css';
+/* The harness root is outside src, so Tailwind is pointed at the app's classes explicitly. */
+@source '../../../src';

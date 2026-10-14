@@ -1,6 +1,22 @@
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CarFront, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
+import {
+  CarFront,
+  ChevronsUpDown,
+  LogOut,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+  UserCog,
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/state/ui.store'
 import type { MembershipRole } from '@/types/user'
@@ -11,6 +27,8 @@ export interface SidebarAccount {
   name: string
   role: MembershipRole
   organization: string
+  onOpenProfile: () => void
+  onSignOut: () => void
 }
 
 interface SidebarProps {
@@ -130,22 +148,44 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges, account }: 
             {expanded && <span>{t('nav:sidebar.collapse')}</span>}
           </button>
           {account && (
-            <div className="hover:bg-surface-3 mt-0.5 flex items-center gap-2.5 rounded-[9px] px-[9px] py-2 transition-colors">
-              <span className="bg-tint text-primary flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
-                {initials(account.name)}
-              </span>
-              {expanded && (
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12.5px] font-semibold">{account.name}</span>
-                  <span className="text-fg-4 block truncate text-[11px]">
-                    {t('nav:sidebar.userRole', {
-                      role: t(`nav:sidebar.roles.${account.role}`),
-                      organization: account.organization,
-                    })}
-                  </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={t('nav:sidebar.accountMenu')}
+                className={cn(
+                  'hover:bg-surface-3 data-[state=open]:bg-surface-3 mt-0.5 flex w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-left transition-colors',
+                  collapsed && 'lg:justify-center lg:px-2',
+                )}
+              >
+                <span className="bg-tint text-primary flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
+                  {initials(account.name)}
                 </span>
-              )}
-            </div>
+                {expanded && (
+                  <>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] font-semibold">{account.name}</span>
+                      <span className="text-fg-4 block truncate text-[11px]">
+                        {t('nav:sidebar.userRole', {
+                          role: t(`nav:sidebar.roles.${account.role}`),
+                          organization: account.organization,
+                        })}
+                      </span>
+                    </span>
+                    <ChevronsUpDown className="text-fg-4 size-4 shrink-0" aria-hidden />
+                  </>
+                )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-[218px]">
+                <DropdownMenuItem onSelect={account.onOpenProfile}>
+                  <UserCog className="size-4" aria-hidden />
+                  {t('nav:sidebar.profile')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={account.onSignOut}>
+                  <LogOut className="size-4" aria-hidden />
+                  {t('nav:sidebar.signOut')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </aside>

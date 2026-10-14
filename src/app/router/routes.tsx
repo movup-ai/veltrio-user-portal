@@ -1,18 +1,28 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
+import { ONBOARDING_PATHS, type AuthRouteHandle } from '@/app/layouts/onboarding-steps'
 import { DashboardLayout } from '@/app/layouts/DashboardLayout'
+import { PublicLayout } from '@/app/layouts/PublicLayout'
 import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { AgreementsPage } from '@/pages/agreements/AgreementsPage.lazy'
+// Not lazy: two thin wrappers over Clerk, which is in the main bundle anyway. A lazy chunk put a
+// spinner and one more round trip in front of the sign-in form's skeleton.
+import { LoginPage } from '@/pages/auth/LoginPage'
+import { SignUpPage } from '@/pages/auth/SignUpPage'
 import { InsuranceReturnPage } from '@/pages/verification/InsuranceReturnPage'
 import { LegacyAppRedirect } from './legacy-app-redirect'
 import { ProtectedRoute } from './protected-route'
 
-const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
-const SignUpPage = lazy(() => import('@/pages/auth/SignUpPage').then((m) => ({ default: m.SignUpPage })))
 const OnboardingPage = lazy(() =>
   import('@/pages/auth/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
+)
+const OnboardingPlanPage = lazy(() =>
+  import('@/pages/auth/OnboardingPlanPage').then((m) => ({ default: m.OnboardingPlanPage })),
+)
+const OnboardingReadyPage = lazy(() =>
+  import('@/pages/auth/OnboardingReadyPage').then((m) => ({ default: m.OnboardingReadyPage })),
 )
 const DashboardPage = lazy(() =>
   import('@/pages/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })),
@@ -61,6 +71,8 @@ const CalendarPage = lazy(() =>
 )
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 
+const step = (name: AuthRouteHandle['step']): AuthRouteHandle => ({ step: name })
+
 function withSuspense(element: React.ReactNode) {
   return <Suspense fallback={<LoadingState />}>{element}</Suspense>
 }
@@ -73,9 +85,35 @@ export const router = createBrowserRouter([
         element: <AuthLayout />,
         children: [
           // Splat paths: Clerk's own screens (verification, SSO callback, ...) live under these.
-          { path: '/login/*', element: withSuspense(<LoginPage />) },
-          { path: '/sign-up/*', element: withSuspense(<SignUpPage />) },
-          { path: '/onboarding', element: withSuspense(<OnboardingPage />) },
+          { path: '/login/*', element: <LoginPage /> },
+          { path: '/sign-up/*', element: <SignUpPage />, handle: step('account') },
+          {
+            path: ONBOARDING_PATHS.company,
+            element: withSuspense(<OnboardingPage />),
+            handle: step('company'),
+          },
+          {
+            // Behind the gate: from here on the company exists, and its plan is read through it.
+            element: <ProtectedRoute />,
+            children: [
+              {
+                path: ONBOARDING_PATHS.plan,
+                element: withSuspense(<OnboardingPlanPage />),
+                handle: step('plan'),
+              },
+              {
+                path: ONBOARDING_PATHS.ready,
+                element: withSuspense(<OnboardingReadyPage />),
+                handle: step('ready'),
+              },
+            ],
+          },
+        ],
+      },
+
+      {
+        element: <PublicLayout />,
+        children: [
           // Public: Axle returns the renter here, and they may be on their own phone. Not lazy,
           { path: '/insurance/return', element: <InsuranceReturnPage /> },
         ],

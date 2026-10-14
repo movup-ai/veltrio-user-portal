@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ONBOARDING_PATHS } from '@/app/layouts/onboarding-steps'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
@@ -29,13 +30,18 @@ export function ProtectedRoute() {
   }, [me.data, setMembership])
 
   if (!isLoaded) return <LoadingState />
-  if (!isSignedIn) return <Navigate to="/login" state={{ from: location }} replace />
+  if (!isSignedIn) {
+    // Clerk returns to `redirect_url` after sign-in, Google's round trip included; router state
+    // was dropped, so every deep link landed on the dashboard.
+    const back = window.location.origin + location.pathname + location.search + location.hash
+    return <Navigate to={`/login?redirect_url=${encodeURIComponent(back)}`} replace />
+  }
   if (me.isPending) return <LoadingState />
 
   if (me.error) {
     // Signed up with Clerk but never created a company: finish onboarding.
     if (me.error instanceof ApiError && me.error.code === 'user_not_onboarded') {
-      return <Navigate to="/onboarding" replace />
+      return <Navigate to={ONBOARDING_PATHS.company} replace />
     }
     return <ErrorState description={me.error.message} onRetry={() => void me.refetch()} />
   }

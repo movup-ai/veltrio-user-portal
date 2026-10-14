@@ -1,28 +1,29 @@
-import { useAuth } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TFunction } from 'i18next'
-import { useMemo, useRef, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { FormField } from '@/components/forms/FormField'
+import { TimezoneCombobox } from '@/components/forms/TimezoneCombobox'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ONBOARDING_PATHS } from '@/app/layouts/onboarding-steps'
 import { AddressPicker } from '@/modules/locations/components/AddressPicker'
 import type { AddressPin } from '@/modules/locations/types/location.types'
 import { authApi, FLEET_SIZES, type RegisterTenantPayload } from '@/services/auth/auth.api'
 import { ME_QUERY_KEY, useMe } from '@/services/auth/use-me'
 import { ApiError } from '@/types/api'
 import { countryOptions, isCountryCode } from '@/utils/countries'
-import { TIMEZONES } from '@/utils/dates'
 import { isValidWebsite, SUBDOMAIN_ATTEMPTS, subdomainFor } from '@/utils/slug'
-
-const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
+import { browserTimezone, timezoneForCountry } from '@/utils/timezones'
+import { StepHeading } from './StepHeading'
 
 /**
  * Registers under the company name's own subdomain, moving to -2, -3… while one is taken.
@@ -68,14 +69,20 @@ export function OnboardingPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isLoaded, isSignedIn } = useAuth()
+  const { user } = useUser()
   const me = useMe()
 
   const [formError, setFormError] = useState<string | null>(null)
+  // Set once the company exists, so the guard below does not send the account to the dashboard
+  // between the refreshed account arriving and the move on to the plans.
+  const [created, setCreated] = useState(false)
   // Beside the form rather than in it: the parts are never typed, only replaced with the address.
   const [pin, setPin] = useState<AddressPin>({})
   // Once chosen by hand the country stops following the address: a company can be based in
   // one country and operate in another.
   const countryChosen = useRef(false)
+  // Likewise the zone: until picked by hand it follows the country, which follows the address.
+  const timezoneChosen = useRef(false)
 
   const countries = useMemo(() => countryOptions(i18n.resolvedLanguage ?? 'en'), [i18n.resolvedLanguage])
   const countryNames = useMemo(() => countries.map((c) => c.name), [countries])
@@ -85,6 +92,7 @@ export function OnboardingPage() {
     control,
     register,
     handleSubmit,
+    getValues,
     setValue,
     setError,
     formState: { errors, isSubmitting },
@@ -97,9 +105,20 @@ export function OnboardingPage() {
       address: '',
       country: '',
       fleetSize: undefined,
-      timezone: BROWSER_TIMEZONE,
+      timezone: browserTimezone(),
     },
   })
+
+  const country = useWatch({ control, name: 'country' })
+  const followCountry = (code: string) => {
+    if (!timezoneChosen.current) setValue('timezone', timezoneForCountry(getValues('timezone'), code))
+  }
+
+  // Google sign-ups hand Clerk a name, so they are not asked for it twice; email sign-ups have none.
+  const clerkName = user?.fullName
+  useEffect(() => {
+    if (clerkName && !getValues('ownerFullName')) setValue('ownerFullName', clerkName)
+  }, [clerkName, getValues, setValue])
 
   const onSubmit = async (values: OnboardingValues) => {
     setFormError(null)
@@ -113,8 +132,9 @@ export function OnboardingPage() {
         website: values.website || undefined,
         companyAddress: { address: values.address, ...pin },
       })
+      setCreated(true)
       await queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY })
-      navigate('/dashboard', { replace: true })
+      navigate(ONBOARDING_PATHS.plan, { replace: true })
     } catch (error) {
       if (error instanceof ApiError && error.code === 'subdomain_taken') {
         setFormError(t('errors.subdomainTaken'))
@@ -136,15 +156,14 @@ export function OnboardingPage() {
   if (!isLoaded) return <LoadingState />
   if (!isSignedIn) return <Navigate to="/login" replace />
   // Already has a company — nothing to onboard.
-  if (me.data) return <Navigate to="/dashboard" replace />
+  if (me.data && !created) return <Navigate to="/dashboard" replace />
 
   return (
-    <div className="w-full max-w-lg rounded-lg border border-border bg-card p-8 shadow-sm">
+    <div className="w-full max-w-lg">
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-section-title">{t('onboarding.title')}</h1>
-          <p className="text-description">{t('onboarding.subtitle')}</p>
-        </div>
+        <StepHeading title={t('onboarding.title')} className="mb-2">
+          {t('onboarding.subtitle')}
+        </StepHeading>
 
         <FormField label={t('onboarding.fullName')} error={errors.ownerFullName?.message} required>
           {(fieldProps) => <Input autoComplete="name" {...register('ownerFullName')} {...fieldProps} />}
@@ -181,6 +200,7 @@ export function OnboardingPage() {
                     setPin(parts)
                     if (parts.country && isCountryCode(parts.country) && !countryChosen.current) {
                       setValue('country', parts.country, { shouldValidate: true })
+                      followCountry(parts.country)
                     }
                   }}
                 />
@@ -201,7 +221,29 @@ export function OnboardingPage() {
                   value={countries.find((c) => c.code === field.value)?.name ?? ''}
                   onChange={(name) => {
                     countryChosen.current = true
-                    field.onChange(countries.find((c) => c.name === name)?.code ?? '')
+                    const code = countries.find((c) => c.name === name)?.code ?? ''
+                    field.onChange(code)
+                    followCountry(code)
+                  }}
+                  {...fieldProps}
+                />
+              )}
+            />
+          )}
+        </FormField>
+
+        <FormField label={t('onboarding.timezone')} error={errors.timezone?.message} required>
+          {(fieldProps) => (
+            <Controller
+              control={control}
+              name="timezone"
+              render={({ field }) => (
+                <TimezoneCombobox
+                  country={country}
+                  value={field.value}
+                  onChange={(zone) => {
+                    timezoneChosen.current = true
+                    field.onChange(zone)
                   }}
                   {...fieldProps}
                 />
@@ -228,18 +270,6 @@ export function OnboardingPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-            />
-          )}
-        </FormField>
-
-        <FormField label={t('onboarding.timezone')} error={errors.timezone?.message} required>
-          {(fieldProps) => (
-            <Controller
-              control={control}
-              name="timezone"
-              render={({ field }) => (
-                <Combobox options={TIMEZONES} value={field.value} onChange={field.onChange} {...fieldProps} />
               )}
             />
           )}

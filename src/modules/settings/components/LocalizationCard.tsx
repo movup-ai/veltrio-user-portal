@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { FormField } from '@/components/forms/FormField'
+import { TimezoneCombobox } from '@/components/forms/TimezoneCombobox'
 import { Combobox } from '@/components/ui/combobox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { countryOptions } from '@/utils/countries'
-import { TIMEZONES } from '@/utils/dates'
 import { LISTING_LANGUAGES, SUPPORTED_CURRENCIES } from '../constants/company.constants'
 import { useCompanySection } from '../hooks/use-company-section'
 import { companySchema } from '../schema/company.schema'
@@ -34,6 +34,7 @@ export function LocalizationCard({ company }: { company: Company }) {
     control,
     formState: { errors, isDirty },
   } = form
+  const country = useWatch({ control, name: 'country' })
 
   return (
     <SettingsCard
@@ -68,7 +69,12 @@ export function LocalizationCard({ company }: { company: Company }) {
             control={control}
             name="timezone"
             render={({ field }) => (
-              <Combobox options={TIMEZONES} value={field.value} onChange={field.onChange} {...fieldProps} />
+              <TimezoneCombobox
+                country={country}
+                value={field.value}
+                onChange={field.onChange}
+                {...fieldProps}
+              />
             )}
           />
         )}

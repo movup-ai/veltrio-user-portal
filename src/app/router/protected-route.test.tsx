@@ -1,13 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { MeResponse } from '@/services/auth/auth.api'
 import { ProtectedRoute } from './protected-route'
 
+const authResult = vi.hoisted(() => ({ current: { isLoaded: true, isSignedIn: true } }))
 vi.mock('@clerk/clerk-react', () => ({
-  useAuth: () => ({ isLoaded: true, isSignedIn: true }),
+  useAuth: () => authResult.current,
 }))
 
 const meResult = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
@@ -65,6 +66,7 @@ function renderGate() {
 }
 
 afterEach(() => {
+  authResult.current = { isLoaded: true, isSignedIn: true }
   useOrganizationStore.setState({ membership: null })
   rendered.length = 0
 })
@@ -104,5 +106,31 @@ describe('ProtectedRoute', () => {
     // store still held the account before it.
     expect(rendered).not.toContain('first-co')
     expect(rendered).toEqual(['second-co'])
+  })
+
+  it('sends a signed-out visitor to sign in with the page to come back to', () => {
+    authResult.current = { isLoaded: true, isSignedIn: false }
+    meResult.current = { data: undefined, isPending: true, error: null }
+    function LoginProbe() {
+      const { search } = useLocation()
+      return <div data-testid="redirect">{new URLSearchParams(search).get('redirect_url')}</div>
+    }
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={['/bookings/b_1?tab=payments']}>
+          <Routes>
+            <Route path="/login" element={<LoginProbe />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/bookings/:id" element={<div />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('redirect')).toHaveTextContent(
+      `${window.location.origin}/bookings/b_1?tab=payments`,
+    )
   })
 })

@@ -25,6 +25,9 @@
     "darkMode": "Modo oscuro",
     "toggleDarkMode": "Alternar modo oscuro",
     "userRole": "{{role}} · {{organization}}",
+    "accountMenu": "Menú de la cuenta",
+    "profile": "Perfil y seguridad",
+    "signOut": "Cerrar sesión",
     "roles": {
       "owner": "Propietario",
       "manager": "Gerente",
