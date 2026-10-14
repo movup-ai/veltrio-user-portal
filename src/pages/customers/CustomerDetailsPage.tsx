@@ -18,7 +18,7 @@ import { CustomerDocuments } from '@/modules/customers/components/CustomerDocume
 import { CustomerFormDialog } from '@/modules/customers/components/CustomerFormDialog'
 import { CustomerOnFile } from '@/modules/customers/components/CustomerOnFile'
 import { MergeCustomerDialog } from '@/modules/customers/components/MergeCustomerDialog'
-import { DAY_FORMAT } from '@/modules/customers/constants/customer.constants'
+import { DAY_FORMAT } from '@/lib/date-format'
 import { useCustomer } from '@/modules/customers/hooks/use-customers'
 import type { Customer } from '@/modules/customers/types/customer.types'
 import { hasAnyPermission } from '@/utils/permissions'

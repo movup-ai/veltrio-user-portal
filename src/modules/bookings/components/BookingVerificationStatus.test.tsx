@@ -106,7 +106,7 @@ describe('the insurance card', () => {
   it('makes Send link the primary action when it is the only one', () => {
     renderRow(<BookingVerificationStatus kind="insurance" onShare={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: 'Send link' })).toHaveClass('bg-primary')
+    expect(screen.getByRole('button', { name: 'Send link' })).toHaveClass('bg-primary-solid')
   })
 
   it('shows a check that has run out as on file, never as cover', () => {

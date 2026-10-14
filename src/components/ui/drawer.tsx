@@ -19,7 +19,7 @@ export function DrawerContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
         className={cn(
-          'fixed inset-0 z-50 bg-foreground/40 backdrop-blur-[1px]',
+          'fixed inset-0 z-50 bg-scrim backdrop-blur-[1px]',
           'data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out',
         )}
       />
@@ -46,10 +46,18 @@ export function DrawerHeader({ className, ...props }: React.HTMLAttributes<HTMLD
 }
 
 export function DrawerFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)} {...props} />
+  return (
+    <div
+      className={cn('mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      {...props}
+    />
+  )
 }
 
-export function DrawerTitle({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+export function DrawerTitle({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return <DialogPrimitive.Title className={cn('text-section-title', className)} {...props} />
 }
 

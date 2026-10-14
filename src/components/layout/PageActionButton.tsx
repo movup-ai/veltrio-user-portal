@@ -33,7 +33,7 @@ export function PageActionButton({
         'text-meta flex h-[34px] shrink-0 items-center gap-[7px] rounded-[9px] px-3 whitespace-nowrap transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-55',
         variant === 'solid'
-          ? 'bg-primary text-primary-foreground shadow-xs enabled:hover:bg-primary-hover'
+          ? 'bg-primary-solid text-solid-foreground shadow-xs enabled:hover:bg-primary-solid-hover'
           : 'bg-surface border-border text-fg-2 enabled:hover:bg-surface-3 enabled:hover:text-foreground border',
         className,
       )}

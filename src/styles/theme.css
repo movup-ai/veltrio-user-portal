@@ -8,6 +8,10 @@
   --color-primary: var(--veltrio-primary);
   --color-primary-hover: var(--veltrio-primary-hover);
   --color-primary-foreground: var(--veltrio-primary-foreground);
+  --color-primary-solid: var(--veltrio-primary-solid);
+  --color-primary-solid-hover: var(--veltrio-primary-solid-hover);
+  --color-error-solid: var(--veltrio-error-solid);
+  --color-solid-foreground: var(--veltrio-solid-foreground);
   --color-secondary: var(--veltrio-secondary);
   --color-secondary-foreground: var(--veltrio-secondary-foreground);
   --color-tint: var(--veltrio-tint);
@@ -34,6 +38,7 @@
   --color-popover: var(--veltrio-surface);
   --color-popover-foreground: var(--veltrio-fg);
   --color-header: var(--veltrio-header-bg);
+  --color-scrim: var(--veltrio-scrim);
 
   --color-success: var(--veltrio-success);
   --color-success-tint: var(--veltrio-success-tint);

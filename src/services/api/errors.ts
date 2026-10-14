@@ -4,6 +4,7 @@ import { ApiError, type ApiFieldError } from '@/types/api'
 
 const STATUS_TO_KIND: Record<number, ApiError['kind']> = {
   401: 'unauthorized',
+  402: 'payment_required',
   403: 'forbidden',
   404: 'not_found',
   409: 'conflict',

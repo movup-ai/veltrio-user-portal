@@ -118,7 +118,8 @@
     "label": "Settings sections",
     "general": "General",
     "brand": "Brand",
-    "payments": "Payments"
+    "payments": "Payments",
+    "billing": "Billing"
   },
   "payments": {
     "section": "Payments",
@@ -238,6 +239,226 @@
       "addTier": "Add tier",
       "preview": "How renters will see it",
       "appliesFrom": "Applies to bookings made from now on: a booking keeps the policy it was made under. You still choose the refund each time you cancel one."
+    }
+  },
+  "billing": {
+    "section": "Billing",
+    "sectionHelp": "Your Veltrio plan and what it covers.",
+    "title": "Your plan",
+    "description": "Plans are sized by the vehicles and branches you run. Every plan has the same features.",
+    "noPlan": "No plan",
+    "planName": {
+      "starter": "Starter",
+      "growth": "Growth",
+      "pro": "Pro",
+      "enterprise": "Enterprise"
+    },
+    "state": {
+      "off": "Not available",
+      "trialing": "Free trial",
+      "active": "Active",
+      "pastDue": "Payment failed",
+      "ending": "Ending",
+      "ended": "Ended",
+      "onHold": "On hold"
+    },
+    "notice": {
+      "off": "Billing isn't switched on for this workspace, so nothing is limited.",
+      "noneTrial": "Choose a plan to start your {{days}}-day free trial. Until then you can't add vehicles, take bookings or run checks.",
+      "none": "Choose a plan to add vehicles, take bookings and run checks.",
+      "trialing": "Your free trial ends on {{date}}. Your card is charged then unless you cancel.",
+      "pastDue": "Your last payment didn't go through. Update your card to keep your plan.",
+      "ending": "Your plan ends on {{date}}. After that you can't add vehicles, take bookings or run checks.",
+      "ended": "Your plan has ended. Choose a plan to add vehicles, take bookings and run checks again.",
+      "onHold": "Your plan is on hold because a payment didn't go through. Update your card under Manage billing to carry on."
+    },
+    "renewsOn": "Renews on {{date}}",
+    "usage": {
+      "vehicles": "Vehicles",
+      "branches": "Branches",
+      "of": "{{used}} of {{limit}}",
+      "unlimited": "{{used}}, no limit"
+    },
+    "interval": {
+      "label": "Billing period",
+      "month": "Monthly",
+      "year": "Yearly",
+      "save": "Save {{percent}}%"
+    },
+    "price": {
+      "unit": {
+        "month": "/ month",
+        "year": "/ year"
+      },
+      "quoted": "Custom pricing"
+    },
+    "limits": {
+      "vehicles_one": "Up to {{count}} vehicle",
+      "vehicles_other": "Up to {{count}} vehicles",
+      "vehiclesUnlimited": "Unlimited vehicles",
+      "branches_one": "{{count}} branch",
+      "branches_other": "{{count}} branches",
+      "branchesUnlimited": "Unlimited branches",
+      "vehiclesOver": "More than {{count}} vehicles"
+    },
+    "actions": {
+      "startTrial": "Start free trial",
+      "choose": "Choose plan",
+      "upgrade": "Upgrade",
+      "downgrade": "Downgrade",
+      "switchTo": {
+        "month": "Switch to monthly",
+        "year": "Switch to yearly"
+      },
+      "current": "Current plan",
+      "manage": "Manage billing",
+      "manageHelp": "Update your card, see invoices or cancel",
+      "contact": "Contact us"
+    },
+    "tooSmall": {
+      "have": "you have {{count}}",
+      "vehicles": "You have {{have}} vehicles. {{plan}} allows up to {{limit}}.",
+      "branches": "You have {{have}} branches. {{plan}} allows {{limit}}."
+    },
+    "ownerOnly": "Only the account owner can choose or change the plan.",
+    "confirmChange": {
+      "title": {
+        "upgrade": "Upgrade to {{plan}}?",
+        "downgrade": "Downgrade to {{plan}}?",
+        "period": {
+          "month": "Switch to monthly billing?",
+          "year": "Switch to yearly billing?"
+        }
+      },
+      "description": "{{plan}} costs {{price}}, billed {{period}}.\n\nThe change takes effect now, and Stripe charges or credits the difference for the rest of this billing period.",
+      "period": {
+        "month": "monthly",
+        "year": "yearly"
+      }
+    },
+    "toast": {
+      "checkoutFailed": "Couldn't open checkout",
+      "portalFailed": "Couldn't open billing",
+      "planChanged": "Plan changed",
+      "planFailed": "Couldn't change the plan",
+      "refreshFailed": "Couldn't refresh your plan"
+    },
+    "banner": {
+      "owner": "Choose a plan to add vehicles, take bookings and run checks.",
+      "other": "This workspace has no active plan. Ask the account owner to choose one.",
+      "pastDue": "Your last payment didn't go through. Update your card to keep your plan.",
+      "action": "Go to billing"
+    },
+    "credits": {
+      "section": "Credits",
+      "sectionHelp": "Prepaid credits for background and insurance checks.",
+      "title": "Verification credits",
+      "description": "A check takes its credits when you run it. They come back if it never gives an answer.",
+      "balance": "Credits left",
+      "level": {
+        "empty": "Not enough credits to run a check.",
+        "low": "Running low. Buy more or switch on auto-recharge."
+      },
+      "costs": {
+        "label": "What a check costs",
+        "background_one": "Background check: {{count}} credit",
+        "background_other": "Background check: {{count}} credits",
+        "insurance_one": "Insurance check: {{count}} credit",
+        "insurance_other": "Insurance check: {{count}} credits"
+      },
+      "buy": "Buy credits",
+      "needsPlan": "Choose a plan before buying credits.",
+      "ownerOnly": "Only the account owner can buy credits.",
+      "buyDialog": {
+        "title": "Buy credits",
+        "description": "Credits never expire. You pay on Stripe's secure page.",
+        "packs": "Packs",
+        "pack": "{{count}} credits",
+        "perCredit": "{{price}} a credit",
+        "total": "Total",
+        "confirm": "Continue to payment"
+      },
+      "autoRecharge": {
+        "title": "Auto-recharge",
+        "off": "Off",
+        "on": "Buys {{credits}} credits when fewer than {{below}} are left",
+        "setUp": "Set up",
+        "change": "Change",
+        "dialogTitle": "Auto-recharge",
+        "dialogDescription": "When the balance falls below the number you choose, a pack is bought on the card your plan is paid with. If the card can't be charged, auto-recharge switches off and you get an email.",
+        "enabled": "Top up automatically",
+        "pack": "Pack to buy",
+        "below": "When credits fall below",
+        "save": "Save",
+        "packOption": "{{count}} credits · {{price}}",
+        "buysNow": "You have fewer than {{below}} credits now, so this pack ({{price}}) is bought as soon as you save."
+      },
+      "toast": {
+        "buyFailed": "Couldn't open checkout",
+        "bought": "Credits added",
+        "confirmFailed": "Couldn't confirm your purchase",
+        "autoRechargeSaved": "Auto-recharge saved",
+        "autoRechargeFailed": "Couldn't save auto-recharge"
+      }
+    },
+    "features": {
+      "bookings": "Bookings & fleet calendar",
+      "contracts": "E-signed rental agreements",
+      "site": "Branded booking website",
+      "checks": "Verification suite"
+    },
+    "enterpriseFeatures": {
+      "everything": "Everything in Pro",
+      "pricing": "Pricing for your fleet size",
+      "setup": "Set up with our team"
+    },
+    "currentTag": "Current",
+    "history": {
+      "section": "History",
+      "sectionHelp": "What Veltrio has charged you, with each invoice.",
+      "title": "Billing history",
+      "description": "Your plan's charges and credit purchases, newest first.",
+      "kind": {
+        "subscription": "Subscription",
+        "planChange": "Plan change",
+        "credits": "Verification credits",
+        "autoRecharge": "Credits bought by auto-recharge",
+        "other": "Invoice"
+      },
+      "status": {
+        "paid": "Paid",
+        "open": "Due",
+        "void": "Void",
+        "uncollectible": "Unpaid"
+      },
+      "invoiceNumber": "Invoice {{number}}",
+      "invoice": "Invoice",
+      "receipt": "Receipt",
+      "downloadInvoice": "Download invoice {{number}}",
+      "viewReceipt": "View receipt for {{date}}",
+      "emptyTitle": "No charges yet",
+      "emptyDescription": "Your first invoice appears here once your plan is charged or you buy credits.",
+      "more": "Older invoices are under Manage billing."
+    },
+    "limit": {
+      "title": {
+        "vehicles": "You've reached your vehicle limit",
+        "branches": "You've reached your branch limit",
+        "noPlan": "Choose a plan first",
+        "onHold": "Your plan is on hold"
+      },
+      "description": {
+        "vehicles_one": "Your {{plan}} plan covers up to {{count}} vehicle. Upgrade it to add more, or archive one you no longer rent out.",
+        "vehicles_other": "Your {{plan}} plan covers up to {{count}} vehicles. Upgrade it to add more, or archive one you no longer rent out.",
+        "branches_one": "Your {{plan}} plan covers {{count}} branch. Upgrade it to add more, or delete one you no longer use.",
+        "branches_other": "Your {{plan}} plan covers {{count}} branches. Upgrade it to add more, or delete one you no longer use.",
+        "noPlan": "Vehicles and branches can be added once your workspace has a running plan.",
+        "onHold": "A payment didn't go through. Update your card under Manage billing to add vehicles and branches again."
+      },
+      "ownerOnly": "Only the account owner can change the plan.",
+      "viewPlans": "View plans",
+      "notNow": "Not now",
+      "openBilling": "Go to billing"
     }
   }
 }

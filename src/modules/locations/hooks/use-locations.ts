@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
+import { billingChanged } from '@/modules/billing/hooks/use-billing'
+import { showPlanLimit } from '@/modules/billing/hooks/use-plan-limit'
 import { normalizeApiError } from '@/services/api/errors'
 import { locationApi } from '../api/location.api'
 import type { Location, LocationInput, LocationSort } from '../types/location.types'
@@ -60,9 +62,11 @@ function useLocationMutation<TArgs>(
       // A rename rewrites the branch on every vehicle based there, so their cached copies
       // are stale too.
       queryClient.invalidateQueries({ queryKey: ['vehicles'] })
+      billingChanged(queryClient)
       toast({ title: titles.success, variant: 'success' })
     },
     onError: (error) => {
+      if (showPlanLimit(error)) return
       toast({
         title: titles.error,
         description: normalizeApiError(error).message,

@@ -55,6 +55,7 @@ import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hook
 import { hasPermission } from '@/utils/permissions'
 import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
 import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImportDialog'
+import { usePlanLimitGuard } from '@/modules/billing/hooks/use-plan-limit'
 import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
 import { copyToClipboard, fleetUrl, vehicleUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
@@ -164,6 +165,8 @@ export function VehiclesPage() {
   const queryClient = useQueryClient()
   const archiveVehicle = useArchiveVehicle()
   const restoreVehicle = useRestoreVehicle()
+  // Checked before the wizard or the import opens, rather than refused at the end of them.
+  const refusedByPlan = usePlanLimitGuard()
   const reorderVehicles = useReorderVehicles()
   const deleteDraft = useDeleteVehicleDraft()
 
@@ -304,7 +307,10 @@ export function VehiclesPage() {
             ? [{ label: t('publicLink.vehicleLink'), onClick: () => void handleCopyVehicleLink(v) }]
             : []),
           v.status === 'Archived'
-            ? { label: t('list.rowActions.restoreVehicle'), onClick: () => restoreVehicle.mutate(v) }
+            ? {
+                label: t('list.rowActions.restoreVehicle'),
+                onClick: () => !refusedByPlan('vehicles') && restoreVehicle.mutate(v),
+              }
             : {
                 label: t('list.rowActions.archiveVehicle'),
                 onClick: () => setDeleteTarget(v),
@@ -331,14 +337,14 @@ export function VehiclesPage() {
               <PageActionButton
                 icon={Download}
                 label={t('list.importCsv')}
-                onClick={() => setImportOpen(true)}
+                onClick={() => !refusedByPlan('vehicles') && setImportOpen(true)}
                 className="!text-[13px]"
               />
               <PageActionButton
                 icon={Plus}
                 label={t('list.addVehicle')}
                 variant="solid"
-                onClick={() => navigate('/vehicles/new')}
+                onClick={() => !refusedByPlan('vehicles') && navigate('/vehicles/new')}
                 className="!text-[13px]"
               />
             </Can>

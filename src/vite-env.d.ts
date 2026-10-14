@@ -13,6 +13,8 @@ interface ImportMetaEnv {
   readonly VITE_GOOGLE_MAPS_API_KEY?: string
   /** `true` once the API can email or text a renter their insurance link. */
   readonly VITE_INSURANCE_LINK_DELIVERY?: string
+  /** Where a company writes for an Enterprise quote. Absent, the plan offers no contact button. */
+  readonly VITE_SALES_EMAIL?: string
   /** Where errors are reported. Absent in development and in CI: nothing is sent. */
   readonly VITE_SENTRY_DSN?: string
   /** Names the deployment in Sentry, e.g. `staging`; the build mode when unset. */

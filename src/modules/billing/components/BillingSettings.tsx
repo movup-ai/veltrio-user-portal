@@ -1,0 +1,72 @@
+import { useEffect, useRef } from 'react'
+import { CreditCard } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
+import { ErrorState } from '@/components/feedback/ErrorState'
+import { LoadingState } from '@/components/feedback/LoadingState'
+import { usePermissions } from '@/components/feedback/Can'
+import { hasAnyPermission } from '@/utils/permissions'
+import { useBilling, useRefreshBilling } from '../hooks/use-billing'
+import { SUBSCRIPTION_RETURN_PARAMS } from '../utils/billing.utils'
+import { BillingHistory } from './BillingHistory'
+import { BillingSection } from './BillingSection'
+import { CreditsCard } from './CreditsCard'
+import { PlanPicker } from './PlanPicker'
+import { PlanSummary } from './PlanSummary'
+
+/**
+ * The company's Veltrio plan: what it is on, what it uses of it, and the plans it can move to.
+ * Stripe sends the owner back from checkout and from its portal with a marker on the URL, and
+ * the subscription is then read from Stripe, since the event reporting it can arrive after them.
+ */
+export function BillingSettings() {
+  const { t } = useTranslation('settings')
+  const { data: billing, isLoading, refetch } = useBilling()
+  const refresh = useRefreshBilling()
+  const canManage = hasAnyPermission(usePermissions(), ['settings.manage'])
+  const [params, setParams] = useSearchParams()
+  const handled = useRef(false)
+
+  const returned = SUBSCRIPTION_RETURN_PARAMS.some((param) => params.has(param))
+  useEffect(() => {
+    if (!returned || handled.current) return
+    handled.current = true
+    setParams({}, { replace: true })
+    refresh.mutate()
+  }, [returned, setParams, refresh])
+
+  // Nothing is offered while Stripe is being asked: the plan just bought is not known yet, and
+  // the picker would open on the wrong period and offer that plan as a switch.
+  const settling = isLoading || refresh.isPending
+
+  return (
+    <>
+      <BillingSection
+        icon={CreditCard}
+        section={t('billing.section')}
+        sectionHelp={t('billing.sectionHelp')}
+        title={t('billing.title')}
+        description={t('billing.description')}
+      >
+        {settling ? (
+          <LoadingState />
+        ) : !billing ? (
+          // Only with nothing to show: a refetch that failed leaves the last answer on screen.
+          <ErrorState onRetry={() => void refetch()} />
+        ) : (
+          <>
+            <PlanSummary billing={billing} canManage={canManage} />
+            {billing.enabled && <PlanPicker billing={billing} canManage={canManage} />}
+            {billing.enabled && !canManage && (
+              <p className="text-fg-4 m-0 text-[12.5px]">{t('billing.ownerOnly')}</p>
+            )}
+          </>
+        )}
+      </BillingSection>
+      {/* Credits pay for checks on a plan, so they are not offered where nothing is billed. */}
+      {billing?.enabled && <CreditsCard billing={billing} canManage={canManage} />}
+      {/* Invoices are the owner's, as the card is; the API refuses them to anyone else. */}
+      {billing?.enabled && canManage && <BillingHistory />}
+    </>
+  )
+}

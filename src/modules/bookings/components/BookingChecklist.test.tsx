@@ -160,7 +160,7 @@ describe('sending the renter a link', () => {
     const send = screen.getAllByRole('button', { name: 'Send link' })
     expect(send).toHaveLength(1)
     // The tile's only action, so it takes the filled style the order button used to.
-    expect(send[0]).toHaveClass('bg-primary')
+    expect(send[0]).toHaveClass('bg-primary-solid')
     send[0].click()
     expect(onShare).toHaveBeenCalledWith('insurance')
   })

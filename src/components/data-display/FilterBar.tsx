@@ -3,7 +3,12 @@ import { Check, ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DateRangePicker, type DateRange } from '@/components/ui/date-range-picker'
 
@@ -84,21 +89,23 @@ interface FilterChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
  * The pill every inline filter renders as. Forwards its ref and props so it can be handed
  * straight to a Radix `asChild` trigger — dropdown or calendar, the chip looks the same.
  */
-const FilterChip = forwardRef<HTMLButtonElement, FilterChipProps>(({ label, value, className, ...props }, ref) => (
-  <button
-    ref={ref}
-    type="button"
-    className={cn(
-      'bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground flex h-9 shrink-0 items-center gap-2 rounded-[9px] border px-[11px] text-[13px] whitespace-nowrap transition-colors',
-      className,
-    )}
-    {...props}
-  >
-    <span className="text-fg-4">{label}</span>
-    <span className="font-semibold">{value}</span>
-    <ChevronDown className="text-fg-4 size-3.5" />
-  </button>
-))
+const FilterChip = forwardRef<HTMLButtonElement, FilterChipProps>(
+  ({ label, value, className, ...props }, ref) => (
+    <button
+      ref={ref}
+      type="button"
+      className={cn(
+        'bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground flex h-9 shrink-0 items-center gap-2 rounded-[9px] border px-[11px] text-[13px] whitespace-nowrap transition-colors',
+        className,
+      )}
+      {...props}
+    >
+      <span className="text-fg-4">{label}</span>
+      <span className="font-semibold">{value}</span>
+      <ChevronDown className="text-fg-4 size-3.5" />
+    </button>
+  ),
+)
 FilterChip.displayName = 'FilterChip'
 
 export function FilterBar({
@@ -203,7 +210,10 @@ export function FilterBar({
                   <div className="flex flex-col gap-2">
                     {f.options.map((opt) => (
                       <label key={opt.value} className="flex cursor-pointer items-center gap-2.5">
-                        <Checkbox checked={f.selected.includes(opt.value)} onCheckedChange={() => f.onToggle(opt.value)} />
+                        <Checkbox
+                          checked={f.selected.includes(opt.value)}
+                          onCheckedChange={() => f.onToggle(opt.value)}
+                        />
                         <span className="text-[13px]">{opt.label}</span>
                       </label>
                     ))}
@@ -222,7 +232,10 @@ export function FilterBar({
                         <ChevronDown className="text-fg-4 size-3.5 shrink-0" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+                    <DropdownMenuContent
+                      align="start"
+                      className="w-[var(--radix-dropdown-menu-trigger-width)]"
+                    >
                       {f.options.map((opt) => (
                         <DropdownMenuItem key={opt.value} onSelect={() => f.onChange(opt.value)}>
                           {opt.label}
@@ -240,7 +253,7 @@ export function FilterBar({
                   onApplyFilters()
                   setMoreFiltersOpen(false)
                 }}
-                className="bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover mt-1 flex h-9 w-full items-center justify-center gap-[7px] rounded-[9px] text-[12.5px] font-semibold transition-colors"
+                className="bg-primary-solid text-solid-foreground shadow-xs hover:bg-primary-solid-hover mt-1 flex h-9 w-full items-center justify-center gap-[7px] rounded-[9px] text-[12.5px] font-semibold transition-colors"
               >
                 <Check className="size-3.5" />
                 {t('filters.apply')}

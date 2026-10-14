@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useFormatters } from '@/i18n'
 import { cn } from '@/lib/utils'
-import { DAY_FORMAT } from '../constants/customer.constants'
+import { DAY_FORMAT } from '@/lib/date-format'
 import type { Customer, MatchReason } from '../types/customer.types'
 
 interface Props {
