@@ -1,15 +1,14 @@
 import { CarFront } from 'lucide-react'
 import { lazy, Suspense } from 'react'
-import { Outlet, useMatches } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Outlet, useMatches } from 'react-router-dom'
 import { LanguageSwitcher } from '@/components/navigation/LanguageSwitcher'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { cn } from '@/lib/utils'
-import { FleetBoard } from './FleetBoard'
 import type { AuthRouteHandle } from './onboarding-steps'
 import { StepProgress } from './OnboardingSteps'
 
-// Only sign-up and onboarding show it; sign-in, the page opened most, is spared the carousel.
+// Its own chunk: the carousel is only wanted where the brand panel is on screen.
 const AuthShowcase = lazy(() => import('./AuthShowcase').then((m) => ({ default: m.AuthShowcase })))
 
 function Brand({ className, onSolid = false }: { className?: string; onSolid?: boolean }) {
@@ -35,8 +34,7 @@ function Brand({ className, onSolid = false }: { className?: string; onSolid?: b
 }
 
 export function AuthLayout() {
-  const { t } = useTranslation('auth')
-  // Sign-up and onboarding name their step; sign-in names none and keeps the fleet board.
+  // Sign-up and onboarding name their step; sign-in names none.
   const step = useMatches()
     .map((match) => (match.handle as AuthRouteHandle | undefined)?.step)
     .find(Boolean)
@@ -55,25 +53,10 @@ export function AuthLayout() {
       <aside className="hidden overflow-hidden bg-brand-deep text-solid-foreground lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:gap-10 lg:p-12 xl:p-14 [@media(max-height:780px)]:gap-6 [@media(max-height:780px)]:py-8">
         <Brand onSolid />
 
-        {!wide ? null : step ? (
+        {wide && (
           <Suspense fallback={<div className="flex-1" />}>
             <AuthShowcase step={step} />
           </Suspense>
-        ) : (
-          <>
-            {/* Below this height the board would crowd the headline, which carries the same message. */}
-            <div className="flex flex-1 items-center [@media(max-height:600px)]:hidden">
-              <FleetBoard className="w-full max-w-[580px]" />
-            </div>
-            <div className="mt-auto max-w-[30rem]">
-              <p className="font-[family-name:var(--font-display)] text-[38px] leading-[1.08] font-bold tracking-[-0.02em] text-balance">
-                {t('brandPanel.headline')}
-              </p>
-              <p className="mt-4 max-w-[26rem] text-[15px] leading-relaxed text-solid-foreground/70">
-                {t('brandPanel.subtitle')}
-              </p>
-            </div>
-          </>
         )}
       </aside>
 
@@ -84,7 +67,8 @@ export function AuthLayout() {
           <LanguageSwitcher />
         </div>
         <div className="flex flex-1 flex-col items-center py-10 sm:justify-center">
-          {step && <StepProgress current={step} className="mb-10 w-full max-w-md" />}
+          {/* Not over sign-up itself: the steps mean something once there is an account to continue. */}
+          {step && step !== 'account' && <StepProgress current={step} className="mb-10 w-full max-w-md" />}
           <div className="flex w-full justify-center">
             <Outlet />
           </div>

@@ -63,10 +63,8 @@
 
   --veltrio-ring: #0f766e;
 
-  /* The auth screens' brand panel: the same in both themes bar the deep ground. */
+  /* The ground of the auth screens' brand panel. */
   --veltrio-brand-deep: #0b3b37;
-  --veltrio-brand-mint: #5eead4;
-  --veltrio-brand-amber: #fbbf24;
 
   --veltrio-shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
   --veltrio-shadow-sm: 0 2px 8px rgba(28, 25, 23, 0.07);

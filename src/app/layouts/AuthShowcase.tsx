@@ -93,13 +93,14 @@ function Scene({ step, language, current }: { step: OnboardingStep; language: st
 }
 
 /**
- * The brand panel during sign-up: a slider of what Veltrio does, opening on the screen the current
- * step leads to. It moves on by itself unless the reader is pointing at it or asks for less motion.
+ * The brand panel on every auth page: a slider of what Veltrio does, opening on the screen the
+ * current step leads to, or the first on sign-in. It moves on by itself unless the reader is
+ * pointing at it or asks for less motion.
  */
-export function AuthShowcase({ step }: { step: OnboardingStep }) {
+export function AuthShowcase({ step }: { step?: OnboardingStep }) {
   const { t, i18n } = useTranslation('auth')
   const language = i18n.resolvedLanguage === 'es' ? 'es' : 'en'
-  const stepIndex = ONBOARDING_STEPS.indexOf(step)
+  const stepIndex = step ? ONBOARDING_STEPS.indexOf(step) : 0
   const [viewportRef, api] = useEmblaCarousel({ loop: true, startIndex: stepIndex, duration: 32 })
   const [selected, setSelected] = useState(stepIndex)
   const [paused, setPaused] = useState(false)
