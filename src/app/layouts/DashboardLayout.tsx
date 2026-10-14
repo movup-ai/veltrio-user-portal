@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Header } from '@/components/navigation/Header'
 import { Sidebar } from '@/components/navigation/Sidebar'
+import { PlanLimitDialog } from '@/modules/billing/components/PlanLimitDialog'
+import { SubscriptionBanner } from '@/modules/billing/components/SubscriptionBanner'
 import { useBookingStats } from '@/modules/bookings/hooks/use-bookings'
 import { useMe } from '@/services/auth/use-me'
 import { useOrganizationStore } from '@/state/organization.store'
@@ -28,6 +30,8 @@ export function DashboardLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header onMobileMenuClick={() => setMobileNavOpen(true)} />
+        <SubscriptionBanner />
+        <PlanLimitDialog />
         <main className="vx-scroll min-w-0 flex-1 overflow-x-hidden">
           <Outlet />
         </main>

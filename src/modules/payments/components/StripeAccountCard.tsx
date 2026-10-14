@@ -8,17 +8,13 @@ import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { usePermissions } from '@/components/feedback/Can'
+import { ToneBadge } from '@/components/data-display/ToneBadge'
 import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
+import { NOTICE_ICON, TONE_CLASS } from '@/lib/tone'
 import { cn } from '@/lib/utils'
 import { hasAnyPermission } from '@/utils/permissions'
-import {
-  CAPABILITY_DOT,
-  NOTICE_ICON,
-  STATE_TONE,
-  STRIPE_DASHBOARD_URL,
-  TONE_CLASS,
-} from '../constants/payment.constants'
+import { CAPABILITY_DOT, STATE_TONE, STRIPE_DASHBOARD_URL } from '../constants/payment.constants'
 import {
   useDisconnectPaymentAccount,
   useEnablePaymentMethod,
@@ -165,15 +161,7 @@ function ProcessorRow({ account, onConnect, connecting, onRefresh, refreshing }:
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[14px] font-semibold">{t('payments.stripe')}</span>
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-semibold',
-                  TONE_CLASS[tone],
-                )}
-              >
-                <span className="size-1.5 rounded-full bg-current" aria-hidden />
-                {t(`payments.state.${state}`)}
-              </span>
+              <ToneBadge tone={tone}>{t(`payments.state.${state}`)}</ToneBadge>
             </div>
             {account.connected ? (
               <>

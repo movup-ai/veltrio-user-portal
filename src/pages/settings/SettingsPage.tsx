@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { BillingSettings } from '@/modules/billing/components/BillingSettings'
 import { StripeAccountCard } from '@/modules/payments/components/StripeAccountCard'
 import { BrandSettings } from '@/modules/settings/components/BrandSettings'
 import { CancellationPolicySettings } from '@/modules/settings/components/CancellationPolicySettings'
@@ -33,6 +34,7 @@ export function SettingsPage() {
             <CancellationPolicySettings />
           </>
         )}
+        {tab === 'billing' && <BillingSettings />}
         {tab === 'brand' && <BrandSettings />}
         {tab === 'general' && <CompanySettings />}
       </div>

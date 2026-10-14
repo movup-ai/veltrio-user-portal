@@ -4,6 +4,7 @@ import { DRAFTS_PAGE } from '@/lib/pagination'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
 import type { PaginationParams } from '@/types/common'
+import { billingChanged } from '@/modules/billing/hooks/use-billing'
 import { vehicleDraftApi } from '../api/vehicle-draft.api'
 import { isPending } from '../api/vehicle-photo.api'
 import type { VehicleInput } from '../types/vehicle.types'
@@ -72,11 +73,11 @@ export function usePublishVehicleDraft() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: VehicleInput }) =>
-      vehicleDraftApi.publish(id, input),
+    mutationFn: ({ id, input }: { id: string; input: VehicleInput }) => vehicleDraftApi.publish(id, input),
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleDraftKeys.all })
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      billingChanged(queryClient)
       toast({
         title: i18n.t('vehicles:toast.added'),
         description: i18n.t('vehicles:toast.addedDescription', {

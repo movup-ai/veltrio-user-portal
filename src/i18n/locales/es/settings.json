@@ -118,7 +118,8 @@
     "label": "Secciones de configuración",
     "general": "General",
     "brand": "Marca",
-    "payments": "Pagos"
+    "payments": "Pagos",
+    "billing": "Facturación"
   },
   "payments": {
     "section": "Pagos",
@@ -238,6 +239,226 @@
       "addTier": "Añadir tramo",
       "preview": "Cómo lo verán los clientes",
       "appliesFrom": "Se aplica a las reservas hechas desde ahora: cada reserva conserva la política con la que se hizo. Tú sigues eligiendo el reembolso cada vez que cancelas una."
+    }
+  },
+  "billing": {
+    "section": "Facturación",
+    "sectionHelp": "Tu plan de Veltrio y lo que incluye.",
+    "title": "Tu plan",
+    "description": "Los planes se definen por los vehículos y sucursales que gestionas. Todos los planes tienen las mismas funciones.",
+    "noPlan": "Sin plan",
+    "planName": {
+      "starter": "Starter",
+      "growth": "Growth",
+      "pro": "Pro",
+      "enterprise": "Enterprise"
+    },
+    "state": {
+      "off": "No disponible",
+      "trialing": "Prueba gratuita",
+      "active": "Activo",
+      "pastDue": "Pago fallido",
+      "ending": "Por finalizar",
+      "ended": "Finalizado",
+      "onHold": "En pausa"
+    },
+    "notice": {
+      "off": "La facturación no está activada en este espacio de trabajo, así que nada está limitado.",
+      "noneTrial": "Elige un plan para empezar tu prueba gratuita de {{days}} días. Hasta entonces no puedes añadir vehículos, tomar reservas ni hacer verificaciones.",
+      "none": "Elige un plan para añadir vehículos, tomar reservas y hacer verificaciones.",
+      "trialing": "Tu prueba gratuita termina el {{date}}. Ese día se cobra tu tarjeta, salvo que canceles.",
+      "pastDue": "Tu último pago no se pudo cobrar. Actualiza tu tarjeta para conservar tu plan.",
+      "ending": "Tu plan termina el {{date}}. Después no podrás añadir vehículos, tomar reservas ni hacer verificaciones.",
+      "ended": "Tu plan ha terminado. Elige un plan para volver a añadir vehículos, tomar reservas y hacer verificaciones.",
+      "onHold": "Tu plan está en pausa porque no se pudo cobrar un pago. Actualiza tu tarjeta en Gestionar facturación para continuar."
+    },
+    "renewsOn": "Se renueva el {{date}}",
+    "usage": {
+      "vehicles": "Vehículos",
+      "branches": "Sucursales",
+      "of": "{{used}} de {{limit}}",
+      "unlimited": "{{used}}, sin límite"
+    },
+    "interval": {
+      "label": "Periodo de facturación",
+      "month": "Mensual",
+      "year": "Anual",
+      "save": "Ahorra {{percent}}%"
+    },
+    "price": {
+      "unit": {
+        "month": "/ mes",
+        "year": "/ año"
+      },
+      "quoted": "Precio a medida"
+    },
+    "limits": {
+      "vehicles_one": "Hasta {{count}} vehículo",
+      "vehicles_other": "Hasta {{count}} vehículos",
+      "vehiclesUnlimited": "Vehículos ilimitados",
+      "branches_one": "{{count}} sucursal",
+      "branches_other": "{{count}} sucursales",
+      "branchesUnlimited": "Sucursales ilimitadas",
+      "vehiclesOver": "Más de {{count}} vehículos"
+    },
+    "actions": {
+      "startTrial": "Empezar prueba gratuita",
+      "choose": "Elegir plan",
+      "upgrade": "Mejorar plan",
+      "downgrade": "Reducir plan",
+      "switchTo": {
+        "month": "Cambiar a mensual",
+        "year": "Cambiar a anual"
+      },
+      "current": "Plan actual",
+      "manage": "Gestionar facturación",
+      "manageHelp": "Actualiza tu tarjeta, consulta facturas o cancela",
+      "contact": "Contáctanos"
+    },
+    "tooSmall": {
+      "have": "tienes {{count}}",
+      "vehicles": "Tienes {{have}} vehículos. {{plan}} permite hasta {{limit}}.",
+      "branches": "Tienes {{have}} sucursales. {{plan}} permite {{limit}}."
+    },
+    "ownerOnly": "Solo el propietario de la cuenta puede elegir o cambiar el plan.",
+    "confirmChange": {
+      "title": {
+        "upgrade": "¿Mejorar a {{plan}}?",
+        "downgrade": "¿Reducir a {{plan}}?",
+        "period": {
+          "month": "¿Cambiar a facturación mensual?",
+          "year": "¿Cambiar a facturación anual?"
+        }
+      },
+      "description": "{{plan}} cuesta {{price}}, con facturación {{period}}.\n\nEl cambio se aplica ahora, y Stripe cobra o abona la diferencia por el resto de este periodo de facturación.",
+      "period": {
+        "month": "mensual",
+        "year": "anual"
+      }
+    },
+    "toast": {
+      "checkoutFailed": "No se pudo abrir el pago",
+      "portalFailed": "No se pudo abrir la facturación",
+      "planChanged": "Plan cambiado",
+      "planFailed": "No se pudo cambiar el plan",
+      "refreshFailed": "No se pudo actualizar tu plan"
+    },
+    "banner": {
+      "owner": "Elige un plan para añadir vehículos, tomar reservas y hacer verificaciones.",
+      "other": "Este espacio de trabajo no tiene un plan activo. Pide al propietario de la cuenta que elija uno.",
+      "pastDue": "Tu último pago no se pudo cobrar. Actualiza tu tarjeta para conservar tu plan.",
+      "action": "Ir a facturación"
+    },
+    "credits": {
+      "section": "Créditos",
+      "sectionHelp": "Créditos prepagados para verificaciones de antecedentes y de seguro.",
+      "title": "Créditos de verificación",
+      "description": "Una verificación toma sus créditos al ejecutarla. Se devuelven si nunca da una respuesta.",
+      "balance": "Créditos disponibles",
+      "level": {
+        "empty": "No hay créditos suficientes para hacer una verificación.",
+        "low": "Quedan pocos. Compra más o activa la recarga automática."
+      },
+      "costs": {
+        "label": "Lo que cuesta una verificación",
+        "background_one": "Verificación de antecedentes: {{count}} crédito",
+        "background_other": "Verificación de antecedentes: {{count}} créditos",
+        "insurance_one": "Verificación de seguro: {{count}} crédito",
+        "insurance_other": "Verificación de seguro: {{count}} créditos"
+      },
+      "buy": "Comprar créditos",
+      "needsPlan": "Elige un plan antes de comprar créditos.",
+      "ownerOnly": "Solo el propietario de la cuenta puede comprar créditos.",
+      "buyDialog": {
+        "title": "Comprar créditos",
+        "description": "Los créditos no caducan. Pagas en la página segura de Stripe.",
+        "packs": "Paquetes",
+        "pack": "{{count}} créditos",
+        "perCredit": "{{price}} por crédito",
+        "total": "Total",
+        "confirm": "Continuar al pago"
+      },
+      "autoRecharge": {
+        "title": "Recarga automática",
+        "off": "Desactivada",
+        "on": "Compra {{credits}} créditos cuando quedan menos de {{below}}",
+        "setUp": "Configurar",
+        "change": "Cambiar",
+        "dialogTitle": "Recarga automática",
+        "dialogDescription": "Cuando el saldo baja del número que elijas, se compra un paquete con la tarjeta con la que pagas tu plan. Si no se puede cobrar la tarjeta, la recarga automática se desactiva y recibes un correo.",
+        "enabled": "Recargar automáticamente",
+        "pack": "Paquete a comprar",
+        "below": "Cuando los créditos bajen de",
+        "save": "Guardar",
+        "packOption": "{{count}} créditos · {{price}}",
+        "buysNow": "Ahora tienes menos de {{below}} créditos, así que este paquete ({{price}}) se compra en cuanto guardes."
+      },
+      "toast": {
+        "buyFailed": "No se pudo abrir el pago",
+        "bought": "Créditos añadidos",
+        "confirmFailed": "No se pudo confirmar tu compra",
+        "autoRechargeSaved": "Recarga automática guardada",
+        "autoRechargeFailed": "No se pudo guardar la recarga automática"
+      }
+    },
+    "features": {
+      "bookings": "Reservas y calendario de flota",
+      "contracts": "Contratos de alquiler con firma electrónica",
+      "site": "Sitio de reservas con tu marca",
+      "checks": "Suite de verificación"
+    },
+    "enterpriseFeatures": {
+      "everything": "Todo lo de Pro",
+      "pricing": "Precio según el tamaño de tu flota",
+      "setup": "Configuración con nuestro equipo"
+    },
+    "currentTag": "Actual",
+    "history": {
+      "section": "Historial",
+      "sectionHelp": "Lo que Veltrio te ha cobrado, con cada factura.",
+      "title": "Historial de facturación",
+      "description": "Los cobros de tu plan y tus compras de créditos, del más reciente al más antiguo.",
+      "kind": {
+        "subscription": "Suscripción",
+        "planChange": "Cambio de plan",
+        "credits": "Créditos de verificación",
+        "autoRecharge": "Créditos comprados por recarga automática",
+        "other": "Factura"
+      },
+      "status": {
+        "paid": "Pagada",
+        "open": "Pendiente",
+        "void": "Anulada",
+        "uncollectible": "Impagada"
+      },
+      "invoiceNumber": "Factura {{number}}",
+      "invoice": "Factura",
+      "receipt": "Recibo",
+      "downloadInvoice": "Descargar la factura {{number}}",
+      "viewReceipt": "Ver el recibo del {{date}}",
+      "emptyTitle": "Aún no hay cobros",
+      "emptyDescription": "Tu primera factura aparecerá aquí cuando se cobre tu plan o compres créditos.",
+      "more": "Las facturas anteriores están en Gestionar facturación."
+    },
+    "limit": {
+      "title": {
+        "vehicles": "Has alcanzado el límite de vehículos",
+        "branches": "Has alcanzado el límite de sucursales",
+        "noPlan": "Primero elige un plan",
+        "onHold": "Tu plan está en pausa"
+      },
+      "description": {
+        "vehicles_one": "Tu plan {{plan}} cubre hasta {{count}} vehículo. Mejóralo para añadir más o archiva uno que ya no alquiles.",
+        "vehicles_other": "Tu plan {{plan}} cubre hasta {{count}} vehículos. Mejóralo para añadir más o archiva uno que ya no alquiles.",
+        "branches_one": "Tu plan {{plan}} cubre {{count}} sucursal. Mejóralo para añadir más o elimina una que ya no uses.",
+        "branches_other": "Tu plan {{plan}} cubre {{count}} sucursales. Mejóralo para añadir más o elimina una que ya no uses.",
+        "noPlan": "Podrás añadir vehículos y sucursales cuando tu espacio de trabajo tenga un plan activo.",
+        "onHold": "Un pago no se completó. Actualiza tu tarjeta en Gestionar facturación para volver a añadir vehículos y sucursales."
+      },
+      "ownerOnly": "Solo el propietario de la cuenta puede cambiar el plan.",
+      "viewPlans": "Ver planes",
+      "notNow": "Ahora no",
+      "openBilling": "Ir a facturación"
     }
   }
 }

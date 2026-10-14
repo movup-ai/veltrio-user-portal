@@ -46,7 +46,13 @@ export function fromDateValue(value: string): Date | undefined {
  * Applying live would filter the list against a half-drawn range on the way to the real one,
  * and dismissing without Done would leave that midpoint applied.
  */
-export function DateRangePicker({ value, onChange, trigger, numberOfMonths = 2, align = 'start' }: DateRangePickerProps) {
+export function DateRangePicker({
+  value,
+  onChange,
+  trigger,
+  numberOfMonths = 2,
+  align = 'start',
+}: DateRangePickerProps) {
   const { t } = useTranslation('common')
   const [open, setOpen] = React.useState(false)
   const [draft, setDraft] = React.useState(value)
@@ -83,7 +89,10 @@ export function DateRangePicker({ value, onChange, trigger, numberOfMonths = 2, 
             range_end: `[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:font-semibold ${isSpan ? '[&>button]:rounded-l-none' : ''}`,
           }}
           onSelect={(range) => {
-            setDraft({ from: range?.from ? toDateValue(range.from) : '', to: range?.to ? toDateValue(range.to) : '' })
+            setDraft({
+              from: range?.from ? toDateValue(range.from) : '',
+              to: range?.to ? toDateValue(range.to) : '',
+            })
           }}
         />
         <div className="border-border-soft mt-2 flex items-center justify-between gap-2 border-t pt-2">
@@ -105,7 +114,7 @@ export function DateRangePicker({ value, onChange, trigger, numberOfMonths = 2, 
               onChange(draft)
               setOpen(false)
             }}
-            className="bg-primary text-primary-foreground hover:bg-primary-hover rounded-[7px] px-3 py-1 text-[12.5px] font-semibold transition-colors"
+            className="bg-primary-solid text-solid-foreground hover:bg-primary-solid-hover rounded-[7px] px-3 py-1 text-[12.5px] font-semibold transition-colors"
           >
             {t('actions.done')}
           </button>

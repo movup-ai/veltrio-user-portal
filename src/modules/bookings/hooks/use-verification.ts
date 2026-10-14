@@ -10,6 +10,7 @@ import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
 import { useDebounced } from '@/lib/use-debounced'
 import { usePdfOpener } from '@/lib/use-pdf-opener'
+import { billingChanged } from '@/modules/billing/hooks/use-billing'
 import { normalizeApiError } from '@/services/api/errors'
 import type { PaginationParams } from '@/types/common'
 import type {
@@ -90,6 +91,7 @@ export function useOrderCustomerVerification() {
     onSuccess: () => {
       // Re-read by customer id: the form knows the renter, not the verification's own key.
       queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+      billingChanged(queryClient)
       toast({
         title: i18n.t('bookings:verification.toast.ordered'),
         description: i18n.t('bookings:verification.toast.orderedDescription'),
@@ -115,6 +117,7 @@ export function useOrderVerification(reference: string) {
       queryClient.setQueryData(verificationKeys.detail(reference), verification)
       // The booking's own copy and the ready counts both move with it.
       queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+      billingChanged(queryClient)
       toast({
         title: i18n.t('bookings:verification.toast.ordered'),
         description: i18n.t('bookings:verification.toast.orderedDescription'),
@@ -177,6 +180,7 @@ export function useOrderStandaloneVerification() {
     mutationFn: (input: StandaloneOrderWire) => verificationApi.orderStandalone(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: verificationKeys.logs() })
+      billingChanged(queryClient)
       toast({
         title: i18n.t('bookings:verification.toast.ordered'),
         description: i18n.t('bookings:verification.toast.orderedDescription'),
@@ -370,6 +374,7 @@ function useInsuranceLink() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: verificationKeys.logs() })
       queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+      billingChanged(queryClient)
     },
     onError: (error) => {
       toast({

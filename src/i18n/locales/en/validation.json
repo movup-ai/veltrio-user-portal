@@ -67,6 +67,7 @@
     "network": "Unable to reach the server. Check your connection.",
     "unauthorized": "Your session has expired. Please sign in again.",
     "forbidden": "You don't have permission to do that.",
+    "paymentRequired": "This needs an active plan or more credits. Check the Billing settings.",
     "notFound": "The requested resource could not be found.",
     "conflict": "That conflicts with something that already exists.",
     "validation": "Some of the submitted information is invalid.",

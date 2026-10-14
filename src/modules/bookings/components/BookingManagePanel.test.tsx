@@ -66,7 +66,7 @@ describe('BookingManagePanel', () => {
   it('makes cancelling the red button on the card', () => {
     render(<BookingManagePanel onAction={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: 'Cancel booking' })).toHaveClass('bg-error')
+    expect(screen.getByRole('button', { name: 'Cancel booking' })).toHaveClass('bg-error-solid')
   })
 
   it('asks to cancel a booking that can be', async () => {

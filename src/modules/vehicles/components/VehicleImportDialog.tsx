@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/use-toast'
 import { normalizeApiError } from '@/services/api/errors'
+import { billingChanged } from '@/modules/billing/hooks/use-billing'
+import { showPlanLimit } from '@/modules/billing/hooks/use-plan-limit'
 import { MAX_IMPORT_BYTES, vehicleImportApi } from '../api/vehicle-import.api'
 import type { ImportPreview, ImportRow } from '../api/vehicle.mapper'
 import { vehicleKeys } from '../hooks/use-vehicles'
@@ -93,7 +95,11 @@ export function VehicleImportDialog({ open, onOpenChange }: Props) {
       setPreview(await vehicleImportApi.preview(file))
     } catch (error) {
       setFileName(null)
-      toast({ title: t('import.previewFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: t('import.previewFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     } finally {
       setIsBusy(false)
     }
@@ -106,10 +112,16 @@ export function VehicleImportDialog({ open, onOpenChange }: Props) {
     try {
       const result = await vehicleImportApi.commit(valid.map((row) => row.values))
       await queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      billingChanged(queryClient)
       toast({ title: t('import.imported', { count: result.imported }), variant: 'success' })
       close(false)
     } catch (error) {
-      toast({ title: t('import.importFailed'), description: normalizeApiError(error).message, variant: 'error' })
+      if (showPlanLimit(error)) return close(false)
+      toast({
+        title: t('import.importFailed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     } finally {
       setIsBusy(false)
     }

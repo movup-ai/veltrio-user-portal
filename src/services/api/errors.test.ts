@@ -1,5 +1,7 @@
 import { AxiosError, AxiosHeaders } from 'axios'
 import { describe, expect, it } from 'vitest'
+import i18n from '@/i18n'
+import { worthReporting } from '@/lib/error-reporting'
 import { normalizeApiError } from './errors'
 
 /** Builds the axios error shape the interceptor actually receives. */
@@ -36,6 +38,21 @@ describe('normalizeApiError', () => {
     expect(normalizeApiError(apiResponse(404, envelope('not_found', 'Gone'))).kind).toBe('not_found')
     expect(normalizeApiError(apiResponse(409, envelope('vin_already_exists', 'Dup'))).kind).toBe('conflict')
     expect(normalizeApiError(apiResponse(503, envelope('down', 'Down'))).kind).toBe('server_error')
+  })
+
+  it('reads a 402 as something to pay for, not as a fault to report', () => {
+    // Running out of credits is the app working; as `unknown` it was sent to Sentry each time.
+    const error = normalizeApiError(apiResponse(402, envelope('insufficient_credits', 'Buy more')))
+
+    expect(error.kind).toBe('payment_required')
+    expect(worthReporting(error)).toBe(false)
+  })
+
+  it('says a 402 that carries no message of its own is about paying, not an unknown fault', () => {
+    const error = normalizeApiError(apiResponse(402, {}))
+
+    expect(error.message).toBe(i18n.t('validation:api.paymentRequired'))
+    expect(error.message).not.toBe(i18n.t('validation:api.unknown'))
   })
 
   it('reads validation field errors from the envelope details', () => {

@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
+import { usePlanLimitGuard } from '@/modules/billing/hooks/use-plan-limit'
 import { LocationCard } from '@/modules/locations/components/LocationCard'
 import { LocationDialog } from '@/modules/locations/components/LocationDialog'
 import { useDeleteLocation, useLocations } from '@/modules/locations/hooks/use-locations'
@@ -24,7 +25,10 @@ export function LocationsPage() {
   // blocker and withholds the action rather than sending a request that cannot succeed.
   const deleteBlocked = Boolean(deleteTarget && deleteTarget.vehicleCount > 0)
 
+  const refusedByPlan = usePlanLimitGuard()
+
   const openAdd = () => {
+    if (refusedByPlan('branches')) return
     setEditing(undefined)
     setDialogOpen(true)
   }
@@ -40,12 +44,7 @@ export function LocationsPage() {
         title={t('list.title')}
         description={t('list.description')}
         actions={
-          <PageActionButton
-            icon={Plus}
-            label={t('list.addLocation')}
-            variant="solid"
-            onClick={openAdd}
-          />
+          <PageActionButton icon={Plus} label={t('list.addLocation')} variant="solid" onClick={openAdd} />
         }
       />
 

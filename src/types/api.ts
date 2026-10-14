@@ -1,6 +1,7 @@
 /** Discriminates the errors the UI must render differently. */
 export type ApiErrorKind =
   | 'unauthorized' // 401
+  | 'payment_required' // 402 — no running plan, or too few credits for a check
   | 'forbidden' // 403
   | 'not_found' // 404
   | 'conflict' // 409 — e.g. a VIN already registered to another vehicle

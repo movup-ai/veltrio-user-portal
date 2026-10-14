@@ -4,14 +4,14 @@ import { settingsTab } from './settings-tab'
 describe('settingsTab', () => {
   it('keeps General selected on every settings page that shows the general sections', () => {
     // These routes render General; matching only /settings left them with no tab selected.
-    for (const path of [
-      '/settings',
-      '/settings/users',
-      '/settings/roles',
-      '/settings/billing',
-    ]) {
+    for (const path of ['/settings', '/settings/users', '/settings/roles']) {
       expect(settingsTab(path)).toBe('general')
     }
+  })
+
+  it('selects Billing on the billing page only', () => {
+    expect(settingsTab('/settings/billing')).toBe('billing')
+    expect(settingsTab('/settings/billingish')).toBe('general')
   })
 
   it('selects Brand on the brand page only', () => {

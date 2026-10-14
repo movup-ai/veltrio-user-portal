@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import i18n from '@/i18n'
 import { toast } from '@/components/ui/use-toast'
+import { billingChanged } from '@/modules/billing/hooks/use-billing'
+import { showPlanLimit } from '@/modules/billing/hooks/use-plan-limit'
 import { normalizeApiError } from '@/services/api/errors'
 import { vehicleApi } from '../api/vehicle.api'
 import { photoThumbnail } from '../utils/vehicle.utils'
@@ -109,6 +111,7 @@ export function useCreateVehicle() {
     mutationFn: (input: VehicleInput) => vehicleApi.create(input),
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      billingChanged(queryClient)
       toast({
         title: i18n.t('vehicles:toast.added'),
         description: i18n.t('vehicles:toast.addedDescription', { name: vehicleName(vehicle) }),
@@ -116,6 +119,7 @@ export function useCreateVehicle() {
       })
     },
     onError: (error) => {
+      if (showPlanLimit(error)) return
       toast({
         title: i18n.t('vehicles:toast.addFailed'),
         description: normalizeApiError(error).message,
@@ -132,6 +136,7 @@ export function useUpdateVehicle(id: string) {
     mutationFn: (input: VehicleInput) => vehicleApi.update(id, input),
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      billingChanged(queryClient)
       queryClient.setQueryData(vehicleKeys.detail(id), vehicle)
       toast({
         title: i18n.t('vehicles:toast.updated'),
@@ -140,6 +145,7 @@ export function useUpdateVehicle(id: string) {
       })
     },
     onError: (error) => {
+      if (showPlanLimit(error)) return
       toast({
         title: i18n.t('vehicles:toast.updateFailed'),
         description: normalizeApiError(error).message,
@@ -175,6 +181,7 @@ export function useArchiveVehicle() {
     mutationFn: (vehicle: Vehicle) => vehicleApi.archive(vehicle.id).then(() => vehicle),
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      billingChanged(queryClient)
       toast({
         title: i18n.t('vehicles:toast.archived'),
         description: i18n.t('vehicles:toast.archivedDescription', { name: vehicleName(vehicle) }),
@@ -198,6 +205,7 @@ export function useRestoreVehicle() {
     mutationFn: (vehicle: Vehicle) => vehicleApi.restore(vehicle.id).then(() => vehicle),
     onSuccess: (vehicle) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all })
+      billingChanged(queryClient)
       toast({
         title: i18n.t('vehicles:toast.restored'),
         description: i18n.t('vehicles:toast.restoredDescription', { name: vehicleName(vehicle) }),
@@ -205,6 +213,7 @@ export function useRestoreVehicle() {
       })
     },
     onError: (error) => {
+      if (showPlanLimit(error)) return
       toast({
         title: i18n.t('vehicles:toast.restoreFailed'),
         description: normalizeApiError(error).message,

@@ -4,6 +4,7 @@ import { ApiError, type ApiFieldError } from '@/types/api'
 
 const STATUS_TO_KIND: Record<number, ApiError['kind']> = {
   401: 'unauthorized',
+  402: 'payment_required',
   403: 'forbidden',
   404: 'not_found',
   409: 'conflict',
@@ -102,6 +103,8 @@ function defaultMessageFor(kind: ApiError['kind']): string {
       return i18n.t('validation:api.unauthorized')
     case 'forbidden':
       return i18n.t('validation:api.forbidden')
+    case 'payment_required':
+      return i18n.t('validation:api.paymentRequired')
     case 'not_found':
       return i18n.t('validation:api.notFound')
     case 'conflict':

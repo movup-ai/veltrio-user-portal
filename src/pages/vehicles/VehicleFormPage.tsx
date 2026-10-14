@@ -20,6 +20,7 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { FormField } from '@/components/forms/FormField'
 import { PhotoDropzone } from '@/components/forms/PhotoDropzone'
+import { showPlanLimit } from '@/modules/billing/hooks/use-plan-limit'
 import { VehiclePhotoEditor } from '@/modules/vehicles/components/VehiclePhotoEditor'
 import { RateOptionsEditor } from '@/modules/vehicles/components/RateOptionsEditor'
 import { DiscountTiersEditor } from '@/modules/vehicles/components/DiscountTiersEditor'
@@ -452,6 +453,8 @@ function VehicleForm({
    * looking valid and nothing indicating what to change.
    */
   const handleSubmitError = (error: unknown) => {
+    // A plan refusal is not a field to fix: the dialog says so, and the form keeps what was typed.
+    if (showPlanLimit(error)) return
     const applied = applyVehicleApiError(error, setError)
     if (applied.step !== undefined) setStepIndex(applied.step)
     if (!applied.handled) {
