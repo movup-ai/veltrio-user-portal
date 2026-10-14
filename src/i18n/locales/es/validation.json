@@ -67,6 +67,7 @@
     "network": "No se puede conectar con el servidor. Compruebe su conexión.",
     "unauthorized": "Su sesión ha expirado. Inicie sesión de nuevo.",
     "forbidden": "No tiene permiso para hacer eso.",
+    "paymentRequired": "Esto requiere un plan activo o más créditos. Revise la configuración de facturación.",
     "notFound": "No se encontró el recurso solicitado.",
     "conflict": "Eso entra en conflicto con algo que ya existe.",
     "validation": "Parte de la información enviada no es válida.",

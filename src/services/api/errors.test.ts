@@ -1,5 +1,6 @@
 import { AxiosError, AxiosHeaders } from 'axios'
 import { describe, expect, it } from 'vitest'
+import i18n from '@/i18n'
 import { worthReporting } from '@/lib/error-reporting'
 import { normalizeApiError } from './errors'
 
@@ -45,6 +46,13 @@ describe('normalizeApiError', () => {
 
     expect(error.kind).toBe('payment_required')
     expect(worthReporting(error)).toBe(false)
+  })
+
+  it('says a 402 that carries no message of its own is about paying, not an unknown fault', () => {
+    const error = normalizeApiError(apiResponse(402, {}))
+
+    expect(error.message).toBe(i18n.t('validation:api.paymentRequired'))
+    expect(error.message).not.toBe(i18n.t('validation:api.unknown'))
   })
 
   it('reads validation field errors from the envelope details', () => {

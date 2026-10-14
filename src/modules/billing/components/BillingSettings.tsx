@@ -31,7 +31,15 @@ export function BillingSettings() {
   useEffect(() => {
     if (!returned || handled.current) return
     handled.current = true
-    setParams({}, { replace: true })
+    // Only the markers handled here: a credits purchase may have come back with them.
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        SUBSCRIPTION_RETURN_PARAMS.forEach((param) => next.delete(param))
+        return next
+      },
+      { replace: true },
+    )
     refresh.mutate()
   }, [returned, setParams, refresh])
 

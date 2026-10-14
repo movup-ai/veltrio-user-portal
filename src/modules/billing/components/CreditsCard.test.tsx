@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
 import { useOrganizationStore } from '@/state/organization.store'
@@ -55,6 +55,11 @@ function withCredits(credits: Partial<Billing['credits']>): Billing {
   return { ...BILLING, credits: { ...BILLING.credits, ...credits } }
 }
 
+/** The query string the page is left with, which is what a reload would start from. */
+function Search() {
+  return <p data-testid="search">{useLocation().search}</p>
+}
+
 function renderAs(role: 'owner' | 'manager', billing = BILLING, path = '/settings/billing') {
   useOrganizationStore.setState({
     membership: {
@@ -71,6 +76,7 @@ function renderAs(role: 'owner' | 'manager', billing = BILLING, path = '/setting
     <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter initialEntries={[path]}>
         <CreditsCard billing={billing} canManage={role === 'owner'} />
+        <Search />
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -119,10 +125,21 @@ describe('CreditsCard', () => {
 
   it('adds the credits of the checkout the owner has just come back from', async () => {
     confirmPack.mockResolvedValue(withCredits({ balance: 90 }))
-    renderAs('owner', BILLING, '/settings/billing?credits=cs_test_9')
+    renderAs('owner', BILLING, '/settings/billing?credits=cs_test_9&tab=keep')
 
     await waitFor(() => expect(confirmPack).toHaveBeenCalledWith('cs_test_9'))
     expect(confirmPack).toHaveBeenCalledOnce()
+    // Only its own marker goes, once the purchase is confirmed.
+    await waitFor(() => expect(screen.getByTestId('search')).toHaveTextContent(/^\?tab=keep$/))
+  })
+
+  it('keeps the marker when the confirmation fails, so coming back again retries it', async () => {
+    confirmPack.mockRejectedValue(new Error('down'))
+    renderAs('owner', BILLING, '/settings/billing?credits=cs_test_9')
+
+    await waitFor(() => expect(confirmPack).toHaveBeenCalledWith('cs_test_9'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.getByTestId('search')).toHaveTextContent('credits=cs_test_9')
   })
 
   it('saves auto-recharge with the pack and the balance chosen', async () => {

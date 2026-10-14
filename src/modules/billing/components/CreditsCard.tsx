@@ -40,8 +40,18 @@ export function CreditsCard({ billing, canManage }: CreditsCardProps) {
   useEffect(() => {
     if (!paidCheckout || handled.current) return
     handled.current = true
-    setParams({}, { replace: true })
-    confirm.mutate(paidCheckout)
+    // Removed once confirmed, so a confirmation that failed is tried again on coming back.
+    confirm.mutate(paidCheckout, {
+      onSuccess: () =>
+        setParams(
+          (current) => {
+            const next = new URLSearchParams(current)
+            next.delete(PACK_CHECKOUT_PARAM)
+            return next
+          },
+          { replace: true },
+        ),
+    })
   }, [paidCheckout, setParams, confirm])
 
   const autoPack = credits.packs.find((pack) => pack.key === credits.autoRecharge?.pack)

@@ -103,6 +103,8 @@ function defaultMessageFor(kind: ApiError['kind']): string {
       return i18n.t('validation:api.unauthorized')
     case 'forbidden':
       return i18n.t('validation:api.forbidden')
+    case 'payment_required':
+      return i18n.t('validation:api.paymentRequired')
     case 'not_found':
       return i18n.t('validation:api.notFound')
     case 'conflict':

@@ -15,6 +15,7 @@ const history = vi.fn<() => Promise<BillingHistory>>()
 const refresh = vi.fn<() => Promise<Billing>>()
 const changePlan = vi.fn<(choice: PlanChoice) => Promise<Billing>>()
 const checkoutLink = vi.fn<(checkout: unknown) => Promise<string>>()
+const confirmPack = vi.fn<(checkoutId: string) => Promise<Billing>>()
 
 vi.mock('@/components/ui/use-toast', () => ({ toast: vi.fn() }))
 
@@ -24,6 +25,7 @@ vi.mock('../api/billing.api', () => ({
     refresh: () => refresh(),
     changePlan: (choice: PlanChoice) => changePlan(choice),
     checkoutLink: (checkout: unknown) => checkoutLink(checkout),
+    confirmPack: (checkoutId: string) => confirmPack(checkoutId),
     history: () => history(),
   },
 }))
@@ -355,5 +357,17 @@ describe('billing history', () => {
     await plan('Growth')
     expect(screen.queryByRole('heading', { name: 'Billing history' })).not.toBeInTheDocument()
     expect(history).not.toHaveBeenCalled()
+  })
+})
+
+describe('coming back from Stripe', () => {
+  it('reads the plan again without dropping a credit purchase still to confirm', async () => {
+    get.mockResolvedValue(ON_GROWTH)
+    refresh.mockResolvedValue(ON_GROWTH)
+    confirmPack.mockResolvedValue(ON_GROWTH)
+    renderAs('owner', '/settings/billing?checkout=success&credits=cs_test_9')
+
+    await waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+    await waitFor(() => expect(confirmPack).toHaveBeenCalledWith('cs_test_9'))
   })
 })
