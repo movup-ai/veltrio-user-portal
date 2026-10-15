@@ -52,6 +52,8 @@ export interface OrganizationMembership {
   currency: string
   /** IANA zone booking times are shown and entered in; the browser's own until it is known. */
   timezone?: string
+  /** What a newly added driver is priced at per day; the portal's default until it is known. */
+  additionalDriverPrice?: number
   role: MembershipRole
   permissions: Permission[]
 }

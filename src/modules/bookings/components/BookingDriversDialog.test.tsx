@@ -18,8 +18,22 @@ vi.mock('../api/booking.api', () => ({
   },
 }))
 
-const SAM: AdditionalDriver = { id: 'd1', name: 'Sam Okafor', licenceNumber: 'FL 9911', pricePerDay: 12 }
-const DANA: AdditionalDriver = { id: 'd2', name: 'Dana Ortiz', licenceNumber: 'FL 2204', pricePerDay: 12 }
+const SAM: AdditionalDriver = {
+  id: 'd1',
+  name: 'Sam Okafor',
+  licenceNumber: 'FL 9911',
+  licenceState: '',
+  licenceExpiry: '',
+  pricePerDay: 12,
+}
+const DANA: AdditionalDriver = {
+  id: 'd2',
+  name: 'Dana Ortiz',
+  licenceNumber: 'FL 2204',
+  licenceState: '',
+  licenceExpiry: '',
+  pricePerDay: 12,
+}
 
 function quoted(overrides: Partial<ChangeQuote> = {}): ChangeQuote {
   return {
@@ -89,7 +103,7 @@ describe('BookingDriversDialog', () => {
     await waitFor(() => expect(quoteChange).toHaveBeenCalled())
     const [, request] = quoteChange.mock.calls.at(-1) ?? []
     expect(request?.additionalDrivers).toMatchObject([
-      { name: 'Sam Okafor', licenceNumber: 'FL 9911', pricePerDay: 12 },
+      { name: 'Sam Okafor', licenceNumber: 'FL 9911', licenceState: '', licenceExpiry: '', pricePerDay: 12 },
     ])
     expect(await screen.findAllByText('$286.76')).toHaveLength(2)
     await user.click(screen.getByRole('button', { name: 'Save drivers' }))

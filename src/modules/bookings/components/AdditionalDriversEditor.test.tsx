@@ -1,10 +1,18 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import '@/i18n'
 import { AdditionalDriversEditor } from './AdditionalDriversEditor'
 import type { AdditionalDriverValues } from '../schema/booking.schema'
 
-const DRIVER: AdditionalDriverValues = { id: 'd1', name: '', licenceNumber: '', pricePerDay: 12 }
+const DRIVER: AdditionalDriverValues = {
+  id: 'd1',
+  name: '',
+  licenceNumber: '',
+  licenceState: '',
+  licenceExpiry: '',
+  pricePerDay: 12,
+}
 
 /** Shape RHF hands down for a row whose name and licence failed the schema. */
 const ERRORS = [
@@ -26,12 +34,22 @@ describe('AdditionalDriversEditor', () => {
     const user = userEvent.setup()
     render(<AdditionalDriversEditor value={[DRIVER]} onChange={vi.fn()} errors={ERRORS} />)
 
-    // i18n is not initialized here, so labels render as their keys rather than English.
-    await user.click(screen.getByLabelText('form.drivers.nameFor'))
+    await user.click(screen.getByLabelText('Driver 1 full name'))
     await user.tab()
 
     expect(screen.getByRole('alert')).toHaveTextContent("Enter the driver's name")
     expect(screen.queryByText('Enter a licence number')).not.toBeInTheDocument()
+  })
+
+  it('takes the licence issuing state and expiry as well as the number', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<AdditionalDriversEditor value={[DRIVER]} onChange={onChange} />)
+
+    await user.type(screen.getByLabelText('Driver 1 licence issuing state'), 'F')
+
+    expect(onChange).toHaveBeenLastCalledWith([{ ...DRIVER, licenceState: 'F' }])
+    expect(screen.getByLabelText('Driver 1 licence expiry')).toBeInTheDocument()
   })
 
   it('reveals every remaining error once the step is submitted', () => {

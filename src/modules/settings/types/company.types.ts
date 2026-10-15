@@ -33,6 +33,8 @@ export interface Company extends Partial<Record<SocialField, string>> {
   address?: string
   /** What a renter who cancels gets back. Absent is no stated policy; empty is non-refundable. */
   cancellationPolicy?: CancellationPolicy
+  /** Per day, for each driver besides the renter. Zero lets them on for free. */
+  additionalDriverPrice: number
 }
 
 /** Every editable field as the forms hold it: strings throughout, '' for unset. */

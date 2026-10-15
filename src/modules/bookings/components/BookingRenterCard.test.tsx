@@ -23,8 +23,22 @@ describe('BookingRenterCard', () => {
         renter={RENTER}
         onOpenProfile={vi.fn()}
         drivers={[
-          { id: 'd1', name: 'Sam Okafor', licenceNumber: 'FL 9911', pricePerDay: 12 },
-          { id: 'd2', name: 'Dana Ortiz', licenceNumber: 'FL 2204', pricePerDay: 0 },
+          {
+            id: 'd1',
+            name: 'Sam Okafor',
+            licenceNumber: 'FL 9911',
+            licenceState: '',
+            licenceExpiry: '',
+            pricePerDay: 12,
+          },
+          {
+            id: 'd2',
+            name: 'Dana Ortiz',
+            licenceNumber: 'FL 2204',
+            licenceState: '',
+            licenceExpiry: '',
+            pricePerDay: 0,
+          },
         ]}
       />,
     )

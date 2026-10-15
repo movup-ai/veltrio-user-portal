@@ -239,6 +239,14 @@
       "addTier": "Add tier",
       "preview": "How renters will see it",
       "appliesFrom": "Applies to bookings made from now on: a booking keeps the policy it was made under. You still choose the refund each time you cancel one."
+    },
+    "drivers": {
+      "title": "Additional drivers",
+      "description": "Each driver besides the renter is billed this per rental day. Renters who add a driver on Veltrio are charged it; at the counter you can still change it per booking.",
+      "label": "Price per driver",
+      "hint": "Set 0 to add drivers for free. Some states, such as California, don't allow a fee for the renter's spouse: set that driver to 0 on the booking.",
+      "perDaySuffix": "/day",
+      "invalid": "Enter an amount of 0 or more, to the cent."
     }
   },
   "billing": {

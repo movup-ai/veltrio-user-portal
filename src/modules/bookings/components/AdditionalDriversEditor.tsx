@@ -3,10 +3,11 @@ import type { FieldError, Merge } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { AdditionalDriverValues } from '../schema/booking.schema'
-import { ADDITIONAL_DRIVER_PER_DAY } from '../utils/booking.pricing'
+import { additionalDriverPerDay } from '../utils/booking.pricing'
 
 /** What RHF hands back for an array field: per-row errors, itself possibly undefined. */
 type DriverRowErrors = Merge<
@@ -56,7 +57,14 @@ export function AdditionalDriversEditor({
   function add() {
     onChange([
       ...value,
-      { id: crypto.randomUUID(), name: '', licenceNumber: '', pricePerDay: ADDITIONAL_DRIVER_PER_DAY },
+      {
+        id: crypto.randomUUID(),
+        name: '',
+        licenceNumber: '',
+        licenceState: '',
+        licenceExpiry: '',
+        pricePerDay: additionalDriverPerDay(),
+      },
     ])
   }
 
@@ -95,7 +103,7 @@ export function AdditionalDriversEditor({
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 lg:col-span-2">
                   <Label htmlFor={`${driver.id}-name`}>{t('form.drivers.name')}</Label>
                   <Input
                     id={`${driver.id}-name`}
@@ -110,24 +118,6 @@ export function AdditionalDriversEditor({
                   {errorFor('name') && (
                     <p role="alert" className="text-caption text-error">
                       {errorFor('name')}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${driver.id}-licence`}>{t('form.drivers.licence')}</Label>
-                  <Input
-                    id={`${driver.id}-licence`}
-                    className="font-mono"
-                    aria-label={t('form.drivers.licenceFor', { index: index + 1 })}
-                    value={driver.licenceNumber}
-                    invalid={Boolean(errorFor('licenceNumber'))}
-                    onBlur={() => markTouched(driver.id, 'licenceNumber')}
-                    onChange={(e) => update(index, { licenceNumber: e.target.value })}
-                  />
-                  {errorFor('licenceNumber') && (
-                    <p role="alert" className="text-caption text-error">
-                      {errorFor('licenceNumber')}
                     </p>
                   )}
                 </div>
@@ -156,6 +146,52 @@ export function AdditionalDriversEditor({
                       {errorFor('pricePerDay')}
                     </p>
                   )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor={`${driver.id}-licence`}>{t('form.drivers.licence')}</Label>
+                  <Input
+                    id={`${driver.id}-licence`}
+                    className="font-mono"
+                    aria-label={t('form.drivers.licenceFor', { index: index + 1 })}
+                    value={driver.licenceNumber}
+                    invalid={Boolean(errorFor('licenceNumber'))}
+                    onBlur={() => markTouched(driver.id, 'licenceNumber')}
+                    onChange={(e) => update(index, { licenceNumber: e.target.value })}
+                  />
+                  {errorFor('licenceNumber') && (
+                    <p role="alert" className="text-caption text-error">
+                      {errorFor('licenceNumber')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor={`${driver.id}-state`}>{t('form.drivers.state')}</Label>
+                  <Input
+                    id={`${driver.id}-state`}
+                    aria-label={t('form.drivers.stateFor', { index: index + 1 })}
+                    value={driver.licenceState}
+                    invalid={Boolean(errorFor('licenceState'))}
+                    onBlur={() => markTouched(driver.id, 'licenceState')}
+                    onChange={(e) => update(index, { licenceState: e.target.value })}
+                  />
+                  {errorFor('licenceState') && (
+                    <p role="alert" className="text-caption text-error">
+                      {errorFor('licenceState')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor={`${driver.id}-expiry`}>{t('form.drivers.expiry')}</Label>
+                  <DatePicker
+                    id={`${driver.id}-expiry`}
+                    aria-label={t('form.drivers.expiryFor', { index: index + 1 })}
+                    value={driver.licenceExpiry}
+                    onChange={(licenceExpiry) => update(index, { licenceExpiry })}
+                    placeholder={t('details.condition.drivers.expiryPlaceholder')}
+                  />
                 </div>
               </div>
             </div>

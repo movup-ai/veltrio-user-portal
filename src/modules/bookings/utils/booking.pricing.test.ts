@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import type { DiscountTier, RateOption, Vehicle } from '@/modules/vehicles/types/vehicle.types'
-import { durationHours, priceBooking, rentalDays } from './booking.pricing'
+import { useOrganizationStore } from '@/state/organization.store'
+import { additionalDriverPerDay, durationHours, priceBooking, rentalDays } from './booking.pricing'
 
 /**
  * These figures are the contract between this file and its Python port in the API
@@ -36,6 +37,26 @@ describe('durationHours', () => {
     expect(durationHours('2026-10-01T00:00:00Z', '2026-10-02T00:00:00Z')).toBe(24)
     expect(durationHours('2026-10-02T00:00:00Z', '2026-10-01T00:00:00Z')).toBe(0)
     expect(durationHours('nonsense', '2026-10-02T00:00:00Z')).toBe(0)
+  })
+})
+
+describe('additionalDriverPerDay', () => {
+  afterEach(() => useOrganizationStore.setState({ membership: null }))
+
+  it("starts a driver on the company's own price, and on $12 until it is known", () => {
+    expect(additionalDriverPerDay()).toBe(12)
+    useOrganizationStore.setState({
+      membership: {
+        organizationId: 'org_1',
+        organizationName: 'Test Org',
+        subdomain: 'test-org',
+        currency: 'USD',
+        additionalDriverPrice: 0,
+        role: 'owner',
+        permissions: [],
+      },
+    })
+    expect(additionalDriverPerDay()).toBe(0)
   })
 })
 

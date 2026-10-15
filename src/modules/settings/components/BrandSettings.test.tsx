@@ -38,6 +38,7 @@ const COMPANY: Company = {
   currency: 'USD',
   currencyLocked: false,
   listingLanguage: 'en',
+  additionalDriverPrice: 12,
   description: 'Family-run rentals in Miami.',
 }
 

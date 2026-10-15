@@ -77,6 +77,37 @@ describe('BookingConditionDialog', () => {
     })
   })
 
+  it("will not hand over until each driver's licence is complete and ticked, then sends it", async () => {
+    const sam = {
+      id: 'd1',
+      name: 'Sam Lee',
+      licenceNumber: 'D123',
+      licenceState: '',
+      licenceExpiry: '2030-01-31',
+      pricePerDay: 12,
+    }
+    const user = renderDialog({ vehicleMileage: 12000, drivers: [sam] })
+    await chooseFuel(user, 'Full')
+
+    await user.click(screen.getByRole('button', { name: 'Hand over vehicle' }))
+    expect(
+      screen.getByText("Enter Sam Lee's licence number, state and expiry from the card."),
+    ).toBeInTheDocument()
+
+    await user.type(screen.getByRole('textbox', { name: 'State' }), 'FL')
+    await user.click(screen.getByRole('button', { name: 'Hand over vehicle' }))
+    expect(screen.getByText("Tick once you've seen Sam Lee's licence.")).toBeInTheDocument()
+    expect(onSubmit).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('checkbox', { name: "I've checked Sam Lee's licence" }))
+    await user.click(screen.getByRole('button', { name: 'Hand over vehicle' }))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        drivers: [{ id: 'd1', licenceNumber: 'D123', licenceState: 'FL', licenceExpiry: '2030-01-31' }],
+      }),
+    )
+  })
+
   it('warns, without calling it an error, when a pickup reads below the mileage on file', async () => {
     const user = renderDialog({ vehicleMileage: 12000 })
 

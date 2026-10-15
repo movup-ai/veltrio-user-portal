@@ -171,6 +171,8 @@ export interface ConditionInput {
   sendToService?: boolean
   /** The photos this handover keeps, by id. The API discards any other left on the stage. */
   photoIds?: string[]
+  /** Pickup only: every additional driver's licence, checked. */
+  drivers?: DriverLicenceCheck[]
 }
 
 /** A photo of the car at one handover. `url` is the image itself and expires within the hour. */
@@ -304,9 +306,24 @@ export type BookingCustomer = CustomerInput
 export interface AdditionalDriver {
   id: string
   name: string
+  /** '' until known: the counter reads the licence off the card at pickup. */
   licenceNumber: string
+  /** e.g. "FL", or a country for a licence from abroad; '' until known. */
+  licenceState: string
+  /** YYYY-MM-DD; '' until known. */
+  licenceExpiry: string
   /** Charged for every rental day. */
   pricePerDay: number
+  /** Who read the licence at pickup, and when. */
+  licenceCheck?: { at: string; by?: string }
+}
+
+/** An additional driver's licence as read off the card at pickup. */
+export interface DriverLicenceCheck {
+  id: string
+  licenceNumber: string
+  licenceState: string
+  licenceExpiry: string
 }
 
 /**

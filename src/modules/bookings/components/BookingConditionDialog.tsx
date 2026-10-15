@@ -16,16 +16,20 @@ import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useFormatters } from '@/i18n'
+import { companyDay } from '@/utils/company-time'
 import { CONDITION_NOTES_MAX } from '../constants/booking.constants'
 import { useConditionPhotoDraft } from '../hooks/use-condition-photos'
 import {
+  type AdditionalDriver,
   type BookingCondition,
   type ConditionStage,
   type FuelLevel,
   type HandoverInput,
 } from '../types/booking.types'
 import { checkOdometer } from '../utils/booking.condition'
+import { driverCheckProblems, type DriverCheckDraft } from '../utils/booking.handover'
 import { BookingConditionPhotos } from './BookingConditionPhotos'
+import { DriverLicenceChecks } from './DriverLicenceChecks'
 import { FuelGauge } from './FuelGauge'
 
 interface BookingConditionDialogProps {
@@ -38,6 +42,8 @@ interface BookingConditionDialogProps {
   vehicleMileage?: number
   /** An electric car is read for charge rather than fuel; the scale is the same. */
   electric?: boolean
+  /** At pickup, every one has their licence checked before the car goes. */
+  drivers?: AdditionalDriver[]
   loading: boolean
   onSubmit: (input: HandoverInput) => void
 }
@@ -73,6 +79,7 @@ function ConditionForm({
   pickup,
   vehicleMileage,
   electric = false,
+  drivers = [],
   loading,
   onSubmit,
   onCancel,
@@ -91,6 +98,21 @@ function ConditionForm({
   const [sendToService, setSendToService] = useState(false)
   const [attempted, setAttempted] = useState(false)
   const draft = useConditionPhotoDraft()
+  const [licences, setLicences] = useState<DriverCheckDraft[]>(() =>
+    returning
+      ? []
+      : drivers.map((driver) => ({
+          id: driver.id,
+          name: driver.name,
+          licenceNumber: driver.licenceNumber,
+          licenceState: driver.licenceState,
+          licenceExpiry: driver.licenceExpiry,
+          checked: false,
+        })),
+  )
+  // Read once: the form is open for minutes, not across a midnight.
+  const [today] = useState(() => companyDay(Date.now()))
+  const licenceProblems = driverCheckProblems(licences, today)
 
   const miles = (value: number) => t('details.condition.miles', { miles: format.number(value) })
   const reading = checkOdometer(odometer, returning ? pickup?.odometer : undefined)
@@ -111,12 +133,21 @@ function ConditionForm({
         event.preventDefault()
         setAttempted(true)
         if (read === undefined || fuelLevel === undefined) return
+        if (Object.keys(licenceProblems).length > 0) return
         onSubmit({
           odometer: read,
           fuelLevel,
           notes,
           photos: draft.photos.map((photo) => photo.file),
           ...(returning && { sendToService }),
+          ...(licences.length > 0 && {
+            drivers: licences.map(({ id, licenceNumber, licenceState, licenceExpiry }) => ({
+              id,
+              licenceNumber,
+              licenceState,
+              licenceExpiry,
+            })),
+          }),
         })
       }}
     >
@@ -187,6 +218,14 @@ function ConditionForm({
           />
         )}
       </FormField>
+
+      {licences.length > 0 && (
+        <DriverLicenceChecks
+          drafts={licences}
+          onChange={setLicences}
+          problems={attempted ? licenceProblems : {}}
+        />
+      )}
 
       <div className="flex flex-col gap-1.5">
         <p className="text-label m-0">{t('details.condition.photos.label')}</p>

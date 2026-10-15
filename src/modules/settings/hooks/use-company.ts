@@ -33,6 +33,14 @@ export function useUpdateCompany() {
   })
 }
 
+function toastSaveFailed(error: unknown) {
+  toast({
+    title: i18n.t('settings:company.toast.saveFailed'),
+    description: normalizeApiError(error).message,
+    variant: 'error',
+  })
+}
+
 /** The cancellation policy saves on its own: it is a schedule, not one of the company's fields. */
 export function useUpdateCancellationPolicy() {
   const queryClient = useQueryClient()
@@ -43,12 +51,21 @@ export function useUpdateCancellationPolicy() {
       queryClient.setQueryData(companyKeys.detail, company)
       toast({ title: i18n.t('settings:company.toast.saved'), variant: 'success' })
     },
-    onError: (error) => {
-      toast({
-        title: i18n.t('settings:company.toast.saveFailed'),
-        description: normalizeApiError(error).message,
-        variant: 'error',
-      })
+    onError: toastSaveFailed,
+  })
+}
+
+export function useUpdateAdditionalDriverPrice() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (price: number) => companyApi.setAdditionalDriverPrice(price),
+    onSuccess: (company) => {
+      queryClient.setQueryData(companyKeys.detail, company)
+      // Every role's booking form starts a new driver on it, off `/auth/me`.
+      void queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY })
+      toast({ title: i18n.t('settings:company.toast.saved'), variant: 'success' })
     },
+    onError: toastSaveFailed,
   })
 }

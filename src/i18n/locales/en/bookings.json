@@ -256,6 +256,22 @@
         "label": "After this return",
         "available": "Available to rent",
         "service": "Send to maintenance"
+      },
+      "drivers": {
+        "title": "Additional drivers",
+        "hint": "Check each driver's licence card against the person in front of you. Fill in or correct the details from the card.",
+        "number": "Licence number",
+        "state": "State",
+        "expiry": "Expires",
+        "expiryFor": "Licence expiry for {{name}}",
+        "expiryPlaceholder": "Pick a date",
+        "seen": "I've checked {{name}}'s licence",
+        "absent": "A driver who isn't here can't drive. Cancel, remove them under Drivers, then hand over.",
+        "problem": {
+          "incomplete": "Enter {{name}}'s licence number, state and expiry from the card.",
+          "expired": "{{name}}'s licence has expired, so they can't drive.",
+          "unchecked": "Tick once you've seen {{name}}'s licence."
+        }
       }
     },
     "vehicle": {
@@ -366,7 +382,11 @@
       "phone": "Phone",
       "licence": "Licence",
       "lifetimeValue": "Lifetime value",
-      "drivers": "Additional drivers"
+      "drivers": "Additional drivers",
+      "licenceAtPickup": "Licence to be checked at pickup",
+      "expires": "expires {{date}}",
+      "checked": "Licence checked {{date}}",
+      "checkedBy": "Licence checked by {{name}}, {{date}}"
     },
     "checklist": {
       "title": "Checklist",
@@ -900,12 +920,17 @@
       "driverN": "Driver {{index}}",
       "remove": "Remove driver {{index}}",
       "name": "Full name",
-      "licence": "Licence number",
+      "licence": "Licence number (optional)",
       "nameFor": "Driver {{index}} full name",
       "licenceFor": "Driver {{index}} licence number",
       "rate": "Daily rate",
       "rateFor": "Driver {{index}} daily rate",
-      "perDaySuffix": "/day"
+      "perDaySuffix": "/day",
+      "licenceAtPickup": "Licence at pickup",
+      "state": "Issuing state (optional)",
+      "stateFor": "Driver {{index}} licence issuing state",
+      "expiry": "Licence expiry (optional)",
+      "expiryFor": "Driver {{index}} licence expiry"
     },
     "fees": {
       "hint": "One-off charges added to this booking — cleaning, a negotiated add-on, anything outside the standard rate.",

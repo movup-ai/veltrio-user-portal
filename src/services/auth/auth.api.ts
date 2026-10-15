@@ -1,4 +1,5 @@
 import { apiClient } from '@/services/api/client'
+import { fromCents } from '@/lib/money'
 import { ROLE_PERMISSIONS } from '@/utils/permissions'
 import type { AddressPin } from '@/modules/locations/types/location.types'
 import type { ID } from '@/types/common'
@@ -15,6 +16,8 @@ export interface TenantMembership {
   subdomain: string
   currency: string
   timezone: string
+  /** Absent from an API build older than the field. */
+  additionalDriverPriceCents?: number
   role: MembershipRole
 }
 
@@ -50,6 +53,10 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
     subdomain: membership.subdomain,
     currency: membership.currency,
     timezone: membership.timezone,
+    additionalDriverPrice:
+      membership.additionalDriverPriceCents === undefined
+        ? undefined
+        : fromCents(membership.additionalDriverPriceCents),
     role: membership.role,
     permissions: ROLE_PERMISSIONS[membership.role],
   }

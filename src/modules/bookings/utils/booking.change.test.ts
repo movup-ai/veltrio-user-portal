@@ -374,13 +374,27 @@ describe('changeEffects', () => {
 })
 
 describe('a change of drivers', () => {
-  const SAM = { id: 'd1', name: 'Sam Okafor', licenceNumber: 'FL 9911', pricePerDay: 12 }
-  const DANA = { id: 'd2', name: 'Dana Ortiz', licenceNumber: 'FL 2204', pricePerDay: 12 }
+  const SAM = {
+    id: 'd1',
+    name: 'Sam Okafor',
+    licenceNumber: 'FL 9911',
+    licenceState: '',
+    licenceExpiry: '',
+    pricePerDay: 12,
+  }
+  const DANA = {
+    id: 'd2',
+    name: 'Dana Ortiz',
+    licenceNumber: 'FL 2204',
+    licenceState: '',
+    licenceExpiry: '',
+    pricePerDay: 12,
+  }
 
   it('starts on the drivers the booking has, or on one to fill in when it has none', () => {
     expect(startingDrivers([SAM], () => 'new')).toEqual([SAM])
     expect(startingDrivers([], () => 'new')).toEqual([
-      { id: 'new', name: '', licenceNumber: '', pricePerDay: 12 },
+      { id: 'new', name: '', licenceNumber: '', licenceState: '', licenceExpiry: '', pricePerDay: 12 },
     ])
   })
 

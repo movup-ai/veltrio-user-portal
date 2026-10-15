@@ -1333,7 +1333,9 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
                         >
                           <span>
                             <span className="font-semibold">{driver.name || '—'}</span>{' '}
-                            <span className="text-fg-4 font-mono text-[13px]">{driver.licenceNumber}</span>
+                            <span className="text-fg-4 font-mono text-[13px]">
+                              {driver.licenceNumber || t('form.drivers.licenceAtPickup')}
+                            </span>
                           </span>
                           <span className="text-fg-4 shrink-0 text-[13px] tabular-nums">
                             {format.currency(driver.pricePerDay)}/day

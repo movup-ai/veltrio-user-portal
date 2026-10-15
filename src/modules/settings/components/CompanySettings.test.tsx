@@ -29,6 +29,7 @@ const COMPANY: Company = {
   timezone: 'America/New_York',
   currency: 'USD',
   listingLanguage: 'en',
+  additionalDriverPrice: 12,
   contactEmail: 'hello@sunstate.com',
 }
 

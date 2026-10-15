@@ -63,7 +63,16 @@ const wire: BookingWire = {
   returnLocation: 'Downtown',
   pickupAt: '2026-10-01T13:30:00Z',
   returnAt: '2026-10-05T13:30:00Z',
-  additionalDrivers: [{ id: 'd1', name: 'Sam Vega', licenceNumber: 'FL V-1', pricePerDayCents: 1200 }],
+  additionalDrivers: [
+    {
+      id: 'd1',
+      name: 'Sam Vega',
+      licenceNumber: 'FL V-1',
+      licenceState: null,
+      licenceExpiry: null,
+      pricePerDayCents: 1200,
+    },
+  ],
   fees: [{ id: 'f1', label: 'Child seat', amountCents: 2500 }],
   verifications: ['identity'],
   pricing: {
@@ -256,7 +265,9 @@ describe('toBookingPayload', () => {
     returnLocation: 'Downtown',
     pickupAt: '2026-10-01T13:30:00Z',
     returnAt: '2026-10-05T13:30:00Z',
-    additionalDrivers: [{ id: 'd1', name: 'Sam', licenceNumber: 'X', pricePerDay: 12.5 }],
+    additionalDrivers: [
+      { id: 'd1', name: 'Sam', licenceNumber: 'X', licenceState: '', licenceExpiry: '', pricePerDay: 12.5 },
+    ],
     fees: [{ id: 'f1', label: 'Seat', amount: 25 }],
     verifications: ['identity', 'insurance'],
   }
@@ -811,10 +822,26 @@ describe('a change of dates or vehicle', () => {
   })
 
   it('sends the drivers as the whole list, in cents, and an empty one to take them all off', () => {
-    const sam = { id: 'd1', name: ' Sam Okafor ', licenceNumber: ' FL 9911 ', pricePerDay: 19.99 }
+    const sam = {
+      id: 'd1',
+      name: ' Sam Okafor ',
+      licenceNumber: ' FL 9911 ',
+      licenceState: '',
+      licenceExpiry: '',
+      pricePerDay: 19.99,
+    }
 
     expect(toChangeQuotePayload({ additionalDrivers: [sam] })).toEqual({
-      additionalDrivers: [{ id: 'd1', name: 'Sam Okafor', licenceNumber: 'FL 9911', pricePerDayCents: 1999 }],
+      additionalDrivers: [
+        {
+          id: 'd1',
+          name: 'Sam Okafor',
+          licenceNumber: 'FL 9911',
+          licenceState: null,
+          licenceExpiry: null,
+          pricePerDayCents: 1999,
+        },
+      ],
     })
     // Left out, the booking keeps its drivers; sent empty, it loses them.
     expect(toChangeQuotePayload({ additionalDrivers: [] })).toEqual({ additionalDrivers: [] })

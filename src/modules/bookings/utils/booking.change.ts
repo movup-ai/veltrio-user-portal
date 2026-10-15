@@ -6,7 +6,7 @@ import { companyDay, companyWall, instantOfWall } from '@/utils/company-time'
 import { BOOKING_TIME_STEP_MINUTES, CHANGE_ERRORS, type ChangeError } from '../constants/booking.constants'
 import { combineDateTime } from '../schema/booking.schema'
 import type { AdditionalDriver, BookedInterval, ChangeQuote, ChangeRequest } from '../types/booking.types'
-import { ADDITIONAL_DRIVER_PER_DAY } from './booking.pricing'
+import { additionalDriverPerDay } from './booking.pricing'
 import { toTimeInput } from './booking.trip-defaults'
 
 const MS_PER_DAY = 86_400_000
@@ -251,7 +251,16 @@ export function changeEffects(quote: ChangeQuote): ChangeEffect[] {
 /** Where the drivers dialog starts: the drivers the booking has, or one to fill in when it has none. */
 export function startingDrivers(current: AdditionalDriver[], newId: () => string): AdditionalDriver[] {
   if (current.length > 0) return current
-  return [{ id: newId(), name: '', licenceNumber: '', pricePerDay: ADDITIONAL_DRIVER_PER_DAY }]
+  return [
+    {
+      id: newId(),
+      name: '',
+      licenceNumber: '',
+      licenceState: '',
+      licenceExpiry: '',
+      pricePerDay: additionalDriverPerDay(),
+    },
+  ]
 }
 
 /**
@@ -265,7 +274,14 @@ export function driversRequest(
   // A rate cleared in its field reads as NaN: no charge, as the form's own schema takes it.
   const asked = drivers.map((driver) => ({ ...driver, pricePerDay: driver.pricePerDay || 0 }))
   const stored = (driver: AdditionalDriver) =>
-    [driver.id, driver.name.trim(), driver.licenceNumber.trim(), toCents(driver.pricePerDay)].join('|')
+    [
+      driver.id,
+      driver.name.trim(),
+      driver.licenceNumber.trim(),
+      driver.licenceState.trim(),
+      driver.licenceExpiry,
+      toCents(driver.pricePerDay),
+    ].join('|')
   const same =
     asked.length === current.length && asked.every((driver, at) => stored(driver) === stored(current[at]))
   return same ? undefined : { additionalDrivers: asked }
