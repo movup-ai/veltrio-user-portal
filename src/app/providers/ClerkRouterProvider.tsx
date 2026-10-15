@@ -1,11 +1,14 @@
 import { ClerkProvider, useAuth, useClerk } from '@clerk/clerk-react'
 import { esES } from '@clerk/localizations'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router-dom'
+import { ONBOARDING_PATHS } from '@/app/layouts/onboarding-steps'
 import { clerkToken } from '@/services/auth/clerk-token'
 import { useOrganizationStore } from '@/state/organization.store'
+import { clerkAppearance } from './clerk-appearance'
+import { CLERK_JS_VERSION } from './clerk-js'
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -60,18 +63,39 @@ function IdentityReset() {
  */
 export function ClerkRouterProvider() {
   const navigate = useNavigate()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation('auth')
+  const spanish = i18n.resolvedLanguage === 'es'
+
+  // Our headings over Clerk's generic "Sign in to Veltrio"; every other string stays Clerk's.
+  const localization = useMemo(() => {
+    const base = spanish ? esES : {}
+    return {
+      ...base,
+      signIn: {
+        ...base.signIn,
+        start: { ...base.signIn?.start, title: t('login.title'), subtitle: t('login.subtitle') },
+      },
+      signUp: {
+        ...base.signUp,
+        start: { ...base.signUp?.start, title: t('signUp.title'), subtitle: t('signUp.subtitle') },
+      },
+    }
+  }, [spanish, t])
 
   return (
     <ClerkProvider
       publishableKey={publishableKey}
-      localization={i18n.resolvedLanguage === 'es' ? esES : undefined}
+      localization={localization}
+      appearance={clerkAppearance}
+      clerkJSVersion={CLERK_JS_VERSION}
       routerPush={(to) => navigate(to)}
       routerReplace={(to) => navigate(to, { replace: true })}
       signInUrl="/login"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/onboarding"
+      // Forced, not a fallback: a return address carried over from sign-in would otherwise send a
+      // brand-new account to the dashboard, which only bounces it back here.
+      signUpForceRedirectUrl={ONBOARDING_PATHS.company}
       afterSignOutUrl="/login"
     >
       <ClerkTokenBridge />

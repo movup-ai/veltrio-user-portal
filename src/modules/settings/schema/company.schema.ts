@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next'
 import { z } from 'zod'
 import { FLEET_SIZES } from '@/services/auth/auth.api'
 import { isCountryCode } from '@/utils/countries'
-import { isValidWebsite } from '@/utils/slug'
+import { isReservedSubdomain, isValidSubdomain, isValidWebsite } from '@/utils/slug'
 import {
   DESCRIPTION_MAX,
   LISTING_LANGUAGES,
@@ -11,6 +11,17 @@ import {
 } from '../constants/company.constants'
 import type { SocialField } from '../types/company.types'
 import { isPhoneNumber, isSocialHandle } from '../utils/company.utils'
+
+/** Mirrors the API's `Subdomain`, which lowercases it too, so typed capitals are not an error. */
+export function subdomainSchema(messages: { required: string; invalid: string; reserved: string }) {
+  return z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, messages.required)
+    .refine((value) => !value || isValidSubdomain(value), messages.invalid)
+    .refine((value) => !isReservedSubdomain(value), messages.reserved)
+}
 
 /** Every editable field; each settings card validates the slice it shows via `.pick`. */
 export function companySchema(t: TFunction<'validation'>) {
@@ -24,6 +35,11 @@ export function companySchema(t: TFunction<'validation'>) {
 
   return z.object({
     name: z.string().trim().min(1, t('company.nameRequired')).max(200, t('company.nameTooLong')),
+    subdomain: subdomainSchema({
+      required: t('company.subdomainRequired'),
+      invalid: t('company.subdomainInvalid'),
+      reserved: t('company.subdomainReserved'),
+    }),
     legalName: z.string().trim().max(200, t('company.nameTooLong')),
     taxId: z.string().trim().max(50, t('company.taxIdTooLong')),
     description: z.string().trim().max(DESCRIPTION_MAX, t('company.descriptionTooLong')),

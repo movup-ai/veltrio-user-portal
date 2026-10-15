@@ -50,6 +50,10 @@ describe.each([
     },
   )
 
+  it('keeps text readable on the auth brand panel', () => {
+    expect(contrast(theme['brand-deep'], theme['solid-foreground'])).toBeGreaterThanOrEqual(4.5)
+  })
+
   it('dims the page behind a dialog, rather than washing it out', () => {
     expect(luminance(theme.scrim)).toBeLessThan(0.05)
   })

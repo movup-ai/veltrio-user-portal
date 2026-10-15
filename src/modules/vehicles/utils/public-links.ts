@@ -4,11 +4,11 @@ import type { Vehicle } from '../types/vehicle.types'
  * Links into the customer-facing portal, which is a separate app served per tenant at
  * `<subdomain>.<domain>`. Nothing here routes inside this app.
  */
-const DOMAIN = import.meta.env.VITE_CUSTOMER_PORTAL_DOMAIN ?? 'veltrio.io'
+export const SITE_DOMAIN = import.meta.env.VITE_CUSTOMER_PORTAL_DOMAIN ?? 'veltrio.io'
 
 /** The company's own site, where renters land. */
 export function siteUrl(subdomain: string): string {
-  return `https://${subdomain}.${DOMAIN}`
+  return `https://${subdomain}.${SITE_DOMAIN}`
 }
 
 export function fleetUrl(subdomain: string): string {

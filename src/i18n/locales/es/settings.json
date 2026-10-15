@@ -16,8 +16,8 @@
       "taxIdHelp": "NIF, RFC, EIN u otro número fiscal. Aparece en las facturas.",
       "fleetSize": "Tamaño de la flota",
       "fleetSizeHelp": "Basta con una estimación.",
-      "subdomain": "Subdominio de la empresa",
-      "subdomainHelp": "La dirección de tu sitio de reservas. No puede cambiar, porque los enlaces que has compartido la usan.",
+      "subdomain": "URL de la empresa",
+      "subdomainHelp": "Donde los clientes ven tu flota y reservan. Si la cambias, los enlaces que ya has compartido dejarán de funcionar.",
       "openSite": "Abrir tu sitio de reservas",
       "about": "Acerca de",
       "aboutPlaceholder": "Alquiler familiar en Miami desde 1998, con recogida gratuita en el aeropuerto.",
@@ -31,7 +31,6 @@
       "currency": "Moneda",
       "currencyLocked": "No se puede cambiar cuando ya hay reservas, para que sus precios conserven su moneda.",
       "listingLanguage": "Idioma de los anuncios",
-      "listingLanguageHint": "El idioma en el que se redactan las descripciones generadas de los vehículos para tus clientes.",
       "languages": {
         "en": "Inglés",
         "es": "Español"
@@ -413,6 +412,7 @@
       "setup": "Configuración con nuestro equipo"
     },
     "currentTag": "Actual",
+    "recommendedTag": "Ideal para tu flota",
     "history": {
       "section": "Historial",
       "sectionHelp": "Lo que Veltrio te ha cobrado, con cada factura.",

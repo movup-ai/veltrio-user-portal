@@ -5,7 +5,13 @@ import { normalizeApiError } from '@/services/api/errors'
 import { billingApi } from '../api/billing.api'
 import { TOP_UP_SETTLE_MS } from '../constants/billing.constants'
 import type { AutoRecharge, Billing, PlanChoice } from '../types/billing.types'
-import { checkoutLinks, packCheckoutLinks, portalReturnUrl, rechargesNow } from '../utils/billing.utils'
+import {
+  checkoutLinks,
+  packCheckoutLinks,
+  portalReturnUrl,
+  rechargesNow,
+  type CheckoutReturn,
+} from '../utils/billing.utils'
 
 export const billingKeys = {
   billing: ['billing'] as const,
@@ -18,6 +24,11 @@ export const billingKeys = {
  */
 export function billingChanged(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: billingKeys.billing })
+}
+
+/** For a step that leads to the plans, so it can wait for them rather than land on a spinner. */
+export function prefetchBilling(queryClient: QueryClient) {
+  return queryClient.prefetchQuery({ queryKey: billingKeys.billing, queryFn: billingApi.get })
 }
 
 /**
@@ -33,10 +44,10 @@ function failed(title: string) {
 }
 
 /** Sends the owner to Stripe's checkout for the plan. The page leaves on success. */
-export function useStartCheckout() {
+export function useStartCheckout(returnTo?: CheckoutReturn) {
   return useMutation({
     mutationFn: (choice: PlanChoice) =>
-      billingApi.checkoutLink({ ...choice, ...checkoutLinks(window.location.origin) }),
+      billingApi.checkoutLink({ ...choice, ...checkoutLinks(window.location.origin, returnTo) }),
     onSuccess: (url) => window.location.assign(url),
     onError: failed(i18n.t('settings:billing.toast.checkoutFailed')),
   })

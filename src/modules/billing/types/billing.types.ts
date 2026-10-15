@@ -92,6 +92,8 @@ export interface Billing {
   currency: string
   yearlyDiscountPercent: number
   plans: PlanOffer[]
+  /** The plan the fleet size given at onboarding fits. */
+  recommendedPlan?: Plan
   credits: Credits
 }
 

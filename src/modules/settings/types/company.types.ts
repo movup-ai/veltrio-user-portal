@@ -16,7 +16,7 @@ export interface Company extends Partial<Record<SocialField, string>> {
   taxId?: string
   /** A short introduction for the company's fleet site. */
   description?: string
-  /** Fixed: it is the fleet site's address, and links already shared depend on it. */
+  /** The fleet site's address. Changing it breaks the links already shared under it. */
   subdomain: string
   website?: string
   fleetSize: FleetSize
@@ -38,6 +38,7 @@ export interface Company extends Partial<Record<SocialField, string>> {
 /** Every editable field as the forms hold it: strings throughout, '' for unset. */
 export type CompanyValues = {
   name: string
+  subdomain: string
   legalName: string
   taxId: string
   description: string

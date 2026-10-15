@@ -1,13 +1,11 @@
-import { useEffect, useRef } from 'react'
 import { CreditCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { usePermissions } from '@/components/feedback/Can'
 import { hasAnyPermission } from '@/utils/permissions'
-import { useBilling, useRefreshBilling } from '../hooks/use-billing'
-import { SUBSCRIPTION_RETURN_PARAMS } from '../utils/billing.utils'
+import { useBilling } from '../hooks/use-billing'
+import { useSubscriptionReturn } from '../hooks/use-subscription-return'
 import { BillingHistory } from './BillingHistory'
 import { BillingSection } from './BillingSection'
 import { CreditsCard } from './CreditsCard'
@@ -22,26 +20,8 @@ import { PlanSummary } from './PlanSummary'
 export function BillingSettings() {
   const { t } = useTranslation('settings')
   const { data: billing, isLoading, refetch } = useBilling()
-  const refresh = useRefreshBilling()
+  const refresh = useSubscriptionReturn()
   const canManage = hasAnyPermission(usePermissions(), ['settings.manage'])
-  const [params, setParams] = useSearchParams()
-  const handled = useRef(false)
-
-  const returned = SUBSCRIPTION_RETURN_PARAMS.some((param) => params.has(param))
-  useEffect(() => {
-    if (!returned || handled.current) return
-    handled.current = true
-    // Only the markers handled here: a credits purchase may have come back with them.
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        SUBSCRIPTION_RETURN_PARAMS.forEach((param) => next.delete(param))
-        return next
-      },
-      { replace: true },
-    )
-    refresh.mutate()
-  }, [returned, setParams, refresh])
 
   // Nothing is offered while Stripe is being asked: the plan just bought is not known yet, and
   // the picker would open on the wrong period and offer that plan as a switch.
