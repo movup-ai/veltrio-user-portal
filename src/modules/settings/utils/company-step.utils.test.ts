@@ -13,6 +13,7 @@ const COMPANY: Company = {
   currency: 'USD',
   currencyLocked: false,
   listingLanguage: 'en',
+  additionalDriverPrice: 12,
   address: '1450 Alton Road, Miami Beach, FL 33139',
 }
 

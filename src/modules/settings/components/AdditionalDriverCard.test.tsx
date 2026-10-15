@@ -17,7 +17,7 @@ const COMPANY: Company = {
   id: 't_1',
   name: 'Sunstate Car Co.',
   subdomain: 'sunstate',
-  fleetSize: '11_50',
+  fleetSize: '21_50',
   country: 'US',
   currencyLocked: false,
   timezone: 'America/New_York',
@@ -57,6 +57,17 @@ describe('AdditionalDriverCard', () => {
     await user.click(save())
 
     await waitFor(() => expect(setPrice).toHaveBeenCalledWith(0))
+  })
+
+  it('saves a price whose cents a float cannot hold exactly', async () => {
+    const user = renderCard()
+
+    // 19.99 * 100 is 1998.9999999999998 in floating point.
+    await user.clear(field())
+    await user.type(field(), '19.99')
+    await user.click(save())
+
+    await waitFor(() => expect(setPrice).toHaveBeenCalledWith(19.99))
   })
 
   it('refuses a price below zero or finer than a cent', async () => {

@@ -13,7 +13,9 @@ function typed(value: string): number {
 
 /** Whole cents at most, and never below zero. */
 function validPrice(price: number): boolean {
-  return Number.isFinite(price) && price >= 0 && Math.round(price * 100) === price * 100
+  const cents = price * 100
+  // Within a tolerance: 19.99 * 100 comes out as 1998.9999999999998.
+  return Number.isFinite(price) && price >= 0 && Math.abs(cents - Math.round(cents)) < 1e-6
 }
 
 /**

@@ -110,8 +110,9 @@ function ConditionForm({
           checked: false,
         })),
   )
-  // Read once: the form is open for minutes, not across a midnight.
-  const [today] = useState(() => companyDay(Date.now()))
+  // Read again on every submit: a form left open past midnight must not pass a licence that has
+  // run out since.
+  const [today, setToday] = useState(() => companyDay(Date.now()))
   const licenceProblems = driverCheckProblems(licences, today)
 
   const miles = (value: number) => t('details.condition.miles', { miles: format.number(value) })
@@ -132,8 +133,10 @@ function ConditionForm({
       onSubmit={(event) => {
         event.preventDefault()
         setAttempted(true)
+        const now = companyDay(Date.now())
+        setToday(now)
         if (read === undefined || fuelLevel === undefined) return
-        if (Object.keys(licenceProblems).length > 0) return
+        if (Object.keys(driverCheckProblems(licences, now)).length > 0) return
         onSubmit({
           odometer: read,
           fuelLevel,

@@ -69,7 +69,7 @@ import {
   useDeleteBookingDraft,
   useSaveBookingDraft,
 } from '@/modules/bookings/hooks/use-booking-drafts'
-import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
+import { resolveDraftResume, restoredDrivers } from '@/modules/bookings/utils/booking.draft-resume'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import { verificationForRenter, type RanVerification } from '@/modules/bookings/utils/booking.verification'
 import {
@@ -139,6 +139,7 @@ function fromDraftPayload(payload: Record<string, unknown>): BookingFormValues {
   return {
     ...blankValues(),
     ...(payload as Partial<BookingFormValues>),
+    additionalDrivers: restoredDrivers(payload.additionalDrivers),
     licenceDocument: null,
     insuranceDocument: null,
   }
