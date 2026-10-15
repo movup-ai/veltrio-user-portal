@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { usePermissions } from '@/components/feedback/Can'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/state/ui.store'
 import type { MembershipRole } from '@/types/user'
@@ -47,6 +48,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges, account }: 
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
   const theme = useUIStore((state) => state.theme)
   const setTheme = useUIStore((state) => state.setTheme)
+  const permissions = usePermissions()
   const expanded = !collapsed
 
   const isDark =
@@ -93,6 +95,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges, account }: 
               ) : null
             }
 
+            if (item.permission && !permissions.includes(item.permission)) return null
             const badge = badges?.[item.key]
             return (
               <NavLink

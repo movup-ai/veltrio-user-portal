@@ -1,18 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Copy } from 'lucide-react'
 import { LoadingState } from '@/components/feedback/LoadingState'
+import { CopyLinkField } from '@/components/forms/CopyLinkField'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { focusDialogContent } from '@/components/ui/dialog-focus'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from '@/components/ui/use-toast'
 import { insuranceLinkDelivery } from '@/lib/features'
 import { useSendInsuranceLink, type InsuranceLinkSession } from '../hooks/use-verification'
-
-const COPIED_FOR_MS = 2_000
 
 interface InsuranceLinkDialogProps {
   open: boolean
@@ -78,39 +75,19 @@ function LinkBody({
 }) {
   const { t } = useTranslation('bookings')
   const send = useSendInsuranceLink(session.verificationId)
-  const [copied, setCopied] = useState(false)
   const [email, setEmail] = useState(defaultEmail)
   const [phone, setPhone] = useState(defaultPhone)
 
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(session.link)
-      setCopied(true)
-      setTimeout(() => setCopied(false), COPIED_FOR_MS)
-    } catch {
-      // Refused outside a secure context or without permission; the field can still be copied.
-      toast({ title: t('insuranceLink.copyFailed'), variant: 'error' })
-    }
-  }
-
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="insurance-link">{t('insuranceLink.linkLabel')}</Label>
-        <div className="flex gap-2">
-          <Input
-            id="insurance-link"
-            readOnly
-            value={session.link}
-            onFocus={(event) => event.currentTarget.select()}
-            className="bg-surface-2 text-fg-2"
-          />
-          <Button type="button" variant="outline" onClick={copy} className="shrink-0">
-            {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
-            {copied ? t('insuranceLink.copied') : t('insuranceLink.copy')}
-          </Button>
-        </div>
-      </div>
+      <CopyLinkField
+        id="insurance-link"
+        label={t('insuranceLink.linkLabel')}
+        url={session.link}
+        copyLabel={t('insuranceLink.copy')}
+        copiedLabel={t('insuranceLink.copied')}
+        copyFailed={t('insuranceLink.copyFailed')}
+      />
 
       {!canSend ? (
         <p className="text-fg-4 m-0 text-[12.5px]">{t('insuranceLink.sendingSoon')}</p>

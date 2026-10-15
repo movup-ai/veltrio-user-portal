@@ -14,6 +14,14 @@ const input = [
 ].join(' ')
 const outlineButton = `h-10 rounded-md border border-input bg-background text-foreground shadow-xs transition-colors hover:bg-muted ${focusRing}`
 const link = 'text-primary hover:text-primary-hover font-semibold no-underline hover:underline'
+// Its own sizes rather than `input` plus overrides: two height utilities in one list resolve by
+// stylesheet order, not by which comes last here.
+const otpDigit = [
+  'h-[60px] w-11 rounded-[10px] border border-input bg-surface p-0 text-center text-[22px] font-semibold tabular-nums',
+  'text-foreground shadow-xs transition-colors hover:border-border-strong',
+  'focus:border-primary focus:outline-2 focus:outline-offset-2 focus:outline-ring',
+  'aria-[invalid=true]:border-error aria-[invalid=true]:focus:outline-error',
+].join(' ')
 
 /**
  * Clerk's screens dressed in the portal's tokens. Colours are CSS variables, so they follow the
@@ -48,7 +56,8 @@ export const clerkAppearance: Appearance = {
     formFieldInputShowPasswordButton: 'text-fg-4 hover:text-foreground hover:bg-transparent',
     formFieldErrorText: 'text-caption text-error',
     formFieldAction: link,
-    otpCodeFieldInput: `${input} size-11 px-0 text-center text-[18px] font-semibold`,
+    otpCodeFieldInputs: 'justify-center gap-2.5',
+    otpCodeFieldInput: otpDigit,
     formButtonPrimary: `h-10 rounded-md bg-primary-solid text-solid-foreground text-label font-semibold normal-case shadow-xs transition-colors hover:bg-primary-solid/90 after:hidden before:hidden ${focusRing}`,
     buttonArrowIcon: 'hidden',
     socialButtonsBlockButton: outlineButton,

@@ -86,7 +86,7 @@ export function OnboardingPage() {
   if (!isLoaded) return <LoadingState />
   if (!isSignedIn) return <Navigate to="/login" replace />
   // Only the owner sets the company up; anyone else already belongs to one.
-  if (me.data && !created && !owner) return <Navigate to="/dashboard" replace />
+  if (membership && !created && !owner) return <Navigate to="/dashboard" replace />
   if (returning && me.data) {
     if (company.isLoading) return <LoadingState />
     if (!company.data) {

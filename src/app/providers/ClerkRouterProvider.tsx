@@ -95,7 +95,7 @@ export function ClerkRouterProvider() {
       signInFallbackRedirectUrl="/dashboard"
       // Forced, not a fallback: a return address carried over from sign-in would otherwise send a
       // brand-new account to the dashboard, which only bounces it back here.
-      signUpForceRedirectUrl={ONBOARDING_PATHS.company}
+      signUpForceRedirectUrl={ONBOARDING_PATHS.start}
       afterSignOutUrl="/login"
     >
       <ClerkTokenBridge />

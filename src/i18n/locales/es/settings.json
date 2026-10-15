@@ -120,6 +120,91 @@
     "payments": "Pagos",
     "billing": "Facturación"
   },
+  "users": {
+    "page": {
+      "title": "Usuarios",
+      "description": "Invita a personas a tu empresa y elige lo que puede hacer cada una."
+    },
+    "ownerOnly": {
+      "title": "Solo los propietarios pueden ver el equipo",
+      "description": "Pide a un propietario de la cuenta que invite a personas o cambie sus roles."
+    },
+    "members": {
+      "title": "Equipo",
+      "description": "Todas las personas que pueden entrar en esta empresa y lo que su rol les permite hacer.",
+      "you": "Tú",
+      "joined": "Se unió el {{date}}",
+      "roleOf": "Rol de {{name}}",
+      "remove": "Quitar",
+      "removeNamed": "Quitar a {{name}}",
+      "lastOwner": "Una empresa necesita al menos un propietario. Haz propietario a otra persona primero."
+    },
+    "invite": {
+      "open": "Invitar personas",
+      "title": "Invitar a alguien",
+      "description": "Recibirá un correo con un enlace. Para unirse, debe iniciar sesión o registrarse con esta dirección.",
+      "email": "Correo electrónico",
+      "emailInvalid": "Introduce un correo electrónico válido",
+      "role": "Rol",
+      "emailPlaceholder": "nombre@empresa.com",
+      "roles": {
+        "owner": "Todo, incluidos los ajustes, la facturación y el equipo",
+        "manager": "Lleva la flota, las reservas, los reembolsos y las sucursales",
+        "staff": "Atiende el mostrador: reservas, clientes y entregas"
+      },
+      "expiry": "El enlace sirve durante 7 días.",
+      "submit": "Enviar invitación",
+      "errors": {
+        "already_member": "Esta persona ya forma parte de tu equipo.",
+        "invitation_pending": "Esta dirección ya tiene una invitación. Reenvíala desde la lista."
+      }
+    },
+    "sent": {
+      "title": "Invitación enviada",
+      "emailed": "Enviamos una invitación a {{email}}. También puedes enviarle el enlace tú mismo.",
+      "notEmailed": "El correo no está configurado, así que no se envió nada a {{email}}. Envíale este enlace tú mismo.",
+      "link": "Enlace de invitación",
+      "linkHelp": "Sirve durante 7 días y solo para esa dirección de correo. No volverás a ver este enlace.",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "copyFailed": "No se pudo copiar el enlace. Selecciónalo y cópialo tú mismo."
+    },
+    "pending": {
+      "title": "Invitaciones pendientes",
+      "description": "Enviadas, pero aún sin aceptar. Al reenviar se crea un enlace nuevo y el anterior deja de funcionar.",
+      "sent": "Enviada el {{date}}",
+      "sentBy": "Enviada el {{date}} por {{name}}",
+      "expired": "Caducada",
+      "resend": "Reenviar",
+      "revoke": "Revocar",
+      "revokeFor": "Revocar la invitación de {{email}}"
+    },
+    "revoke": {
+      "title": "¿Revocar esta invitación?",
+      "description": "El enlace enviado a {{email}} dejará de funcionar.",
+      "confirm": "Revocar"
+    },
+    "remove": {
+      "title": "¿Quitar a {{name}}?",
+      "description": "Pierde el acceso de inmediato. Lo que hizo sigue en el historial con su nombre.",
+      "selfDescription": "Pierdes el acceso a esta empresa de inmediato. Otro propietario puede volver a invitarte.",
+      "confirm": "Quitar"
+    },
+    "stepDown": {
+      "title": "¿Dejar de ser propietario?",
+      "description": "Perderás el acceso a los ajustes, la facturación y el equipo de inmediato. Otro propietario puede volver a hacerte propietario.",
+      "confirm": "Cambiar mi rol"
+    },
+    "toast": {
+      "roleChanged": "Rol cambiado",
+      "roleFailed": "No se pudo cambiar el rol",
+      "removed": "Quitado del equipo",
+      "removeFailed": "No se pudo quitar a esta persona",
+      "revoked": "Invitación revocada",
+      "revokeFailed": "No se pudo revocar la invitación",
+      "resendFailed": "No se pudo reenviar la invitación"
+    }
+  },
   "payments": {
     "section": "Pagos",
     "sectionHelp": "Cómo te pagan los clientes y adónde va el dinero.",

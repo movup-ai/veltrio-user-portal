@@ -23,7 +23,7 @@ export interface TenantMembership {
 
 export interface MeResponse {
   user: User
-  /** Null only if the company was deleted out from under the account. */
+  /** Null once removed from the company, or if it was deleted out from under the account. */
   membership: TenantMembership | null
 }
 
@@ -66,7 +66,7 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
  * calls map a verified Clerk session onto the platform account: `/auth/me`
  * resolves it to a user and their company, and `/auth/register-tenant` creates
  * both at the end of onboarding. Signup is the owner's route in and an owner
- * owns one company; staff arrive by invitation, which is not built yet.
+ * owns one company; everyone else arrives by invitation (modules/users).
  */
 export const authApi = {
   getMe: () => apiClient.get<MeResponse>('/auth/me').then((r) => r.data),
