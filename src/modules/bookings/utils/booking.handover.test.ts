@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   awaitsConfirmation,
+  driverCheckProblems,
   handoverButton,
   isBeforePickup,
   nextStepNeeds,
   pickupWaitsFor,
+  type DriverCheckDraft,
 } from './booking.handover'
 
 const NOT_OUT = { allowed: false, reason: 'not_on_rental' } as const
@@ -122,5 +124,30 @@ describe('isBeforePickup', () => {
     expect(isBeforePickup({ pickUp: { allowed: false, reason: 'not_fully_paid' } })).toBe(true)
     expect(isBeforePickup({ pickUp: { allowed: true } })).toBe(true)
     expect(isBeforePickup({ pickUp: { allowed: false, reason: 'not_before_pickup' } })).toBe(false)
+  })
+})
+
+describe('driverCheckProblems', () => {
+  const draft = (change: Partial<DriverCheckDraft>): DriverCheckDraft => ({
+    id: 'd1',
+    name: 'Sam Lee',
+    licenceNumber: 'D123',
+    licenceState: 'FL',
+    licenceExpiry: '2030-01-31',
+    checked: true,
+    ...change,
+  })
+
+  it('passes a complete, unexpired, ticked licence', () => {
+    expect(driverCheckProblems([draft({})], '2026-10-14')).toEqual({})
+  })
+
+  it('names what is missing first, then an expired card, then a missing tick', () => {
+    expect(driverCheckProblems([draft({ licenceState: ' ' })], '2026-10-14')).toEqual({ d1: 'incomplete' })
+    expect(driverCheckProblems([draft({ licenceExpiry: '2026-10-13' })], '2026-10-14')).toEqual({
+      d1: 'expired',
+    })
+    expect(driverCheckProblems([draft({ licenceExpiry: '2026-10-14' })], '2026-10-14')).toEqual({})
+    expect(driverCheckProblems([draft({ checked: false })], '2026-10-14')).toEqual({ d1: 'unchecked' })
   })
 })

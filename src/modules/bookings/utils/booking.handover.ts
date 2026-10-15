@@ -79,3 +79,35 @@ export function nextStepNeeds(
   if (button.action !== 'close') return []
   return [button.rule.reason === 'charges_unpaid' ? 'charges' : 'settlement']
 }
+
+/** An additional driver's licence as the handover form holds it, ticked once seen. */
+export interface DriverCheckDraft {
+  id: string
+  name: string
+  licenceNumber: string
+  licenceState: string
+  /** YYYY-MM-DD; '' until entered. */
+  licenceExpiry: string
+  checked: boolean
+}
+
+export type DriverCheckProblem = 'incomplete' | 'expired' | 'unchecked'
+
+/** What keeps each driver's licence from going with the handover, by driver id; empty when none. */
+export function driverCheckProblems(
+  drafts: DriverCheckDraft[],
+  /** The company's own date, YYYY-MM-DD: a licence that ran out before it cannot drive. */
+  today: string,
+): Record<string, DriverCheckProblem> {
+  const problems: Record<string, DriverCheckProblem> = {}
+  for (const draft of drafts) {
+    if (!draft.licenceNumber.trim() || !draft.licenceState.trim() || !draft.licenceExpiry) {
+      problems[draft.id] = 'incomplete'
+    } else if (draft.licenceExpiry < today) {
+      problems[draft.id] = 'expired'
+    } else if (!draft.checked) {
+      problems[draft.id] = 'unchecked'
+    }
+  }
+  return problems
+}

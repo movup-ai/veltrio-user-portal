@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useBookingContract } from '@/modules/contracts/hooks/use-booking-contract'
 import { useBookingPayments } from '@/modules/payments/hooks/use-booking-payments'
 import { useBookingHandover } from '../hooks/use-booking-handover'
-import type { BookingCondition } from '../types/booking.types'
+import type { AdditionalDriver, BookingCondition } from '../types/booking.types'
 import { handoverButton, nextStepNeeds } from '../utils/booking.handover'
 import { BookingConditionDialog } from './BookingConditionDialog'
 
@@ -23,6 +23,8 @@ interface BookingHandoverActionProps {
   pickupCondition?: BookingCondition
   vehicleMileage?: number
   vehicleElectric?: boolean
+  /** Their licences are checked in the pickup form. */
+  drivers?: AdditionalDriver[]
 }
 
 /**
@@ -90,6 +92,7 @@ export function BookingHandoverAction({ reference, ...condition }: BookingHandov
           pickup={condition.pickupCondition}
           vehicleMileage={condition.vehicleMileage}
           electric={condition.vehicleElectric}
+          drivers={condition.drivers}
           loading={handover.isPending}
           onSubmit={(input) => handover.mutate(input, { onSuccess: () => setRecording(undefined) })}
         />

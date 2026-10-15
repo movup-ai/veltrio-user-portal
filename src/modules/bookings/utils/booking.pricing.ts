@@ -1,6 +1,7 @@
 import { fromCents, percentOfCents, toCents } from '@/lib/money'
 import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
 import { planRental, planTotal, type RatePlan } from '@/modules/vehicles/utils/rate-plan'
+import { useOrganizationStore } from '@/state/organization.store'
 import { wallClockHours } from '@/utils/company-time'
 
 const MS_PER_HOUR = 1000 * 60 * 60
@@ -10,11 +11,16 @@ export function rentalDays(hours: number): number {
   return Math.max(1, Math.ceil(hours / 24))
 }
 
-/**
- * Rate a newly added driver starts on. Only a starting point — each driver carries its own
- * rate, so the counter can waive or discount one without affecting the others.
- */
+/** Until the company's own price is known. */
 export const ADDITIONAL_DRIVER_PER_DAY = 12
+
+/**
+ * Rate a newly added driver starts on: the company's own price. Only a starting point — each
+ * driver carries its own rate, so the counter can waive or discount one.
+ */
+export function additionalDriverPerDay(): number {
+  return useOrganizationStore.getState().membership?.additionalDriverPrice ?? ADDITIONAL_DRIVER_PER_DAY
+}
 
 export interface DriverCharge {
   count: number

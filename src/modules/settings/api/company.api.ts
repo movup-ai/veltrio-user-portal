@@ -1,4 +1,5 @@
 import type { CancellationPolicy } from '@/lib/cancellation-policy'
+import { toCents } from '@/lib/money'
 import { apiClient } from '@/services/api/client'
 import type { Company, CompanyPatch } from '../types/company.types'
 import { toCompany, toCompanyPayload, type CompanyWire } from './settings.mapper'
@@ -13,5 +14,10 @@ export const companyApi = {
   setCancellationPolicy: (policy: CancellationPolicy | undefined): Promise<Company> =>
     apiClient
       .patch<CompanyWire>('/tenant', { cancellationPolicy: policy ?? null })
+      .then((r) => toCompany(r.data)),
+
+  setAdditionalDriverPrice: (price: number): Promise<Company> =>
+    apiClient
+      .patch<CompanyWire>('/tenant', { additionalDriverPriceCents: toCents(price) })
       .then((r) => toCompany(r.data)),
 }

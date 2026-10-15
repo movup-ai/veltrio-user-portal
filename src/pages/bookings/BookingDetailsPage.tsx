@@ -284,6 +284,7 @@ export function BookingDetailsPage() {
                 pickupCondition={booking.pickupCondition}
                 vehicleMileage={booking.vehicleMileage}
                 vehicleElectric={booking.vehicleElectric}
+                drivers={booking.additionalDrivers}
               />
             )}
           </>

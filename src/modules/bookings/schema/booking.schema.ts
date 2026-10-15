@@ -64,7 +64,10 @@ function additionalDriverSchema(t: ValidationT) {
   return z.object({
     id: z.string(),
     name: z.string().min(1, t('booking.driverNameRequired')).max(60),
-    licenceNumber: z.string().min(1, t('booking.driverLicenceRequired')).max(30),
+    // Optional: the counter reads the licence at pickup if it is not known yet.
+    licenceNumber: z.string().max(30),
+    licenceState: z.string().max(40),
+    licenceExpiry: z.string(),
     pricePerDay: money(t('booking.driverRateInvalid')),
   })
 }

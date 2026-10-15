@@ -256,6 +256,22 @@
         "label": "Después de esta devolución",
         "available": "Disponible para alquilar",
         "service": "Enviar a mantenimiento"
+      },
+      "drivers": {
+        "title": "Conductores adicionales",
+        "hint": "Compara la licencia de cada conductor con la persona presente. Completa o corrige los datos desde la tarjeta.",
+        "number": "Número de licencia",
+        "state": "Estado",
+        "expiry": "Vence",
+        "expiryFor": "Vencimiento de la licencia de {{name}}",
+        "expiryPlaceholder": "Elige una fecha",
+        "seen": "He revisado la licencia de {{name}}",
+        "absent": "Un conductor que no está presente no puede conducir. Cancela, quítalo en Conductores y entrega el vehículo.",
+        "problem": {
+          "incomplete": "Escribe el número, el estado y el vencimiento de la licencia de {{name}} desde la tarjeta.",
+          "expired": "La licencia de {{name}} está vencida, así que no puede conducir.",
+          "unchecked": "Marca la casilla cuando hayas visto la licencia de {{name}}."
+        }
       }
     },
     "vehicle": {
@@ -366,7 +382,11 @@
       "phone": "Teléfono",
       "licence": "Licencia",
       "lifetimeValue": "Valor de por vida",
-      "drivers": "Conductores adicionales"
+      "drivers": "Conductores adicionales",
+      "licenceAtPickup": "La licencia se revisa al recoger",
+      "expires": "vence {{date}}",
+      "checked": "Licencia revisada {{date}}",
+      "checkedBy": "Licencia revisada por {{name}}, {{date}}"
     },
     "checklist": {
       "title": "Lista de verificación",
@@ -900,12 +920,17 @@
       "driverN": "Conductor {{index}}",
       "remove": "Eliminar conductor {{index}}",
       "name": "Nombre completo",
-      "licence": "Número de permiso",
+      "licence": "Número de permiso (opcional)",
       "nameFor": "Nombre completo del conductor {{index}}",
       "licenceFor": "Número de permiso del conductor {{index}}",
       "rate": "Tarifa diaria",
       "rateFor": "Tarifa diaria del conductor {{index}}",
-      "perDaySuffix": "/día"
+      "perDaySuffix": "/día",
+      "licenceAtPickup": "Licencia al recoger",
+      "state": "Estado de emisión (opcional)",
+      "stateFor": "Estado de emisión del permiso del conductor {{index}}",
+      "expiry": "Vencimiento del permiso (opcional)",
+      "expiryFor": "Vencimiento del permiso del conductor {{index}}"
     },
     "fees": {
       "hint": "Cargos puntuales añadidos a esta reserva — limpieza, un complemento acordado, cualquier cosa fuera de la tarifa estándar.",
