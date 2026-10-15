@@ -2,6 +2,8 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
+import { useOrganizationStore } from '@/state/organization.store'
+import type { OrganizationMembership } from '@/types/user'
 import type { HandoverInput } from '../types/booking.types'
 import { BookingConditionDialog } from './BookingConditionDialog'
 
@@ -75,6 +77,65 @@ describe('BookingConditionDialog', () => {
       notes: 'Scuff on the rear bumper',
       photos: [],
     })
+  })
+
+  it("will not hand over until each driver's licence is complete and ticked, then sends it", async () => {
+    const sam = {
+      id: 'd1',
+      name: 'Sam Lee',
+      licenceNumber: 'D123',
+      licenceState: '',
+      licenceExpiry: '2030-01-31',
+      pricePerDay: 12,
+    }
+    const user = renderDialog({ vehicleMileage: 12000, drivers: [sam] })
+    await chooseFuel(user, 'Full')
+
+    await user.click(screen.getByRole('button', { name: 'Hand over vehicle' }))
+    expect(
+      screen.getByText("Enter Sam Lee's licence number, state and expiry from the card."),
+    ).toBeInTheDocument()
+
+    await user.type(screen.getByRole('textbox', { name: 'State' }), 'FL')
+    await user.click(screen.getByRole('button', { name: 'Hand over vehicle' }))
+    expect(screen.getByText("Tick once you've seen Sam Lee's licence.")).toBeInTheDocument()
+    expect(onSubmit).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('checkbox', { name: "I've checked Sam Lee's licence" }))
+    await user.click(screen.getByRole('button', { name: 'Hand over vehicle' }))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        drivers: [{ id: 'd1', licenceNumber: 'D123', licenceState: 'FL', licenceExpiry: '2030-01-31' }],
+      }),
+    )
+  })
+
+  it('refuses a licence that runs out while the form is open across midnight', async () => {
+    useOrganizationStore.setState({ membership: { timezone: 'UTC' } as OrganizationMembership })
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-15T23:58:00Z'))
+    try {
+      const sam = {
+        id: 'd1',
+        name: 'Sam Lee',
+        licenceNumber: 'D123',
+        licenceState: 'FL',
+        licenceExpiry: '2026-10-15',
+        pricePerDay: 12,
+      }
+      const user = renderDialog({ vehicleMileage: 12000, drivers: [sam] })
+      await chooseFuel(user, 'Full')
+      await user.click(screen.getByRole('checkbox', { name: "I've checked Sam Lee's licence" }))
+
+      vi.setSystemTime(new Date('2026-10-16T00:01:00Z'))
+      await user.click(screen.getByRole('button', { name: 'Hand over vehicle' }))
+
+      expect(onSubmit).not.toHaveBeenCalled()
+      expect(screen.getByText("Sam Lee's licence has expired, so they can't drive.")).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+      useOrganizationStore.setState({ membership: null })
+    }
   })
 
   it('warns, without calling it an error, when a pickup reads below the mileage on file', async () => {

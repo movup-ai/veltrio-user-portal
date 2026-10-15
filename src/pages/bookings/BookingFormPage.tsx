@@ -69,7 +69,7 @@ import {
   useDeleteBookingDraft,
   useSaveBookingDraft,
 } from '@/modules/bookings/hooks/use-booking-drafts'
-import { resolveDraftResume } from '@/modules/bookings/utils/booking.draft-resume'
+import { resolveDraftResume, restoredDrivers } from '@/modules/bookings/utils/booking.draft-resume'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import { verificationForRenter, type RanVerification } from '@/modules/bookings/utils/booking.verification'
 import {
@@ -139,6 +139,7 @@ function fromDraftPayload(payload: Record<string, unknown>): BookingFormValues {
   return {
     ...blankValues(),
     ...(payload as Partial<BookingFormValues>),
+    additionalDrivers: restoredDrivers(payload.additionalDrivers),
     licenceDocument: null,
     insuranceDocument: null,
   }
@@ -1333,7 +1334,9 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
                         >
                           <span>
                             <span className="font-semibold">{driver.name || '—'}</span>{' '}
-                            <span className="text-fg-4 font-mono text-[13px]">{driver.licenceNumber}</span>
+                            <span className="text-fg-4 font-mono text-[13px]">
+                              {driver.licenceNumber || t('form.drivers.licenceAtPickup')}
+                            </span>
                           </span>
                           <span className="text-fg-4 shrink-0 text-[13px] tabular-nums">
                             {format.currency(driver.pricePerDay)}/day

@@ -24,6 +24,7 @@ const COMPANY: Company = {
   timezone: 'America/New_York',
   currency: 'USD',
   listingLanguage: 'en',
+  additionalDriverPrice: 12,
 }
 const STANDARD: CancellationPolicy = [
   { daysBefore: 14, refundPercent: 100 },

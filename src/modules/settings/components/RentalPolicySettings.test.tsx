@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { Company } from '../types/company.types'
-import { CancellationPolicySettings } from './CancellationPolicySettings'
+import { RentalPolicySettings } from './RentalPolicySettings'
 
 const get = vi.fn<() => Promise<Company>>()
 
@@ -21,6 +21,7 @@ const COMPANY: Company = {
   timezone: 'America/New_York',
   currency: 'USD',
   listingLanguage: 'en',
+  additionalDriverPrice: 12,
   cancellationPolicy: [],
 }
 
@@ -37,7 +38,7 @@ function renderAs(role: 'owner' | 'manager') {
   })
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <CancellationPolicySettings />
+      <RentalPolicySettings />
     </QueryClientProvider>,
   )
 }
@@ -47,7 +48,7 @@ afterEach(() => {
   useOrganizationStore.setState({ membership: null })
 })
 
-describe('CancellationPolicySettings', () => {
+describe('RentalPolicySettings', () => {
   it("shows the owner the company's policy as it is saved", async () => {
     get.mockResolvedValue(COMPANY)
     renderAs('owner')

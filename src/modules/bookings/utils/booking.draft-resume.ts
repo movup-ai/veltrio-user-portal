@@ -1,4 +1,5 @@
 import type { BookingDraft } from '../types/booking.types'
+import type { AdditionalDriverValues } from '../schema/booking.schema'
 
 /**
  * What the form page should show for a `?draft=<id>` link.
@@ -26,4 +27,11 @@ export function resolveDraftResume(
 
   const draft = drafts.find((d) => d.id === resumedDraftId)
   return draft ? { kind: 'resume', draft } : { kind: 'missing' }
+}
+
+/** A draft's drivers, with the licence fields a draft saved before they existed lacks. */
+export function restoredDrivers(drivers: unknown): AdditionalDriverValues[] {
+  return ((drivers ?? []) as Partial<AdditionalDriverValues>[]).map(
+    (driver) => ({ licenceState: '', licenceExpiry: '', ...driver }) as AdditionalDriverValues,
+  )
 }

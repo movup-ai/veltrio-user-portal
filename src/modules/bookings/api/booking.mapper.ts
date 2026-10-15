@@ -57,8 +57,13 @@ import { bookingToTuple } from '../utils/booking.utils'
 interface AdditionalDriverWire {
   id: string
   name: string
-  licenceNumber: string
+  licenceNumber: string | null
+  // The three below and the check are absent from API builds that predate them.
+  licenceState?: string | null
+  licenceExpiry?: string | null
   pricePerDayCents: number
+  licenceCheckedAt?: string | null
+  licenceCheckedBy?: string | null
 }
 
 interface BookingFeeWire {
@@ -291,8 +296,13 @@ function toDriver(wire: AdditionalDriverWire): AdditionalDriver {
   return {
     id: wire.id,
     name: wire.name,
-    licenceNumber: wire.licenceNumber,
+    licenceNumber: wire.licenceNumber ?? '',
+    licenceState: wire.licenceState ?? '',
+    licenceExpiry: wire.licenceExpiry ?? '',
     pricePerDay: fromCents(wire.pricePerDayCents),
+    ...(wire.licenceCheckedAt && {
+      licenceCheck: { at: wire.licenceCheckedAt, by: wire.licenceCheckedBy ?? undefined },
+    }),
   }
 }
 
@@ -485,6 +495,14 @@ export function toConditionPayload(input: ConditionInput) {
     notes: input.notes.trim() || null,
     ...(input.sendToService !== undefined && { sendToService: input.sendToService }),
     ...(input.photoIds && { photoIds: input.photoIds }),
+    ...(input.drivers && {
+      drivers: input.drivers.map((driver) => ({
+        id: driver.id,
+        licenceNumber: driver.licenceNumber.trim(),
+        licenceState: driver.licenceState.trim(),
+        licenceExpiry: driver.licenceExpiry,
+      })),
+    }),
   }
 }
 
@@ -574,11 +592,14 @@ export function toChangeQuote(wire: ChangeQuoteWire): ChangeQuote {
   }
 }
 
+/** The check is the counter's own record: only the handover writes it, so it is never sent. */
 function toDriverPayload(driver: AdditionalDriver): AdditionalDriverWire {
   return {
     id: driver.id,
     name: driver.name.trim(),
-    licenceNumber: driver.licenceNumber.trim(),
+    licenceNumber: driver.licenceNumber.trim() || null,
+    licenceState: driver.licenceState.trim() || null,
+    licenceExpiry: driver.licenceExpiry || null,
     pricePerDayCents: toCents(driver.pricePerDay),
   }
 }

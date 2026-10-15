@@ -1,4 +1,5 @@
 import type { CancellationTier } from '@/lib/cancellation-policy'
+import { fromCents } from '@/lib/money'
 import type { FleetSize } from '@/services/auth/auth.api'
 import type { Brand, BrandValues } from '../types/brand.types'
 import {
@@ -36,6 +37,8 @@ export interface CompanyWire {
   xHandle: string | null
   tiktokHandle: string | null
   cancellationPolicy: CancellationTier[] | null
+  /** Absent from an API build older than the field. */
+  additionalDriverPriceCents?: number
 }
 
 type CompanyPayload = { [K in keyof CompanyValues]?: CompanyValues[K] | null }
@@ -50,6 +53,9 @@ const REQUIRED: ReadonlySet<keyof CompanyValues> = new Set([
   'listingLanguage',
   'timezone',
 ])
+
+/** The API's own default, for a build that does not send the field yet. */
+const DEFAULT_DRIVER_PRICE_CENTS = 1200
 
 function optional<T>(value: T | null): T | undefined {
   return value ?? undefined
@@ -78,6 +84,7 @@ export function toCompany(wire: CompanyWire): Company {
     xHandle: optional(wire.xHandle),
     tiktokHandle: optional(wire.tiktokHandle),
     cancellationPolicy: optional(wire.cancellationPolicy),
+    additionalDriverPrice: fromCents(wire.additionalDriverPriceCents ?? DEFAULT_DRIVER_PRICE_CENTS),
   }
 }
 

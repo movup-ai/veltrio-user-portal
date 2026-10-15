@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { BookingDraft } from '../types/booking.types'
-import { resolveDraftResume } from './booking.draft-resume'
+import { additionalDriversSchema } from '../schema/booking.schema'
+import { resolveDraftResume, restoredDrivers } from './booking.draft-resume'
 
 const DRAFT: BookingDraft = {
   id: 'd1',
@@ -41,5 +42,28 @@ describe('resolveDraftResume', () => {
 
   it('distinguishes a draft that is genuinely gone from one that failed to load', () => {
     expect(resolveDraftResume('gone', [DRAFT], LOADED)).toEqual({ kind: 'missing' })
+  })
+})
+
+describe('restoredDrivers', () => {
+  const t = ((key: string) => key) as never
+  // Saved before a driver's licence state and expiry were asked for.
+  const older = [{ id: 'x1', name: 'Ana Ruiz', licenceNumber: 'D123', pricePerDay: 12 }]
+
+  it('fills in the licence fields an older draft never saved, so the form can still submit', () => {
+    const drivers = restoredDrivers(older)
+
+    expect(additionalDriversSchema(t).safeParse({ additionalDrivers: drivers }).success).toBe(true)
+    expect(drivers).toEqual([{ ...older[0], licenceState: '', licenceExpiry: '' }])
+  })
+
+  it('keeps licence details the draft already holds', () => {
+    const saved = [{ ...older[0], licenceState: 'FL', licenceExpiry: '2028-04-30' }]
+
+    expect(restoredDrivers(saved)).toEqual(saved)
+  })
+
+  it('reads a draft with no drivers as none', () => {
+    expect(restoredDrivers(undefined)).toEqual([])
   })
 })

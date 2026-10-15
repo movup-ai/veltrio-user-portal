@@ -323,6 +323,14 @@
       "addTier": "Añadir tramo",
       "preview": "Cómo lo verán los clientes",
       "appliesFrom": "Se aplica a las reservas hechas desde ahora: cada reserva conserva la política con la que se hizo. Tú sigues eligiendo el reembolso cada vez que cancelas una."
+    },
+    "drivers": {
+      "title": "Conductores adicionales",
+      "description": "Cada conductor además del arrendatario se cobra a este precio por día de alquiler. Se cobra a quien añada un conductor en Veltrio; en el mostrador puedes cambiarlo en cada reserva.",
+      "label": "Precio por conductor",
+      "hint": "Pon 0 para añadir conductores sin costo. Algunos estados, como California, no permiten cobrar por el cónyuge del arrendatario: pon ese conductor en 0 en la reserva.",
+      "perDaySuffix": "/día",
+      "invalid": "Introduce un importe de 0 o más, con centavos como máximo."
     }
   },
   "billing": {

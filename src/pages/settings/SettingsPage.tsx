@@ -7,8 +7,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { BillingSettings } from '@/modules/billing/components/BillingSettings'
 import { StripeAccountCard } from '@/modules/payments/components/StripeAccountCard'
 import { BrandSettings } from '@/modules/settings/components/BrandSettings'
-import { CancellationPolicySettings } from '@/modules/settings/components/CancellationPolicySettings'
 import { CompanySettings } from '@/modules/settings/components/CompanySettings'
+import { RentalPolicySettings } from '@/modules/settings/components/RentalPolicySettings'
 import { SettingsTabs } from '@/modules/settings/components/SettingsTabs'
 import { settingsTab } from '@/modules/settings/utils/settings-tab'
 
@@ -31,7 +31,7 @@ export function SettingsPage() {
         {tab === 'payments' && (
           <>
             <StripeAccountCard />
-            <CancellationPolicySettings />
+            <RentalPolicySettings />
           </>
         )}
         {tab === 'billing' && <BillingSettings />}

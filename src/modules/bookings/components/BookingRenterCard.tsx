@@ -80,12 +80,33 @@ export function BookingRenterCard({
           </h3>
           <ul className="divide-border-soft m-0 flex list-none flex-col divide-y p-0">
             {drivers.map((driver) => (
-              <li key={driver.id} className="flex items-center justify-between gap-3 py-1.5">
-                <span className="min-w-0 truncate text-[13px] font-semibold">{driver.name}</span>
-                <span className="text-fg-3 shrink-0 text-[12px]">
-                  <span className="font-mono">{driver.licenceNumber}</span> ·{' '}
-                  {t('details.vehicle.perDay', { rate: format.currency(driver.pricePerDay) })}
-                </span>
+              <li key={driver.id} className="py-1.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate text-[13px] font-semibold">{driver.name}</span>
+                  <span className="text-fg-3 shrink-0 text-[12px]">
+                    {t('details.vehicle.perDay', { rate: format.currency(driver.pricePerDay) })}
+                  </span>
+                </div>
+                <p className="text-fg-3 m-0 text-[12px]">
+                  {driver.licenceNumber ? (
+                    <>
+                      <span className="font-mono">{driver.licenceNumber}</span>
+                      {driver.licenceState && ` · ${driver.licenceState}`}
+                      {driver.licenceExpiry &&
+                        ` · ${t('details.renter.expires', { date: format.shortDate(driver.licenceExpiry) })}`}
+                    </>
+                  ) : (
+                    t('details.renter.licenceAtPickup')
+                  )}
+                </p>
+                {driver.licenceCheck && (
+                  <p className="text-fg-3 m-0 text-[12px]">
+                    {t(driver.licenceCheck.by ? 'details.renter.checkedBy' : 'details.renter.checked', {
+                      name: driver.licenceCheck.by,
+                      date: format.dateTime(driver.licenceCheck.at),
+                    })}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
