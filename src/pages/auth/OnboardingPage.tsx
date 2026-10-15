@@ -265,7 +265,8 @@ function CompanyStep({ saved, onCreated }: { saved?: Saved; onCreated?: () => vo
 
         <FormField
           label={t('onboarding.subdomain')}
-          description={t('onboarding.subdomainHelp')}
+          // Once the company exists, links may be out under this URL: changing it is no longer free.
+          description={t(saved ? 'onboarding.subdomainHelpSaved' : 'onboarding.subdomainHelp')}
           error={errors.subdomain?.message}
           required
         >

@@ -187,6 +187,14 @@ describe('OnboardingPage', () => {
     expect(registerTenant.mock.calls[0][0].subdomain).toBe('sunstate-car-co')
   })
 
+  it('says the URL can change later, with no links out under it yet', () => {
+    renderPage()
+
+    expect(screen.getByLabelText(/Company URL/)).toHaveAccessibleDescription(
+      /You can change it later in Settings/,
+    )
+  })
+
   it('keeps a URL typed by hand when the name changes, and sends it lowercased', async () => {
     const user = userEvent.setup({ delay: null })
     renderPage()
@@ -612,6 +620,14 @@ describe('OnboardingPage, come back to from the stepper', () => {
     expect(registerTenant).not.toHaveBeenCalled()
     expect(updateMe).not.toHaveBeenCalled()
     expect(locationUpdate).not.toHaveBeenCalled()
+  })
+
+  it('warns that links already shared stop working if the URL changes', async () => {
+    renderPage()
+
+    expect(await screen.findByLabelText(/Company URL/)).toHaveAccessibleDescription(
+      /Links you've already shared stop working/,
+    )
   })
 
   it('keeps the URL when the company name is corrected', async () => {

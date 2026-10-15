@@ -157,9 +157,12 @@ const agreement = {
     { label: 'Daily', detail: '$649 × 3', amount: '$1,947.00' },
     { label: 'Additional driver', detail: '1 driver · $25/day', amount: '$75.00' },
     { label: 'Collision damage waiver', detail: '', amount: '$135.00' },
-    { label: 'Taxes & fees', detail: 'Branch surcharge + 7% sales tax', amount: '$150.99' },
   ],
+  // As the API words them (contracts/documents.py): tax is a total, not a charge, and it is the
+  // whole of the $150.99 on top of the $2,157 subtotal.
   totals: [
+    { label: 'Subtotal', amount: '$2,157.00', strong: false },
+    { label: 'Tax (7%)', amount: '$150.99', strong: false },
     { label: 'Total', amount: '$2,307.99', strong: true },
     { label: 'Security deposit (held)', amount: '$2,500.00', strong: false },
   ],
