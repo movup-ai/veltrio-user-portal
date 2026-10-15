@@ -67,6 +67,10 @@ function NoCompany() {
   const invitations = useMyInvitations(userId, true)
 
   if (invitations.isPending) return <LoadingState />
+  // A failed check is not an empty one: offering a company of one's own would hide an invitation.
+  if (invitations.isError) {
+    return <ErrorState description={invitations.error.message} onRetry={() => void invitations.refetch()} />
+  }
   if (hasOpenInvitation(invitations.data)) return <Navigate to={INVITE_PATH} replace />
   return (
     <ErrorState

@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import '@/i18n'
 import { ApiError } from '@/types/api'
 import { OnboardingStartPage } from './OnboardingStartPage'
 
@@ -85,5 +87,34 @@ describe('OnboardingStartPage', () => {
 
     expect(await screen.findByText('Dashboard')).toBeInTheDocument()
     expect(myInvitations).not.toHaveBeenCalled()
+  })
+
+  it('stops on a failed account read with a retry, rather than read it as having no company', async () => {
+    const refetch = vi.fn()
+    meResult.current = {
+      data: undefined,
+      isPending: false,
+      error: new ApiError('network_error', 'Could not reach the server'),
+      refetch,
+    }
+    renderStart()
+
+    await userEvent.setup({ delay: null }).click(screen.getByRole('button', { name: 'Try again' }))
+
+    expect(screen.getByText('Could not reach the server')).toBeInTheDocument()
+    expect(refetch).toHaveBeenCalledOnce()
+    expect(screen.queryByText('Company step')).not.toBeInTheDocument()
+    expect(myInvitations).not.toHaveBeenCalled()
+  })
+
+  it('stops on a failed invitation check with a retry, rather than read it as no invitation', async () => {
+    myInvitations.mockRejectedValueOnce(new ApiError('server_error', 'Something went wrong', { status: 500 }))
+    myInvitations.mockResolvedValueOnce([invitation(false)])
+    renderStart()
+
+    await userEvent.setup({ delay: null }).click(await screen.findByRole('button', { name: 'Try again' }))
+
+    expect(await screen.findByText('Invitations')).toBeInTheDocument()
+    expect(myInvitations).toHaveBeenCalledTimes(2)
   })
 })

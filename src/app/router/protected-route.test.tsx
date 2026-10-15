@@ -20,7 +20,9 @@ vi.mock('@/services/auth/use-me', () => ({
   useMe: () => meResult.current,
 }))
 
-const invitationsResult = vi.hoisted(() => ({ current: { isPending: false, data: [] as unknown[] } }))
+const invitationsResult = vi.hoisted(() => ({
+  current: { isPending: false, data: [] } as Record<string, unknown>,
+}))
 vi.mock('@/modules/users/hooks/use-invitations', () => ({
   useMyInvitations: () => invitationsResult.current,
 }))
@@ -205,6 +207,23 @@ describe('ProtectedRoute', () => {
         .click(screen.getByRole('button', { name: 'Set up your own company' }))
 
       expect(screen.getByTestId('where').textContent).toBe('/onboarding')
+    })
+
+    it('stops on a failed invitation check with a retry, rather than offer a company of its own', async () => {
+      const refetch = vi.fn()
+      invitationsResult.current = {
+        isPending: false,
+        isError: true,
+        data: undefined,
+        error: new Error('Something went wrong'),
+        refetch,
+      }
+
+      renderWithoutCompany()
+      await userEvent.setup({ delay: null }).click(screen.getByRole('button', { name: 'Try again' }))
+
+      expect(refetch).toHaveBeenCalledOnce()
+      expect(screen.queryByRole('button', { name: 'Set up your own company' })).not.toBeInTheDocument()
     })
   })
 })
