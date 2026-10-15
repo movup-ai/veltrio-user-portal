@@ -23,7 +23,7 @@ const COMPANY: Company = {
   name: 'Sunstate Car Co.',
   subdomain: 'sunstate',
   website: 'https://sunstate.com',
-  fleetSize: '11_50',
+  fleetSize: '21_50',
   country: 'US',
   currencyLocked: false,
   timezone: 'America/New_York',
@@ -213,6 +213,7 @@ describe('CompanySettings', () => {
 
     const language = await screen.findByRole('combobox', { name: /Listing language/ })
     expect(language).toHaveTextContent('English')
+    expect(language).not.toHaveAttribute('aria-describedby')
     await user.click(language)
     await user.click(await screen.findByRole('option', { name: 'Spanish' }))
     await user.click(within(card('Localization')).getByRole('button', { name: 'Save changes' }))
@@ -245,6 +246,41 @@ describe('CompanySettings', () => {
 
     const link = await screen.findByRole('link', { name: 'Open your fleet site' })
     expect(link.getAttribute('href')).toMatch(/^https:\/\/sunstate\.[^/]+$/)
+  })
+
+  it('moves the site to a new URL, and refreshes the account every shared link is built from', async () => {
+    get.mockResolvedValue(COMPANY)
+    update.mockImplementation(async (patch) => ({ ...COMPANY, ...patch }))
+    const invalidate = vi.spyOn(QueryClient.prototype, 'invalidateQueries')
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const url = await screen.findByLabelText(/Company URL/)
+    expect(url).toHaveValue('sunstate')
+    await user.clear(url)
+    await user.type(url, 'Sunstate-Miami')
+    await user.click(within(card('Company')).getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ subdomain: 'sunstate-miami' }))
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['auth', 'me'] })
+    invalidate.mockRestore()
+  })
+
+  it('puts a URL another company has under the field, not in a toast', async () => {
+    get.mockResolvedValue(COMPANY)
+    update.mockRejectedValue(
+      new ApiError('conflict', 'Subdomain is already taken', { status: 409, code: 'subdomain_taken' }),
+    )
+    const user = userEvent.setup({ delay: null })
+    renderAs('owner')
+
+    const url = await screen.findByLabelText(/Company URL/)
+    await user.clear(url)
+    await user.type(url, 'miami')
+    await user.click(within(card('Company')).getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(url).toHaveAccessibleDescription(/Another company has this URL/))
+    expect(url).toHaveFocus()
   })
 
   it("saves the company's address as typed, not a location's", async () => {

@@ -18,6 +18,7 @@ import { useChangePlan, useStartCheckout } from '../hooks/use-billing'
 import type { Billing, BillingInterval, PlanChoice, PlanOffer } from '../types/billing.types'
 import {
   billingState,
+  type CheckoutReturn,
   isQuoted,
   isSubscribed,
   planMove,
@@ -32,15 +33,21 @@ interface PlanPickerProps {
   billing: Billing
   /** Only the owner chooses; everyone else reads the plans. */
   canManage: boolean
+  /** Where checkout comes back to; the Billing tab unless given. */
+  returnTo?: CheckoutReturn
+  /** Replaces the card grid's columns, for a narrower column than the settings page. */
+  listClassName?: string
+  /** Puts the month/year switch at the right, clear of a heading centred above the cards. */
+  toggleAtEnd?: boolean
 }
 
 /** The plans on offer, by month or by year, with the way to start, upgrade or downgrade. */
-export function PlanPicker({ billing, canManage }: PlanPickerProps) {
+export function PlanPicker({ billing, canManage, returnTo, listClassName, toggleAtEnd }: PlanPickerProps) {
   const { t } = useTranslation('settings')
   const format = useFormatters()
   const [period, setPeriod] = useState<BillingInterval>(billing.interval ?? 'month')
   const [switching, setSwitching] = useState<PlanChoice | null>(null)
-  const checkout = useStartCheckout()
+  const checkout = useStartCheckout(returnTo)
   const change = useChangePlan()
   const subscribed = isSubscribed(billing)
   // On hold, Stripe still has the subscription: the way out is the card, not another plan.
@@ -57,7 +64,11 @@ export function PlanPicker({ billing, canManage }: PlanPickerProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Tabs value={period} onValueChange={(value) => setPeriod(value as BillingInterval)}>
+      <Tabs
+        value={period}
+        onValueChange={(value) => setPeriod(value as BillingInterval)}
+        className={cn(toggleAtEnd && 'flex justify-end')}
+      >
         <TabsList aria-label={t('billing.interval.label')}>
           {BILLING_INTERVALS.map((option) => (
             <TabsTrigger key={option} value={option} className="gap-1.5">
@@ -72,7 +83,7 @@ export function PlanPicker({ billing, canManage }: PlanPickerProps) {
         </TabsList>
       </Tabs>
 
-      <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-4">
+      <ul className={cn('m-0 grid list-none gap-3 p-0', listClassName ?? 'sm:grid-cols-2 xl:grid-cols-4')}>
         {billing.plans.map((offer) => {
           // What choosing this card would be; a company with no plan is simply starting one.
           const move = subscribed ? planMove(billing, offer, period) : undefined
@@ -85,6 +96,8 @@ export function PlanPicker({ billing, canManage }: PlanPickerProps) {
               billing={billing}
               interval={period}
               current={subscribed && billing.plan === offer.plan}
+              // Only while there is a plan to pick: once one is running, "Current" says what matters.
+              recommended={!subscribed && billing.recommendedPlan === offer.plan}
               largestFleet={largestFleet}
               shortfall={shortfall}
               action={
@@ -157,13 +170,24 @@ interface PlanCardProps {
   billing: Billing
   interval: BillingInterval
   current: boolean
+  /** The plan the company's stated fleet size fits. */
+  recommended: boolean
   /** The vehicle limit of the largest plan on sale; a quoted plan is for fleets past it. */
   largestFleet: number
   shortfall: Shortfall
   action: React.ReactNode
 }
 
-function PlanCard({ offer, billing, interval, current, largestFleet, shortfall, action }: PlanCardProps) {
+function PlanCard({
+  offer,
+  billing,
+  interval,
+  current,
+  recommended,
+  largestFleet,
+  shortfall,
+  action,
+}: PlanCardProps) {
   const { t } = useTranslation('settings')
   const format = useFormatters()
   const price = planPrice(offer, interval)
@@ -173,13 +197,15 @@ function PlanCard({ offer, billing, interval, current, largestFleet, shortfall, 
     <li
       className={cn(
         'flex flex-col gap-3 rounded-[11px] border p-4',
-        current ? 'border-primary bg-primary/[0.03]' : 'border-border',
+        current || recommended ? 'border-primary bg-primary/[0.03]' : 'border-border',
+        recommended && 'ring-primary/15 ring-4',
       )}
     >
       <div className="flex flex-col gap-1">
         <div className="flex min-h-[22px] items-center justify-between gap-2">
           <h3 className="m-0 text-[14px] font-semibold">{t(`billing.planName.${offer.plan}`)}</h3>
           {current && <Badge variant="primary">{t('billing.currentTag')}</Badge>}
+          {recommended && <Badge variant="primary">{t('billing.recommendedTag')}</Badge>}
         </div>
         {/* The price of the period shown, as it is charged: a year is not broken into months. */}
         <p className="m-0 flex flex-wrap items-baseline gap-x-1.5">

@@ -46,6 +46,7 @@ type CompanyPayload = { [K in keyof CompanyValues]?: CompanyValues[K] | null }
 /** The API rejects null for these; the rest are cleared with it. */
 const REQUIRED: ReadonlySet<keyof CompanyValues> = new Set([
   'name',
+  'subdomain',
   'fleetSize',
   'country',
   'currency',
@@ -90,6 +91,7 @@ export function toCompany(wire: CompanyWire): Company {
 export function toCompanyValues(company: Company): CompanyValues {
   return {
     name: company.name,
+    subdomain: company.subdomain,
     legalName: company.legalName ?? '',
     taxId: company.taxId ?? '',
     description: company.description ?? '',

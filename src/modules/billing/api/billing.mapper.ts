@@ -84,6 +84,8 @@ export interface BillingWire {
   currency: string
   yearlyDiscountPercent: number
   plans: PlanOfferWire[]
+  /** Absent from an API build older than the field. */
+  recommendedPlan?: Plan
   credits: CreditsWire
 }
 
@@ -174,6 +176,7 @@ export function toBilling(wire: BillingWire): Billing {
     currency: wire.currency,
     yearlyDiscountPercent: wire.yearlyDiscountPercent,
     plans: wire.plans.map(toPlanOffer),
+    recommendedPlan: wire.recommendedPlan,
     credits: toCredits(wire.credits),
   }
 }

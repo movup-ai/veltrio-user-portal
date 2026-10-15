@@ -18,7 +18,7 @@ const COMPANY: Company = {
   id: 't_1',
   name: 'Sunstate Car Co.',
   subdomain: 'sunstate',
-  fleetSize: '11_50',
+  fleetSize: '21_50',
   country: 'US',
   currencyLocked: false,
   timezone: 'America/New_York',

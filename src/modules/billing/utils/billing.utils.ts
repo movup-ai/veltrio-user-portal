@@ -22,12 +22,20 @@ export function portalReturnUrl(origin: string): string {
 }
 
 /** The return URLs for Stripe's checkout, on this portal's own origin. */
-export function checkoutLinks(origin: string) {
+export function checkoutLinks(origin: string, returnTo: CheckoutReturn = BILLING_RETURN) {
   return {
-    successUrl: `${origin}${BILLING_SETTINGS_PATH}?checkout=done`,
-    cancelUrl: `${origin}${BILLING_SETTINGS_PATH}`,
+    successUrl: `${origin}${returnTo.donePath}?checkout=done`,
+    cancelUrl: `${origin}${returnTo.cancelPath}`,
   }
 }
+
+/** Where Stripe's checkout comes back to: a finished one, and one the owner left. */
+export interface CheckoutReturn {
+  donePath: string
+  cancelPath: string
+}
+
+const BILLING_RETURN: CheckoutReturn = { donePath: BILLING_SETTINGS_PATH, cancelPath: BILLING_SETTINGS_PATH }
 
 /** Where Stripe sends the owner after buying a pack; it fills in the checkout's own id. */
 export const PACK_CHECKOUT_PARAM = 'credits'

@@ -2,7 +2,32 @@ import path from 'node:path'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { clerkFrontendApi, clerkJsUrl } from './src/app/providers/clerk-js.ts'
+
+/**
+ * Starts Clerk's script while the HTML is still parsing. Left to ClerkProvider it was requested
+ * only once the app had booted, and the sign-in form waited behind that whole chain.
+ */
+function clerkPreload(publishableKey: string | undefined): Plugin {
+  const host = clerkFrontendApi(publishableKey)
+  return {
+    name: 'veltrio:clerk-preload',
+    transformIndexHtml: () =>
+      host
+        ? [
+            // The script tag Clerk injects is crossOrigin="anonymous"; the preload must match it.
+            {
+              tag: 'link',
+              attrs: { rel: 'preload', as: 'script', href: clerkJsUrl(host), crossorigin: 'anonymous' },
+              injectTo: 'head-prepend',
+            },
+            // Clerk's API calls carry credentials, which a crossorigin connection cannot serve.
+            { tag: 'link', attrs: { rel: 'preconnect', href: `https://${host}` }, injectTo: 'head-prepend' },
+          ]
+        : [],
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -12,11 +37,13 @@ export default defineConfig(({ mode }) => {
   // Source maps go to Sentry so a stack trace names real files and lines. Only where a build is
   // given the token (the deploy), so a local or CI build neither uploads nor needs one.
   const uploadSourceMaps = Boolean(sentry.SENTRY_AUTH_TOKEN)
+  const clerk = loadEnv(mode, process.cwd(), 'VITE_CLERK_')
 
   return {
     plugins: [
       react(),
       tailwindcss(),
+      clerkPreload(clerk.VITE_CLERK_PUBLISHABLE_KEY),
       // Last, as it reads the finished bundle.
       ...(uploadSourceMaps
         ? [

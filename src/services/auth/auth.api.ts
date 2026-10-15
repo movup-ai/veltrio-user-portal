@@ -5,8 +5,8 @@ import type { AddressPin } from '@/modules/locations/types/location.types'
 import type { ID } from '@/types/common'
 import type { MembershipRole, OrganizationMembership, User } from '@/types/user'
 
-/** Self-reported band, not a count — mirrors the backend's FleetSize enum. */
-export const FLEET_SIZES = ['1_10', '11_50', '51_200', '200_plus'] as const
+/** Self-reported band, not a count — mirrors the backend's FleetSize enum. Each ends at a plan's limit. */
+export const FLEET_SIZES = ['1_5', '6_20', '21_50', '51_plus'] as const
 export type FleetSize = (typeof FLEET_SIZES)[number]
 
 /** `GET /auth/me`'s `membership` — the one tenant the user belongs to. */
@@ -34,7 +34,6 @@ export interface RegisterTenantPayload {
   ownerFullName: string
   country: string
   fleetSize: FleetSize
-  website?: string
   /** Becomes the address of the starter branch the API creates. */
   companyAddress?: AddressPin & { address: string }
 }
@@ -71,6 +70,9 @@ export function toOrganizationMembership(membership: TenantMembership): Organiza
  */
 export const authApi = {
   getMe: () => apiClient.get<MeResponse>('/auth/me').then((r) => r.data),
+
+  /** The signed-in user's own name; the email is Clerk's. */
+  updateMe: (fullName: string) => apiClient.patch<MeResponse>('/auth/me', { fullName }).then((r) => r.data),
 
   registerTenant: (payload: RegisterTenantPayload) =>
     apiClient.post<RegisterTenantResponse>('/auth/register-tenant', payload).then((r) => r.data),

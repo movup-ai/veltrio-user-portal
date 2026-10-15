@@ -22,6 +22,7 @@ function pick<V>(company: Company, keys: string[]): V {
 export function useCompanySection<S extends z.ZodObject>(company: Company, schema: S) {
   type Values = z.infer<S> & FieldValues
   const { t } = useTranslation('settings')
+  const { t: tValidation } = useTranslation('validation')
   const update = useUpdateCompany()
   const keys = Object.keys(schema.shape)
 
@@ -41,6 +42,10 @@ export function useCompanySection<S extends z.ZodObject>(company: Company, schem
     } catch (error) {
       const apiError = normalizeApiError(error)
       const placed = (apiError.fieldErrors ?? []).filter(({ field }) => keys.includes(field))
+      // A 409, not a 422, so it names no field; it is still the subdomain's to show.
+      if (apiError.code === 'subdomain_taken' && keys.includes('subdomain')) {
+        placed.push({ field: 'subdomain', message: tValidation('company.subdomainTaken') })
+      }
       for (const { field, message } of placed) {
         form.setError(field as Path<Values>, { message }, { shouldFocus: true })
       }

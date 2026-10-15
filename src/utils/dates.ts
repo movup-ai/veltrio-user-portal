@@ -37,6 +37,3 @@ export function formatDay(date: Date): string {
 export function today(): string {
   return formatDay(new Date())
 }
-
-/** IANA zone names the browser knows, for timezone pickers. */
-export const TIMEZONES = Intl.supportedValuesOf('timeZone')
