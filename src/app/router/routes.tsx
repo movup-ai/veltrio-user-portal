@@ -7,6 +7,10 @@ import { PublicLayout } from '@/app/layouts/PublicLayout'
 import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { AgreementsPage } from '@/pages/agreements/AgreementsPage.lazy'
+import { UsersPage } from '@/pages/users/UsersPage.lazy'
+// Not lazy: small pages on the way in, where a lazy chunk would put a spinner in front of a redirect.
+import { InvitePage } from '@/pages/auth/InvitePage'
+import { OnboardingStartPage } from '@/pages/auth/OnboardingStartPage'
 // Not lazy: two thin wrappers over Clerk, which is in the main bundle anyway. A lazy chunk put a
 // spinner and one more round trip in front of the sign-in form's skeleton.
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -87,6 +91,10 @@ export const router = createBrowserRouter([
           // Splat paths: Clerk's own screens (verification, SSO callback, ...) live under these.
           { path: '/login/*', element: <LoginPage /> },
           { path: '/sign-up/*', element: <SignUpPage />, handle: step('account') },
+          // Outside the gate: an invitee usually has no account here yet.
+          { path: '/invite/:token?', element: <InvitePage /> },
+          // No step handle, so no stepper while it decides between joining and setting up.
+          { path: ONBOARDING_PATHS.start, element: <OnboardingStartPage /> },
           {
             path: ONBOARDING_PATHS.company,
             element: <OnboardingPage />,
@@ -151,9 +159,11 @@ export const router = createBrowserRouter([
               { path: 'agreements', element: withSuspense(<AgreementsPage />) },
               { path: 'agreements/:templateId', element: withSuspense(<AgreementsPage />) },
 
+              { path: 'users', element: withSuspense(<UsersPage />) },
               { path: 'settings', element: withSuspense(<SettingsPage />) },
               { path: 'settings/organization', element: withSuspense(<SettingsPage />) },
-              { path: 'settings/users', element: withSuspense(<SettingsPage />) },
+              // The team page's earlier address, still in bookmarks.
+              { path: 'settings/users', element: <Navigate to="/users" replace /> },
               { path: 'settings/roles', element: withSuspense(<SettingsPage />) },
               { path: 'settings/billing', element: withSuspense(<SettingsPage />) },
               { path: 'settings/brand', element: withSuspense(<SettingsPage />) },

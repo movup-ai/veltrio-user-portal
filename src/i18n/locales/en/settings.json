@@ -120,6 +120,91 @@
     "payments": "Payments",
     "billing": "Billing"
   },
+  "users": {
+    "page": {
+      "title": "Users",
+      "description": "Invite people to your company and choose what each of them can do."
+    },
+    "ownerOnly": {
+      "title": "Only owners can see the team",
+      "description": "Ask an owner of the account to invite people or change their roles."
+    },
+    "members": {
+      "title": "Team",
+      "description": "Everyone who can sign in to this company, and what their role lets them do.",
+      "you": "You",
+      "joined": "Joined {{date}}",
+      "roleOf": "Role of {{name}}",
+      "remove": "Remove",
+      "removeNamed": "Remove {{name}}",
+      "lastOwner": "A company needs at least one owner. Make someone else an owner first."
+    },
+    "invite": {
+      "open": "Invite people",
+      "title": "Invite someone",
+      "description": "They get an email with a link. They sign in or sign up with this address to join.",
+      "email": "Email",
+      "emailInvalid": "Enter a valid email address",
+      "role": "Role",
+      "emailPlaceholder": "name@company.com",
+      "roles": {
+        "owner": "Everything, including settings, billing and the team",
+        "manager": "Runs the fleet, bookings, refunds and branches",
+        "staff": "Works the counter: bookings, customers and handovers"
+      },
+      "expiry": "The link works for 7 days.",
+      "submit": "Send invitation",
+      "errors": {
+        "already_member": "This person is already on your team.",
+        "invitation_pending": "This address already has an invitation. Resend it from the list instead."
+      }
+    },
+    "sent": {
+      "title": "Invitation sent",
+      "emailed": "We emailed an invitation to {{email}}. You can also send them the link yourself.",
+      "notEmailed": "Email isn't set up, so nothing was sent to {{email}}. Send them this link yourself.",
+      "link": "Invitation link",
+      "linkHelp": "Works for 7 days, and only for that email address. You won't see this link again.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy the link. Select it and copy it yourself."
+    },
+    "pending": {
+      "title": "Pending invitations",
+      "description": "Sent, but not accepted yet. Resending creates a new link and the old one stops working.",
+      "sent": "Sent {{date}}",
+      "sentBy": "Sent {{date}} by {{name}}",
+      "expired": "Expired",
+      "resend": "Resend",
+      "revoke": "Revoke",
+      "revokeFor": "Revoke the invitation for {{email}}"
+    },
+    "revoke": {
+      "title": "Revoke this invitation?",
+      "description": "The link sent to {{email}} will stop working.",
+      "confirm": "Revoke"
+    },
+    "remove": {
+      "title": "Remove {{name}}?",
+      "description": "They lose access straight away. What they did stays in the history under their name.",
+      "selfDescription": "You lose access to this company straight away. Another owner can invite you back.",
+      "confirm": "Remove"
+    },
+    "stepDown": {
+      "title": "Stop being an owner?",
+      "description": "You'll lose access to settings, billing and the team straight away. Another owner can make you an owner again.",
+      "confirm": "Change my role"
+    },
+    "toast": {
+      "roleChanged": "Role changed",
+      "roleFailed": "Couldn't change the role",
+      "removed": "Removed from the team",
+      "removeFailed": "Couldn't remove them",
+      "revoked": "Invitation revoked",
+      "revokeFailed": "Couldn't revoke the invitation",
+      "resendFailed": "Couldn't resend the invitation"
+    }
+  },
   "payments": {
     "section": "Payments",
     "sectionHelp": "How renters pay you, and where the money goes.",

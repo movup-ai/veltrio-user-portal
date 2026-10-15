@@ -9,9 +9,11 @@ import {
   Settings,
   ShieldCheck,
   Tag,
+  UserCog,
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import type { Permission } from '@/types/user'
 
 /** Canonical English keys — they index into the `nav` namespace, they are not display text. */
 export type NavGroupKey = 'Operations' | 'Revenue' | 'Setup'
@@ -26,10 +28,13 @@ export type NavLinkKey =
   | 'Pricing'
   | 'Locations'
   | 'Agreements'
+  | 'Users'
   | 'Settings'
 
 export type NavEntry =
-  { type: 'group'; key: NavGroupKey } | { type: 'link'; key: NavLinkKey; to: string; icon: LucideIcon }
+  | { type: 'group'; key: NavGroupKey }
+  /** `permission`: shown only to roles holding it, for a page that is nothing but a notice to anyone else. */
+  | { type: 'link'; key: NavLinkKey; to: string; icon: LucideIcon; permission?: Permission }
 
 export const NAV_ITEMS: NavEntry[] = [
   { type: 'group', key: 'Operations' },
@@ -45,6 +50,7 @@ export const NAV_ITEMS: NavEntry[] = [
   { type: 'group', key: 'Setup' },
   { type: 'link', key: 'Locations', to: '/locations', icon: MapPin },
   { type: 'link', key: 'Agreements', to: '/agreements', icon: FileSignature },
+  { type: 'link', key: 'Users', to: '/users', icon: UserCog, permission: 'users.manage' },
   { type: 'link', key: 'Settings', to: '/settings', icon: Settings },
 ]
 

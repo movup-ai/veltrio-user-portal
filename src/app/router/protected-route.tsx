@@ -2,9 +2,12 @@ import { useAuth } from '@clerk/clerk-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ONBOARDING_PATHS } from '@/app/layouts/onboarding-steps'
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
+import { INVITE_PATH } from '@/modules/users/api/users.api'
+import { useMyInvitations } from '@/modules/users/hooks/use-invitations'
+import { hasOpenInvitation } from '@/modules/users/utils/invite.utils'
 import { toOrganizationMembership } from '@/services/auth/auth.api'
 import { useMe } from '@/services/auth/use-me'
 import { useOrganizationStore } from '@/state/organization.store'
@@ -17,7 +20,6 @@ import { ApiError } from '@/types/api'
  * request below this point is scoped to it.
  */
 export function ProtectedRoute() {
-  const { t } = useTranslation('auth')
   const { isLoaded, isSignedIn } = useAuth()
   const location = useLocation()
   const me = useMe()
@@ -41,14 +43,12 @@ export function ProtectedRoute() {
   if (me.error) {
     // Signed up with Clerk but never created a company: finish onboarding.
     if (me.error instanceof ApiError && me.error.code === 'user_not_onboarded') {
-      return <Navigate to={ONBOARDING_PATHS.company} replace />
+      return <Navigate to={ONBOARDING_PATHS.start} replace />
     }
     return <ErrorState description={me.error.message} onRetry={() => void me.refetch()} />
   }
 
-  if (!me.data.membership) {
-    return <ErrorState title={t('noTenant.title')} description={t('noTenant.description')} />
-  }
+  if (!me.data.membership) return <NoCompany />
 
   // Hold the render until the effect above has copied this company into the store. Pages read
   // the subdomain and their permissions from there, not from `me`, so a frame rendered before
@@ -57,4 +57,23 @@ export function ProtectedRoute() {
   if (membership?.organizationId !== me.data.membership.tenantId) return <LoadingState />
 
   return <Outlet />
+}
+
+/** An account with no company: removed from one, or never in one. An invitation is its way back. */
+function NoCompany() {
+  const { t } = useTranslation('auth')
+  const { userId } = useAuth()
+  const navigate = useNavigate()
+  const invitations = useMyInvitations(userId, true)
+
+  if (invitations.isPending) return <LoadingState />
+  if (hasOpenInvitation(invitations.data)) return <Navigate to={INVITE_PATH} replace />
+  return (
+    <ErrorState
+      title={t('noTenant.title')}
+      description={t('noTenant.description')}
+      actionLabel={t('noTenant.createCompany')}
+      onRetry={() => navigate(ONBOARDING_PATHS.company)}
+    />
+  )
 }

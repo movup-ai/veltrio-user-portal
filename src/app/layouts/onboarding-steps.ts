@@ -9,6 +9,8 @@ export interface AuthRouteHandle {
 }
 
 export const ONBOARDING_PATHS = {
+  /** Not a step: decides where an account without a company goes, before any stepper shows. */
+  start: '/onboarding/start',
   company: '/onboarding',
   plan: '/onboarding/plan',
   ready: '/onboarding/ready',

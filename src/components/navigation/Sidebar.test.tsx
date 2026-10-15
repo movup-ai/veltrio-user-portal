@@ -1,9 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
+import { useOrganizationStore } from '@/state/organization.store'
 import { useUIStore } from '@/state/ui.store'
+import type { MembershipRole } from '@/types/user'
+import { ROLE_PERMISSIONS } from '@/utils/permissions'
 import { Sidebar } from './Sidebar'
 
 const bookings = () => screen.getByRole('link', { name: /Bookings/ })
@@ -79,4 +82,45 @@ describe('Sidebar account', () => {
 
     expect(props[handler]).toHaveBeenCalledOnce()
   })
+})
+
+describe('Sidebar links by role', () => {
+  beforeEach(() => useUIStore.setState({ theme: 'light', sidebarCollapsed: false }))
+  afterEach(() => useOrganizationStore.setState({ membership: null }))
+
+  function renderAs(role: MembershipRole) {
+    useOrganizationStore.setState({
+      membership: {
+        organizationId: 't_1',
+        organizationName: 'Coastline Rentals',
+        subdomain: 'coastline',
+        currency: 'USD',
+        timezone: 'America/New_York',
+        role,
+        permissions: ROLE_PERMISSIONS[role],
+      },
+    })
+    render(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>,
+    )
+  }
+
+  it('lists Users for an owner, just above Settings', () => {
+    renderAs('owner')
+
+    const names = screen.getAllByRole('link').map((link) => link.textContent)
+    expect(names.slice(-2)).toEqual(['Users', 'Settings'])
+  })
+
+  it.each(['manager', 'staff'] as const)(
+    'leaves Users out for %s, who could only see a notice there',
+    (role) => {
+      renderAs(role)
+
+      expect(screen.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Settings' })).toBeInTheDocument()
+    },
+  )
 })

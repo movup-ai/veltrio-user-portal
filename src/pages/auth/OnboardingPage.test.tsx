@@ -717,3 +717,12 @@ describe('OnboardingPage, come back to from the stepper', () => {
     expect(companyGet).not.toHaveBeenCalled()
   })
 })
+
+describe('OnboardingPage, for an account with no company', () => {
+  it('lets someone removed from their company set up one of their own', async () => {
+    meResult.current = { data: { user: { fullName: 'Ana' }, membership: null } }
+    renderPage()
+
+    expect(await screen.findByLabelText(/Company name/)).toBeInTheDocument()
+  })
+})

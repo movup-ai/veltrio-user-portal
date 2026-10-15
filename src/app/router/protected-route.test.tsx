@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import '@/i18n'
 import { useOrganizationStore } from '@/state/organization.store'
+import { ApiError } from '@/types/api'
 import type { MeResponse } from '@/services/auth/auth.api'
 import { ProtectedRoute } from './protected-route'
 
@@ -15,6 +18,11 @@ const meResult = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
 vi.mock('@/services/auth/use-me', () => ({
   ME_QUERY_KEY: ['auth', 'me'],
   useMe: () => meResult.current,
+}))
+
+const invitationsResult = vi.hoisted(() => ({ current: { isPending: false, data: [] as unknown[] } }))
+vi.mock('@/modules/users/hooks/use-invitations', () => ({
+  useMyInvitations: () => invitationsResult.current,
 }))
 
 function meFor(tenantId: string, subdomain: string): MeResponse {
@@ -67,6 +75,7 @@ function renderGate() {
 
 afterEach(() => {
   authResult.current = { isLoaded: true, isSignedIn: true }
+  invitationsResult.current = { isPending: false, data: [] }
   useOrganizationStore.setState({ membership: null })
   rendered.length = 0
 })
@@ -132,5 +141,70 @@ describe('ProtectedRoute', () => {
     expect(screen.getByTestId('redirect')).toHaveTextContent(
       `${window.location.origin}/bookings/b_1?tab=payments`,
     )
+  })
+
+  it('sends an account not set up yet to be asked about invitations, not to the company step', () => {
+    meResult.current = {
+      data: undefined,
+      isPending: false,
+      error: new ApiError('forbidden', '', { status: 403, code: 'user_not_onboarded' }),
+    }
+    function Where() {
+      return <div data-testid="where">{useLocation().pathname}</div>
+    }
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<div />} />
+            </Route>
+            <Route path="*" element={<Where />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('where').textContent).toBe('/onboarding/start')
+  })
+
+  describe('an account with no company', () => {
+    function renderWithoutCompany() {
+      meResult.current = { data: { ...meFor('', ''), membership: null }, isPending: false, error: null }
+      function Where() {
+        const { pathname, search } = useLocation()
+        return <div data-testid="where">{pathname + search}</div>
+      }
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter initialEntries={['/dashboard']}>
+            <Routes>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<div />} />
+              </Route>
+              <Route path="*" element={<Where />} />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      )
+    }
+
+    it('is taken to an open invitation, the way back in for someone removed', () => {
+      invitationsResult.current = { isPending: false, data: [{ id: 'inv_1', expired: false }] }
+
+      renderWithoutCompany()
+
+      expect(screen.getByTestId('where')).toHaveTextContent('/invite')
+    })
+
+    it('is offered a company of its own when nobody has invited it', async () => {
+      renderWithoutCompany()
+
+      await userEvent
+        .setup({ delay: null })
+        .click(screen.getByRole('button', { name: 'Set up your own company' }))
+
+      expect(screen.getByTestId('where').textContent).toBe('/onboarding')
+    })
   })
 })
