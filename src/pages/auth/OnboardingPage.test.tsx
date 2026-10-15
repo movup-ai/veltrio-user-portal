@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
+import { lazy, Suspense } from 'react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useOrganizationStore } from '@/state/organization.store'
+import { useSitePreviewStore } from '@/state/site-preview.store'
 import { ApiError } from '@/types/api'
 import { OnboardingPage } from './OnboardingPage'
 
@@ -16,7 +19,7 @@ vi.mock('@/utils/timezones', async (importOriginal) => ({
 // Signed in with Clerk, but with no tenant yet — exactly the state this page exists for.
 const clerkUser = vi.hoisted(() => ({ current: null as { fullName: string } | null }))
 vi.mock('@clerk/clerk-react', () => ({
-  useAuth: () => ({ isLoaded: true, isSignedIn: true }),
+  useAuth: () => ({ isLoaded: true, isSignedIn: true, userId: 'user_1' }),
   useUser: () => ({ user: clerkUser.current }),
 }))
 const meResult = vi.hoisted(() => ({ current: { data: undefined as unknown } }))
@@ -55,17 +58,43 @@ vi.mock('@/modules/locations/utils/places', () => ({
 
 const TAKEN = new ApiError('unknown', 'Subdomain is already taken', { status: 409, code: 'subdomain_taken' })
 
+const billingGet = vi.fn()
+vi.mock('@/modules/billing/api/billing.api', () => ({ billingApi: { get: () => billingGet() } }))
+
 const registerTenant = vi.fn()
+const updateMe = vi.fn()
 vi.mock('@/services/auth/auth.api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/services/auth/auth.api')>()),
-  authApi: { registerTenant: (...args: unknown[]) => registerTenant(...args) },
+  authApi: {
+    registerTenant: (...args: unknown[]) => registerTenant(...args),
+    updateMe: (...args: unknown[]) => updateMe(...args),
+  },
+}))
+
+// A return to the step reads and saves the company, and may move its starter branch.
+const companyGet = vi.fn()
+const companyUpdate = vi.fn()
+vi.mock('@/modules/settings/api/company.api', () => ({
+  companyApi: { get: () => companyGet(), update: (patch: unknown) => companyUpdate(patch) },
+}))
+const locationList = vi.fn()
+const locationUpdate = vi.fn()
+vi.mock('@/modules/locations/api/location.api', () => ({
+  locationApi: {
+    list: () => locationList(),
+    update: (id: string, input: unknown) => locationUpdate(id, input),
+  },
 }))
 
 function renderPage() {
   return render(
     <QueryClientProvider client={new QueryClient()}>
-      <MemoryRouter>
-        <OnboardingPage />
+      <MemoryRouter initialEntries={['/onboarding']}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/onboarding/plan" element={<p>Plan step</p>} />
+          <Route path="/dashboard" element={<p>Dashboard</p>} />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -81,7 +110,7 @@ async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: 'United States' }))
 
   await user.click(screen.getByLabelText(/Number of vehicles/))
-  await user.click(await screen.findByRole('option', { name: '11-50 vehicles' }))
+  await user.click(await screen.findByRole('option', { name: '21-50 vehicles' }))
   await pickTimezone(user, 'New York')
 }
 
@@ -99,20 +128,135 @@ beforeEach(() => {
   placesConfigured = false
   registerTenant.mockReset()
   registerTenant.mockResolvedValue({})
+  billingGet.mockReset()
+  billingGet.mockResolvedValue({ enabled: true })
+  useOrganizationStore.setState({ membership: null })
+  for (const mock of [updateMe, companyGet, companyUpdate, locationList, locationUpdate]) mock.mockReset()
+  companyGet.mockResolvedValue(SAVED_COMPANY)
+  companyUpdate.mockImplementation(async (patch: object) => ({ ...SAVED_COMPANY, ...patch }))
+  locationList.mockResolvedValue([STARTER_BRANCH])
+  locationUpdate.mockResolvedValue(STARTER_BRANCH)
 })
 
+const SAVED_COMPANY = {
+  id: 't_1',
+  name: 'Sunstate Car Co.',
+  subdomain: 'sunstate-car-co',
+  fleetSize: '6_20',
+  country: 'US',
+  timezone: 'America/New_York',
+  currency: 'USD',
+  currencyLocked: false,
+  listingLanguage: 'en',
+  address: '1450 Alton Road, Miami Beach, FL 33139',
+}
+const STARTER_BRANCH = {
+  id: 'loc_1',
+  name: 'Main Office',
+  address: SAVED_COMPANY.address,
+  originalAddress: SAVED_COMPANY.address,
+  status: 'Open',
+  openingDays: 'monSun',
+  opensAt: 480,
+  closesAt: 1200,
+  isDefault: true,
+  vehicleCount: 0,
+}
+
+const MEMBERSHIP = {
+  tenantId: 't_1',
+  tenantName: 'Sunstate Car Co.',
+  subdomain: 'sunstate-car-co',
+  currency: 'USD',
+  timezone: 'America/New_York',
+  role: 'owner' as const,
+}
+
 describe('OnboardingPage', () => {
-  it('has no portal address field: it is derived from the company name', async () => {
+  it('fills the company URL from the company name, and sends it', async () => {
     const user = userEvent.setup({ delay: null })
     renderPage()
 
-    expect(screen.queryByLabelText(/Portal address/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Company website/)).not.toBeInTheDocument()
 
     await fillRequiredFields(user)
+    expect(screen.getByLabelText(/Company URL/)).toHaveValue('sunstate-car-co')
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
     await waitFor(() => expect(registerTenant).toHaveBeenCalledTimes(1))
     expect(registerTenant.mock.calls[0][0].subdomain).toBe('sunstate-car-co')
+  })
+
+  it('keeps a URL typed by hand when the name changes, and sends it lowercased', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    await fillRequiredFields(user)
+    const url = screen.getByLabelText(/Company URL/)
+    await user.clear(url)
+    await user.type(url, 'Sunstate-Miami')
+    await user.type(screen.getByLabelText(/Company name/), ' Rentals')
+    expect(url).toHaveValue('Sunstate-Miami')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    await waitFor(() => expect(registerTenant).toHaveBeenCalledTimes(1))
+    expect(registerTenant.mock.calls[0][0].subdomain).toBe('sunstate-miami')
+  })
+
+  it('follows the name again once the URL is cleared', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    const url = screen.getByLabelText(/Company URL/)
+    await user.type(url, 'mine')
+    await user.clear(url)
+    await user.type(screen.getByLabelText(/Company name/), 'Sunstate')
+
+    expect(url).toHaveValue('sunstate')
+  })
+
+  it('hands the URL to the brand panel as it is typed, and takes it back on leaving', async () => {
+    const user = userEvent.setup({ delay: null })
+    const { unmount } = renderPage()
+
+    await user.type(screen.getByLabelText(/Company name/), 'Sunstate')
+    expect(useSitePreviewStore.getState().subdomain).toBe('sunstate')
+    await user.type(screen.getByLabelText(/Company URL/), '-Miami')
+    expect(useSitePreviewStore.getState().subdomain).toBe('sunstate-miami')
+
+    unmount()
+    expect(useSitePreviewStore.getState().subdomain).toBe('')
+  })
+
+  it('asks for a URL when the name gives nothing to suggest', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    await fillRequiredFields(user)
+    const name = screen.getByLabelText(/Company name/)
+    await user.clear(name)
+    await user.type(name, '汽车租赁')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText('Choose your company URL')).toBeInTheDocument()
+    expect(registerTenant).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['admin', 'This URL is reserved. Choose another one.'],
+    ['-sunstate', 'Use 3-63 lowercase letters, numbers and single hyphens, not at the start or end'],
+  ])('stops the URL %s before it reaches the API', async (typed, message) => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    await fillRequiredFields(user)
+    const url = screen.getByLabelText(/Company URL/)
+    await user.clear(url)
+    await user.type(url, typed)
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText(message)).toBeInTheDocument()
+    expect(registerTenant).not.toHaveBeenCalled()
   })
 
   it('moves on to the plans once the company exists, not to the dashboard', async () => {
@@ -140,6 +284,69 @@ describe('OnboardingPage', () => {
 
     expect(await screen.findByText('Plans')).toBeInTheDocument()
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
+  })
+
+  it('hands the plan step its company and plans, so it opens on them instead of a spinner', async () => {
+    const queryClient = new QueryClient()
+    registerTenant.mockImplementation(async () => {
+      queryClient.setQueryData(['auth', 'me', 'user_1'], { user: {}, membership: MEMBERSHIP })
+      meResult.current = { data: { user: {}, membership: MEMBERSHIP } }
+      return {}
+    })
+    let seen: unknown
+    function PlanStep() {
+      seen = {
+        company: useOrganizationStore.getState().membership?.organizationId,
+        plans: queryClient.getQueryData(['billing']),
+      }
+      return <p>Plans</p>
+    }
+    const user = userEvent.setup({ delay: null })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/onboarding']}>
+          <Routes>
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/onboarding/plan" element={<PlanStep />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText('Plans')).toBeInTheDocument()
+    // Read on its first render: neither the guard nor the plans had anything left to wait for.
+    expect(seen).toEqual({ company: 't_1', plans: { enabled: true } })
+  })
+
+  it('stays on screen and busy while the next step loads, so it cannot be submitted twice', async () => {
+    registerTenant.mockImplementation(async () => {
+      meResult.current = { data: { user: {}, membership: MEMBERSHIP } }
+      return {}
+    })
+    const NeverLoads = lazy(() => new Promise<{ default: () => null }>(() => {}))
+    const user = userEvent.setup({ delay: null })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={['/onboarding']}>
+          <Suspense fallback={<p>Loading the next step</p>}>
+            <Routes>
+              <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route path="/onboarding/plan" element={<NeverLoads />} />
+            </Routes>
+          </Suspense>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    await waitFor(() => expect(registerTenant).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled())
+    expect(screen.queryByText('Loading the next step')).not.toBeInTheDocument()
   })
 
   it('asks for the zone once a country with several is chosen, listing its zones first', async () => {
@@ -210,7 +417,6 @@ describe('OnboardingPage', () => {
     renderPage()
 
     await fillRequiredFields(user)
-    await user.type(screen.getByLabelText(/Company website/), 'sunstate.com')
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
     await waitFor(() => expect(registerTenant).toHaveBeenCalledTimes(1))
@@ -220,21 +426,24 @@ describe('OnboardingPage', () => {
         subdomain: 'sunstate-car-co',
         ownerFullName: 'Diego Rivas',
         country: 'US',
-        fleetSize: '11_50',
-        website: 'sunstate.com',
+        fleetSize: '21_50',
       }),
     )
   })
 
-  it('omits an empty website rather than sending a blank string', async () => {
+  it('offers the fleet sizes the plans are sized by', async () => {
     const user = userEvent.setup({ delay: null })
     renderPage()
 
-    await fillRequiredFields(user)
-    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByLabelText(/Number of vehicles/))
 
-    await waitFor(() => expect(registerTenant).toHaveBeenCalledTimes(1))
-    expect(registerTenant.mock.calls[0][0].website).toBeUndefined()
+    const options = await screen.findAllByRole('option')
+    expect(options.map((option) => option.textContent)).toEqual([
+      '1-5 vehicles',
+      '6-20 vehicles',
+      '21-50 vehicles',
+      'More than 50 vehicles',
+    ])
   })
 
   it('stops an address the contact address could not hold', async () => {
@@ -285,7 +494,7 @@ describe('OnboardingPage', () => {
     await user.type(screen.getByLabelText(/Company name/), 'Sunstate Car Co.')
     await pickAddress(user)
     await user.click(screen.getByLabelText(/Number of vehicles/))
-    await user.click(await screen.findByRole('option', { name: '11-50 vehicles' }))
+    await user.click(await screen.findByRole('option', { name: '21-50 vehicles' }))
 
     expect(screen.getByLabelText(/Operating country/)).toHaveValue('United States')
     // A US address leaves the zone to choose: the country has several.
@@ -345,25 +554,7 @@ describe('OnboardingPage', () => {
     expect(registerTenant).not.toHaveBeenCalled()
   })
 
-  it('moves to a numbered portal address when the name’s own is taken', async () => {
-    registerTenant.mockRejectedValueOnce(TAKEN).mockRejectedValueOnce(TAKEN)
-    const user = userEvent.setup({ delay: null })
-    renderPage()
-
-    await fillRequiredFields(user)
-    await user.click(screen.getByRole('button', { name: 'Continue' }))
-
-    await waitFor(() => expect(registerTenant).toHaveBeenCalledTimes(3))
-    // Nobody can fix a clash in a field they are not shown, so the form resolves it itself.
-    expect(registerTenant.mock.calls.map(([payload]) => payload.subdomain)).toEqual([
-      'sunstate-car-co',
-      'sunstate-car-co-2',
-      'sunstate-car-co-3',
-    ])
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-  })
-
-  it('stops after a few taken addresses and says what to change', async () => {
+  it('puts a taken URL under its field, where it can be changed', async () => {
     registerTenant.mockRejectedValue(TAKEN)
     const user = userEvent.setup({ delay: null })
     renderPage()
@@ -371,8 +562,10 @@ describe('OnboardingPage', () => {
     await fillRequiredFields(user)
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Try a slightly different company name')
-    expect(registerTenant).toHaveBeenCalledTimes(5)
+    const url = screen.getByLabelText(/Company URL/)
+    await waitFor(() => expect(url).toHaveAccessibleDescription(/Another company has this URL/))
+    expect(url).toHaveFocus()
+    expect(registerTenant).toHaveBeenCalledTimes(1)
   })
 
   it('puts a rejected field’s message under that field, and anything else above the form', async () => {
@@ -394,5 +587,117 @@ describe('OnboardingPage', () => {
     // `plan` is not a field on this form, so it is left out rather than shown under another.
     expect(await screen.findByText('Not a valid name')).toBeInTheDocument()
     expect(screen.queryByText('Unknown plan')).not.toBeInTheDocument()
+  })
+})
+
+describe('OnboardingPage, come back to from the stepper', () => {
+  beforeEach(() => {
+    meResult.current = { data: { user: { fullName: 'Diego Rivas' }, membership: MEMBERSHIP } }
+  })
+
+  it('opens on what was saved, and saves only what changed', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    expect(await screen.findByLabelText(/Company name/)).toHaveValue('Sunstate Car Co.')
+    expect(screen.getByLabelText(/Your full name/)).toHaveValue('Diego Rivas')
+    expect(screen.getByLabelText(/Company URL/)).toHaveValue('sunstate-car-co')
+    expect(screen.getByLabelText(/Company address/)).toHaveValue(SAVED_COMPANY.address)
+    await user.click(screen.getByLabelText(/Number of vehicles/))
+    await user.click(await screen.findByRole('option', { name: '21-50 vehicles' }))
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText('Plan step')).toBeInTheDocument()
+    expect(companyUpdate).toHaveBeenCalledWith({ fleetSize: '21_50' })
+    expect(registerTenant).not.toHaveBeenCalled()
+    expect(updateMe).not.toHaveBeenCalled()
+    expect(locationUpdate).not.toHaveBeenCalled()
+  })
+
+  it('keeps the URL when the company name is corrected', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    await user.type(await screen.findByLabelText(/Company name/), ' Rentals')
+
+    // Every field was chosen the first time, so none follows another on a return.
+    expect(screen.getByLabelText(/Company URL/)).toHaveValue('sunstate-car-co')
+  })
+
+  it('corrects the owner’s name on their own account', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    const name = await screen.findByLabelText(/Your full name/)
+    await user.clear(name)
+    await user.type(name, 'Diego Herrera')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText('Plan step')).toBeInTheDocument()
+    expect(updateMe).toHaveBeenCalledWith('Diego Herrera')
+    expect(companyUpdate).not.toHaveBeenCalled()
+  })
+
+  it('moves the starter branch with a corrected address', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    const address = await screen.findByLabelText(/Company address/)
+    await user.clear(address)
+    await user.type(address, '5 Ocean Drive, Miami Beach')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText('Plan step')).toBeInTheDocument()
+    expect(companyUpdate).toHaveBeenCalledWith({ address: '5 Ocean Drive, Miami Beach' })
+    expect(locationUpdate).toHaveBeenCalledWith(
+      'loc_1',
+      expect.objectContaining({
+        name: 'Main Office',
+        address: '5 Ocean Drive, Miami Beach',
+        originalAddress: '5 Ocean Drive, Miami Beach',
+      }),
+    )
+  })
+
+  it('leaves a branch the owner has already changed where it is', async () => {
+    locationList.mockResolvedValue([{ ...STARTER_BRANCH, address: '9 Collins Ave' }])
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    const address = await screen.findByLabelText(/Company address/)
+    await user.clear(address)
+    await user.type(address, '5 Ocean Drive, Miami Beach')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(await screen.findByText('Plan step')).toBeInTheDocument()
+    expect(locationUpdate).not.toHaveBeenCalled()
+  })
+
+  it('puts a rejected company name under the field it was typed in', async () => {
+    companyUpdate.mockRejectedValue(
+      new ApiError('validation', 'Request validation failed', {
+        status: 422,
+        fieldErrors: [{ field: 'name', message: 'Too long for a company name' }],
+      }),
+    )
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+
+    await user.type(await screen.findByLabelText(/Company name/), ' Rentals')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/Company name/)).toHaveAccessibleDescription(
+        'Too long for a company name',
+      ),
+    )
+  })
+
+  it('sends someone who does not own the company to the dashboard', async () => {
+    meResult.current = { data: { user: { fullName: 'Ana' }, membership: { ...MEMBERSHIP, role: 'staff' } } }
+    renderPage()
+
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument()
+    expect(companyGet).not.toHaveBeenCalled()
   })
 })

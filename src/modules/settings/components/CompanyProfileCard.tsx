@@ -14,6 +14,7 @@ import { DESCRIPTION_MAX } from '../constants/company.constants'
 import { companySchema } from '../schema/company.schema'
 import type { Company } from '../types/company.types'
 import { SettingsCard } from './SettingsCard'
+import { SubdomainInput } from './SubdomainInput'
 
 export function CompanyProfileCard({ company }: { company: Company }) {
   const { t } = useTranslation('settings')
@@ -21,11 +22,22 @@ export function CompanyProfileCard({ company }: { company: Company }) {
   const { t: tValidation } = useTranslation('validation')
   const schema = useMemo(
     () =>
-      companySchema(tValidation).pick({ name: true, legalName: true, taxId: true, fleetSize: true, description: true }),
+      companySchema(tValidation).pick({
+        name: true,
+        legalName: true,
+        taxId: true,
+        fleetSize: true,
+        subdomain: true,
+        description: true,
+      }),
     [tValidation],
   )
   const { form, submit, discard, saving } = useCompanySection(company, schema)
-  const { register, control, formState: { errors, isDirty } } = form
+  const {
+    register,
+    control,
+    formState: { errors, isDirty },
+  } = form
   const siteUrl = companySiteUrl(company.subdomain)
 
   return (
@@ -55,11 +67,19 @@ export function CompanyProfileCard({ company }: { company: Company }) {
         )}
       </FormField>
 
-      <FormField label={t('company.profile.taxId')} description={t('company.profile.taxIdHelp')} error={errors.taxId?.message}>
+      <FormField
+        label={t('company.profile.taxId')}
+        description={t('company.profile.taxIdHelp')}
+        error={errors.taxId?.message}
+      >
         {(fieldProps) => <Input autoComplete="off" {...register('taxId')} {...fieldProps} />}
       </FormField>
 
-      <FormField label={t('company.profile.fleetSize')} description={t('company.profile.fleetSizeHelp')} required>
+      <FormField
+        label={t('company.profile.fleetSize')}
+        description={t('company.profile.fleetSizeHelp')}
+        required
+      >
         {(fieldProps) => (
           <Controller
             control={control}
@@ -85,11 +105,13 @@ export function CompanyProfileCard({ company }: { company: Company }) {
       <FormField
         label={t('company.profile.subdomain')}
         description={t('company.profile.subdomainHelp')}
+        error={errors.subdomain?.message}
         className="sm:col-span-2"
+        required
       >
         {(fieldProps) => (
           <div className="flex gap-2">
-            <Input readOnly value={new URL(siteUrl).host} className="bg-muted" {...fieldProps} />
+            <SubdomainInput {...register('subdomain')} {...fieldProps} />
             <Button asChild variant="outline" size="icon">
               <a href={siteUrl} target="_blank" rel="noreferrer" aria-label={t('company.profile.openSite')}>
                 <ExternalLink />

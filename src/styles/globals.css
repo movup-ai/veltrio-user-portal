@@ -119,6 +119,13 @@
     font-weight: var(--text-caption--font-weight);
     color: var(--color-muted-foreground);
   }
+  /*
+   * Manrope gives its masking dot a wide advance, so a hidden password read as spaced-out dots.
+   * Here rather than in base, which Clerk's layer outranks. Not on the placeholder, which is words.
+   */
+  input[type='password']:not(:placeholder-shown) {
+    letter-spacing: -0.15em;
+  }
 }
 
 @layer utilities {
@@ -226,6 +233,17 @@
   @keyframes slide-out-right {
     to {
       transform: translateX(100%);
+    }
+  }
+  @keyframes grow-x {
+    from {
+      scale: 0 1;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      translate: 0 14px;
     }
   }
 

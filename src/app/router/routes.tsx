@@ -89,7 +89,7 @@ export const router = createBrowserRouter([
           { path: '/sign-up/*', element: <SignUpPage />, handle: step('account') },
           {
             path: ONBOARDING_PATHS.company,
-            element: withSuspense(<OnboardingPage />),
+            element: <OnboardingPage />,
             handle: step('company'),
           },
           {
@@ -98,12 +98,12 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: ONBOARDING_PATHS.plan,
-                element: withSuspense(<OnboardingPlanPage />),
+                element: <OnboardingPlanPage />,
                 handle: step('plan'),
               },
               {
                 path: ONBOARDING_PATHS.ready,
-                element: withSuspense(<OnboardingReadyPage />),
+                element: <OnboardingReadyPage />,
                 handle: step('ready'),
               },
             ],

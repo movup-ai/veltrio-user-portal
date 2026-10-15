@@ -139,6 +139,23 @@ describe('BillingSettings', () => {
     })
   })
 
+  it('marks the one plan the stated fleet size fits', async () => {
+    get.mockResolvedValue({ ...NO_PLAN, recommendedPlan: 'growth' })
+    renderAs('owner')
+
+    const growth = await plan('Growth')
+    expect(growth.getByText('Best for your fleet')).toBeInTheDocument()
+    expect(screen.getAllByText('Best for your fleet')).toHaveLength(1)
+  })
+
+  it('drops the mark once a plan is running, where the current one is what matters', async () => {
+    get.mockResolvedValue({ ...ON_GROWTH, recommendedPlan: 'pro' })
+    renderAs('owner')
+
+    expect((await plan('Growth')).getByText('Current')).toBeInTheDocument()
+    expect(screen.queryByText('Best for your fleet')).not.toBeInTheDocument()
+  })
+
   it('shows anyone else the plans without a way to choose one', async () => {
     get.mockResolvedValue(NO_PLAN)
     renderAs('manager')

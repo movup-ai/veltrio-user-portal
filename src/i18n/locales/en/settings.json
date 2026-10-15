@@ -16,8 +16,8 @@
       "taxIdHelp": "VAT, EIN or other tax number. Shown on invoices.",
       "fleetSize": "Fleet size",
       "fleetSizeHelp": "An estimate is fine.",
-      "subdomain": "Company subdomain",
-      "subdomainHelp": "Your fleet site's address. It can't change, because links you've shared use it.",
+      "subdomain": "Company URL",
+      "subdomainHelp": "Where renters see your fleet and book. Links you've already shared stop working if you change it.",
       "openSite": "Open your fleet site",
       "about": "About",
       "aboutPlaceholder": "Family-run rentals in Miami since 1998, with free airport pickup.",
@@ -31,7 +31,6 @@
       "currency": "Currency",
       "currencyLocked": "Can't be changed once you have bookings, so their prices keep their currency.",
       "listingLanguage": "Listing language",
-      "listingLanguageHint": "The language generated vehicle descriptions are written in for your renters.",
       "languages": {
         "en": "English",
         "es": "Spanish"
@@ -413,6 +412,7 @@
       "setup": "Set up with our team"
     },
     "currentTag": "Current",
+    "recommendedTag": "Best for your fleet",
     "history": {
       "section": "History",
       "sectionHelp": "What Veltrio has charged you, with each invoice.",

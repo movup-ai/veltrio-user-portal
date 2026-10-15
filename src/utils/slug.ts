@@ -45,35 +45,11 @@ export function isReservedSubdomain(value: string): boolean {
   return RESERVED_SUBDOMAINS.has(value)
 }
 
-/** How many subdomains onboarding tries for one company before giving up. */
-export const SUBDOMAIN_ATTEMPTS = 5
-
-const SUFFIX_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
-
-/** Six random characters a subdomain allows: about two billion values, so two never meet. */
-export function randomSubdomainSuffix(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(6))
-  return Array.from(bytes, (byte) => SUFFIX_ALPHABET[byte % SUFFIX_ALPHABET.length]).join('')
-}
-
-/**
- * The subdomain to register for a company, which onboarding picks without asking. Attempt 0
- * is the name itself; later attempts add a number, and the last one a random suffix.
- */
-export function subdomainFor(companyName: string, attempt = 0, unique = randomSubdomainSuffix): string {
+/** The subdomain onboarding offers for a company name; empty when nothing of the name is Latin. */
+export function suggestedSubdomain(companyName: string): string {
   const slug = slugify(companyName)
-  // Nothing of a non-Latin name survives, so a fixed word would put every such company in
-  // contention for the same few addresses. Each gets a random one instead.
-  if (!slug) return `rentals-${unique()}`
-
   // A short or reserved name is not one the API accepts on its own, so it borrows a word.
-  const usable = isValidSubdomain(slug) && !isReservedSubdomain(slug)
-  const base = usable ? slug : `${slug}-rentals`
-  if (attempt === 0) return base
-
-  // Random on the last attempt: numbers alone would dead-end the sixth "Car Rental".
-  const suffix = attempt >= SUBDOMAIN_ATTEMPTS - 1 ? `-${unique()}` : `-${attempt + 1}`
-  return base.slice(0, 63 - suffix.length).replace(/-+$/, '') + suffix
+  return !slug || (isValidSubdomain(slug) && !isReservedSubdomain(slug)) ? slug : `${slug}-rentals`
 }
 
 /**

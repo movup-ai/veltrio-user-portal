@@ -26,6 +26,11 @@ export function billingChanged(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: billingKeys.billing })
 }
 
+/** For a step that leads to the plans, so it can wait for them rather than land on a spinner. */
+export function prefetchBilling(queryClient: QueryClient) {
+  return queryClient.prefetchQuery({ queryKey: billingKeys.billing, queryFn: billingApi.get })
+}
+
 /**
  * Read again on coming back to the tab: the plan changes where this page cannot see it, in
  * Stripe's pages and when the owner subscribes while a colleague has the portal open.

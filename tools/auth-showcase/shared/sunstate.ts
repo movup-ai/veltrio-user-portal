@@ -361,3 +361,7 @@ export const EXTRA_DRIVER = { id: 'drv_andres', name: 'Andrés Restrepo', licenc
 
 /** The booking the details page shows: confirmed, paid, signed and checked, picking up today at 13:00. */
 export const HERO_REFERENCE = 'BK-20431'
+/** The car that booking is for. */
+export const HERO_CAR = FLEET.find((car) => car.id === 'veh_audi_r8') as FleetCar
+/** The agreement and payment links the hero booking's renter was sent. */
+export const RENTER_LINK = { contractId: 'ctr_20431', token: 'demo-token' } as const

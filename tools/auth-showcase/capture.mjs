@@ -8,7 +8,9 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium } from 'playwright'
 import { installClock } from './shared/clock.ts'
-import { HERO_REFERENCE, TODAY_MS } from './shared/sunstate.ts'
+import { HERO_CAR, HERO_REFERENCE, RENTER_LINK, RENTERS, TODAY_MS } from './shared/sunstate.ts'
+
+const RENTER_NAME = RENTERS.camila.name
 
 const here = import.meta.dirname
 const portalRoot = path.resolve(here, '../..')
@@ -22,6 +24,9 @@ const SITE = 'http://sunstate-car-co.localhost:3100/'
 const LANGS = ['en', 'es']
 const MAX_BYTES = 450 * 1024
 const PAD = 8
+// The renter's pages are cut from a page rather than a card, so they keep some of its margin,
+// short of the 24px it has to the next edge: at PAD their headings met the close-up's edge.
+const PAGE_PAD = 20
 
 const problems = []
 const warn = (message) => {
@@ -48,6 +53,8 @@ function start(name, args, options) {
     ...options,
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
+    // Its own process group on POSIX, so stop() can signal the workers along with it.
+    detached: process.platform !== 'win32',
   })
   const onData = (chunk) => {
     for (const line of chunk.toString().split(/\r?\n/)) {
@@ -63,10 +70,17 @@ function start(name, args, options) {
 
 function stop({ name, child }) {
   if (child.exitCode !== null) return
-  // Next and Vite spawn workers of their own: the whole tree has to go.
+  // Next and Vite spawn workers of their own: the whole tree has to go, or a worker keeps the
+  // port and the next run's strictPort start fails. A negative pid signals the process group.
   if (process.platform === 'win32')
     spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' })
-  else child.kill('SIGTERM')
+  else {
+    try {
+      process.kill(-child.pid, 'SIGTERM')
+    } catch (error) {
+      if (error.code !== 'ESRCH') throw error // the group has already gone
+    }
+  }
   console.log(`  stopped ${name}`)
 }
 
@@ -190,17 +204,29 @@ async function save(page, file, options = {}) {
   if (buffer.length > MAX_BYTES) warn(`${file}: ${kb} KB even at q${quality}`)
 }
 
-/** The union of the elements' boxes plus PAD on every side, saved as one clean card. */
-async function saveCrop(page, file, locators) {
+/**
+ * The page beside the sidebar, at 16:10. The whole window shrank to unreadable in the panel;
+ * without the sidebar the same frame shows the page a fifth larger.
+ */
+async function saveMain(page, file) {
+  const sidebar = await page.locator('aside').first().boundingBox()
+  if (!sidebar) return warn(`${file}: no sidebar to crop beside`)
+  const x = Math.round(sidebar.x + sidebar.width)
+  const width = page.viewportSize().width - x
+  await save(page, file, { clip: { x, y: 0, width, height: Math.round(width / 1.6) } })
+}
+
+/** The union of the elements' boxes plus `pad` on every side, saved as one clean card. */
+async function saveCrop(page, file, locators, pad = PAD) {
   await locators[0].scrollIntoViewIfNeeded()
   await page.waitForTimeout(300)
   const boxes = await Promise.all(locators.map((l) => l.boundingBox()))
   if (boxes.some((box) => !box)) return warn(`${file}: crop target not found`)
   for (const l of locators) await settleImages(page, file, l)
-  const x = Math.min(...boxes.map((b) => b.x)) - PAD
-  const y = Math.min(...boxes.map((b) => b.y)) - PAD
-  const right = Math.max(...boxes.map((b) => b.x + b.width)) + PAD
-  const bottom = Math.max(...boxes.map((b) => b.y + b.height)) + PAD
+  const x = Math.min(...boxes.map((b) => b.x)) - pad
+  const y = Math.min(...boxes.map((b) => b.y)) - pad
+  const right = Math.max(...boxes.map((b) => b.x + b.width)) + pad
+  const bottom = Math.max(...boxes.map((b) => b.y + b.height)) + pad
   const viewport = page.viewportSize()
   const fits = y >= 0 && bottom <= viewport.height
   // A target taller than the window is cut from the full page, in page coordinates.
@@ -225,23 +251,32 @@ async function capturePortal(context, lang) {
   page.on('pageerror', (error) => warn(`${lang} page error: ${error.message}`))
 
   await open(page, `${HARNESS}/dashboard?lang=${lang}`, `dashboard-${lang}`)
-  await save(page, `dashboard-${lang}.jpg`)
+  await saveMain(page, `dashboard-${lang}.jpg`)
   // The KPI row: the first grid on the page.
   await saveCrop(page, `dashboard-detail-${lang}.jpg`, [page.locator('main div.grid').first()])
 
   await open(page, `${HARNESS}/calendar?date=2026-10-13&view=week&lang=${lang}`, `calendar-${lang}`)
-  await save(page, `calendar-${lang}.jpg`)
+  await saveMain(page, `calendar-${lang}.jpg`)
   // The day header and the first two cars: the R8 picked up today and the Huracán out on rent.
   const header = page.locator('[data-calendar-label]').locator('xpath=..')
   // Scoped to the grid: the sidebar has a bordered row with the same classes.
   const rows = header.locator('xpath=..').locator(':scope > div.border-border-soft')
   await saveCrop(page, `calendar-detail-${lang}.jpg`, [header, rows.nth(0), rows.nth(1)])
 
+  await open(page, `${HARNESS}/vehicles?lang=${lang}`, `vehicles-${lang}`)
+  await saveMain(page, `vehicles-${lang}.jpg`)
+
   await open(page, `${HARNESS}/bookings/${HERO_REFERENCE}?lang=${lang}`, `booking-${lang}`)
-  await save(page, `booking-${lang}.jpg`)
+  await saveMain(page, `booking-${lang}.jpg`)
   // The payment card: fully paid, with the deposit held.
   await saveCrop(page, `booking-detail-${lang}.jpg`, [
     page.locator('[class*="flex-[1_1_320px]"] > section').first(),
+  ])
+  // The renter's checklist: background, ID and insurance, all passed.
+  const checks = page.locator('main ol[class*="lg:grid-cols-3"]')
+  await saveCrop(page, `booking-checks-${lang}.jpg`, [
+    checks.locator('xpath=preceding-sibling::*[1]'),
+    checks,
   ])
 
   await page.close()
@@ -258,7 +293,44 @@ async function captureSite(context) {
   await settleImages(page, 'site-en')
   await save(page, 'site-en.jpg')
   await saveCrop(page, 'site-detail-en.jpg', [page.locator('#fleet article').first()])
+
+  // Dates picked three days after Camila's, so the panel prices a stay rather than asking for one.
+  const stay = 'pickup=2026-10-20&return=2026-10-23&pickupTime=10:00&returnTime=10:00'
+  await open(page, `${SITE}vehicles/${HERO_CAR.uri}?${stay}`, 'vehicle-en')
+  await saveCrop(page, 'vehicle-detail-en.jpg', [page.locator('div.rounded-xl.shadow-2').first()])
+
+  const { contractId, token } = RENTER_LINK
+  await open(page, `${SITE}sign/${contractId}/${token}`, 'sign-en')
+  const form = page.locator('main form').first()
+  await form.getByLabel('Full name').fill(RENTER_NAME)
+  await drawSignature(page, form.locator('canvas'))
+  await saveCrop(page, 'sign-detail-en.jpg', [form], PAGE_PAD)
+
+  await open(page, `${SITE}pay/${token}`, 'pay-en')
+  // The summary only: the card form is Stripe's, which the capture has no key for.
+  await saveCrop(
+    page,
+    'pay-detail-en.jpg',
+    [page.locator('main header').first(), page.locator('main dl').last()],
+    PAGE_PAD,
+  )
   await page.close()
+}
+
+/** A cursive-looking signature: a run of joined loops, drawn as one smooth stroke. */
+async function drawSignature(page, canvas) {
+  await canvas.scrollIntoViewIfNeeded()
+  const box = await canvas.boundingBox()
+  if (!box) return warn('sign-en: no signature pad')
+  // A prolate trochoid: the pen moves right while circling, so each turn leaves a loop.
+  const point = (t) => [
+    box.x + box.width * (0.16 + 0.62 * t - 0.035 * Math.sin(t * 26)),
+    box.y + box.height * (0.56 - 0.16 * Math.cos(t * 26) * (1 - 0.5 * t) - 0.08 * t),
+  ]
+  await page.mouse.move(...point(0))
+  await page.mouse.down()
+  for (let i = 1; i <= 160; i++) await page.mouse.move(...point(i / 160))
+  await page.mouse.up()
 }
 
 // --- Run -----------------------------------------------------------------------------------
@@ -286,6 +358,8 @@ const servers = [
       NEXT_PUBLIC_API_URL: MOCK_API,
       NEXT_PUBLIC_SITE_URL: 'http://localhost:3100',
       NEXT_TELEMETRY_DISABLED: '1',
+      // Blank over any key in its .env: the payment page would load Stripe against a fake secret.
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: '',
     }),
   }),
 ]

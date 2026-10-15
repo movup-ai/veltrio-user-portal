@@ -10,6 +10,7 @@ import i18n from '@/i18n'
 import { BookingDetailsPage } from '@/pages/bookings/BookingDetailsPage'
 import { CalendarPage } from '@/pages/calendar/CalendarPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
+import { VehiclesPage } from '@/pages/vehicles/VehiclesPage'
 import { useUIStore } from '@/state/ui.store'
 import { installMocks } from './mocks'
 
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'calendar', element: <CalendarPage /> },
+      { path: 'vehicles', element: <VehiclesPage /> },
       { path: 'bookings/:bookingId', element: <BookingDetailsPage /> },
     ],
   },

@@ -108,11 +108,7 @@ export function LocalizationCard({ company }: { company: Company }) {
         )}
       </FormField>
 
-      <FormField
-        label={t('company.localization.listingLanguage')}
-        description={t('company.localization.listingLanguageHint')}
-        required
-      >
+      <FormField label={t('company.localization.listingLanguage')} required>
         {(fieldProps) => (
           <Controller
             control={control}

@@ -1,6 +1,7 @@
 import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { billingApi } from '@/modules/billing/api/billing.api'
 import { bookingApi } from '@/modules/bookings/api/booking.api'
+import { toBookingLists } from '@/modules/bookings/api/booking.mapper'
 import { verificationApi } from '@/modules/bookings/api/verification.api'
 import type { ProviderKind } from '@/modules/bookings/types/booking.types'
 import { buildBookingDetails } from '@/modules/bookings/utils/booking.details'
@@ -11,6 +12,8 @@ import { locationApi } from '@/modules/locations/api/location.api'
 import { bookingExtensionApi } from '@/modules/payments/api/booking-extension.api'
 import { bookingPaymentApi } from '@/modules/payments/api/booking-payment.api'
 import { vehicleApi } from '@/modules/vehicles/api/vehicle.api'
+import { vehicleDraftApi } from '@/modules/vehicles/api/vehicle-draft.api'
+import { toPaginatedResult } from '@/lib/pagination'
 import { apiClient } from '@/services/api/client'
 import { authApi } from '@/services/auth/auth.api'
 import { useOrganizationStore } from '@/state/organization.store'
@@ -29,11 +32,23 @@ export function installMocks(): void {
   Object.assign(billingApi, { get: async () => f.billing } satisfies Partial<typeof billingApi>)
   Object.assign(vehicleApi, {
     listAll: async () => f.vehicles,
+    // Filtered by status only: each tab's count is a list request for its status.
+    list: async (params) => {
+      const shown = f.vehicles.filter(
+        (v) => !params.status || params.status === 'Any' || v.status === params.status,
+      )
+      return toPaginatedResult(shown, shown.length, params)
+    },
+    stats: async () => f.vehicleStats,
     get: async (id: string) => f.vehicles.find((v) => v.id === id) ?? f.vehicles[0],
   } satisfies Partial<typeof vehicleApi>)
+  Object.assign(vehicleDraftApi, {
+    list: async (params) => toPaginatedResult([], 0, params),
+  } satisfies Partial<typeof vehicleDraftApi>)
   Object.assign(locationApi, { list: async () => f.locations } satisfies Partial<typeof locationApi>)
   Object.assign(bookingApi, {
     stats: async () => f.stats,
+    list: async () => toBookingLists(f.bookings),
     calendar: async () => f.bookings,
     activity: async () => f.activity,
     detail: async () => {

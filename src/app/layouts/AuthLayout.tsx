@@ -2,6 +2,7 @@ import { CarFront } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useMatches } from 'react-router-dom'
+import { LoadingState } from '@/components/feedback/LoadingState'
 import { LanguageSwitcher } from '@/components/navigation/LanguageSwitcher'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { cn } from '@/lib/utils'
@@ -38,7 +39,9 @@ export function AuthLayout() {
   const step = useMatches()
     .map((match) => (match.handle as AuthRouteHandle | undefined)?.step)
     .find(Boolean)
-  // The panel is CSS-hidden below `lg`; not rendering it there spares phones the slider's code and timer.
+  // Not over sign-up itself: the steps mean something once there is an account to continue.
+  const stepper = step && step !== 'account' ? step : undefined
+  // The panel is CSS-hidden below `lg`; not rendering it there spares phones the slider's code.
   const wide = useMediaQuery('(min-width: 64rem)')
 
   return (
@@ -66,11 +69,16 @@ export function AuthLayout() {
           <Brand className="lg:invisible" />
           <LanguageSwitcher />
         </div>
-        <div className="flex flex-1 flex-col items-center py-10 sm:justify-center">
-          {/* Not over sign-up itself: the steps mean something once there is an account to continue. */}
-          {step && step !== 'account' && <StepProgress current={step} className="mb-10 w-full max-w-md" />}
+        {/* Centred alone, but from the top under the steps: centred, each step's height moved the
+            stepper, and it dropped to mid-screen and back while a step loaded. */}
+        <div className={cn('flex flex-1 flex-col items-center py-10', !stepper && 'sm:justify-center')}>
+          {stepper && <StepProgress current={stepper} className="mb-10 w-full max-w-md" />}
           <div className="flex w-full justify-center">
-            <Outlet />
+            {/* Mounted with the layout rather than per step: navigating is a transition, so the step
+                on screen stays until the next one's code has loaded, instead of a spinner. */}
+            <Suspense fallback={<LoadingState />}>
+              <Outlet />
+            </Suspense>
           </div>
         </div>
       </main>

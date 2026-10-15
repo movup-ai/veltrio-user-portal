@@ -83,6 +83,10 @@
   "company": {
     "nameRequired": "El nombre de la empresa es obligatorio",
     "nameTooLong": "Usa 200 caracteres o menos",
+    "subdomainRequired": "Elige la URL de tu empresa",
+    "subdomainInvalid": "Usa de 3 a 63 letras minúsculas, números y guiones sueltos, sin guion al principio ni al final",
+    "subdomainReserved": "Esta URL está reservada. Elige otra.",
+    "subdomainTaken": "Otra empresa ya tiene esta URL. Elige otra.",
     "websiteInvalid": "Introduce una URL válida, p. ej. tuempresa.com",
     "countryRequired": "Selecciona un país",
     "timezoneRequired": "Selecciona una zona horaria",

@@ -13,7 +13,7 @@ import type { BookingContract } from '@/modules/contracts/types/booking-contract
 import type { Location } from '@/modules/locations/types/location.types'
 import type { BookingExtensions } from '@/modules/payments/types/booking-extension.types'
 import type { BookingPayments, CancellationQuote } from '@/modules/payments/types/booking-payment.types'
-import type { Vehicle } from '@/modules/vehicles/types/vehicle.types'
+import { VEHICLE_STATUSES, type Vehicle, type VehicleStats } from '@/modules/vehicles/types/vehicle.types'
 import type { MeResponse } from '@/services/auth/auth.api'
 import type { OrganizationMembership } from '@/types/user'
 import { ROLE_PERMISSIONS } from '@/utils/permissions'
@@ -24,6 +24,7 @@ import {
   FLEET,
   HERO_REFERENCE,
   PHOTO_SIZES,
+  RENTER_LINK,
   RENTERS,
   unsplashUrl,
   type FleetCar,
@@ -159,6 +160,16 @@ function toPortalVehicle(c: FleetCar): Vehicle {
 }
 
 export const vehicles: Vehicle[] = FLEET.map(toPortalVehicle)
+
+// Worked out from the fleet, so the stat cards cannot disagree with the rows under them.
+export const vehicleStats: VehicleStats = {
+  total: vehicles.length,
+  byStatus: Object.fromEntries(
+    VEHICLE_STATUSES.map((status) => [status, vehicles.filter((v) => v.status === status).length]),
+  ) as VehicleStats['byStatus'],
+  avgDailyRate: Math.round(FLEET.reduce((sum, c) => sum + c.dailyRate, 0) / FLEET.length),
+  avgUtilization: FLEET.reduce((sum, c) => sum + c.utilization, 0) / FLEET.length,
+}
 
 export const locations: Location[] = [
   {
@@ -495,7 +506,7 @@ export const contract: BookingContract = {
   signerName: RENTERS.camila.name,
   method: 'e_signature',
   companySigner: COMPANY.owner.fullName,
-  link: { contractId: 'ctr_20431', token: 'demo-token' },
+  link: RENTER_LINK,
   actions: {
     sign: { allowed: false, reason: 'already_signed' },
     void: { allowed: true },

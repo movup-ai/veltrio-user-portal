@@ -83,6 +83,10 @@
   "company": {
     "nameRequired": "Company name is required",
     "nameTooLong": "Use 200 characters or fewer",
+    "subdomainRequired": "Choose your company URL",
+    "subdomainInvalid": "Use 3-63 lowercase letters, numbers and single hyphens, not at the start or end",
+    "subdomainReserved": "This URL is reserved. Choose another one.",
+    "subdomainTaken": "Another company has this URL. Choose another one.",
     "websiteInvalid": "Enter a valid URL, e.g. yourcompany.com",
     "countryRequired": "Select a country",
     "timezoneRequired": "Select a timezone",

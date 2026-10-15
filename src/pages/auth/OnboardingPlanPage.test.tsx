@@ -52,14 +52,24 @@ describe('OnboardingPlanPage', () => {
     expect(picker.props?.returnTo).toEqual({ donePath: '/onboarding/ready', cancelPath: '/onboarding/plan' })
   })
 
-  it.each([
-    ['the deployment does not bill', { ...BILLING, enabled: false }],
-    ['a plan is already running', { ...BILLING, active: true, plan: 'growth', status: 'trialing' }],
-  ])('moves straight on when %s', (_, billing) => {
-    billingResult.current = { data: billing, isLoading: false }
+  it('moves straight on when the deployment does not bill', () => {
+    billingResult.current = { data: { ...BILLING, enabled: false }, isLoading: false }
     renderStep()
 
     expect(screen.getByText('Ready step')).toBeInTheDocument()
     expect(screen.queryByText('Plans')).not.toBeInTheDocument()
+  })
+
+  it('stays open when come back to with a plan running, and moves on from there', () => {
+    billingResult.current = {
+      data: { ...BILLING, active: true, trialAvailable: false, plan: 'growth', status: 'trialing' },
+      isLoading: false,
+    }
+    renderStep()
+
+    // The cards mark the running plan; skipping is no longer the way on.
+    expect(screen.getByText('Plans')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Choose later' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/onboarding/ready')
   })
 })
