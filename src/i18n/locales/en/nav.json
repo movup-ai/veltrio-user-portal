@@ -33,6 +33,11 @@
       "owner": "Owner",
       "manager": "Manager",
       "staff": "Staff"
+    },
+    "setup": {
+      "label": "Setup guide",
+      "progress": "{{done}}/{{total}}",
+      "open": "Setup guide, {{done}} of {{total}} done"
     }
   },
   "header": {

@@ -1,6 +1,6 @@
 {
   "agreements": {
-    "title": "Plantillas de contrato",
+    "title": "Contratos de alquiler",
     "description": "Las condiciones de alquiler que firman tus clientes. Cada reserva usa la plantilla elegida para ella, o la predeterminada.",
     "new": "Nueva plantilla",
     "default": "Predeterminada",

@@ -1,4 +1,4 @@
-import { CarFront, Check, ChevronRight, CreditCard, FileSignature, MapPin } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ONBOARDING_PATHS } from '@/app/layouts/onboarding-steps'
@@ -8,17 +8,9 @@ import { useBilling } from '@/modules/billing/hooks/use-billing'
 import { useSubscriptionReturn } from '@/modules/billing/hooks/use-subscription-return'
 import type { Billing } from '@/modules/billing/types/billing.types'
 import { billingState } from '@/modules/billing/utils/billing.utils'
-import { PAYMENT_SETTINGS_PATH } from '@/modules/payments/utils/payment-account.utils'
+import { SetupStepList, useSetup } from '@/modules/setup'
 import { useOrganizationStore } from '@/state/organization.store'
 import { StepHeading } from './StepHeading'
-
-// What a new company still has to do before its first rental, in the order it meets them.
-const CHECKLIST = [
-  { key: 'vehicle', icon: CarFront, to: '/vehicles/new' },
-  { key: 'branch', icon: MapPin, to: '/locations' },
-  { key: 'agreement', icon: FileSignature, to: '/agreements' },
-  { key: 'payments', icon: CreditCard, to: PAYMENT_SETTINGS_PATH },
-] as const
 
 function PlanStatus({ billing }: { billing: Billing }) {
   const { t } = useTranslation(['auth', 'settings'])
@@ -58,6 +50,8 @@ export function OnboardingReadyPage() {
   const refresh = useSubscriptionReturn()
   const { data: billing } = useBilling()
   const company = useOrganizationStore((state) => state.membership?.organizationName)
+  // The plan has its own line above, which also says when a trial ends.
+  const steps = useSetup().data?.steps.filter((step) => step.key !== 'plan')
 
   return (
     <div className="flex w-full max-w-lg flex-col gap-7">
@@ -71,29 +65,7 @@ export function OnboardingReadyPage() {
       {/* Held back while Stripe is asked: the plan just bought is not known until then. */}
       {billing && !refresh.isPending && <PlanStatus billing={billing} />}
 
-      <ul className="border-border divide-border m-0 list-none divide-y overflow-hidden rounded-lg border p-0">
-        {CHECKLIST.map(({ key, icon: Icon, to }) => (
-          <li key={key}>
-            <Link
-              to={to}
-              className="hover:bg-surface-2 flex items-center gap-3.5 px-4 py-3.5 transition-colors"
-            >
-              <span className="bg-tint text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
-                <Icon className="size-[18px]" aria-hidden />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="text-label text-foreground block">
-                  {t(`readyStep.checklist.${key}.title`)}
-                </span>
-                <span className="text-caption text-fg-3 block">
-                  {t(`readyStep.checklist.${key}.description`)}
-                </span>
-              </span>
-              <ChevronRight className="text-fg-4 size-4 shrink-0" aria-hidden />
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {steps && <SetupStepList steps={steps} />}
 
       <Button asChild size="lg" className="w-full">
         <Link to="/dashboard">{t('readyStep.dashboard')}</Link>

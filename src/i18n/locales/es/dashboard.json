@@ -45,7 +45,9 @@
     "previousAmount": "{{amount}} en los 14 días anteriores",
     "today": "Hoy",
     "todayLong": "Hoy, {{date}}",
-    "collected": "cobrado, descontados los reembolsos",
+    "bookingsMade_zero": "Ninguna reserva nueva",
+    "bookingsMade_one": "{{count}} reserva nueva",
+    "bookingsMade_other": "{{count}} reservas nuevas",
     "none": "No se ha cobrado nada en los últimos 14 días"
   },
   "fleet": {
@@ -95,9 +97,41 @@
       }
     }
   },
-  "empty": {
-    "title": "Añada su primer vehículo",
-    "description": "Las reservas, los ingresos y las cifras de la flota aparecerán aquí cuando tenga un coche para alquilar.",
-    "addVehicle": "Añadir vehículo"
+  "setup": {
+    "title": "¡Guía de configuración para empezar!",
+    "progress": "Complete estos pasos para empezar a alquilar sus vehículos · {{done}} de {{total}} listos",
+    "dismiss": "Ocultar la lista",
+    "markReviewed": "Marcar como revisado",
+    "inReview": "En revisión",
+    "done": "listo",
+    "steps": {
+      "plan": {
+        "title": "Elija un plan",
+        "description": "Las reservas y los vehículos nuevos lo necesitan"
+      },
+      "vehicle": {
+        "title": "Agregue su primer vehículo",
+        "description": "Su placa, fotos y al menos una tarifa"
+      },
+      "branch": {
+        "title": "Ubique su sucursal en el mapa",
+        "description": "Quien busca cerca solo encuentra sucursales ubicadas"
+      },
+      "agreement": {
+        "title": "Revise su contrato de alquiler",
+        "description": "El cliente lo firma al recoger; hay uno inicial listo"
+      },
+      "payments": {
+        "title": "Conecte Stripe para cobrar",
+        "description": "Los depósitos y alquileres se pagan en su propia cuenta"
+      },
+      "booking": {
+        "title": "Cree su primera reserva",
+        "description": "Para un cliente en mostrador, una llamada o un mensaje"
+      }
+    },
+    "toast": {
+      "saveFailed": "No se pudo actualizar la lista"
+    }
   }
 }

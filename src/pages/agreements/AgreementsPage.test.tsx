@@ -18,7 +18,13 @@ vi.mock('@/modules/contracts/api/agreement-template.api', () => ({
   agreementTemplateApi: {
     list: () =>
       Promise.resolve([
-        { id: 'tpl_1', name: 'Standard rental agreement', revision: 1, isDefault: true, updatedAt: '2026-10-05T09:00:00Z' },
+        {
+          id: 'tpl_1',
+          name: 'Standard rental agreement',
+          revision: 1,
+          isDefault: true,
+          updatedAt: '2026-10-05T09:00:00Z',
+        },
       ]),
   },
 }))
@@ -53,7 +59,7 @@ describe('AgreementsPage', () => {
     const user = userEvent.setup({ delay: null })
     renderAt('/agreements')
 
-    expect(screen.getByRole('heading', { name: 'Agreement templates' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Rental agreements' })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Standard rental agreement' })).toBeInTheDocument()
     // Under the templates: who signs them for the company.
     expect(await screen.findByRole('heading', { name: 'Company signature' })).toBeInTheDocument()

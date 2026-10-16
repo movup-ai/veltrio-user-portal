@@ -10,6 +10,8 @@
     "loadError": "No pudimos cargar la flota.",
     "emptyTitle": "Ningún vehículo coincide con sus filtros",
     "emptyDescription": "Pruebe a ajustar la búsqueda o los filtros.",
+    "firstTitle": "Aún no hay vehículos",
+    "firstDescription": "Agregue un vehículo o importe su flota desde una hoja de cálculo.",
     "setOrder": "Ordenar vehículos",
     "doneOrdering": "Listo",
     "dragToReorder_one": "{{count}} vehículo · arrastre para reordenar",

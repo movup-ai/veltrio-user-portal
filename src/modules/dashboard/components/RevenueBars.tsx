@@ -5,16 +5,22 @@ import { PanelHeading } from '@/components/layout/PanelHeading'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { useFormatters } from '@/i18n'
+import { cn } from '@/lib/utils'
 import { parseDay } from '@/utils/dates'
 import { percentChange, roundedPercent, type RecentRevenue } from '../utils/dashboard.utils'
 
+/** The shortest a bar's hover target gets, as a percentage of the chart's height. */
+const HIT_MIN_PCT = 20
+
 interface RevenueBarsProps {
   recent?: RecentRevenue
+  /** Bookings made on each day (`YYYY-MM-DD`), for the tooltip; left out while unknown. */
+  bookingsMade?: Map<string, number>
   isError: boolean
   onRetry: () => void
 }
 
-export function RevenueBars({ recent, isError, onRetry }: RevenueBarsProps) {
+export function RevenueBars({ recent, bookingsMade, isError, onRetry }: RevenueBarsProps) {
   const { t } = useTranslation('dashboard')
   const format = useFormatters()
   // Local midnight of a bare day, not UTC's: west of Greenwich that would label the day before.
@@ -62,46 +68,66 @@ export function RevenueBars({ recent, isError, onRetry }: RevenueBarsProps) {
                 {t('revenue.none')}
               </p>
             )}
-            {recent.days.map((d, i) => (
-              <Tooltip key={d.day} delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={`${long(d.day)}: ${format.currency(d.collected)}`}
-                    // The whole column is the target: a quiet day's bar is too thin to point at.
-                    className="group hover:bg-surface-2 focus-visible:bg-surface-2 flex h-full min-w-0 flex-1 flex-col justify-end gap-[5px] rounded-t-[6px] outline-none"
-                  >
-                    <span
-                      className="text-fg-4 text-center text-[10px] tabular-nums"
-                      style={{ opacity: i % 2 === 0 ? 1 : 0 }}
-                    >
-                      {Number(d.day.slice(8))}
-                    </span>
-                    <span
-                      className={`group-hover:bg-primary group-focus-visible:bg-primary block w-full rounded-t-[5px] rounded-b-[2px] transition-colors ${
-                        i === last ? 'bg-primary' : 'bg-bar-dim'
-                      }`}
-                      // A sliver for a day with nothing taken, so the day still shows.
-                      style={{ height: `${Math.max(2, Math.round((d.collected / max) * 100))}%` }}
-                    />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="px-3 py-2">
-                  <div className="text-[11px] opacity-75">
-                    {i === last ? t('revenue.todayLong', { date: long(d.day) }) : long(d.day)}
-                  </div>
-                  <div className="mt-0.5 text-[13px] font-semibold tabular-nums">
-                    {format.currency(d.collected)}
-                  </div>
-                  <div className="text-[11px] opacity-75">{t('revenue.collected')}</div>
-                </TooltipContent>
-              </Tooltip>
-            ))}
+            {recent.days.map((d, i) => {
+              const height = (d.collected / max) * 100
+              const made = bookingsMade?.get(d.day)
+              return (
+                <div key={d.day} className="flex h-full min-w-0 flex-1 flex-col justify-end">
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`${long(d.day)}: ${format.currency(d.collected)}`}
+                        // At least a fifth of the chart tall, so a quiet day's sliver is easy to
+                        // point at; the tooltip then sits on the bar, not at the top of the chart.
+                        className="group flex w-full flex-col justify-end outline-none"
+                        style={{ height: `${Math.max(height, HIT_MIN_PCT)}%` }}
+                      >
+                        <span
+                          className={cn(
+                            'group-hover:bg-primary group-focus-visible:ring-primary/40 group-focus-visible:bg-primary block w-full rounded-t-[5px] rounded-b-[2px] transition-colors group-focus-visible:ring-2',
+                            i === last ? 'bg-primary' : 'bg-bar-dim',
+                          )}
+                          // Of the button, which is the bar's height or the minimum, whichever is taller.
+                          style={{
+                            height: `${(height / Math.max(height, HIT_MIN_PCT)) * 100}%`,
+                            minHeight: 2,
+                          }}
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="px-3 py-2">
+                      <div className="text-[11px] opacity-75">
+                        {i === last ? t('revenue.todayLong', { date: long(d.day) }) : long(d.day)}
+                      </div>
+                      <div className="mt-0.5 text-[13px] font-semibold tabular-nums">
+                        {format.currency(d.collected)}
+                      </div>
+                      {made !== undefined && (
+                        <div className="text-[11px] opacity-75">
+                          {t('revenue.bookingsMade', { count: made })}
+                        </div>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )
+            })}
           </div>
-          <div className="text-fg-4 mt-2 flex justify-between font-mono text-[11px]">
-            <span>{short(recent.days[0].day)}</span>
-            <span>{short(recent.days[Math.floor(last / 2)].day)}</span>
-            <span>{t('revenue.today')}</span>
+          {/* Every other day, ending on today, under the bar it names. Flex rather than
+              text-align: a label wider than its bar then overflows both sides, not just the right. */}
+          <div className="text-fg-4 mt-2 flex gap-[7px] font-mono text-[11px]">
+            {recent.days.map((d, i) => (
+              <span
+                key={d.day}
+                className={cn(
+                  'flex min-w-0 flex-1 whitespace-nowrap',
+                  i === last ? 'justify-end' : 'justify-center',
+                )}
+              >
+                {(last - i) % 2 === 0 ? (i === last ? t('revenue.today') : short(d.day)) : null}
+              </span>
+            ))}
           </div>
         </>
       )}

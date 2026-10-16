@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   CarFront,
   ChevronsUpDown,
+  ListChecks,
   LogOut,
   Moon,
   PanelLeftClose,
@@ -40,9 +41,11 @@ interface SidebarProps {
   badges?: Partial<Record<NavLinkKey, string>>
   /** Who is signed in; the card is left out until it is known. */
   account?: SidebarAccount
+  /** Brings back a getting-started checklist that was put away before it was finished. */
+  setup?: { done: number; total: number; onOpen: () => void }
 }
 
-export function Sidebar({ mobileOpen = false, onMobileClose, badges, account }: SidebarProps) {
+export function Sidebar({ mobileOpen = false, onMobileClose, badges, account, setup }: SidebarProps) {
   const { t } = useTranslation(['nav', 'common'])
   const collapsed = useUIStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
@@ -128,6 +131,24 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges, account }: 
         </nav>
 
         <div className="border-border-soft border-t px-3 py-2.5">
+          {setup && (
+            <button
+              type="button"
+              aria-label={t('nav:sidebar.setup.open', { done: setup.done, total: setup.total })}
+              onClick={setup.onOpen}
+              className="text-fg-3 hover:bg-surface-3 hover:text-foreground flex w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-[13px] transition-colors"
+            >
+              <ListChecks className="size-[17px] shrink-0" />
+              {expanded && (
+                <>
+                  <span className="flex-1 text-left">{t('nav:sidebar.setup.label')}</span>
+                  <span className="text-fg-4 text-[11.5px] tabular-nums">
+                    {t('nav:sidebar.setup.progress', { done: setup.done, total: setup.total })}
+                  </span>
+                </>
+              )}
+            </button>
+          )}
           <button
             type="button"
             aria-label={t('nav:sidebar.toggleDarkMode')}
