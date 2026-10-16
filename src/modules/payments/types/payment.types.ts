@@ -79,4 +79,12 @@ export interface PaymentStats {
   failed: number
   held: number
   heldCount: number
+  /** Held deposits that lapse within 2 days unless captured first. */
+  expiringHolds: number
+}
+
+/** Money taken on one company calendar day (`YYYY-MM-DD`), netted as `PaymentStats.collected`. */
+export interface CollectedDay {
+  day: string
+  collected: number
 }

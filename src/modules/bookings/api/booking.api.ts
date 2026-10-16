@@ -28,6 +28,7 @@ import {
   toBookingListQuery,
   toBookingLists,
   toBookingPayload,
+  toBookingDay,
   toBookingStats,
   toCalendarQuery,
   toConditionPayload,
@@ -47,6 +48,7 @@ import {
   type BookingCancelledWire,
   type BookingChangedWire,
   type BookingNotifiedWire,
+  type BookingDayWire,
   type BookingStatsWire,
   type BookingTabCountsWire,
   type BookingWire,
@@ -207,6 +209,12 @@ export const bookingApi = {
 
   /** Headline totals for the whole book — not narrowed by the list's filters. */
   stats: () => apiClient.get<BookingStatsWire>('/bookings/stats').then((r) => toBookingStats(r.data)),
+
+  /** Each company day from `from` to `to` (`YYYY-MM-DD`): bookings made, rentals out, fleet use. */
+  daily: (from: string, to: string) =>
+    apiClient
+      .get<BookingDayWire[]>('/bookings/daily', { params: { dateFrom: from, dateTo: to } })
+      .then((r) => r.data.map(toBookingDay)),
 
   /** What each tab would show under the filters already applied. */
   tabCounts: (filters: BookingFilters) =>

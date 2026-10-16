@@ -11,20 +11,11 @@ import { useDomainLabels } from '@/i18n/domain'
 import { cn, moveItem } from '@/lib/utils'
 import { BILLING_BASES, DURATION_UNITS, type BillingBasis, type DurationUnit } from '../types/vehicle.types'
 import type { RateOptionValues, VehicleFormValues } from '../schema/vehicle.schema'
+import { newRateOption } from '../utils/vehicle.utils'
 
 /** Shared grid so the header labels line up with each row's controls. The 1px column is the pricing | mileage divider. */
-const ROW_GRID = 'grid grid-cols-1 gap-x-3 gap-y-2 lg:grid-cols-[24px_1.25fr_1.6fr_0.85fr_1px_1fr_92px_40px] lg:items-start'
-
-function newRateOption(): RateOptionValues {
-  return {
-    id: crypto.randomUUID(),
-    label: '',
-    basis: 'day',
-    rate: Number.NaN,
-    includedMiles: undefined,
-    unlimitedMileage: false,
-  }
-}
+const ROW_GRID =
+  'grid grid-cols-1 gap-x-3 gap-y-2 lg:grid-cols-[24px_1.25fr_1.6fr_0.85fr_1px_1fr_92px_40px] lg:items-start'
 
 interface RateOptionsEditorProps {
   value: RateOptionValues[]
@@ -35,7 +26,13 @@ interface RateOptionsEditorProps {
   showAllErrors?: boolean
 }
 
-export function RateOptionsEditor({ value, onChange, errors, rootError, showAllErrors }: RateOptionsEditorProps) {
+export function RateOptionsEditor({
+  value,
+  onChange,
+  errors,
+  rootError,
+  showAllErrors,
+}: RateOptionsEditorProps) {
   const { t } = useTranslation('vehicles')
   const { currencyCode } = useFormatters()
   const domain = useDomainLabels()
@@ -77,7 +74,11 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
     })
   }
 
-  const errorFor = (option: RateOptionValues, index: number, field: keyof RateOptionValues): string | undefined => {
+  const errorFor = (
+    option: RateOptionValues,
+    index: number,
+    field: keyof RateOptionValues,
+  ): string | undefined => {
     if (!Array.isArray(errors)) return undefined
     if (!showAllErrors && !touched.has(`${option.id}:${field}`)) return undefined
     return (errors[index] as Record<string, { message?: string }> | undefined)?.[field]?.message
@@ -89,7 +90,12 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
         <div className="border-border-strong flex flex-col items-center justify-center gap-2 rounded-[9px] border border-dashed px-6 py-10 text-center">
           <p className="text-[13.5px] font-semibold">{t('rateOptions.emptyTitle')}</p>
           <p className="text-fg-3 max-w-md text-[12.5px]">{t('rateOptions.emptyDescription')}</p>
-          <Button type="button" variant="outline" className="mt-1.5 gap-1.5" onClick={() => onChange([newRateOption()])}>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-1.5 gap-1.5"
+            onClick={() => onChange([newRateOption()])}
+          >
             <Plus className="size-4" />
             {t('rateOptions.add')}
           </Button>
@@ -159,7 +165,11 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                     })}
                     onClick={() => move(option.id, index + (direction === 'up' ? -1 : 1))}
                   >
-                    {direction === 'up' ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                    {direction === 'up' ? (
+                      <ChevronUp className="size-4" />
+                    ) : (
+                      <ChevronDown className="size-4" />
+                    )}
                   </Button>
                 ))}
               </div>
@@ -170,7 +180,9 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                 }}
                 type="button"
                 draggable
-                aria-label={t('rateOptions.reorder', { label: option.label || t('rateOptions.removeFallback') })}
+                aria-label={t('rateOptions.reorder', {
+                  label: option.label || t('rateOptions.removeFallback'),
+                })}
                 className="text-fg-4 hover:text-foreground hidden size-6 cursor-grab items-center justify-center rounded active:cursor-grabbing lg:flex"
                 onDragStart={(e) => {
                   // Firefox starts no drag without data; the image shows the whole row, not the icon.
@@ -231,7 +243,9 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                       <SelectItem key={basis} value={basis}>
                         <span className="flex w-full items-center justify-between gap-6">
                           {domain.label('billingBasis', basis)}
-                          <span className="text-fg-4 text-[11.5px]">{domain.label('billingBasisHint', basis)}</span>
+                          <span className="text-fg-4 text-[11.5px]">
+                            {domain.label('billingBasisHint', basis)}
+                          </span>
                         </span>
                       </SelectItem>
                     ))}
@@ -253,8 +267,13 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                       value={option.blockDurationUnit ?? 'days'}
                       onValueChange={(unit) => update(option.id, { blockDurationUnit: unit as DurationUnit })}
                     >
-                      <SelectTrigger aria-label={t('rateOptions.durationUnit')} className="w-[86px] shrink-0 px-2">
-                        <SelectValue>{domain.durationUnit(option.blockDurationUnit ?? 'days', 2)}</SelectValue>
+                      <SelectTrigger
+                        aria-label={t('rateOptions.durationUnit')}
+                        className="w-[86px] shrink-0 px-2"
+                      >
+                        <SelectValue>
+                          {domain.durationUnit(option.blockDurationUnit ?? 'days', 2)}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {DURATION_UNITS.map((unit) => (
@@ -271,7 +290,9 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-meta text-fg-3 lg:hidden">{t('rateOptions.rate', { currency: currencyCode })}</span>
+              <span className="text-meta text-fg-3 lg:hidden">
+                {t('rateOptions.rate', { currency: currencyCode })}
+              </span>
               <Input
                 aria-label={t('rateOptions.rate', { currency: currencyCode })}
                 type="number"
@@ -292,7 +313,11 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
               <Input
                 aria-label={includedMilesLabel(option.basis)}
                 type="number"
-                placeholder={option.unlimitedMileage ? t('rateOptions.unlimited') : t('rateOptions.includedMilesPlaceholder')}
+                placeholder={
+                  option.unlimitedMileage
+                    ? t('rateOptions.unlimited')
+                    : t('rateOptions.includedMilesPlaceholder')
+                }
                 disabled={option.unlimitedMileage}
                 value={option.includedMiles ?? ''}
                 onChange={(e) => update(option.id, { includedMiles: e.target.valueAsNumber })}
@@ -304,7 +329,10 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                 aria-label={t('rateOptions.unlimitedMiles')}
                 checked={option.unlimitedMileage}
                 onCheckedChange={(checked) =>
-                  update(option.id, { unlimitedMileage: checked, ...(checked ? { includedMiles: undefined } : {}) })
+                  update(option.id, {
+                    unlimitedMileage: checked,
+                    ...(checked ? { includedMiles: undefined } : {}),
+                  })
                 }
               />
               <span className="text-fg-3 text-[12.5px] lg:hidden">{t('rateOptions.unlimitedMiles')}</span>
@@ -315,7 +343,9 @@ export function RateOptionsEditor({ value, onChange, errors, rootError, showAllE
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={t('rateOptions.remove', { label: option.label || t('rateOptions.removeFallback') })}
+                aria-label={t('rateOptions.remove', {
+                  label: option.label || t('rateOptions.removeFallback'),
+                })}
                 className="text-fg-4 hover:text-error size-8"
                 onClick={() => onChange(value.filter((o) => o.id !== option.id))}
               >

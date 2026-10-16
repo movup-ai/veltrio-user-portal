@@ -9,6 +9,7 @@ import type {
   PaymentRowState,
   PaymentStats,
   Payout,
+  CollectedDay,
 } from '../types/payment.types'
 import type { PaymentState } from '@/modules/bookings/types/booking.types'
 import type { BookingWire } from '@/modules/bookings/api/booking.mapper'
@@ -204,6 +205,7 @@ export interface PaymentStatsWire {
   failed: number
   heldCents: number
   held: number
+  expiringHolds: number
 }
 
 export function toPaymentRow(wire: PaymentRowWire): PaymentRow {
@@ -221,6 +223,15 @@ export function toPaymentRow(wire: PaymentRowWire): PaymentRow {
   }
 }
 
+export interface CollectedDayWire {
+  day: string
+  collectedCents: number
+}
+
+export function toCollectedDay(wire: CollectedDayWire): CollectedDay {
+  return { day: wire.day, collected: fromCents(wire.collectedCents) }
+}
+
 export function toPaymentStats(wire: PaymentStatsWire): PaymentStats {
   return {
     collected: fromCents(wire.collectedCents),
@@ -230,6 +241,7 @@ export function toPaymentStats(wire: PaymentStatsWire): PaymentStats {
     failed: wire.failed,
     held: fromCents(wire.heldCents),
     heldCount: wire.held,
+    expiringHolds: wire.expiringHolds,
   }
 }
 

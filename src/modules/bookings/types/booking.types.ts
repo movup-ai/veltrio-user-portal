@@ -238,6 +238,17 @@ export type BookingSort = (typeof BOOKING_SORTS)[number]
  * The stat cards. Deliberately unaffected by the list filters — they describe the whole book,
  * not the current view — so they come from their own endpoint rather than the loaded page.
  */
+/** One company calendar day (`YYYY-MM-DD`) of the dashboard's trend lines. */
+export interface BookingDay {
+  day: string
+  /** Bookings made that day, requests included. */
+  created: number
+  /** Rentals out at the day's end, or now for today. */
+  onRent: number
+  /** 0-1 share of the fleet's time on rent that day, today counted to now. */
+  utilization: number
+}
+
 export interface BookingStats {
   openBookings: number
   startingSoon: number
@@ -250,6 +261,14 @@ export interface BookingStats {
   ready: number
   /** Reservations waiting for the company to confirm or decline them. */
   pending: number
+  /** Of the Today tab's pickups, those already handed over. */
+  pickedUpToday: number
+  /** Open rentals due back today on the company's clock, late ones included. */
+  returningToday: number
+  /** Accepted bookings whose pickup time has passed with the car not handed over. */
+  missedPickups: number
+  /** Accepted bookings starting within the "starting soon" window, unsigned or unpaid. */
+  notReadySoon: number
   /** Unfiltered count per tab; the filtered counts come from `useBookingTabCounts`. */
   tabCounts: Record<BookingTab, number>
 }

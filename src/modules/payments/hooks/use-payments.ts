@@ -10,6 +10,8 @@ import { paymentReceiptFileName } from '../utils/payment.utils'
 export const paymentKeys = {
   page: (params: PaymentListParams) => ['payments', 'page', params] as const,
   stats: ['payments', 'stats'] as const,
+  allCollected: ['payments', 'collected'] as const,
+  collected: (from: string, to: string) => [...paymentKeys.allCollected, from, to] as const,
   methodsInUse: ['payments', 'methods-in-use'] as const,
 }
 
@@ -30,6 +32,14 @@ export function usePaymentPage(params: PaymentListParams) {
 
 export function usePaymentStats() {
   return useQuery({ queryKey: paymentKeys.stats, queryFn: paymentApi.stats, ...ALWAYS_FRESH })
+}
+
+export function useCollectedByDay(from: string, to: string) {
+  return useQuery({
+    queryKey: paymentKeys.collected(from, to),
+    queryFn: () => paymentApi.collected(from, to),
+    ...ALWAYS_FRESH,
+  })
 }
 
 /**
