@@ -1,8 +1,7 @@
 {
   "page": {
     "title": "Settings",
-    "description": "Company profile, localization and contact details",
-    "auditLog": "View audit log"
+    "description": "Company profile, localization and contact details"
   },
   "company": {
     "profile": {
@@ -177,7 +176,8 @@
       "expired": "Expired",
       "resend": "Resend",
       "revoke": "Revoke",
-      "revokeFor": "Revoke the invitation for {{email}}"
+      "revokeFor": "Revoke the invitation for {{email}}",
+      "loadError": "We couldn't load the pending invitations."
     },
     "revoke": {
       "title": "Revoke this invitation?",
@@ -195,6 +195,16 @@
       "description": "You'll lose access to settings, billing and the team straight away. Another owner can make you an owner again.",
       "confirm": "Change my role"
     },
+    "makeOwner": {
+      "title": "Make {{name}} an owner?",
+      "description": "Owners can do everything, including settings, billing and the team. {{name}} will be able to invite or remove people and change anyone's role, yours too.",
+      "confirm": "Make owner"
+    },
+    "removeOwner": {
+      "title": "Take owner access from {{name}}?",
+      "description": "{{name}} loses access to settings, billing and the team straight away, and keeps only what the new role allows.",
+      "confirm": "Change role"
+    },
     "toast": {
       "roleChanged": "Role changed",
       "roleFailed": "Couldn't change the role",
@@ -206,8 +216,6 @@
     }
   },
   "payments": {
-    "section": "Payments",
-    "sectionHelp": "How renters pay you, and where the money goes.",
     "title": "Payment processor",
     "description": "Renters pay into your own Stripe account and Stripe pays out to your bank. Refunds, disputes and payouts are managed in your Stripe Dashboard.",
     "stripe": "Stripe",
@@ -334,8 +342,6 @@
     }
   },
   "billing": {
-    "section": "Billing",
-    "sectionHelp": "Your Veltrio plan and what it covers.",
     "title": "Your plan",
     "description": "Plans are sized by the vehicles and branches you run. Every plan has the same features.",
     "noPlan": "No plan",
@@ -442,8 +448,6 @@
       "action": "Go to billing"
     },
     "credits": {
-      "section": "Credits",
-      "sectionHelp": "Prepaid credits for background and insurance checks.",
       "title": "Verification credits",
       "description": "A check takes its credits when you run it. They come back if it never gives an answer.",
       "balance": "Credits left",
@@ -507,8 +511,6 @@
     "currentTag": "Current",
     "recommendedTag": "Best for your fleet",
     "history": {
-      "section": "History",
-      "sectionHelp": "What Veltrio has charged you, with each invoice.",
       "title": "Billing history",
       "description": "Your plan's charges and credit purchases, newest first.",
       "kind": {

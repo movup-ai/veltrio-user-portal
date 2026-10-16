@@ -19,23 +19,32 @@ export function PendingInvitations({ onSent }: { onSent: (invitation: SentInvita
   const revoke = useRevokeInvitation()
   const [revoking, setRevoking] = useState<Invitation>()
 
-  if (isLoading) return <LoadingState />
-  if (!invitations) return <ErrorState className="py-10" onRetry={() => void refetch()} />
-  if (invitations.length === 0) return null
+  if (invitations?.length === 0) return null
 
   return (
+    // Loading and failure sit under this card's title: bare, they read as part of the Team card.
     <TeamCard title={t('users.pending.title')} description={t('users.pending.description')}>
-      <TeamList>
-        {invitations.map((invitation) => (
-          <InvitationRow
-            key={invitation.id}
-            invitation={invitation}
-            resending={resend.isPending && resend.variables?.id === invitation.id}
-            onResend={() => resend.mutate(invitation, { onSuccess: onSent })}
-            onRevoke={() => setRevoking(invitation)}
-          />
-        ))}
-      </TeamList>
+      {isLoading ? (
+        <LoadingState />
+      ) : !invitations ? (
+        <ErrorState
+          className="py-10"
+          description={t('users.pending.loadError')}
+          onRetry={() => void refetch()}
+        />
+      ) : (
+        <TeamList>
+          {invitations.map((invitation) => (
+            <InvitationRow
+              key={invitation.id}
+              invitation={invitation}
+              resending={resend.isPending && resend.variables?.id === invitation.id}
+              onResend={() => resend.mutate(invitation, { onSuccess: onSent })}
+              onRevoke={() => setRevoking(invitation)}
+            />
+          ))}
+        </TeamList>
+      )}
 
       <ConfirmDialog
         open={Boolean(revoking)}

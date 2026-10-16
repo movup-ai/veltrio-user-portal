@@ -31,8 +31,8 @@ interface BookingChecklistProps {
   closed?: boolean
   /** The rental's last day, as `YYYY-MM-DD`, so cover that runs out before it can be flagged. */
   returnOn?: string
-  /** Fired for a kind with no provider — verify it, or open what was signed. */
-  onAction: (kind: VerificationKind) => void
+  /** Fired for a kind with no provider. Absent while nothing backs it: the button shows as coming soon. */
+  onAction?: (kind: VerificationKind) => void
 }
 
 /**
@@ -87,7 +87,7 @@ export function BookingChecklist({
                     aria-hidden
                     className={cn(
                       'flex size-[16px] shrink-0 items-center justify-center rounded-full',
-                      check.done ? 'bg-success text-white' : 'bg-error-tint',
+                      check.done ? 'bg-success-tint text-success' : 'bg-error-tint',
                     )}
                   >
                     {check.done ? (
@@ -134,15 +134,21 @@ export function BookingChecklist({
                     {t(`details.checkHints.${check.key}`)}
                   </p>
 
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={check.done ? 'outline' : 'primary'}
-                    onClick={() => onAction(check.key)}
-                    className="mt-auto w-full"
-                  >
-                    {check.done ? t(`details.checkActions.${check.key}`) : t('details.checklist.verify')}
-                  </Button>
+                  {onAction ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={check.done ? 'outline' : 'primary'}
+                      onClick={() => onAction(check.key)}
+                      className="mt-auto w-full"
+                    >
+                      {check.done ? t(`details.checkActions.${check.key}`) : t('details.checklist.verify')}
+                    </Button>
+                  ) : (
+                    <Button type="button" size="sm" variant="outline" disabled className="mt-auto w-full">
+                      {t('details.checklist.comingSoon')}
+                    </Button>
+                  )}
                 </>
               )}
             </div>

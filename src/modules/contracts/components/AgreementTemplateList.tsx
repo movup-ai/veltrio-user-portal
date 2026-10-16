@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { FileText, MoreVertical, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
+import { PanelHeading } from '@/components/layout/PanelHeading'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useFormatters } from '@/i18n'
@@ -31,6 +33,9 @@ export function AgreementTemplateList() {
 
   return (
     <Card as="section" className="overflow-hidden">
+      <div className="border-border-soft border-b px-[18px] py-4">
+        <PanelHeading title={t('agreements.templates')} description={t('agreements.templatesDescription')} />
+      </div>
       {isLoading ? (
         <LoadingState />
       ) : isError || !templates ? (
@@ -74,7 +79,6 @@ interface TemplateRowProps {
 function TemplateRow({ template, onMakeDefault, onDelete }: TemplateRowProps) {
   const { t } = useTranslation('contracts')
   const format = useFormatters()
-  const navigate = useNavigate()
   const path = agreementTemplatePath(template.id)
 
   return (
@@ -104,6 +108,11 @@ function TemplateRow({ template, onMakeDefault, onDelete }: TemplateRowProps) {
           })}
         </p>
       </div>
+      <Button asChild variant="outline" size="sm">
+        <Link to={path} aria-label={t('agreements.editNamed', { name: template.name })}>
+          {t('agreements.edit')}
+        </Link>
+      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -115,16 +124,22 @@ function TemplateRow({ template, onMakeDefault, onDelete }: TemplateRowProps) {
             <MoreVertical className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => navigate(path)}>{t('agreements.edit')}</DropdownMenuItem>
+        <DropdownMenuContent align="end" className="max-w-[260px]">
           {/* The default can only be moved, never removed: a booking with no template falls back to it. */}
           {!template.isDefault && (
-            <>
-              <DropdownMenuItem onClick={onMakeDefault}>{t('agreements.makeDefault')}</DropdownMenuItem>
-              <DropdownMenuItem className="text-error focus:text-error" onClick={onDelete}>
-                {t('agreements.delete')}
-              </DropdownMenuItem>
-            </>
+            <DropdownMenuItem onClick={onMakeDefault}>{t('agreements.makeDefault')}</DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            className="text-error focus:text-error"
+            disabled={template.isDefault}
+            onClick={onDelete}
+          >
+            {t('agreements.delete')}
+          </DropdownMenuItem>
+          {template.isDefault && (
+            <DropdownMenuLabel className="text-caption text-fg-4 font-normal">
+              {t('agreements.defaultLocked')}
+            </DropdownMenuLabel>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

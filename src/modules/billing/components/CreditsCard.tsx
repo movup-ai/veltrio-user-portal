@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Coins } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { PROVIDER_KINDS } from '@/modules/bookings/types/booking.types'
+import { SettingsSection } from '@/modules/settings/components/SettingsCard'
 import { useConfirmPack } from '../hooks/use-billing'
 import type { Billing } from '../types/billing.types'
 import { PACK_CHECKOUT_PARAM, billingState, creditLevel } from '../utils/billing.utils'
 import { AutoRechargeDialog } from './AutoRechargeDialog'
-import { BillingSection } from './BillingSection'
 import { BuyCreditsDialog } from './BuyCreditsDialog'
 
 interface CreditsCardProps {
@@ -57,13 +57,7 @@ export function CreditsCard({ billing, canManage }: CreditsCardProps) {
   const autoPack = credits.packs.find((pack) => pack.key === credits.autoRecharge?.pack)
 
   return (
-    <BillingSection
-      icon={Coins}
-      section={t('billing.credits.section')}
-      sectionHelp={t('billing.credits.sectionHelp')}
-      title={t('billing.credits.title')}
-      description={t('billing.credits.description')}
-    >
+    <SettingsSection title={t('billing.credits.title')} description={t('billing.credits.description')}>
       <div className="border-border overflow-hidden rounded-[11px] border">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 p-4">
           <div
@@ -146,6 +140,6 @@ export function CreditsCard({ billing, canManage }: CreditsCardProps) {
       {recharging && (
         <AutoRechargeDialog open onOpenChange={setRecharging} credits={credits} currency={billing.currency} />
       )}
-    </BillingSection>
+    </SettingsSection>
   )
 }

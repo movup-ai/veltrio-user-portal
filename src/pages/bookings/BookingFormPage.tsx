@@ -16,6 +16,7 @@ import { DatePicker } from '@/components/ui/date-picker'
 import { TimePicker } from '@/components/ui/time-picker'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/components/ui/use-toast'
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { DocumentUpload } from '@/components/forms/DocumentUpload'
@@ -70,6 +71,7 @@ import {
   useSaveBookingDraft,
 } from '@/modules/bookings/hooks/use-booking-drafts'
 import { resolveDraftResume, restoredDrivers } from '@/modules/bookings/utils/booking.draft-resume'
+import { bookingFormChanged } from '@/modules/bookings/utils/booking.form-changes'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import { verificationForRenter, type RanVerification } from '@/modules/bookings/utils/booking.verification'
 import {
@@ -262,6 +264,9 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
 
   // `tValidation` is re-created on language change, so the schema (and its messages) follow.
   const schema = useMemo(() => bookingFormSchema(tValidation), [tValidation])
+  // Held once: blankValues() reads the clock, and Cancel compares against what the form opened with.
+  const [openedWith] = useState(() => restoredDraft ?? blankValues())
+  const [leaving, setLeaving] = useState(false)
 
   const {
     control,
@@ -272,7 +277,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
     formState: { errors, isSubmitting },
   } = useForm<BookingFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: restoredDraft ?? blankValues(),
+    defaultValues: openedWith,
     mode: 'onChange',
   })
 
@@ -446,7 +451,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
 
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
-  const cancel = () => navigate('/bookings')
+  const cancel = () => (bookingFormChanged(values, openedWith) ? setLeaving(true) : navigate('/bookings'))
 
   function handleSaveDraft() {
     // Attachments are left out: a File cannot be serialized, so the API would store `{}` and
@@ -763,8 +768,6 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
                     )}
                   </FormField>
 
-                  <CompanyTimeHint />
-
                   {/* Date and time split per side, so each column stays a self-contained pickup/return block. */}
                   <div className="grid grid-cols-2 gap-3">
                     <FormField
@@ -860,6 +863,9 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
                       )}
                     </FormField>
                   </div>
+
+                  {/* Below both rows and across them: as a cell of its own it pushed the dates apart. */}
+                  <CompanyTimeHint className="md:col-span-2" />
                 </div>
               </Card>
 
@@ -1339,7 +1345,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
                             </span>
                           </span>
                           <span className="text-fg-4 shrink-0 text-[13px] tabular-nums">
-                            {format.currency(driver.pricePerDay)}/day
+                            {t('details.vehicle.perDay', { rate: format.currency(driver.pricePerDay) })}
                           </span>
                         </li>
                       ))}
@@ -1453,6 +1459,16 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
           if (conflict) void submitBooking(conflict.submitted, { allowSharedLicence: true })
         }}
         pending={createBooking.isPending}
+      />
+
+      <ConfirmDialog
+        open={leaving}
+        onOpenChange={setLeaving}
+        title={resumedDraftId ? t('form.leave.titleResumed') : t('form.leave.title')}
+        description={resumedDraftId ? t('form.leave.descriptionResumed') : t('form.leave.description')}
+        confirmLabel={resumedDraftId ? t('form.leave.confirmResumed') : t('form.leave.confirm')}
+        cancelLabel={t('form.leave.keepEditing')}
+        onConfirm={() => navigate('/bookings')}
       />
     </PageContainer>
   )

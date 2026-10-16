@@ -34,7 +34,7 @@ export function Calendar({ className, classNames, captionLayout, ...props }: Day
         // Padding keeps the dropdowns clear of the absolutely-positioned nav buttons.
         month_caption: cn('flex h-8 items-center justify-center', isDropdown && 'px-9'),
         caption_label: isDropdown
-          ? 'border-input bg-background text-fg-2 pointer-events-none flex h-7 items-center gap-1 rounded-[7px] border px-2 text-[12.5px] font-semibold'
+          ? 'border-input bg-field text-fg-2 pointer-events-none flex h-7 items-center gap-1 rounded-[7px] border px-2 text-[12.5px] font-semibold'
           : 'text-[13.5px] font-semibold',
         dropdowns: 'flex items-center gap-1.5',
         dropdown_root: 'relative inline-flex items-center',

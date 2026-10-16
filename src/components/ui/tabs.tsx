@@ -13,13 +13,16 @@ export function TabsList({ className, ...props }: React.ComponentPropsWithoutRef
   )
 }
 
-export function TabsTrigger({ className, ...props }: React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>) {
+export function TabsTrigger({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-label font-medium transition-colors',
         'focus-visible:outline-ring focus-visible:outline-2 disabled:pointer-events-none disabled:opacity-50',
-        'data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs',
+        'data-[state=active]:bg-field data-[state=active]:text-foreground data-[state=active]:shadow-xs',
         'data-[state=inactive]:text-muted-foreground',
         className,
       )}
@@ -28,7 +31,10 @@ export function TabsTrigger({ className, ...props }: React.ComponentPropsWithout
   )
 }
 
-export function TabsContent({ className, ...props }: React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>) {
+export function TabsContent({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
       className={cn('mt-4 focus-visible:outline-ring focus-visible:outline-2', className)}

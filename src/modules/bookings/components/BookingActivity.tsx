@@ -142,7 +142,7 @@ export function BookingActivity({ reference, electric }: BookingActivityProps) {
                     className={cn(
                       'flex size-7 shrink-0 items-center justify-center rounded-full',
                       // The newest entry is the one the counter is looking for; the rest recede.
-                      newest ? 'bg-primary text-white' : 'bg-surface-2 text-fg-4',
+                      newest ? 'bg-primary-solid text-solid-foreground' : 'bg-surface-2 text-fg-4',
                     )}
                   >
                     <Icon className="size-3.5" aria-hidden />

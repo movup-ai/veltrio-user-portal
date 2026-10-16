@@ -36,9 +36,7 @@ export function SettingsCard({
   return (
     <Card as="section" className="overflow-hidden">
       <form noValidate onSubmit={(event) => void onSubmit(event)}>
-        <div className="border-border-soft border-b px-[18px] py-4">
-          <PanelHeading title={title} description={description} />
-        </div>
+        <SettingsCardHeading title={title} description={description} />
 
         <div className={cn('grid gap-4 p-[18px]', columns === 2 && 'sm:grid-cols-2')}>{children}</div>
 
@@ -52,6 +50,33 @@ export function SettingsCard({
           </Button>
         </div>
       </form>
+    </Card>
+  )
+}
+
+/** Every settings card opens with this strip, so the tabs read as one page. */
+function SettingsCardHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="border-border-soft border-b px-[18px] py-4">
+      <PanelHeading title={title} description={description} />
+    </div>
+  )
+}
+
+/** A settings card with nothing to save: SettingsCard's heading, then its own content. */
+export function SettingsSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: React.ReactNode
+}) {
+  return (
+    <Card as="section" className="overflow-hidden">
+      <SettingsCardHeading title={title} description={description} />
+      <div className="flex min-w-0 flex-col gap-4 p-[18px]">{children}</div>
     </Card>
   )
 }

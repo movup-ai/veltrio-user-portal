@@ -11,8 +11,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/use-toast'
 import { SettingsCard } from '@/modules/settings/components/SettingsCard'
+import { cn } from '@/lib/utils'
 import { normalizeApiError } from '@/services/api/errors'
-import { SIGNATORY_TITLE_MAX, SIGNER_NAME_MAX } from '../constants/booking-contract.constants'
+import {
+  SIGNATORY_TITLE_MAX,
+  SIGNATURE_INK_ON_SCREEN,
+  SIGNER_NAME_MAX,
+} from '../constants/booking-contract.constants'
 import {
   useCompanySignatory,
   useRemoveCompanySignatory,
@@ -48,7 +53,9 @@ export function CompanySignatoryCard() {
     )
   }
   // Keyed on what is saved, so a save or a removal reopens the form from the new baseline.
-  return <SignatoryForm key={`${signatory.name}|${signatory.title}|${signatory.signature}`} saved={signatory} />
+  return (
+    <SignatoryForm key={`${signatory.name}|${signatory.title}|${signatory.signature}`} saved={signatory} />
+  )
 }
 
 function SignatoryForm({ saved }: { saved: CompanySignatory }) {
@@ -73,7 +80,11 @@ function SignatoryForm({ saved }: { saved: CompanySignatory }) {
     } catch (error) {
       const drawing = drawingProblem(error)
       if (drawing) return setRefused(drawing)
-      toast({ title: t('signatory.toast.failed'), description: normalizeApiError(error).message, variant: 'error' })
+      toast({
+        title: t('signatory.toast.failed'),
+        description: normalizeApiError(error).message,
+        variant: 'error',
+      })
     }
   }
 
@@ -91,7 +102,13 @@ function SignatoryForm({ saved }: { saved: CompanySignatory }) {
       saving={save.isPending}
       actions={
         saved.name && (
-          <Button type="button" variant="outline" size="sm" loading={remove.isPending} onClick={() => remove.mutate()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            loading={remove.isPending}
+            onClick={() => remove.mutate()}
+          >
             {t('signatory.remove')}
           </Button>
         )
@@ -99,7 +116,11 @@ function SignatoryForm({ saved }: { saved: CompanySignatory }) {
     >
       {!saved.name && <p className="text-fg-3 m-0 text-[13px] sm:col-span-2">{t('signatory.unset')}</p>}
 
-      <FormField label={t('signatory.name')} error={problems.name && t(`signatory.${problems.name}`)} required>
+      <FormField
+        label={t('signatory.name')}
+        error={problems.name && t(`signatory.${problems.name}`)}
+        required
+      >
         {(fieldProps) => (
           <Input
             value={draft.name}
@@ -128,11 +149,11 @@ function SignatoryForm({ saved }: { saved: CompanySignatory }) {
         <span className="text-[13px] font-medium">{t('signatory.signature')}</span>
         {draft.mode === 'kept' && saved.signature && (
           // The pad's own size and corner control, so swapping to the pad does not shift the card.
-          <div className="border-input relative flex h-[160px] items-center justify-center rounded-[10px] border bg-white">
+          <div className="border-input bg-field relative flex h-[160px] items-center justify-center rounded-[10px] border">
             <img
               src={saved.signature}
               alt={t('signatory.signatureOf', { name: saved.name })}
-              className="max-h-full max-w-full object-contain"
+              className={cn('max-h-full max-w-full object-contain', SIGNATURE_INK_ON_SCREEN)}
             />
             <Button
               type="button"
@@ -141,7 +162,7 @@ function SignatoryForm({ saved }: { saved: CompanySignatory }) {
               aria-label={t('signatory.redraw')}
               title={t('signatory.redraw')}
               onClick={() => setDraft((d) => ({ ...d, mode: 'draw' }))}
-              className="absolute top-1.5 right-1.5 size-7 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="text-fg-3 hover:bg-surface-3 hover:text-foreground absolute top-1.5 right-1.5 size-7"
             >
               <Pencil className="size-3.5" aria-hidden />
             </Button>

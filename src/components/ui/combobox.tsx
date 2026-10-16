@@ -83,7 +83,7 @@ export function Combobox({
       <PopoverAnchor asChild>
         <div
           className={cn(
-            'flex h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-body shadow-xs transition-colors',
+            'flex h-9 w-full items-center gap-2 rounded-md border border-input bg-field px-3 py-1 text-body shadow-xs transition-colors',
             'focus-within:outline-ring focus-within:outline-2 focus-within:outline-offset-2',
             disabled && 'cursor-not-allowed opacity-50',
             invalid && 'border-error focus-within:outline-error',

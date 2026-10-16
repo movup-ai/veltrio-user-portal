@@ -4,7 +4,14 @@ import { Car, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { LoadingState } from '@/components/feedback/LoadingState'
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '@/components/ui/carousel'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
 import { useVehiclePhotoUpload } from '../hooks/use-photo-upload'
@@ -80,9 +87,7 @@ export function VehiclePhotoGallery({ vehicleId, photos }: { vehicleId: string; 
    */
   useEffect(() => {
     if (!api) return
-    const snap = api
-      .internalEngine()
-      .slideRegistry.findIndex((slides) => slides.includes(activeIndex))
+    const snap = api.internalEngine().slideRegistry.findIndex((slides) => slides.includes(activeIndex))
     if (snap !== -1 && snap !== api.selectedScrollSnap()) api.scrollTo(snap)
   }, [api, activeIndex])
 
@@ -105,16 +110,14 @@ export function VehiclePhotoGallery({ vehicleId, photos }: { vehicleId: string; 
             alt={active.name}
             className="size-full object-cover"
           />
+        ) : // Not yet rendered by the worker.
+        active ? (
+          <LoadingState label={t('gallery.processing')} hideLabel className="py-0" />
         ) : (
-          // Not yet rendered by the worker.
-          active ? (
-            <LoadingState label={t('gallery.processing')} hideLabel className="py-0" />
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <Car className="text-fg-4 size-8" aria-hidden />
-              <p className="text-fg-3 text-[12.5px] font-semibold">{t('gallery.primaryPhoto')}</p>
-            </div>
-          )
+          <div className="flex flex-col items-center gap-2">
+            <Car className="text-fg-4 size-8" aria-hidden />
+            <p className="text-fg-3 text-[12.5px] font-semibold">{t('gallery.primaryPhoto')}</p>
+          </div>
         )}
 
         {photos.length > 1 && (
@@ -123,7 +126,7 @@ export function VehiclePhotoGallery({ vehicleId, photos }: { vehicleId: string; 
               type="button"
               onClick={() => step(-1)}
               aria-label={t('gallery.previousPhoto')}
-              className="bg-foreground/45 hover:bg-foreground/70 absolute top-1/2 left-3 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white opacity-0 transition-all group-hover:opacity-100 focus-visible:opacity-100"
+              className="bg-black/55 hover:bg-black/70 absolute top-1/2 left-3 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white opacity-0 transition-all group-hover:opacity-100 focus-visible:opacity-100"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -131,21 +134,23 @@ export function VehiclePhotoGallery({ vehicleId, photos }: { vehicleId: string; 
               type="button"
               onClick={() => step(1)}
               aria-label={t('gallery.nextPhoto')}
-              className="bg-foreground/45 hover:bg-foreground/70 absolute top-1/2 right-3 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white opacity-0 transition-all group-hover:opacity-100 focus-visible:opacity-100"
+              className="bg-black/55 hover:bg-black/70 absolute top-1/2 right-3 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white opacity-0 transition-all group-hover:opacity-100 focus-visible:opacity-100"
             >
               <ChevronRight className="size-5" />
             </button>
-            <span className="bg-foreground/55 absolute right-3 bottom-3 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white">
+            <span className="bg-black/55 absolute right-3 bottom-3 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white">
               {activeIndex + 1} / {photos.length}
             </span>
           </>
         )}
-
       </div>
 
       {photos.length > 0 ? (
         <div className="flex flex-col gap-2 p-2.5">
-          <Carousel setApi={setApi} opts={{ align: 'start', slidesToScroll: PAGE_SIZE, containScroll: 'trimSnaps' }}>
+          <Carousel
+            setApi={setApi}
+            opts={{ align: 'start', slidesToScroll: PAGE_SIZE, containScroll: 'trimSnaps' }}
+          >
             <CarouselContent>
               {photos.map((photo, index) => (
                 <CarouselItem key={photo.id} className="basis-1/4">
@@ -156,7 +161,9 @@ export function VehiclePhotoGallery({ vehicleId, photos }: { vehicleId: string; 
                     aria-current={index === activeIndex}
                     className={cn(
                       'group/thumb relative aspect-[4/3] w-full overflow-hidden rounded-[7px] ring-inset transition-all',
-                      index === activeIndex ? 'ring-primary ring-2' : 'ring-border hover:ring-border-strong ring-1',
+                      index === activeIndex
+                        ? 'ring-primary ring-2'
+                        : 'ring-border hover:ring-border-strong ring-1',
                     )}
                   >
                     {photo.url ? (
@@ -190,8 +197,8 @@ export function VehiclePhotoGallery({ vehicleId, photos }: { vehicleId: string; 
 
             {pageCount > 1 && (
               <>
-                <CarouselPrevious className="size-7 border-0 bg-foreground/50 text-white hover:bg-foreground/70 hover:text-white disabled:opacity-0" />
-                <CarouselNext className="size-7 border-0 bg-foreground/50 text-white hover:bg-foreground/70 hover:text-white disabled:opacity-0" />
+                <CarouselPrevious className="size-7 border-0 bg-black/55 text-white hover:bg-black/70 hover:text-white disabled:opacity-0" />
+                <CarouselNext className="size-7 border-0 bg-black/55 text-white hover:bg-black/70 hover:text-white disabled:opacity-0" />
               </>
             )}
           </Carousel>
@@ -205,7 +212,10 @@ export function VehiclePhotoGallery({ vehicleId, photos }: { vehicleId: string; 
                   onClick={() => api?.scrollTo(i)}
                   aria-label={t('gallery.goToPage', { page: i + 1 })}
                   aria-current={i === page}
-                  className={cn('h-1.5 rounded-full transition-all', i === page ? 'bg-primary w-4' : 'bg-border-strong w-1.5')}
+                  className={cn(
+                    'h-1.5 rounded-full transition-all',
+                    i === page ? 'bg-primary w-4' : 'bg-border-strong w-1.5',
+                  )}
                 />
               ))}
             </div>

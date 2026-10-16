@@ -23,7 +23,11 @@ import { useDebounced } from '@/lib/use-debounced'
 import { customerApi } from '@/modules/customers/api/customer.api'
 import { CustomerFormDialog } from '@/modules/customers/components/CustomerFormDialog'
 import { useCustomerPage, useCustomerStats } from '@/modules/customers/hooks/use-customers'
-import { CUSTOMER_SORTS, type CustomerSort } from '@/modules/customers/types/customer.types'
+import {
+  CUSTOMER_SORTS,
+  type CustomerSort,
+  type CustomerStats,
+} from '@/modules/customers/types/customer.types'
 import {
   customerColumns,
   customerRow,
@@ -59,8 +63,9 @@ export function CustomersPage() {
     refetch,
     isStale,
   } = useCustomerPage({ search: debouncedSearch, sort, page, pageSize })
-  const { data: stats } = useCustomerStats()
-  const { total = 0, rented = 0, repeat = 0, possibleDuplicates = 0 } = stats ?? {}
+  const { data: stats, isError: statsFailed, refetch: refetchStats } = useCustomerStats()
+  // A dash until the totals load: a zero would say the customer book is empty.
+  const figure = (show: (loaded: CustomerStats) => string) => (stats ? show(stats) : '—')
   const [exporting, setExporting] = useState(false)
 
   /** Exports everyone matching the search, not just the page on screen. */
@@ -98,6 +103,8 @@ export function CustomersPage() {
     }
   }
 
+  // The search the rows answer, not the one still being typed, trimmed as the query sends it.
+  const searching = debouncedSearch.trim() !== ''
   const rows = (pageData?.items ?? []).map((customer) =>
     customerRow(
       customer,
@@ -141,28 +148,32 @@ export function CustomersPage() {
         filters={[]}
       />
 
-      <StatStrip
-        stats={[
-          {
-            icon: Users,
-            label: t('list.stats.total'),
-            value: format.number(total),
-            note: t('list.stats.totalNote'),
-          },
-          {
-            icon: Repeat,
-            label: t('list.stats.repeatRate'),
-            value: format.percent(repeatRate(repeat, rented)),
-            note: t('list.stats.repeatRateNote'),
-          },
-          {
-            icon: CopyCheck,
-            label: t('list.stats.possibleDuplicates'),
-            value: format.number(possibleDuplicates),
-            note: t('list.stats.possibleDuplicatesNote'),
-          },
-        ]}
-      />
+      {statsFailed && !stats ? (
+        <ErrorState className="py-6" description={t('list.statsError')} onRetry={() => refetchStats()} />
+      ) : (
+        <StatStrip
+          stats={[
+            {
+              icon: Users,
+              label: t('list.stats.total'),
+              value: figure((s) => format.number(s.total)),
+              note: t('list.stats.totalNote'),
+            },
+            {
+              icon: Repeat,
+              label: t('list.stats.repeatRate'),
+              value: figure((s) => format.percent(repeatRate(s.repeat, s.rented))),
+              note: t('list.stats.repeatRateNote'),
+            },
+            {
+              icon: CopyCheck,
+              label: t('list.stats.possibleDuplicates'),
+              value: figure((s) => format.number(s.possibleDuplicates)),
+              note: t('list.stats.possibleDuplicatesNote'),
+            },
+          ]}
+        />
+      )}
 
       {isLoading && !pageData ? (
         <LoadingState label={t('list.loading')} />
@@ -202,8 +213,8 @@ export function CustomersPage() {
             emptyState={
               <EmptyState
                 icon={UserX}
-                title={t('list.emptyTitle')}
-                description={t('list.emptyDescription')}
+                title={t(searching ? 'list.noMatchesTitle' : 'list.emptyTitle')}
+                description={t(searching ? 'list.noMatchesDescription' : 'list.emptyDescription')}
               />
             }
           />

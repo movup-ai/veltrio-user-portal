@@ -9,6 +9,7 @@ const share = vi.fn()
 const openReport = vi.fn()
 const removeCheck = vi.fn()
 let logItems: VerificationRecord[] = []
+let logLoading = false
 let permissions: string[] = []
 
 vi.mock('@/components/feedback/Can', () => ({ usePermissions: () => permissions }))
@@ -21,7 +22,10 @@ vi.mock('@/modules/bookings/hooks/use-verification', () => ({
     dialog: { open: false, onOpenChange: vi.fn(), session: undefined },
   }),
   useInsuranceResults: () => false,
-  useVerificationLog: () => ({ data: { items: logItems, total: logItems.length }, isError: false }),
+  useVerificationLog: () =>
+    logLoading
+      ? { data: undefined, isLoading: true, isError: false }
+      : { data: { items: logItems, total: logItems.length }, isLoading: false, isError: false },
   useVerificationReportById: () => ({ open: openReport, isPending: false }),
   useDeleteVerification: () => ({ mutate: removeCheck, isPending: false }),
 }))
@@ -48,6 +52,7 @@ beforeEach(() => {
   openReport.mockReset()
   removeCheck.mockReset()
   logItems = []
+  logLoading = false
   permissions = []
 })
 
@@ -128,6 +133,21 @@ describe('the verification form', () => {
 })
 
 describe('the verification history', () => {
+  it('shows loading, not "no checks yet", until the history arrives', () => {
+    logLoading = true
+    render(<VerificationPage />)
+
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument()
+    expect(screen.queryByText('No checks yet')).not.toBeInTheDocument()
+  })
+
+  it('says there are no checks once the history has loaded empty', () => {
+    render(<VerificationPage />)
+
+    expect(screen.getByText('No checks yet')).toBeInTheDocument()
+    expect(screen.getByText(/checks you run above appear here/)).toBeInTheDocument()
+  })
+
   it('shows who was checked without their date of birth', () => {
     logItems = [record({ email: 'kevin@example.com', customerId: 'c1' })]
     render(<VerificationPage />)

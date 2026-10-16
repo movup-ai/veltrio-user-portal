@@ -141,3 +141,27 @@ export function filterBookings(bookings: BookingTuple[], f: BookingFilters): Boo
     return true
   })
 }
+
+function hasActiveBookingFilters(f: BookingFilters): boolean {
+  return (
+    Boolean(f.search.trim()) ||
+    f.status !== 'Any' ||
+    f.location !== 'All' ||
+    Boolean(f.pickup.from || f.pickup.to) ||
+    f.make !== 'All' ||
+    f.durationBand !== 'Any' ||
+    f.valueBands.length > 0
+  )
+}
+
+/**
+ * Which empty state an empty list shows. Blaming the filters when none are set sent a new
+ * company looking for a filter to clear instead of creating its first booking.
+ */
+export function bookingListEmptyKind(
+  f: BookingFilters,
+  tab: BookingTab,
+): 'noMatches' | 'firstRun' | 'emptyTab' {
+  if (hasActiveBookingFilters(f)) return 'noMatches'
+  return tab === 'All' ? 'firstRun' : 'emptyTab'
+}

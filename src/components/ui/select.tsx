@@ -3,10 +3,7 @@ import * as SelectPrimitive from '@radix-ui/react-select'
 import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export function Select({
-  onValueChange,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+export function Select({ onValueChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return (
     <SelectPrimitive.Root
       {...props}
@@ -25,7 +22,7 @@ export function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-1 text-body shadow-xs transition-colors',
+        'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-field px-3 py-1 text-body shadow-xs transition-colors',
         'data-[placeholder]:text-muted-foreground focus:outline-ring focus:outline-2 focus:outline-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
         'aria-[invalid=true]:border-error aria-[invalid=true]:focus:outline-error',
@@ -140,6 +137,9 @@ export function SelectItem({
   )
 }
 
-export function SelectSeparator({ className, ...props }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>) {
+export function SelectSeparator({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>) {
   return <SelectPrimitive.Separator className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />
 }

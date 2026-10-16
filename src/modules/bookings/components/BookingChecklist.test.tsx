@@ -62,6 +62,22 @@ describe('which tiles a provider answers for', () => {
     expect(screen.getByRole('button', { name: /view id check/i })).toBeInTheDocument()
   })
 
+  it('shows a kind nothing backs yet as coming soon, not as a button that does nothing', () => {
+    render(
+      <BookingChecklist
+        checks={[{ key: 'identity', done: false }]}
+        verifications={{}}
+        providerKinds={['background', 'insurance']}
+        openingReport={false}
+        onOrder={vi.fn()}
+        onViewReport={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Verify' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Coming soon' })).toBeDisabled()
+  })
+
   it('words each tile for its own provider', () => {
     // Every label was once Checkr's, so an insurance tile waiting on the renter read "Checkr
     // is searching" and a lapsed policy said "Records were found".

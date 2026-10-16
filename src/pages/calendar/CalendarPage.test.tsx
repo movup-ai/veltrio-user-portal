@@ -163,6 +163,18 @@ describe('the booking calendar', () => {
     expect(screen.getByText('Honda Accord')).toBeInTheDocument()
   })
 
+  it('keeps the legend when a search matches only hidden bookings, so they can be switched on', async () => {
+    calendar.mockResolvedValue([booking('BK-1'), booking('BK-2', { status: 'Cancelled', vehicleId: 'v2' })])
+    const user = renderPage()
+    await screen.findByRole('button', { name: /^BK-1:/ })
+
+    await user.type(screen.getByRole('textbox'), 'BK-2')
+    expect(screen.getByText('Nothing matches')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Cancelled' }))
+    expect(bar('BK-2')).toBeInTheDocument()
+  })
+
   it('narrows to the cars and rentals a search matches', async () => {
     const user = renderPage()
     await screen.findByRole('button', { name: /^BK-1:/ })

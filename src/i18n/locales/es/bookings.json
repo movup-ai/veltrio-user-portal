@@ -6,11 +6,14 @@
     "export": "Exportar",
     "newBooking": "Nueva reserva",
     "searchPlaceholder": "Buscar referencia, cliente, matrícula",
-    "noneFound": "No se encontraron reservas",
     "loading": "Cargando reservas…",
     "loadError": "No pudimos cargar sus reservas.",
     "emptyTitle": "Ninguna reserva coincide con sus filtros",
     "emptyDescription": "Pruebe a ajustar la búsqueda o los filtros.",
+    "firstRunTitle": "Aún no hay reservas",
+    "firstRunDescription": "Aquí aparecen las reservas que cree y las que los clientes hagan en línea.",
+    "emptyTabTitle": "No hay reservas en esta pestaña",
+    "emptyTabDescription": "Por ahora no hay nada aquí. Las demás pestañas muestran el resto de sus reservas.",
     "tabs": {
       "All": "Todas",
       "Upcoming": "Próximas",
@@ -29,7 +32,6 @@
     },
     "rowActions": {
       "viewDetails": "Ver detalles",
-      "editBooking": "Editar reserva",
       "exportBooking": "Exportar reserva"
     },
     "stats": {
@@ -47,7 +49,10 @@
       "noCustomer": "Sin cliente aún",
       "noDates": "Sin fechas aún",
       "resume": "Retomar borrador",
-      "discard": "Descartar borrador"
+      "discard": "Descartar borrador",
+      "discardTitle": "¿Descartar este borrador?",
+      "discardDescription": "El borrador {{reference}} de {{renter}} se eliminará. Esta acción no se puede deshacer.",
+      "discardDescriptionUnnamed": "El borrador {{reference}} se eliminará. Esta acción no se puede deshacer."
     },
     "draftsNote": "{{count}} borrador guardado",
     "draftsNote_other": "{{count}} borradores guardados",
@@ -149,7 +154,8 @@
   "details": {
     "loading": "Cargando la reserva…",
     "notFoundTitle": "Reserva no encontrada",
-    "notFoundDescription": "No encontramos esa reserva. Es posible que se haya cancelado.",
+    "notFoundDescription": "No hay ninguna reserva con esta referencia. Compruebe el enlace o búsquela en la lista.",
+    "loadError": "No pudimos cargar esta reserva. Inténtelo de nuevo en un momento.",
     "backToList": "Volver a reservas",
     "stages": {
       "reserved": "Reservada",
@@ -392,7 +398,8 @@
       "title": "Lista de verificación",
       "done": "Completado",
       "pending": "Pendiente",
-      "verify": "Verificar"
+      "verify": "Verificar",
+      "comingSoon": "Próximamente"
     },
     "checks": {
       "background": "Verificación de antecedentes",
@@ -532,7 +539,7 @@
       "decline": "Rechazar",
       "openAgreement": "Abrir contrato",
       "messageRenter": "Escribir al arrendatario",
-      "pendingApi": "Esto necesita la API de reservas, que aún no está disponible.",
+      "noEmail": "Este arrendatario no tiene correo electrónico registrado",
       "restore": "Restaurar reserva",
       "returnVehicle": "Devolver vehículo"
     },
@@ -886,6 +893,15 @@
       "notDiscardedTitle": "El borrador sigue en la lista",
       "notDiscarded": "Se creó la reserva {{reference}}, pero no se pudo eliminar su borrador. Descártalo en la pestaña Borradores para no reservar dos veces."
     },
+    "leave": {
+      "title": "¿Descartar esta reserva?",
+      "titleResumed": "¿Descartar tus cambios?",
+      "description": "Se perderá lo que has introducido hasta ahora. Para retomarlo más tarde, elige Seguir editando y después Guardar borrador.",
+      "descriptionResumed": "Se perderán los cambios hechos desde que se guardó este borrador; el borrador guardado sigue en Borradores. Para conservarlos, elige Seguir editando y después Guardar borrador.",
+      "confirm": "Descartar reserva",
+      "confirmResumed": "Descartar cambios",
+      "keepEditing": "Seguir editando"
+    },
     "customerConflict": {
       "useCustomer": "Es la misma persona, usar este cliente"
     },
@@ -1074,7 +1090,8 @@
     "log": {
       "title": "Historial de verificaciones",
       "rowCount_other": "{{count}} verificaciones",
-      "empty": "Aún no hay verificaciones. Ejecute una arriba.",
+      "emptyTitle": "Aún no hay verificaciones",
+      "emptyDescription": "Las verificaciones de antecedentes y de seguro que ejecute arriba aparecen aquí, de la más reciente a la más antigua.",
       "columns": {
         "person": "Persona",
         "source": "Origen",

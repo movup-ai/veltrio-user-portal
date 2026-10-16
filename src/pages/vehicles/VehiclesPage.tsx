@@ -53,16 +53,19 @@ import {
 } from '@/modules/vehicles/hooks/use-vehicles'
 import { useDeleteVehicleDraft, useVehicleDrafts } from '@/modules/vehicles/hooks/use-vehicle-drafts'
 import { hasPermission } from '@/utils/permissions'
-import { draftAsVehicle, vehicleColumns, vehicleRow } from '@/modules/vehicles/utils/vehicle.utils'
+import {
+  draftAsVehicle,
+  vehicleColumns,
+  vehicleDisplayName,
+  vehicleRow,
+} from '@/modules/vehicles/utils/vehicle.utils'
+import { vehicleFiltersActive, vehicleListEmptyKind } from '@/modules/vehicles/utils/vehicle-list-empty'
+import { VEHICLE_LIST_TABS, type VehicleListTab } from '@/modules/vehicles/constants/vehicle-list.constants'
 import { VehicleImportDialog } from '@/modules/vehicles/components/VehicleImportDialog'
 import { usePlanLimitGuard } from '@/modules/billing/hooks/use-plan-limit'
 import { CopyLinkButton } from '@/modules/vehicles/components/CopyLinkButton'
 import { copyToClipboard, fleetUrl, vehicleUrl } from '@/modules/vehicles/utils/public-links'
 import { useOrganizationStore } from '@/state/organization.store'
-
-/** Canonical values — `All` means "no status filter", `Drafts` filters on isDraft instead of status, the rest map 1:1 to VehicleStatus. */
-const TABS = ['All', 'Available', 'On rent', 'Maintenance', 'Drafts', 'Archived'] as const
-type Tab = (typeof TABS)[number]
 
 /**
  * The fleet order lives on the server and is shared across the tenant, so ordering only makes
@@ -87,7 +90,7 @@ export function VehiclesPage() {
   const format = useFormatters()
   const navigate = useNavigate()
   const subdomain = useOrganizationStore((s) => s.membership?.subdomain)
-  const [tab, setTab] = useState<Tab>('All')
+  const [tab, setTab] = useState<VehicleListTab>('All')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')
@@ -105,6 +108,7 @@ export function VehiclesPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null)
+  const [discardTarget, setDiscardTarget] = useState<Vehicle | null>(null)
   const [importOpen, setImportOpen] = useState(false)
 
   const isDraftsTab = tab === 'Drafts'
@@ -173,7 +177,7 @@ export function VehiclesPage() {
   const drafts = useMemo(() => (draftsData?.items ?? []).map(draftAsVehicle), [draftsData])
 
   const byStatus = tabStats?.byStatus
-  const tabCounts: Record<Tab, number> = {
+  const tabCounts: Record<VehicleListTab, number> = {
     All: (statusFilter === 'Any' ? tabStats?.total : byStatus?.[statusFilter]) ?? 0,
     Available: byStatus?.Available ?? 0,
     'On rent': byStatus?.['On rent'] ?? 0,
@@ -182,7 +186,9 @@ export function VehiclesPage() {
     Archived: archivedStats?.total ?? 0,
   }
 
-  const visibleTabs = canAddVehicles ? TABS : TABS.filter((value) => value !== 'Drafts')
+  const visibleTabs = canAddVehicles
+    ? VEHICLE_LIST_TABS
+    : VEHICLE_LIST_TABS.filter((value) => value !== 'Drafts')
 
   const resetToFirstPage = () => setPage(1)
 
@@ -284,6 +290,11 @@ export function VehiclesPage() {
 
   // The server sorts; order mode requests sortBy=manual, so the fetched order is the order.
   const orderedItems = isDraftsTab ? drafts : (data?.items ?? [])
+  const emptyKind = vehicleListEmptyKind({
+    tab,
+    filtersActive: vehicleFiltersActive(listParams, tab),
+    fleetEmpty: fleetStats?.total === 0 && archivedStats?.total === 0,
+  })
 
   // A draft has no vehicle to open, so its row leads back into the wizard instead.
   const rows = orderedItems.map((v) =>
@@ -295,7 +306,7 @@ export function VehiclesPage() {
           },
           {
             label: t('list.rowActions.discardDraft'),
-            onClick: () => deleteDraft.mutate(v.id),
+            onClick: () => setDiscardTarget(v),
             destructive: true,
           },
         ])
@@ -528,13 +539,14 @@ export function VehiclesPage() {
             </div>
           }
           pageNote={
+            // No note on an empty tab: the empty state already says so.
             isDraftsTab
-              ? t('list.draftsNote', { count: drafts.length })
+              ? drafts.length > 0
+                ? t('list.draftsNote', { count: drafts.length })
+                : undefined
               : manualOrderMode
                 ? t('list.dragToReorder', { count: orderedItems.length })
-                : data && data.total > 0
-                  ? undefined
-                  : t('list.noneFound')
+                : undefined
           }
           minWidth="960px"
           onRowClick={
@@ -558,24 +570,16 @@ export function VehiclesPage() {
           onReorder={handleReorder}
           emptyState={
             // With no cars at all there is nothing filtered out: say where to start instead.
-            !isDraftsTab && fleetStats?.total === 0 && archivedStats?.total === 0 ? (
+            emptyKind === 'firstRun' ? (
+              <EmptyState icon={Car} title={t('list.firstTitle')} description={t('list.firstDescription')} />
+            ) : emptyKind === 'noMatches' ? (
+              <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
+            ) : (
               <EmptyState
                 icon={Car}
-                title={t('list.firstTitle')}
-                description={t('list.firstDescription')}
-                action={
-                  canAddVehicles ? (
-                    <PageActionButton
-                      icon={Plus}
-                      label={t('list.addVehicle')}
-                      variant="solid"
-                      onClick={() => !refusedByPlan('vehicles') && navigate('/vehicles/new')}
-                    />
-                  ) : undefined
-                }
+                title={t(`list.emptyTabs.${tab}.title`)}
+                description={t(`list.emptyTabs.${tab}.description`)}
               />
-            ) : (
-              <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
             )
           }
         />
@@ -600,6 +604,23 @@ export function VehiclesPage() {
         onConfirm={() => {
           if (!deleteTarget) return
           archiveVehicle.mutate(deleteTarget, { onSuccess: () => setDeleteTarget(null) })
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(discardTarget)}
+        onOpenChange={(open) => !open && setDiscardTarget(null)}
+        title={t('discardDraftDialog.title')}
+        description={
+          discardTarget
+            ? t('discardDraftDialog.description', { name: vehicleDisplayName(discardTarget) })
+            : undefined
+        }
+        confirmLabel={t('discardDraftDialog.confirm')}
+        loading={deleteDraft.isPending}
+        onConfirm={() => {
+          if (!discardTarget) return
+          deleteDraft.mutate(discardTarget.id, { onSuccess: () => setDiscardTarget(null) })
         }}
       />
     </PageContainer>

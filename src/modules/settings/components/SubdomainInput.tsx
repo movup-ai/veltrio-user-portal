@@ -11,7 +11,7 @@ import { SITE_DOMAIN } from '@/modules/vehicles/utils/public-links'
 export const SubdomainInput = forwardRef<HTMLInputElement, InputProps>(({ className, ...props }, ref) => (
   <div
     className={cn(
-      'border-input bg-background flex h-9 min-w-0 flex-1 overflow-hidden rounded-md border shadow-xs transition-colors',
+      'border-input bg-field flex h-9 min-w-0 flex-1 overflow-hidden rounded-md border shadow-xs transition-colors',
       'focus-within:outline-ring focus-within:outline-2 focus-within:outline-offset-2',
       'has-[[aria-invalid=true]]:border-error has-[[aria-invalid=true]]:focus-within:outline-error',
       'has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50',

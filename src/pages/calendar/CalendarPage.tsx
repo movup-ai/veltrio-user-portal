@@ -192,11 +192,17 @@ export function CalendarPage() {
             />
           ) : view !== 'year' && rows.length === 0 ? (
             narrowed ? (
-              <EmptyState
-                icon={SearchX}
-                title={t('calendar.noMatches.title')}
-                description={t('calendar.noMatches.description')}
-              />
+              // The legend stays: a search matching only hidden statuses lands here, and it is the
+              // only way to switch them back on.
+              <Card>
+                <EmptyState
+                  icon={SearchX}
+                  title={t('calendar.noMatches.title')}
+                  description={t('calendar.noMatches.description')}
+                  className="border-0"
+                />
+                <BookingCalendarLegend hidden={hidden} onToggle={toggleStatus} count={0} />
+              </Card>
             ) : (
               <EmptyState
                 icon={Car}

@@ -9,6 +9,8 @@
     "statsError": "We couldn't load your payment totals.",
     "emptyTitle": "No payments found",
     "emptyDescription": "Payments appear here when a link is sent or money is recorded on a booking.",
+    "noMatchesTitle": "No payments match",
+    "noMatchesDescription": "Try adjusting the search, filters or tab.",
     "partlyRefunded": "Refunded {{amount}}",
     "rowActions": {
       "viewBooking": "View booking",

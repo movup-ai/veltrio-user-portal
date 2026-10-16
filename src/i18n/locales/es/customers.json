@@ -9,8 +9,11 @@
     "searchPlaceholder": "Buscar nombre, correo, teléfono o licencia",
     "loading": "Cargando clientes…",
     "loadError": "No pudimos cargar tus clientes.",
+    "statsError": "No pudimos cargar los totales de tus clientes.",
     "emptyTitle": "No se encontraron clientes",
     "emptyDescription": "Los clientes aparecen aquí al tomar una reserva o al añadir uno.",
+    "noMatchesTitle": "Ningún cliente coincide con la búsqueda",
+    "noMatchesDescription": "Prueba con otro nombre, correo, teléfono o licencia.",
     "possibleDuplicate": "Posible duplicado",
     "rowActions": {
       "view": "Ver cliente"

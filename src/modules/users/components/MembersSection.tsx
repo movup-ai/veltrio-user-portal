@@ -13,7 +13,7 @@ import type { MembershipRole } from '@/types/user'
 import { initials } from '@/utils/formatting'
 import { useChangeRole, useMembers, useRemoveMember } from '../hooks/use-members'
 import { MEMBERSHIP_ROLES, type Member } from '../types/users.types'
-import { isLastOwner } from '../utils/members.utils'
+import { isLastOwner, roleChangeConfirmation, type RoleChangeConfirmation } from '../utils/members.utils'
 import { TeamCard, TeamList, TeamRow } from './TeamCard'
 
 /** Who is in the company, in what role. Changes take effect on each person's next request. */
@@ -23,13 +23,38 @@ export function MembersSection() {
   const changeRole = useChangeRole()
   const remove = useRemoveMember()
   const [removing, setRemoving] = useState<Member>()
-  // An owner stepping down loses this page with the click, so it is asked first.
-  const [steppingDown, setSteppingDown] = useState<{ member: Member; role: MembershipRole }>()
+  const [confirming, setConfirming] = useState<{
+    member: Member
+    role: MembershipRole
+    kind: RoleChangeConfirmation
+  }>()
+  // Kept apart from `confirming` so the dialog's words do not change while it fades out.
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const onRole = (member: Member, role: MembershipRole) => {
-    if (member.isYou && member.role === 'owner' && role !== 'owner') setSteppingDown({ member, role })
-    else changeRole.mutate({ member, role })
+    const kind = roleChangeConfirmation(member, role)
+    if (!kind) {
+      changeRole.mutate({ member, role })
+      return
+    }
+    setConfirming({ member, role, kind })
+    setConfirmOpen(true)
   }
+
+  const kind = confirming?.kind
+  const name = confirming?.member.fullName
+  const copy =
+    kind === 'makeOwner' || kind === 'removeOwner'
+      ? {
+          title: t(`users.${kind}.title`, { name }),
+          description: t(`users.${kind}.description`, { name }),
+          confirm: t(`users.${kind}.confirm`),
+        }
+      : {
+          title: t('users.stepDown.title'),
+          description: t('users.stepDown.description'),
+          confirm: t('users.stepDown.confirm'),
+        }
 
   return (
     <TeamCard title={t('users.members.title')} description={t('users.members.description')}>
@@ -61,14 +86,19 @@ export function MembersSection() {
         onConfirm={() => removing && remove.mutate(removing, { onSuccess: () => setRemoving(undefined) })}
       />
       <ConfirmDialog
-        open={Boolean(steppingDown)}
-        onOpenChange={(open) => !open && setSteppingDown(undefined)}
-        title={t('users.stepDown.title')}
-        description={t('users.stepDown.description')}
-        confirmLabel={t('users.stepDown.confirm')}
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={copy.title}
+        description={copy.description}
+        confirmLabel={copy.confirm}
+        confirmVariant={kind === 'makeOwner' ? 'primary' : 'destructive'}
         loading={changeRole.isPending}
         onConfirm={() =>
-          steppingDown && changeRole.mutate(steppingDown, { onSuccess: () => setSteppingDown(undefined) })
+          confirming &&
+          changeRole.mutate(
+            { member: confirming.member, role: confirming.role },
+            { onSuccess: () => setConfirmOpen(false) },
+          )
         }
       />
     </TeamCard>

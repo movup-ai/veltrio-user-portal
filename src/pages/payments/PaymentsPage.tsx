@@ -40,6 +40,7 @@ import {
   hasReceipt,
   isOwnWorded,
   paymentColumns,
+  paymentFiltersActive,
   paymentRow,
   payoutsCsv,
   sharedStatus,
@@ -98,6 +99,13 @@ export function PaymentsPage() {
   const receipt = usePaymentReceipt()
   const [reporting, setReporting] = useState(false)
   const payments = pageData?.items ?? []
+  const filtered = paymentFiltersActive({
+    search: debouncedSearch,
+    tab,
+    state: stateFilter,
+    method: methodFilter,
+    period,
+  })
 
   /** A card is one choice whichever card it was; every other method reads as it was written. */
   const methodLabel = (method: string) => (method === CARD_METHOD ? t('list.methodCard') : method)
@@ -287,8 +295,8 @@ export function PaymentsPage() {
             emptyState={
               <EmptyState
                 icon={WalletCards}
-                title={t('list.emptyTitle')}
-                description={t('list.emptyDescription')}
+                title={t(filtered ? 'list.noMatchesTitle' : 'list.emptyTitle')}
+                description={t(filtered ? 'list.noMatchesDescription' : 'list.emptyDescription')}
               />
             }
           />

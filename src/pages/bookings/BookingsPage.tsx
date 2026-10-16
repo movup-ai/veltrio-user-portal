@@ -5,6 +5,7 @@ import {
   Banknote,
   CalendarCheck,
   CalendarDays,
+  CalendarPlus,
   CalendarX2,
   Download,
   FileEdit,
@@ -19,6 +20,7 @@ import { FilterBar } from '@/components/data-display/FilterBar'
 import { RecordTable } from '@/components/data-display/RecordTable'
 import { SortSelect } from '@/components/data-display/SortSelect'
 import { StatStrip } from '@/components/data-display/StatStrip'
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
@@ -42,17 +44,20 @@ import {
   type BookingTab,
   type BookingTuple,
   type BookingValueBand,
+  type BookingDraft,
 } from '@/modules/bookings/types/booking.types'
 import {
   bookingColumns,
   bookingRow,
   downloadBookingsCsv,
   draftColumns,
+  draftRenterName,
   draftRow,
   withVehicleImage,
 } from '@/modules/bookings/utils/booking.utils'
 import { useVehicleMakes, useVehicleThumbnails } from '@/modules/vehicles/hooks/use-vehicles'
 import { resultSetKey } from '@/modules/bookings/utils/booking.paging'
+import { bookingListEmptyKind } from '@/modules/bookings/utils/booking.filters'
 import { dateRangeLabel } from '@/lib/date-range'
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { useDebounced } from '@/lib/use-debounced'
@@ -125,10 +130,13 @@ export function BookingsPage() {
   const { data: draftPage } = useBookingDrafts()
   const thumbnails = useVehicleThumbnails()
   const deleteDraft = useDeleteBookingDraft()
+  const [discarding, setDiscarding] = useState<BookingDraft | null>(null)
+  const discardingRenter = discarding ? draftRenterName(discarding) : undefined
   const drafts = draftPage?.items ?? []
 
   const rowsData = pageData?.items ?? []
   const tabCounts = filteredCounts ?? EMPTY_TAB_COUNTS
+  const emptyKind = bookingListEmptyKind(filters, bookingTab)
 
   // Makes come from the fleet, not the loaded page: a filter offering only what this page
   // happens to show would hide the rest of the book.
@@ -238,7 +246,6 @@ export function BookingsPage() {
   const rows = rowsData.map((b) =>
     bookingRow(withVehicleImage(b, thumbnails), [
       { label: t('list.rowActions.viewDetails'), onClick: () => navigate(`/bookings/${b[1]}`) },
-      { label: t('list.rowActions.editBooking'), onClick: () => navigate(`/bookings/${b[1]}`) },
       { label: t('list.rowActions.exportBooking'), onClick: () => handleExport([b]) },
     ]),
   )
@@ -259,7 +266,7 @@ export function BookingsPage() {
           label: t('list.drafts.resume'),
           onClick: () => navigate(`/bookings/new?draft=${draft.id}`),
         },
-        { label: t('list.drafts.discard'), onClick: () => deleteDraft.mutate(draft.id) },
+        { label: t('list.drafts.discard'), onClick: () => setDiscarding(draft), destructive: true },
       ],
     ),
   )
@@ -414,12 +421,9 @@ export function BookingsPage() {
                 />
               )
             }
+            // Only a count worth reading: the empty state already says when there is nothing.
             pageNote={
-              showingDrafts
-                ? t('list.draftsNote', { count: drafts.length })
-                : rows.length === 0
-                  ? t('list.noneFound')
-                  : undefined
+              showingDrafts && drafts.length > 0 ? t('list.draftsNote', { count: drafts.length }) : undefined
             }
             pagination={
               // Drafts are capped well under one page, so they never paginate.
@@ -444,6 +448,18 @@ export function BookingsPage() {
                   title={t('list.draftsEmptyTitle')}
                   description={t('list.draftsEmptyDescription')}
                 />
+              ) : emptyKind === 'firstRun' ? (
+                <EmptyState
+                  icon={CalendarPlus}
+                  title={t('list.firstRunTitle')}
+                  description={t('list.firstRunDescription')}
+                />
+              ) : emptyKind === 'emptyTab' ? (
+                <EmptyState
+                  icon={CalendarX2}
+                  title={t('list.emptyTabTitle')}
+                  description={t('list.emptyTabDescription')}
+                />
               ) : (
                 <EmptyState
                   icon={CalendarX2}
@@ -455,6 +471,28 @@ export function BookingsPage() {
           />
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(discarding)}
+        onOpenChange={(open) => !open && setDiscarding(null)}
+        title={t('list.drafts.discardTitle')}
+        description={
+          discarding
+            ? discardingRenter
+              ? t('list.drafts.discardDescription', {
+                  reference: discarding.reference,
+                  renter: discardingRenter,
+                })
+              : t('list.drafts.discardDescriptionUnnamed', { reference: discarding.reference })
+            : undefined
+        }
+        confirmLabel={t('list.drafts.discard')}
+        loading={deleteDraft.isPending}
+        onConfirm={() => {
+          if (!discarding) return
+          deleteDraft.mutate(discarding.id, { onSuccess: () => setDiscarding(null) })
+        }}
+      />
     </PageContainer>
   )
 }

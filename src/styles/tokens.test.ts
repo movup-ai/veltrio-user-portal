@@ -38,6 +38,13 @@ function contrast(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
+describe('light theme', () => {
+  it('sets a card apart from the page behind it', () => {
+    // A white card on near-white read as one surface; the border alone carried every edge.
+    expect(contrast(LIGHT.surface, LIGHT.bg)).toBeGreaterThanOrEqual(1.1)
+  })
+})
+
 describe.each([
   ['light', LIGHT],
   ['dark', DARK],
@@ -52,6 +59,10 @@ describe.each([
 
   it('keeps text readable on the auth brand panel', () => {
     expect(contrast(theme['brand-deep'], theme['solid-foreground'])).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('keeps muted text readable on the page itself, as page descriptions sit there', () => {
+    expect(contrast(theme['fg-3'], theme.bg)).toBeGreaterThanOrEqual(4.5)
   })
 
   it('dims the page behind a dialog, rather than washing it out', () => {

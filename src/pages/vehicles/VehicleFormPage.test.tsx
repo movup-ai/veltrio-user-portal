@@ -49,6 +49,14 @@ describe('VehicleFormPage pricing', () => {
   })
 })
 
+describe('VehicleFormPage with no locations', () => {
+  it('links to the Locations page, where branches are actually added', () => {
+    renderNew()
+
+    expect(screen.getByRole('link', { name: 'Locations' })).toHaveAttribute('href', '/locations')
+  })
+})
+
 describe('VehicleFormPage description writer', () => {
   it('sends the user to the make when Generate is pressed before the car is named', async () => {
     const user = userEvent.setup({ delay: null })

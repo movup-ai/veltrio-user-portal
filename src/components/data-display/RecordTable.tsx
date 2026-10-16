@@ -9,13 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StatusBadge } from './StatusBadge'
 import { PAGE_SIZE_OPTIONS } from '@/lib/pagination'
 import type { Cell, Column, Row } from './record-table.types'
@@ -42,21 +36,17 @@ function CellContent({ cell }: { cell: Cell }) {
             {cell.imageUrl ? (
               <img src={cell.imageUrl} alt="" className="size-full object-cover" loading="lazy" />
             ) : cell.fallbackIcon ? (
-              <cell.fallbackIcon
-                style={{ width: '45%', height: '45%' }}
-                strokeWidth={1.75}
-                aria-hidden
-              />
+              <cell.fallbackIcon style={{ width: '45%', height: '45%' }} strokeWidth={1.75} aria-hidden />
             ) : (
               cell.initials
             )}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[13.5px] font-semibold whitespace-nowrap">{cell.primary}</span>
+            <span className="block truncate text-[13.5px] font-semibold whitespace-nowrap">
+              {cell.primary}
+            </span>
             {cell.secondary && (
-              <span
-                className={cn('text-fg-4 block text-[11.5px]', cell.subFontMono && 'font-mono')}
-              >
+              <span className={cn('text-fg-4 block text-[11.5px]', cell.subFontMono && 'font-mono')}>
                 {cell.secondary}
               </span>
             )}
@@ -79,10 +69,7 @@ function CellContent({ cell }: { cell: Cell }) {
     case 'text':
       return (
         <span
-          className={cn(
-            'text-fg-2 text-[13px] whitespace-nowrap tabular-nums',
-            cell.fontMono && 'font-mono',
-          )}
+          className={cn('text-fg-2 text-[13px] whitespace-nowrap tabular-nums', cell.fontMono && 'font-mono')}
         >
           {cell.primary}
         </span>
@@ -99,7 +86,10 @@ function CellContent({ cell }: { cell: Cell }) {
       )
     case 'amount':
       return (
-        <span className="text-[13.5px] font-semibold whitespace-nowrap tabular-nums" style={{ color: cell.tone ?? 'var(--color-foreground)' }}>
+        <span
+          className="text-[13.5px] font-semibold whitespace-nowrap tabular-nums"
+          style={{ color: cell.tone ?? 'var(--color-foreground)' }}
+        >
           {cell.primary}
         </span>
       )
@@ -116,7 +106,10 @@ function CellContent({ cell }: { cell: Cell }) {
       return (
         <span
           className="inline-flex h-5 w-[34px] items-center rounded-full p-0.5"
-          style={{ background: cell.on ? 'var(--color-primary)' : 'var(--color-border-strong)', justifyContent: cell.on ? 'flex-end' : 'flex-start' }}
+          style={{
+            background: cell.on ? 'var(--color-primary)' : 'var(--color-border-strong)',
+            justifyContent: cell.on ? 'flex-end' : 'flex-start',
+          }}
         >
           <span className="bg-surface shadow-xs size-4 rounded-full" />
         </span>
@@ -223,6 +216,10 @@ export function RecordTable({
   const [dragKey, setDragKey] = useState<string | null>(null)
   const rowsPerPageId = useId()
   const hasNextPage = pagination ? pagination.page * pagination.pageSize < pagination.total : false
+  // With nothing to count or page through, the empty state says it all. Anything to page to keeps
+  // it: a later page that came back empty, or rows still on their way for a known total.
+  const showFooter =
+    rows.length > 0 || Boolean(pageNote) || (pagination ? pagination.page > 1 || pagination.total > 0 : false)
   const footerNote =
     pageNote ??
     (pagination && pagination.total > 0
@@ -318,12 +315,24 @@ export function RecordTable({
             {rows.map((row) => (
               <tr
                 key={row.key}
+                tabIndex={onRowClick ? 0 : undefined}
                 onClick={onRowClick ? () => onRowClick(row.key) : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (e) => {
+                        // A key on a button inside the row (its actions menu) belongs to that button.
+                        if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
+                        e.preventDefault()
+                        onRowClick(row.key)
+                      }
+                    : undefined
+                }
                 onDragOver={reorderable ? (e) => e.preventDefault() : undefined}
                 onDrop={reorderable ? () => handleDrop(row.key) : undefined}
                 className={cn(
                   'border-border-soft hover:bg-surface-2 border-b transition-colors last:border-0',
-                  onRowClick && 'cursor-pointer',
+                  // Inset: the scroll container clips an outline drawn outside the row.
+                  onRowClick && 'focus-visible:bg-surface-2 cursor-pointer focus-visible:-outline-offset-2',
                   dragKey === row.key && 'opacity-40',
                 )}
               >
@@ -340,7 +349,11 @@ export function RecordTable({
                   </td>
                 )}
                 {row.cells.map((cell, i) => (
-                  <td key={i} className="px-4 py-[11px] align-middle" style={{ textAlign: cell.align ?? 'left' }}>
+                  <td
+                    key={i}
+                    className="px-4 py-[11px] align-middle"
+                    style={{ textAlign: cell.align ?? 'left' }}
+                  >
                     <CellContent cell={cell} />
                   </td>
                 ))}
@@ -350,7 +363,10 @@ export function RecordTable({
         </table>
       </div>
 
-      <div className="border-border-soft bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-t px-4 py-[11px]">
+      <div
+        hidden={!showFooter}
+        className="border-border-soft bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-t px-4 py-[11px]"
+      >
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="text-fg-3 text-[12.5px] tabular-nums">{footerNote}</span>
           {pagination?.onPageSizeChange && (

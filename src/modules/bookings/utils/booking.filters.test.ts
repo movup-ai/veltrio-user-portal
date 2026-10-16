@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useOrganizationStore } from '@/state/organization.store'
 import type { OrganizationMembership } from '@/types/user'
-import type { BookingTuple } from '../types/booking.types'
-import { bookingDurationDays, bookingPickupOrdinal, bookingsForTab, filterBookings } from './booking.filters'
+import type { BookingFilters, BookingTuple } from '../types/booking.types'
+import {
+  bookingDurationDays,
+  bookingListEmptyKind,
+  bookingPickupOrdinal,
+  bookingsForTab,
+  filterBookings,
+} from './booking.filters'
 import { EMPTY_BOOKING_LISTS } from './booking.filters'
 
 /**
@@ -117,5 +123,43 @@ describe("days on the company's clock", () => {
     const morning = row({ pickupAt: '2026-10-10T20:00:00Z', returnAt: '2026-10-12T20:00:00Z' })
 
     expect(bookingPickupOrdinal(morning)).toBe(todayOrdinal(new Date('2026-10-11T03:00:00Z')))
+  })
+})
+
+describe('bookingListEmptyKind', () => {
+  const none: BookingFilters = {
+    search: '',
+    status: 'Any',
+    location: 'All',
+    pickup: { from: '', to: '' },
+    make: 'All',
+    durationBand: 'Any',
+    valueBands: [],
+  }
+
+  it('greets a company with no bookings rather than blaming filters it never set', () => {
+    expect(bookingListEmptyKind(none, 'All')).toBe('firstRun')
+    // Whitespace left in the box is not a search.
+    expect(bookingListEmptyKind({ ...none, search: '  ' }, 'All')).toBe('firstRun')
+  })
+
+  it('says a narrower tab is empty, without suggesting there are no bookings at all', () => {
+    expect(bookingListEmptyKind(none, 'Today')).toBe('emptyTab')
+  })
+
+  it('blames the filters only when one is set', () => {
+    const narrowed: Partial<BookingFilters>[] = [
+      { search: 'vega' },
+      { status: 'Confirmed' },
+      { location: 'Miami' },
+      { pickup: { from: '2026-10-01', to: '' } },
+      { make: 'Honda' },
+      { durationBand: '7+' },
+      { valueBands: ['0-250'] },
+    ]
+    for (const filter of narrowed) {
+      expect(bookingListEmptyKind({ ...none, ...filter }, 'All'), JSON.stringify(filter)).toBe('noMatches')
+      expect(bookingListEmptyKind({ ...none, ...filter }, 'Today'), JSON.stringify(filter)).toBe('noMatches')
+    }
   })
 })
