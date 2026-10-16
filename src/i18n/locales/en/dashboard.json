@@ -45,7 +45,9 @@
     "previousAmount": "{{amount}} in the prior 14 days",
     "today": "Today",
     "todayLong": "Today, {{date}}",
-    "collected": "collected, after refunds",
+    "bookingsMade_zero": "No bookings made",
+    "bookingsMade_one": "{{count}} booking made",
+    "bookingsMade_other": "{{count}} bookings made",
     "none": "Nothing collected in the last 14 days"
   },
   "fleet": {
@@ -95,9 +97,41 @@
       }
     }
   },
-  "empty": {
-    "title": "Add your first vehicle",
-    "description": "Bookings, revenue and fleet figures appear here once you have a car to rent.",
-    "addVehicle": "Add vehicle"
+  "setup": {
+    "title": "Setup guide to get started!",
+    "progress": "Finish these steps to start renting out your cars · {{done}} of {{total}} done",
+    "dismiss": "Hide the checklist",
+    "markReviewed": "Mark as reviewed",
+    "inReview": "In review",
+    "done": "done",
+    "steps": {
+      "plan": {
+        "title": "Choose a plan",
+        "description": "Bookings and new vehicles wait for one"
+      },
+      "vehicle": {
+        "title": "Add your first vehicle",
+        "description": "Its plate, photos and at least one rate"
+      },
+      "branch": {
+        "title": "Pin your branch on the map",
+        "description": "Renters searching nearby only find pinned branches"
+      },
+      "agreement": {
+        "title": "Review your rental agreement",
+        "description": "Renters sign it at pickup; a starter one is ready"
+      },
+      "payments": {
+        "title": "Connect Stripe to take payments",
+        "description": "Deposits and rentals are paid into your own account"
+      },
+      "booking": {
+        "title": "Create your first booking",
+        "description": "For a walk-in, a call or a message"
+      }
+    },
+    "toast": {
+      "saveFailed": "Couldn't update the checklist"
+    }
   }
 }

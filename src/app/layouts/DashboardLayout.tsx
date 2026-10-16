@@ -1,11 +1,12 @@
 import { useClerk } from '@clerk/clerk-react'
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Header } from '@/components/navigation/Header'
 import { Sidebar } from '@/components/navigation/Sidebar'
 import { PlanLimitDialog } from '@/modules/billing/components/PlanLimitDialog'
 import { SubscriptionBanner } from '@/modules/billing/components/SubscriptionBanner'
 import { useBookingStats } from '@/modules/bookings/hooks/use-bookings'
+import { setupProgress, showSetupReopen, useSetup, useUpdateSetup } from '@/modules/setup'
 import { useMe } from '@/services/auth/use-me'
 import { useOrganizationStore } from '@/state/organization.store'
 
@@ -16,6 +17,9 @@ export function DashboardLayout() {
   const user = useMe().data?.user
   const membership = useOrganizationStore((state) => state.membership)
   const clerk = useClerk()
+  const navigate = useNavigate()
+  const setup = useSetup().data
+  const reopenSetup = useUpdateSetup()
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -23,6 +27,17 @@ export function DashboardLayout() {
         mobileOpen={mobileNavOpen}
         onMobileClose={() => setMobileNavOpen(false)}
         badges={{ Bookings: pending > 0 ? String(pending) : undefined }}
+        setup={
+          setup && showSetupReopen(setup, membership?.role)
+            ? {
+                ...setupProgress(setup.steps),
+                onOpen: () => {
+                  setMobileNavOpen(false)
+                  reopenSetup.mutate({ dismissed: false }, { onSuccess: () => navigate('/dashboard') })
+                },
+              }
+            : undefined
+        }
         account={
           user && membership
             ? {

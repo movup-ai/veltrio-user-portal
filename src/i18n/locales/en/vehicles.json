@@ -10,6 +10,8 @@
     "loadError": "We couldn't load the fleet.",
     "emptyTitle": "No vehicles match your filters",
     "emptyDescription": "Try adjusting the search or filters.",
+    "firstTitle": "No vehicles yet",
+    "firstDescription": "Add a car, or import your fleet from a spreadsheet.",
     "setOrder": "Set vehicle order",
     "doneOrdering": "Done ordering",
     "dragToReorder_one": "{{count}} vehicle · drag to reorder",

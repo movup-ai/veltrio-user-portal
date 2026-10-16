@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Banknote, CalendarCheck, CarFront, Gauge, KeyRound, Plus } from 'lucide-react'
+import { Banknote, CalendarCheck, Gauge, KeyRound, Plus } from 'lucide-react'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -9,7 +9,6 @@ import { RecordTable } from '@/components/data-display/RecordTable'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
-import { usePermissions } from '@/components/feedback/Can'
 import { useFormatters } from '@/i18n'
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
@@ -46,11 +45,11 @@ import {
 } from '@/modules/dashboard'
 import { useLocations } from '@/modules/locations/hooks/use-locations'
 import { useCollectedByDay } from '@/modules/payments/hooks/use-payments'
+import { SetupChecklist, setupIsWholePage, showSetupCard, useSetup } from '@/modules/setup'
 import { useVehicleStats, useVehicleThumbnails } from '@/modules/vehicles/hooks/use-vehicles'
 import { useMe } from '@/services/auth/use-me'
 import { companyDay, companyWall } from '@/utils/company-time'
 import { parseDay } from '@/utils/dates'
-import { hasPermission } from '@/utils/permissions'
 
 const LISTS: Record<ListKey, { tab: BookingListTab; sort: BookingListSort; filters: BookingFilters }> = {
   pickups: { tab: 'Today', sort: 'pickupAsc', filters: NO_BOOKING_FILTERS },
@@ -86,7 +85,6 @@ export function DashboardPage() {
   const { t: tBookings } = useTranslation('bookings')
   const format = useFormatters()
   const navigate = useNavigate()
-  const canAddVehicles = hasPermission(usePermissions(), 'vehicles.create')
   const now = useDashboardRefresh()
 
   const [list, setList] = useState<ListKey>('pickups')
@@ -103,6 +101,10 @@ export function DashboardPage() {
   const locations = useLocations().data?.length
   const thumbnails = useVehicleThumbnails()
   const bookingsPage = useBookingPage({ ...LISTS[list], page, pageSize: DEFAULT_PAGE_SIZE })
+  const setupQuery = useSetup()
+  const setup = setupQuery.data
+  const showSetup = setup !== undefined && showSetupCard(setup)
+  const setupOnly = setup !== undefined && setupIsWholePage(setup)
 
   const bookings = bookingStats.data
   const fleet = vehicleStats.data
@@ -205,8 +207,6 @@ export function DashboardPage() {
     },
   ]
   const failed = [bookingStats, vehicleStats].filter((query) => query.isError)
-  // A company with no cars and no bookings yet has nothing to count: show where to start instead.
-  const isNewCompany = fleet?.total === 0 && bookings?.tabCounts.All === 0
 
   const rows = (bookingsPage.data?.items ?? []).map((b) =>
     bookingRow(withVehicleImage(b, thumbnails), [
@@ -242,24 +242,14 @@ export function DashboardPage() {
         }
       />
 
-      {failed.length > 0 ? (
+      {showSetup && <SetupChecklist setup={setup} />}
+
+      {/* Before the first booking the steps are the whole page. The figures wait for them to
+          load, so they don't show and then vanish. */}
+      {setupOnly ? null : setupQuery.isLoading ? (
+        <LoadingState />
+      ) : failed.length > 0 ? (
         <ErrorState onRetry={() => failed.forEach((query) => void query.refetch())} />
-      ) : isNewCompany ? (
-        <EmptyState
-          icon={CarFront}
-          title={t('empty.title')}
-          description={t('empty.description')}
-          action={
-            canAddVehicles ? (
-              <PageActionButton
-                icon={Plus}
-                label={t('empty.addVehicle')}
-                variant="solid"
-                onClick={() => navigate('/vehicles/new')}
-              />
-            ) : undefined
-          }
-        />
       ) : (
         <>
           <div
@@ -276,6 +266,7 @@ export function DashboardPage() {
           <div className="flex flex-wrap items-stretch gap-4">
             <RevenueBars
               recent={collected.data && recentRevenue(collected.data, today)}
+              bookingsMade={daily.data && new Map(daily.data.map((d) => [d.day, d.created]))}
               isError={collected.isError}
               onRetry={() => void collected.refetch()}
             />

@@ -4,7 +4,7 @@ import SignaturePadCore from 'signature_pad'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-/** Dark ink on a pad that stays white in either theme: the PDF prints it on white paper. */
+/** Always dark ink in the drawing itself: the PDF prints it on white paper. */
 const INK = '#0f172a'
 
 interface SignaturePadProps {
@@ -59,20 +59,20 @@ export function SignaturePad({ onChange, label, clearLabel, invalid }: Signature
   }, [])
 
   return (
-    <div className="relative">
+    <div
+      className={cn('border-input bg-background relative rounded-[10px] border', invalid && 'border-error')}
+    >
       <canvas
         ref={canvasRef}
         role="img"
         aria-label={label}
         aria-invalid={invalid || undefined}
-        // touch-none: without it a phone scrolls the page instead of drawing.
-        className={cn(
-          'border-input block h-[160px] w-full touch-none rounded-[10px] border bg-white',
-          invalid && 'border-error',
-        )}
+        // touch-none: without it a phone scrolls the page instead of drawing. Dark mode inverts the
+        // ink on screen only; a filter never reaches the pixels the PNG is made from.
+        className="block h-[160px] w-full touch-none rounded-[10px] [.dark_&]:hue-rotate-180 [.dark_&]:invert"
       />
       {empty && (
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[13px] text-slate-400">
+        <span className="text-fg-4 pointer-events-none absolute inset-0 flex items-center justify-center text-[13px]">
           {label}
         </span>
       )}
@@ -86,7 +86,7 @@ export function SignaturePad({ onChange, label, clearLabel, invalid }: Signature
           setEmpty(true)
           onChange(undefined)
         }}
-        className="absolute top-1.5 right-1.5 h-7 gap-1 px-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+        className="text-fg-3 hover:bg-surface-3 hover:text-foreground absolute top-1.5 right-1.5 h-7 gap-1 px-2"
       >
         <Eraser className="size-3.5" aria-hidden />
         {clearLabel}

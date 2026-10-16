@@ -557,7 +557,26 @@ export function VehiclesPage() {
           reorderable={manualOrderMode && !isDraftsTab}
           onReorder={handleReorder}
           emptyState={
-            <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
+            // With no cars at all there is nothing filtered out: say where to start instead.
+            !isDraftsTab && fleetStats?.total === 0 && archivedStats?.total === 0 ? (
+              <EmptyState
+                icon={Car}
+                title={t('list.firstTitle')}
+                description={t('list.firstDescription')}
+                action={
+                  canAddVehicles ? (
+                    <PageActionButton
+                      icon={Plus}
+                      label={t('list.addVehicle')}
+                      variant="solid"
+                      onClick={() => !refusedByPlan('vehicles') && navigate('/vehicles/new')}
+                    />
+                  ) : undefined
+                }
+              />
+            ) : (
+              <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
+            )
           }
         />
       )}

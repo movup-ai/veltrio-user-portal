@@ -33,6 +33,11 @@
       "owner": "Propietario",
       "manager": "Gerente",
       "staff": "Personal"
+    },
+    "setup": {
+      "label": "Guía de configuración",
+      "progress": "{{done}}/{{total}}",
+      "open": "Guía de configuración, {{done}} de {{total}} listos"
     }
   },
   "header": {

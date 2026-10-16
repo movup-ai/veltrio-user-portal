@@ -1,6 +1,6 @@
 {
   "agreements": {
-    "title": "Agreement templates",
+    "title": "Rental agreements",
     "description": "The rental terms your renters sign. A booking uses the template picked for it, or the default.",
     "new": "New template",
     "default": "Default",
