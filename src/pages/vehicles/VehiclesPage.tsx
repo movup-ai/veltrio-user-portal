@@ -293,7 +293,8 @@ export function VehiclesPage() {
   const emptyKind = vehicleListEmptyKind({
     tab,
     filtersActive: vehicleFiltersActive(listParams, tab),
-    fleetEmpty: fleetStats?.total === 0 && archivedStats?.total === 0,
+    active: fleetStats?.total,
+    archived: archivedStats?.total,
   })
 
   // A draft has no vehicle to open, so its row leads back into the wizard instead.
@@ -572,6 +573,12 @@ export function VehiclesPage() {
             // With no cars at all there is nothing filtered out: say where to start instead.
             emptyKind === 'firstRun' ? (
               <EmptyState icon={Car} title={t('list.firstTitle')} description={t('list.firstDescription')} />
+            ) : emptyKind === 'allArchived' ? (
+              <EmptyState
+                icon={Car}
+                title={t('list.allArchivedTitle')}
+                description={t('list.allArchivedDescription')}
+              />
             ) : emptyKind === 'noMatches' ? (
               <EmptyState icon={Car} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
             ) : (

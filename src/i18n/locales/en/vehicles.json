@@ -12,14 +12,16 @@
     "emptyDescription": "Try adjusting the search or filters.",
     "firstTitle": "No vehicles yet",
     "firstDescription": "Add a car, or import your fleet from a spreadsheet.",
+    "allArchivedTitle": "No active vehicles",
+    "allArchivedDescription": "Every vehicle is archived. Restore one from the Archived tab, or add a new one.",
     "emptyTabs": {
       "All": {
         "title": "No active vehicles",
-        "description": "Every vehicle is archived. Restore one from the Archived tab, or add a new one."
+        "description": "Vehicles you add, restore or publish show here."
       },
       "Available": {
         "title": "No vehicles available",
-        "description": "Every vehicle is out on rent or in maintenance right now."
+        "description": "Every vehicle is on rent, in maintenance or out of service right now."
       },
       "On rent": {
         "title": "No vehicles on rent",

@@ -21,3 +21,21 @@ function same(a: unknown, b: unknown): boolean {
 export function bookingFormChanged(values: BookingFormValues, initial: BookingFormValues): boolean {
   return !same(values, initial)
 }
+
+/**
+ * Whether leaving the wizard should ask first. Staying on the page (a draft id added to the URL)
+ * is not leaving, and once the booking or draft is saved the wizard leaves on purpose.
+ */
+export function asksBeforeLeaving({
+  finished,
+  fromPath,
+  toPath,
+  changed,
+}: {
+  finished: boolean
+  fromPath: string
+  toPath: string
+  changed: boolean
+}): boolean {
+  return !finished && fromPath !== toPath && changed
+}

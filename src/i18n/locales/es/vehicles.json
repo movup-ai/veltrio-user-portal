@@ -12,14 +12,16 @@
     "emptyDescription": "Pruebe a ajustar la búsqueda o los filtros.",
     "firstTitle": "Aún no hay vehículos",
     "firstDescription": "Agregue un vehículo o importe su flota desde una hoja de cálculo.",
+    "allArchivedTitle": "No hay vehículos activos",
+    "allArchivedDescription": "Todos los vehículos están archivados. Restaure uno desde la pestaña Archivados o agregue uno nuevo.",
     "emptyTabs": {
       "All": {
         "title": "No hay vehículos activos",
-        "description": "Todos los vehículos están archivados. Restaure uno desde la pestaña Archivados o agregue uno nuevo."
+        "description": "Aquí aparecen los vehículos que agregue, restaure o publique."
       },
       "Available": {
         "title": "No hay vehículos disponibles",
-        "description": "Todos los vehículos están alquilados o en mantenimiento en este momento."
+        "description": "Todos los vehículos están alquilados, en mantenimiento o fuera de servicio en este momento."
       },
       "On rent": {
         "title": "No hay vehículos alquilados",

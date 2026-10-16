@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { BookingFormValues } from '../schema/booking.schema'
-import { bookingFormChanged } from './booking.form-changes'
+import { asksBeforeLeaving, bookingFormChanged } from './booking.form-changes'
 
 const BLANK: BookingFormValues = {
   pickupLocation: '',
@@ -47,5 +47,22 @@ describe('bookingFormChanged', () => {
     const initial = { ...BLANK, licenceDocument: scan('a.png') }
     expect(bookingFormChanged({ ...BLANK, licenceDocument: scan('a.png') }, initial)).toBe(true)
     expect(bookingFormChanged({ ...initial }, initial)).toBe(false)
+  })
+})
+
+describe('asksBeforeLeaving', () => {
+  const leave = { finished: false, fromPath: '/bookings/new', toPath: '/bookings', changed: true }
+
+  it('asks before a changed form is left, however the user leaves', () => {
+    expect(asksBeforeLeaving(leave)).toBe(true)
+  })
+
+  it('lets an untouched form go, and a saved one', () => {
+    expect(asksBeforeLeaving({ ...leave, changed: false })).toBe(false)
+    expect(asksBeforeLeaving({ ...leave, finished: true })).toBe(false)
+  })
+
+  it('does not treat staying on the page as leaving it', () => {
+    expect(asksBeforeLeaving({ ...leave, toPath: '/bookings/new' })).toBe(false)
   })
 })

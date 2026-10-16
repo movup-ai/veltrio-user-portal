@@ -19,6 +19,7 @@ function renderSection() {
       <PendingInvitations onSent={vi.fn()} />
     </QueryClientProvider>,
   )
+  return client
 }
 
 beforeEach(() => {
@@ -40,6 +41,19 @@ describe('pending invitations', () => {
 
     expect(await screen.findByText("We couldn't load the pending invitations.")).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Pending invitations' })).toBeInTheDocument()
+  })
+
+  it('shows a failed refetch even when the list it had was empty', async () => {
+    invitations.mockResolvedValue([])
+    const client = renderSection()
+    await vi.waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument())
+
+    // TanStack keeps the empty list it had and reports the error alongside it.
+    invitations.mockRejectedValue(new Error('boom'))
+    await client.refetchQueries()
+
+    expect(await screen.findByText("We couldn't load the pending invitations.")).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
   })
 
   it('stays out of the way when there are none', async () => {

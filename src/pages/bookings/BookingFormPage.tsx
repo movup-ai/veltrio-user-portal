@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { useBlocker, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleSlash, Paperclip, Save, UserPlus, X } from 'lucide-react'
 import { MAX_PAGE_SIZE } from '@/lib/pagination'
@@ -71,7 +71,7 @@ import {
   useSaveBookingDraft,
 } from '@/modules/bookings/hooks/use-booking-drafts'
 import { resolveDraftResume, restoredDrivers } from '@/modules/bookings/utils/booking.draft-resume'
-import { bookingFormChanged } from '@/modules/bookings/utils/booking.form-changes'
+import { asksBeforeLeaving, bookingFormChanged } from '@/modules/bookings/utils/booking.form-changes'
 import { conflictsForVehicle } from '@/modules/bookings/utils/booking.schedule'
 import { verificationForRenter, type RanVerification } from '@/modules/bookings/utils/booking.verification'
 import {
@@ -215,6 +215,10 @@ interface BookingWizardProps {
   savedTemplateId?: string
 }
 
+interface LeaveState {
+  saved: boolean
+}
+
 function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizardProps) {
   const { t } = useTranslation('bookings')
   const { t: tCommon } = useTranslation('common')
@@ -266,7 +270,6 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
   const schema = useMemo(() => bookingFormSchema(tValidation), [tValidation])
   // Held once: blankValues() reads the clock, and Cancel compares against what the form opened with.
   const [openedWith] = useState(() => restoredDraft ?? blankValues())
-  const [leaving, setLeaving] = useState(false)
 
   const {
     control,
@@ -451,7 +454,18 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
 
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
-  const cancel = () => (bookingFormChanged(values, openedWith) ? setLeaving(true) : navigate('/bookings'))
+  // Back, a sidebar link and Cancel all leave the same way, so one guard asks for all of them.
+  const leaving = useBlocker(({ currentLocation, nextLocation }) =>
+    asksBeforeLeaving({
+      finished: (nextLocation.state as LeaveState | null)?.saved === true,
+      fromPath: currentLocation.pathname,
+      toPath: nextLocation.pathname,
+      changed: bookingFormChanged(values, openedWith),
+    }),
+  )
+  const cancel = () => navigate('/bookings')
+  // Marked on the navigation itself, so the guard lets a saved booking or draft through.
+  const finish = () => navigate('/bookings', { state: { saved: true } satisfies LeaveState })
 
   function handleSaveDraft() {
     // Attachments are left out: a File cannot be serialized, so the API would store `{}` and
@@ -473,7 +487,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
               : t('form.draft.savedDescription'),
             variant: 'success',
           })
-          navigate('/bookings')
+          finish()
         },
       },
     )
@@ -604,7 +618,7 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
           // discard a booking that was made: it is reported on its own and the booking stands.
           await uploadDocuments(booking.customer.id, submitted)
           settle()
-          navigate('/bookings')
+          finish()
         },
         onError: (error) => {
           const refused = toCustomerConflict(error)
@@ -1462,13 +1476,13 @@ function BookingWizard({ draftId, initialValues, savedTemplateId }: BookingWizar
       />
 
       <ConfirmDialog
-        open={leaving}
-        onOpenChange={setLeaving}
+        open={leaving.state === 'blocked'}
+        onOpenChange={(open) => !open && leaving.reset?.()}
         title={resumedDraftId ? t('form.leave.titleResumed') : t('form.leave.title')}
         description={resumedDraftId ? t('form.leave.descriptionResumed') : t('form.leave.description')}
         confirmLabel={resumedDraftId ? t('form.leave.confirmResumed') : t('form.leave.confirm')}
         cancelLabel={t('form.leave.keepEditing')}
-        onConfirm={() => navigate('/bookings')}
+        onConfirm={() => leaving.proceed?.()}
       />
     </PageContainer>
   )
