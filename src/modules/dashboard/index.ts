@@ -1,5 +1,5 @@
-export { KpiCard } from './components/KpiCard'
-export { OpsRow } from './components/OpsRow'
+export { KpiCard, type KpiDef } from './components/KpiCard'
+export { OpsRow, type OpDef } from './components/OpsRow'
 export { RevenueBars } from './components/RevenueBars'
 export { FleetStatusCard } from './components/FleetStatusCard'
-export { KPIS } from './mock/dashboard.mock'
+export { useDashboardRefresh } from './hooks/use-dashboard-refresh'

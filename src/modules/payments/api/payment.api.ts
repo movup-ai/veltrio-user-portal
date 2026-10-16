@@ -2,15 +2,17 @@ import { apiClient } from '@/services/api/client'
 import { toPaginatedResult, type ListEnvelope } from '@/lib/pagination'
 import type { CheckoutMethod, CheckoutMethodStatus, PaymentAccount } from '../types/payment-account.types'
 import type { DateRange } from '@/components/ui/date-range-picker'
-import type { PaymentListParams, PaymentStats, Payout } from '../types/payment.types'
+import type { CollectedDay, PaymentListParams, PaymentStats, Payout } from '../types/payment.types'
 import {
   toCheckoutMethods,
+  toCollectedDay,
   toPaymentAccount,
   toPaymentListQuery,
   toPaymentRow,
   toPaymentStats,
   toPayout,
   toPeriodQuery,
+  type CollectedDayWire,
   type OnboardingLinksWire,
   type OnboardingLinkWire,
   type PaymentAccountWire,
@@ -41,6 +43,12 @@ export const paymentApi = {
 
   stats: (): Promise<PaymentStats> =>
     apiClient.get<PaymentStatsWire>('/payments/stats').then((r) => toPaymentStats(r.data)),
+
+  /** Money taken on each company day from `from` to `to` (`YYYY-MM-DD`), both included. */
+  collected: (from: string, to: string): Promise<CollectedDay[]> =>
+    apiClient
+      .get<CollectedDayWire[]>('/payments/collected', { params: { dateFrom: from, dateTo: to } })
+      .then((r) => r.data.map(toCollectedDay)),
 
   /** One payment's own receipt as a PDF: that payment alone, not the booking's invoice. */
   receipt: (paymentId: string): Promise<Blob> =>

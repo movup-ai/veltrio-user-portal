@@ -1,41 +1,103 @@
 {
-  "greeting": "Buenos días, {{name}}",
-  "subtitle": "{{date}} · {{pickups}} entregas y {{returns}} devoluciones programadas para hoy",
+  "greeting": {
+    "morning": "Buenos días, {{name}}",
+    "afternoon": "Buenas tardes, {{name}}",
+    "evening": "Buenas noches, {{name}}"
+  },
+  "greetingAnonymous": {
+    "morning": "Buenos días",
+    "afternoon": "Buenas tardes",
+    "evening": "Buenas noches"
+  },
+  "summary": {
+    "none": "No quedan entregas ni devoluciones hoy",
+    "pickupsOnly": "{{pickups}} pendientes hoy",
+    "returnsOnly": "{{returns}} pendientes hoy",
+    "both": "{{pickups}} y {{returns}} pendientes hoy",
+    "pickups_one": "{{count}} entrega",
+    "pickups_other": "{{count}} entregas",
+    "returns_one": "{{count}} devolución",
+    "returns_other": "{{count}} devoluciones"
+  },
   "newBooking": "Nueva reserva",
-  "export": "Exportar",
+  "ops": {
+    "pickups": "Entregas pendientes hoy",
+    "returns": "Devoluciones previstas hoy",
+    "overdue": "Devoluciones vencidas",
+    "requests": "Solicitudes de reserva"
+  },
   "kpi": {
     "revenueMtd": "Ingresos (mes en curso)",
+    "vsMonth": "vs. {{month}}",
     "activeRentals": "Alquileres activos",
-    "fleetUtilization": "Uso de la flota",
-    "bookings7d": "Reservas (7 días)",
-    "vsAug": "vs. ago.",
     "outToday": "salen hoy",
+    "utilization": "Uso de la flota (7 días)",
     "vsLastWeek": "vs. sem. pasada",
-    "vsPriorWeek": "vs. sem. previa"
-  },
-  "ops": {
-    "pickupsToday": "Entregas de hoy",
-    "returnsToday": "Devoluciones de hoy",
-    "overdueReturns": "Devoluciones vencidas",
-    "unpaidInvoices": "Facturas sin pagar"
+    "points": "{{value}} pts",
+    "bookings7d": "Reservas (7 días)",
+    "vsPriorWeek": "vs. sem. previa",
+    "unavailable": "No se pudo cargar"
   },
   "revenue": {
     "title": "Ingresos",
-    "description": "Bruto diario, últimos 14 días",
-    "delta": "+9,8 % vs. 14 días previos"
+    "description": "Cobrado por día, últimos 14 días",
+    "previousChange": "{{change}} vs. los 14 días anteriores",
+    "previousAmount": "{{amount}} en los 14 días anteriores",
+    "today": "Hoy",
+    "todayLong": "Hoy, {{date}}",
+    "collected": "cobrado, descontados los reembolsos",
+    "none": "No se ha cobrado nada en los últimos 14 días"
   },
   "fleet": {
     "title": "Estado de la flota",
-    "description": "{{vehicles}} vehículos en {{locations}} sucursales",
-    "utilized": "en uso",
+    "description": "{{vehicles}} en {{locations}}",
+    "vehicles_one": "{{count}} vehículo",
+    "vehicles_other": "{{count}} vehículos",
+    "locations_one": "{{count}} sucursal",
+    "locations_other": "{{count}} sucursales",
+    "onRentNow": "alquilado ahora",
     "openFleet": "Abrir flota"
   },
-  "bookings": {
+  "list": {
     "title": "Reservas",
     "tabs": {
-      "upcoming": "Próximas",
-      "recent": "Actividad reciente"
+      "pickups": "Entregas de hoy",
+      "returns": "Devoluciones de hoy",
+      "overdue": "Vencidas",
+      "requests": "Solicitudes",
+      "missed": "Entregas no realizadas",
+      "notReady": "No listas"
     },
-    "pageNote": "Mostrando 1–{{shown}} de {{total}} reservas"
+    "empty": {
+      "pickups": {
+        "title": "No hay entregas hoy",
+        "description": "Las reservas que empiezan hoy aparecen aquí, para saber qué coches tener listos."
+      },
+      "returns": {
+        "title": "No hay devoluciones previstas hoy",
+        "description": "Los alquileres que vuelven hoy aparecen aquí, en el orden en que se esperan."
+      },
+      "overdue": {
+        "title": "No hay alquileres vencidos",
+        "description": "Todos los coches alquilados están dentro de su hora de devolución."
+      },
+      "requests": {
+        "title": "No hay solicitudes de reserva",
+        "description": "Las reservas que los clientes hacen en línea esperan aquí a que las acepte o rechace."
+      },
+      "missed": {
+        "title": "No hay entregas no realizadas",
+        "description": "Aquí aparecen las reservas aceptadas cuya hora de entrega pasó sin entregar el coche."
+      },
+      "notReady": {
+        "title": "Todas las reservas que empiezan pronto están listas",
+        "description": "Aquí aparecen las reservas que empiezan en 2 días o menos y siguen sin firmar o sin pagar."
+      }
+    }
+  },
+  "empty": {
+    "title": "Añada su primer vehículo",
+    "description": "Las reservas, los ingresos y las cifras de la flota aparecerán aquí cuando tenga un coche para alquilar.",
+    "addVehicle": "Añadir vehículo"
   }
 }

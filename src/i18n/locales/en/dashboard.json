@@ -1,41 +1,103 @@
 {
-  "greeting": "Good morning, {{name}}",
-  "subtitle": "{{date}} · {{pickups}} pickups and {{returns}} returns scheduled today",
+  "greeting": {
+    "morning": "Good morning, {{name}}",
+    "afternoon": "Good afternoon, {{name}}",
+    "evening": "Good evening, {{name}}"
+  },
+  "greetingAnonymous": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening"
+  },
+  "summary": {
+    "none": "Nothing left to hand over or take back today",
+    "pickupsOnly": "{{pickups}} to go today",
+    "returnsOnly": "{{returns}} to go today",
+    "both": "{{pickups}} and {{returns}} to go today",
+    "pickups_one": "{{count}} pickup",
+    "pickups_other": "{{count}} pickups",
+    "returns_one": "{{count}} return",
+    "returns_other": "{{count}} returns"
+  },
   "newBooking": "New booking",
-  "export": "Export",
+  "ops": {
+    "pickups": "Pickups left today",
+    "returns": "Returns due today",
+    "overdue": "Overdue returns",
+    "requests": "Booking requests"
+  },
   "kpi": {
     "revenueMtd": "Revenue (MTD)",
+    "vsMonth": "vs. {{month}}",
     "activeRentals": "Active rentals",
-    "fleetUtilization": "Fleet utilization",
-    "bookings7d": "Bookings (7d)",
-    "vsAug": "vs. Aug",
     "outToday": "out today",
+    "utilization": "Fleet utilization (7d)",
     "vsLastWeek": "vs. last wk",
-    "vsPriorWeek": "vs. prior wk"
-  },
-  "ops": {
-    "pickupsToday": "Pickups today",
-    "returnsToday": "Returns today",
-    "overdueReturns": "Overdue returns",
-    "unpaidInvoices": "Unpaid invoices"
+    "points": "{{value}} pts",
+    "bookings7d": "Bookings (7d)",
+    "vsPriorWeek": "vs. prior wk",
+    "unavailable": "Couldn't load"
   },
   "revenue": {
     "title": "Revenue",
-    "description": "Daily gross, last 14 days",
-    "delta": "+9.8% vs. prior 14d"
+    "description": "Collected per day, last 14 days",
+    "previousChange": "{{change}} vs. prior 14 days",
+    "previousAmount": "{{amount}} in the prior 14 days",
+    "today": "Today",
+    "todayLong": "Today, {{date}}",
+    "collected": "collected, after refunds",
+    "none": "Nothing collected in the last 14 days"
   },
   "fleet": {
     "title": "Fleet status",
-    "description": "{{vehicles}} vehicles across {{locations}} locations",
-    "utilized": "utilized",
+    "description": "{{vehicles}} across {{locations}}",
+    "vehicles_one": "{{count}} vehicle",
+    "vehicles_other": "{{count}} vehicles",
+    "locations_one": "{{count}} location",
+    "locations_other": "{{count}} locations",
+    "onRentNow": "on rent now",
     "openFleet": "Open fleet"
   },
-  "bookings": {
+  "list": {
     "title": "Bookings",
     "tabs": {
-      "upcoming": "Upcoming",
-      "recent": "Recent activity"
+      "pickups": "Pickups today",
+      "returns": "Returns today",
+      "overdue": "Overdue",
+      "requests": "Requests",
+      "missed": "Missed pickups",
+      "notReady": "Not ready"
     },
-    "pageNote": "Showing 1–{{shown}} of {{total}} bookings"
+    "empty": {
+      "pickups": {
+        "title": "No pickups today",
+        "description": "Bookings that start today show here, so the counter knows which cars to have ready."
+      },
+      "returns": {
+        "title": "No returns due today",
+        "description": "Rentals due back today show here, in the order they are expected."
+      },
+      "overdue": {
+        "title": "No overdue rentals",
+        "description": "Every car out on rent is within its return time."
+      },
+      "requests": {
+        "title": "No booking requests",
+        "description": "Reservations renters make online wait here for you to accept or decline."
+      },
+      "missed": {
+        "title": "No missed pickups",
+        "description": "Accepted bookings whose pickup time passed without a handover show here."
+      },
+      "notReady": {
+        "title": "Every booking starting soon is ready",
+        "description": "Bookings that start within 2 days and are still unsigned or unpaid show here."
+      }
+    }
+  },
+  "empty": {
+    "title": "Add your first vehicle",
+    "description": "Bookings, revenue and fleet figures appear here once you have a car to rent.",
+    "addVehicle": "Add vehicle"
   }
 }

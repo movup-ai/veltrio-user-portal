@@ -41,6 +41,7 @@ const STATS: PaymentStats = {
   failed: 1,
   held: 250,
   heldCount: 1,
+  expiringHolds: 0,
 }
 
 /** How many payments the company has: a link withdrawn elsewhere lowers it mid-test. */

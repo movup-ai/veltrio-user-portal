@@ -68,6 +68,7 @@ import {
   formatRateOptionBasis,
   formatRateOptionMileage,
   formatRateOptionPrice,
+  newRateOption,
   photoThumbnail,
   valuesFromVehicle,
 } from '@/modules/vehicles/utils/vehicle.utils'
@@ -180,6 +181,8 @@ export function VehicleFormPage() {
   // "Continue editing" from the Drafts tab arrives as /vehicles/new?draft=<id>.
   const draftId = searchParams.get('draft') ?? undefined
   const isEdit = Boolean(vehicleId)
+  // Made once: a fresh id on every render would hand the form a new row each time.
+  const [starterRate] = useState(newRateOption)
 
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(vehicleId)
   // Drafts are capped at one page, so the list doubles as the lookup — no per-draft endpoint.
@@ -220,7 +223,8 @@ export function VehicleFormPage() {
     : draft
       ? // Photos live on the server against the draft, not in its payload.
         sanitizeFormValues({ ...EMPTY_VALUES, ...draft.payload, photos: draft.photos })
-      : EMPTY_VALUES
+      : // A vehicle is bookable only with a rate, so the pricing step opens on one to fill in.
+        { ...EMPTY_VALUES, rateOptions: [starterRate] }
 
   return (
     <VehicleForm

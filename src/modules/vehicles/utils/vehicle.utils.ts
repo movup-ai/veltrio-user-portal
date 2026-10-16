@@ -4,7 +4,7 @@ import type { Row, RowActionItem } from '@/components/data-display/record-table.
 import { formatCurrency, formatNumberIn, currentLanguage } from '@/i18n/formatters'
 import { translateDomain, translateDurationUnit } from '@/i18n/domain'
 import { DEFAULT_BILLABLE_HOURS_PER_DAY } from '../constants/rate-plan.constants'
-import type { VehicleFormValues } from '../schema/vehicle.schema'
+import type { RateOptionValues, VehicleFormValues } from '../schema/vehicle.schema'
 import type { VehicleDraft } from '../types/vehicle-draft.types'
 import type { RateOption, Vehicle, VehicleInput, VehiclePhoto } from '../types/vehicle.types'
 
@@ -70,6 +70,18 @@ export function draftAsVehicle(draft: VehicleDraft): Vehicle {
     features: values.features ?? [],
     createdAt: draft.createdAt,
     isDraft: true,
+  }
+}
+
+/** A blank rate option row: daily, the basis most rentals are priced on. */
+export function newRateOption(): RateOptionValues {
+  return {
+    id: crypto.randomUUID(),
+    label: '',
+    basis: 'day',
+    rate: Number.NaN,
+    includedMiles: undefined,
+    unlimitedMileage: false,
   }
 }
 

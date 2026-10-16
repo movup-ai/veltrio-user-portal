@@ -13,6 +13,7 @@ export const bookingKeys = {
   lists: () => [...bookingKeys.all, 'list'] as const,
   page: (params: BookingListParams) => [...bookingKeys.lists(), params] as const,
   stats: () => [...bookingKeys.all, 'stats'] as const,
+  daily: (from: string, to: string) => [...bookingKeys.all, 'daily', from, to] as const,
   tabCounts: (filters: BookingFilters) => [...bookingKeys.all, 'tabCounts', filters] as const,
   detail: (reference: string) => [...bookingKeys.all, 'detail', reference] as const,
   activity: (reference: string) => [...bookingKeys.all, 'activity', reference] as const,
@@ -50,6 +51,15 @@ export function useBookingStats() {
   return useQuery({
     queryKey: bookingKeys.stats(),
     queryFn: () => bookingApi.stats(),
+    placeholderData: (previous) => previous,
+  })
+}
+
+/** The dashboard's trend lines, one entry per company day. */
+export function useBookingDaily(from: string, to: string) {
+  return useQuery({
+    queryKey: bookingKeys.daily(from, to),
+    queryFn: () => bookingApi.daily(from, to),
     placeholderData: (previous) => previous,
   })
 }

@@ -6,6 +6,7 @@ import {
   toBookingListQuery,
   toBookingLists,
   toBookingPayload,
+  toBookingDay,
   toBookingStats,
   toCancelPayload,
   toCancelledBooking,
@@ -384,6 +385,14 @@ describe('toBookingListQuery', () => {
     })
   })
 
+  it("asks for the dashboard's returns by the API's own tab and sort names", () => {
+    const query = toBookingListQuery({ ...base, filters: NO_FILTERS, tab: 'Returning', sort: 'returnAsc' })
+
+    expect([query.tab, query.sort]).toEqual(['returning', 'returnAsc'])
+    const notReady = toBookingListQuery({ ...base, filters: NO_FILTERS, tab: 'NotReady', sort: 'pickupAsc' })
+    expect(notReady.tab).toBe('not_ready')
+  })
+
   it('narrows to one customer for their own page, and never otherwise', () => {
     const theirs = toBookingListQuery({ ...base, tab: 'All', filters: { ...NO_FILTERS, customerId: 'c1' } })
 
@@ -392,9 +401,28 @@ describe('toBookingListQuery', () => {
   })
 })
 
+describe('toBookingDay', () => {
+  it('reads utilization as a 0-1 fraction, as the fleet stats do', () => {
+    expect(toBookingDay({ day: '2026-10-16', created: 2, onRent: 3, utilization: 37.5 })).toEqual({
+      day: '2026-10-16',
+      created: 2,
+      onRent: 3,
+      utilization: 0.375,
+    })
+  })
+})
+
 describe('toTabCounts', () => {
   it('counts All as upcoming plus recent, which split the book between them', () => {
-    const counts = toTabCounts({ upcoming: 2, today: 1, recent: 5, overdue: 1 })
+    const counts = toTabCounts({
+      upcoming: 2,
+      today: 1,
+      recent: 5,
+      overdue: 1,
+      returning: 1,
+      missed: 0,
+      notReady: 0,
+    })
 
     expect(counts.All).toBe(7)
     // The API still splits the book in two to count it; the portal has no tab for the second half.
@@ -411,10 +439,14 @@ describe('toTabCounts', () => {
       unsigned: 1,
       ready: 1,
       pending: 3,
-      tabCounts: { upcoming: 4, today: 0, recent: 2, overdue: 0 },
+      pickedUpToday: 1,
+      tabCounts: { upcoming: 4, today: 2, recent: 2, overdue: 0, returning: 3, missed: 4, notReady: 1 },
     })
 
     expect(stats.pending).toBe(3)
+    // The dashboard's today row and to-do list.
+    expect([stats.pickedUpToday, stats.returningToday]).toEqual([1, 3])
+    expect([stats.missedPickups, stats.notReadySoon]).toEqual([4, 1])
   })
 })
 

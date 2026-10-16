@@ -22,6 +22,7 @@ import {
   type BookingLists,
   type BookingFilters,
   type BookingSort,
+  type BookingDay,
   type BookingStats,
   type BookingStatus,
   type BookingRateLine,
@@ -683,19 +684,26 @@ export function toBookingDraft(wire: BookingDraftWire): BookingDraft {
 
 // --- List query ----------------------------------------------------------------------------
 
+/** The page's tabs and sorts, plus the dashboard's own lists, which the page does not offer. */
+export type BookingListTab = BookingTab | 'Returning' | 'Missed' | 'NotReady'
+export type BookingListSort = BookingSort | 'returnAsc'
+
 /** Tabs, as the API names them. The portal's own labels stay in BOOKING_TABS. */
-const TAB_TO_API: Record<BookingTab, string | undefined> = {
+const TAB_TO_API: Record<BookingListTab, string | undefined> = {
   // The API has no "all" tab; leaving the param off is what returns the whole book.
   All: undefined,
   Upcoming: 'upcoming',
   Today: 'today',
   Overdue: 'overdue',
+  Returning: 'returning',
+  Missed: 'missed',
+  NotReady: 'not_ready',
 }
 
 export interface BookingListParams extends PaginationParams {
   filters: BookingFilters
-  tab: BookingTab
-  sort: BookingSort
+  tab: BookingListTab
+  sort: BookingListSort
 }
 
 /**
@@ -752,6 +760,9 @@ export interface BookingTabCountsWire {
   today: number
   recent: number
   overdue: number
+  returning: number
+  missed: number
+  notReady: number
 }
 
 export interface BookingStatsWire {
@@ -763,6 +774,7 @@ export interface BookingStatsWire {
   unsigned: number
   ready: number
   pending: number
+  pickedUpToday: number
   tabCounts: BookingTabCountsWire
 }
 
@@ -777,6 +789,19 @@ export function toTabCounts(wire: BookingTabCountsWire): Record<BookingTab, numb
   }
 }
 
+export interface BookingDayWire {
+  day: string
+  created: number
+  onRent: number
+  /** Percentage, 0-100. */
+  utilization: number
+}
+
+/** Utilization as a 0-1 fraction, as VehicleStats carries it. */
+export function toBookingDay(wire: BookingDayWire): BookingDay {
+  return { day: wire.day, created: wire.created, onRent: wire.onRent, utilization: wire.utilization / 100 }
+}
+
 export function toBookingStats(wire: BookingStatsWire): BookingStats {
   return {
     openBookings: wire.openBookings,
@@ -787,6 +812,10 @@ export function toBookingStats(wire: BookingStatsWire): BookingStats {
     unsigned: wire.unsigned,
     ready: wire.ready,
     pending: wire.pending,
+    pickedUpToday: wire.pickedUpToday,
+    returningToday: wire.tabCounts.returning,
+    missedPickups: wire.tabCounts.missed,
+    notReadySoon: wire.tabCounts.notReady,
     tabCounts: toTabCounts(wire.tabCounts),
   }
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   toBookingExtensions,
   toCancellationQuote,
+  toCollectedDay,
   toExtensionPayload,
   toExtensionQuote,
   toPaymentActions,
@@ -138,6 +139,7 @@ describe('toPaymentStats', () => {
       failed: 2,
       heldCents: 400000,
       held: 2,
+      expiringHolds: 1,
     })
 
     expect(stats).toEqual({
@@ -148,6 +150,16 @@ describe('toPaymentStats', () => {
       failed: 2,
       held: 4000,
       heldCount: 2,
+      expiringHolds: 1,
+    })
+  })
+})
+
+describe('toCollectedDay', () => {
+  it('keeps the company day as sent and reads the money in currency units', () => {
+    expect(toCollectedDay({ day: '2026-09-30', collectedCents: 18540 })).toEqual({
+      day: '2026-09-30',
+      collected: 185.4,
     })
   })
 })
