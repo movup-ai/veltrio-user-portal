@@ -88,6 +88,7 @@
   "settings": {
     "title": "Notification settings",
     "description": "You always see every notification here in the portal. Choose which ones also come by email.",
+    "back": "Back to notifications",
     "cardTitle": "Email",
     "cardDescription": "Sent to {{email}}, in the language you use the portal in.",
     "categories": {

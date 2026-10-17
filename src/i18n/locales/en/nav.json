@@ -1,9 +1,7 @@
 {
   "groups": {
     "Operations": "Operations",
-    "Revenue": "Revenue",
-    "Setup": "Setup",
-    "Help": "Help"
+    "Setup": "Setup"
   },
   "links": {
     "Dashboard": "Dashboard",

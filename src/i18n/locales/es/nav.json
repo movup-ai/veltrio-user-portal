@@ -1,9 +1,7 @@
 {
   "groups": {
     "Operations": "Operaciones",
-    "Revenue": "Ingresos",
-    "Setup": "Configuración",
-    "Help": "Ayuda"
+    "Setup": "Configuración"
   },
   "links": {
     "Dashboard": "Panel",

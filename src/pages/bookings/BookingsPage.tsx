@@ -12,6 +12,7 @@ import {
   Plus,
   TriangleAlert,
 } from 'lucide-react'
+import { useUrlSearch } from '@/lib/use-url-search'
 import { cn } from '@/lib/utils'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -74,7 +75,7 @@ export function BookingsPage() {
   const navigate = useNavigate()
 
   const [tab, setTab] = useState<BookingTab | typeof DRAFTS_TAB>('All')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useUrlSearch()
   const [statusFilter, setStatusFilter] = useState<BookingStatusFilter | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')
   const [pickupFilter, setPickupFilter] = useState<DateRange>(EMPTY_DATE_RANGE)

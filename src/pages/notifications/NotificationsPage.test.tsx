@@ -111,4 +111,21 @@ describe('NotificationsPage', () => {
     )
     expect(await screen.findByRole('link', { name: /BK-10002 is overdue/ })).toBeInTheDocument()
   })
+
+  it('goes back to the last page that has rows when the one shown has emptied', async () => {
+    // Rows read away elsewhere (the bell, another tab) shrink the list under a later page.
+    const user = userEvent.setup({ delay: null })
+    page.mockImplementation(async (params) =>
+      params.page === 1
+        ? { items: [OVERDUE], page: 1, pageSize: 10, total: 11, totalPages: 2 }
+        : { items: [], page: 1, pageSize: 10, total: 10, totalPages: 1 },
+    )
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: '2' }))
+
+    await waitFor(() => expect(page).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 })))
+    expect(await screen.findByRole('link', { name: /BK-10002 is overdue/ })).toBeInTheDocument()
+    expect(screen.queryByText(/No notifications yet/)).not.toBeInTheDocument()
+  })
 })

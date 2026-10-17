@@ -88,6 +88,7 @@
   "settings": {
     "title": "Ajustes de notificaciones",
     "description": "Aquí en el portal siempre ves todas las notificaciones. Elige cuáles quieres recibir también por correo.",
+    "back": "Volver a notificaciones",
     "cardTitle": "Correo",
     "cardDescription": "Se envían a {{email}}, en el idioma en que usas el portal.",
     "categories": {

@@ -51,6 +51,15 @@ export function toPaginatedResult<T>(
   return { items, page: Math.min(page, totalPages), pageSize, total, totalPages }
 }
 
+/**
+ * Where to go when the page asked for now lies past the end: rows were removed while it was
+ * open, so its offset is empty though earlier pages are not. Undefined when it is fine.
+ */
+export function pageBackTo<T>(requested: number, result: PaginatedResult<T>): number | undefined {
+  const behind = result.items.length === 0 && result.total > 0 && requested > result.totalPages
+  return behind ? result.totalPages : undefined
+}
+
 /** Raised instead of returning a partial export, so the caller can say what went wrong. */
 export class ExportTooLargeError extends Error {
   readonly total: number

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BellOff, CheckCheck, Filter, Megaphone, Settings, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
+import { DEFAULT_PAGE_SIZE, pageBackTo } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 import { AnnouncementRows, NotificationRows } from '@/modules/notifications/components/NotificationLists'
 import { KEPT_FOR_DAYS } from '@/modules/notifications/constants/notifications.constants'
@@ -33,6 +33,7 @@ import {
   type EmptyNotifications,
 } from '@/modules/notifications/utils/notifications.utils'
 import { useOrganizationStore } from '@/state/organization.store'
+import type { PaginatedResult } from '@/types/common'
 
 const TABS = ['all', 'unread', 'whatsNew'] as const
 type Tab = (typeof TABS)[number]
@@ -156,7 +157,9 @@ function NotificationList({
   const markOpened = useMarkOpened()
   const now = dataUpdatedAt
 
-  if (isLoading) return <LoadingState />
+  const movingBack = useBackToRows(page, data, onPageChange)
+
+  if (isLoading || movingBack) return <LoadingState />
   if (isError || !data) return <ErrorState onRetry={() => void refetch()} />
   if (data.items.length === 0) {
     const empty = emptyNotifications({ unread, category })
@@ -193,8 +196,9 @@ function AnnouncementList({ page, onPageChange }: ListProps) {
     pageSize: DEFAULT_PAGE_SIZE,
   })
   useReadShownAnnouncements(data?.items)
+  const movingBack = useBackToRows(page, data, onPageChange)
 
-  if (isLoading) return <LoadingState />
+  if (isLoading || movingBack) return <LoadingState />
   if (isError || !data) return <ErrorState onRetry={() => void refetch()} />
   if (data.items.length === 0) {
     return (
@@ -249,4 +253,17 @@ function PagedCard({
       {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />}
     </>
   )
+}
+
+/** Moves back a page when the one shown has emptied under it; true until it has. */
+function useBackToRows<T>(
+  page: number,
+  data: PaginatedResult<T> | undefined,
+  onPageChange: (page: number) => void,
+) {
+  const back = data ? pageBackTo(page, data) : undefined
+  useEffect(() => {
+    if (back !== undefined) onPageChange(back)
+  }, [back, onPageChange])
+  return back !== undefined
 }
