@@ -9,6 +9,7 @@ import enLocations from './locales/en/locations.json'
 import enNav from './locales/en/nav.json'
 import enPayments from './locales/en/payments.json'
 import enSettings from './locales/en/settings.json'
+import enSupport from './locales/en/support.json'
 import enValidation from './locales/en/validation.json'
 import enVehicles from './locales/en/vehicles.json'
 
@@ -23,6 +24,7 @@ import esLocations from './locales/es/locations.json'
 import esNav from './locales/es/nav.json'
 import esPayments from './locales/es/payments.json'
 import esSettings from './locales/es/settings.json'
+import esSupport from './locales/es/support.json'
 import esValidation from './locales/es/validation.json'
 import esVehicles from './locales/es/vehicles.json'
 
@@ -44,6 +46,7 @@ export const resources = {
     nav: enNav,
     payments: enPayments,
     settings: enSettings,
+    support: enSupport,
     validation: enValidation,
     vehicles: enVehicles,
   },
@@ -59,6 +62,7 @@ export const resources = {
     nav: esNav,
     payments: esPayments,
     settings: esSettings,
+    support: esSupport,
     validation: esValidation,
     vehicles: esVehicles,
   },

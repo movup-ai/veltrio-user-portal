@@ -195,6 +195,8 @@ interface RecordTableProps {
   onReorder?: (orderedKeys: string[]) => void
   /** Shown in place of the rows when there are none — keeps the tabs/filters reachable. */
   emptyState?: React.ReactNode
+  /** Taller rows, for a table whose cells are a single line of text and would read cramped. */
+  comfortable?: boolean
 }
 
 export function RecordTable({
@@ -211,6 +213,7 @@ export function RecordTable({
   reorderable = false,
   onReorder,
   emptyState,
+  comfortable = false,
 }: RecordTableProps) {
   const { t } = useTranslation('common')
   const [dragKey, setDragKey] = useState<string | null>(null)
@@ -337,7 +340,10 @@ export function RecordTable({
                 )}
               >
                 {reorderable && (
-                  <td className="px-2 py-[11px] align-middle" onClick={(e) => e.stopPropagation()}>
+                  <td
+                    className={cn('px-2 align-middle', comfortable ? 'py-[15px]' : 'py-[11px]')}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <span
                       draggable
                       onDragStart={() => setDragKey(row.key)}
@@ -351,7 +357,7 @@ export function RecordTable({
                 {row.cells.map((cell, i) => (
                   <td
                     key={i}
-                    className="px-4 py-[11px] align-middle"
+                    className={cn('px-4 align-middle', comfortable ? 'py-[15px]' : 'py-[11px]')}
                     style={{ textAlign: cell.align ?? 'left' }}
                   >
                     <CellContent cell={cell} />

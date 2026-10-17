@@ -5,6 +5,7 @@ import {
   CreditCard,
   FileSignature,
   LayoutDashboard,
+  LifeBuoy,
   MapPin,
   Settings,
   ShieldCheck,
@@ -15,7 +16,7 @@ import {
 import type { Permission } from '@/types/user'
 
 /** Canonical English keys — they index into the `nav` namespace, they are not display text. */
-export type NavGroupKey = 'Operations' | 'Revenue' | 'Setup'
+export type NavGroupKey = 'Operations' | 'Revenue' | 'Setup' | 'Help'
 export type NavLinkKey =
   | 'Dashboard'
   | 'Bookings'
@@ -28,6 +29,7 @@ export type NavLinkKey =
   | 'Agreements'
   | 'Users'
   | 'Settings'
+  | 'Support'
 
 export type NavEntry =
   | { type: 'group'; key: NavGroupKey }
@@ -49,6 +51,8 @@ export const NAV_ITEMS: NavEntry[] = [
   { type: 'link', key: 'Agreements', to: '/agreements', icon: FileSignature },
   { type: 'link', key: 'Users', to: '/users', icon: UserCog, permission: 'users.manage' },
   { type: 'link', key: 'Settings', to: '/settings', icon: Settings },
+  { type: 'group', key: 'Help' },
+  { type: 'link', key: 'Support', to: '/support', icon: LifeBuoy },
 ]
 
 /** The nav key for a path — callers translate it via `t('nav:links.<key>')`. */
