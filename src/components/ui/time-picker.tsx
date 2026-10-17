@@ -86,7 +86,7 @@ export function TimePicker({
           disabled={disabled}
           aria-invalid={invalid || undefined}
           className={cn(
-            'border-input bg-background text-body shadow-xs flex h-9 w-full items-center gap-2 rounded-md border px-3 py-1 transition-colors',
+            'border-input bg-field text-body shadow-xs flex h-9 w-full items-center gap-2 rounded-md border px-3 py-1 transition-colors',
             'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'aria-[invalid=true]:border-error aria-[invalid=true]:focus-visible:outline-error',

@@ -263,6 +263,12 @@ export function draftColumns(t: TFunction<'bookings'>) {
   ]
 }
 
+/** The renter typed into a draft so far, if any; a draft can be saved before one is entered. */
+export function draftRenterName(draft: BookingDraft): string | undefined {
+  const name = (draft.payload as Partial<Record<string, string>>).customerName
+  return name?.trim() || undefined
+}
+
 /**
  * One row per saved draft. Everything is read defensively: the payload is whatever the wizard
  * happened to hold when it was saved, so a draft abandoned on the first step has almost
@@ -275,7 +281,7 @@ export function draftRow(
   actions?: RowActionItem[],
 ): Row {
   const payload = draft.payload as Partial<Record<string, string>>
-  const customer = payload.customerName?.trim() || t('list.drafts.noCustomer')
+  const customer = draftRenterName(draft) ?? t('list.drafts.noCustomer')
   const window =
     payload.pickupDate && payload.returnDate
       ? `${payload.pickupDate} → ${payload.returnDate}`

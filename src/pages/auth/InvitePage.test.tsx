@@ -96,6 +96,21 @@ describe('InvitePage', () => {
     expect(accept).not.toHaveBeenCalled()
   })
 
+  it('explains a failed join in translated words, not the English the API sent', async () => {
+    accept.mockRejectedValue(
+      new ApiError('not_found', 'This invitation has expired', { status: 410, code: 'invitation_expired' }),
+    )
+    const user = userEvent.setup({ delay: null })
+    renderLink()
+
+    await screen.findByLabelText(/Your full name/)
+    await user.click(screen.getByRole('button', { name: 'Join ABC Rentals' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This invitation has expired. Ask the company to send you a new one.',
+    )
+  })
+
   it('names both addresses when another account is signed in, instead of offering to join', async () => {
     clerkEmail.current = 'sam@example.com'
     renderLink()

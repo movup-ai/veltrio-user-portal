@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { PaymentRow, PaymentRowState, Payout } from '../types/payment.types'
+import type { PaymentFilters, PaymentRow, PaymentRowState, Payout } from '../types/payment.types'
 import {
   hasReceipt,
   isOwnWorded,
+  paymentFiltersActive,
   paymentReceiptFileName,
   paymentRow,
   payoutsCsv,
@@ -132,5 +133,31 @@ describe('payoutsCsv', () => {
       ['2026-10-09', 'FAILED', 'USD 3823.18', 'STRIPE TEST BANK ·· 2227', 'Insufficient funds', 'po_1'],
       ['2026-10-09', 'FAILED', 'USD 3823.18', '', '', 'po_2'],
     ])
+  })
+})
+
+describe('paymentFiltersActive', () => {
+  const none: PaymentFilters = {
+    search: '',
+    tab: 'All',
+    state: 'Any',
+    method: 'All',
+    period: { from: '', to: '' },
+  }
+
+  it('is off for the whole list, so an empty one reads as "no payments yet"', () => {
+    expect(paymentFiltersActive(none)).toBe(false)
+    expect(paymentFiltersActive({ ...none, search: '   ' })).toBe(false)
+  })
+
+  it.each<[string, Partial<PaymentFilters>]>([
+    ['a search', { search: 'vega' }],
+    ['a tab', { tab: 'Failed' }],
+    ['a status', { state: 'held' }],
+    ['a method', { method: 'Cash' }],
+    ['a period start', { period: { from: '2026-10-01', to: '' } }],
+    ['a period end', { period: { from: '', to: '2026-10-31' } }],
+  ])('is on for %s', (_, change) => {
+    expect(paymentFiltersActive({ ...none, ...change })).toBe(true)
   })
 })

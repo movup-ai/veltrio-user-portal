@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { ApiError } from '@/types/api'
 import type { InvitationPreview, MyInvitation } from '../types/users.types'
-import { hasOpenInvitation, inviteView } from './invite.utils'
+import { acceptError, hasOpenInvitation, inviteView } from './invite.utils'
 
 const preview: InvitationPreview = {
   id: 'inv_1',
@@ -80,5 +81,23 @@ describe('hasOpenInvitation', () => {
     expect(hasOpenInvitation(undefined)).toBe(false)
     expect(hasOpenInvitation([mine('a', true)])).toBe(false)
     expect(hasOpenInvitation([mine('a', true), mine('b')])).toBe(true)
+  })
+})
+
+describe('acceptError', () => {
+  it.each(['invitation_expired', 'already_onboarded', 'email_in_use', 'tenant_suspended'])(
+    'names %s by its code, not the English the API sent',
+    (code) => {
+      expect(acceptError(new ApiError('conflict', 'Server words', { code }))).toBe(code)
+    },
+  )
+
+  it('falls back to a general line for anything it does not know', () => {
+    const unknown = new ApiError('forbidden', 'User has not completed onboarding', {
+      code: 'user_not_onboarded',
+    })
+    expect(acceptError(unknown)).toBe('generic')
+    expect(acceptError(new ApiError('network_error', 'Offline'))).toBe('generic')
+    expect(acceptError(new Error('boom'))).toBe('generic')
   })
 })

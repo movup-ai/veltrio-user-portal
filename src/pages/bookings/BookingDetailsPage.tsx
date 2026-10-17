@@ -61,6 +61,7 @@ import {
   type BookingVerification,
   type ProviderKind,
 } from '@/modules/bookings/types/booking.types'
+import { isNotFound } from '@/services/api/errors'
 import { companyDay } from '@/utils/company-time'
 
 /**
@@ -102,7 +103,7 @@ export function BookingDetailsPage() {
   const [extending, setExtending] = useState(false)
   const [changing, setChanging] = useState<'modify' | 'swapVehicle' | 'addDriver'>()
 
-  const { data: booking, isLoading, isError, refetch } = useBookingDetails(bookingId)
+  const { data: booking, isLoading, error, refetch } = useBookingDetails(bookingId)
   // Its own query, so a check that takes days can be polled without refetching the whole page.
   const { data: background } = useVerification(bookingId, 'background')
   const { data: insurance } = useVerification(bookingId, 'insurance')
@@ -163,13 +164,6 @@ export function BookingDetailsPage() {
   usePageBreadcrumb(bookingId)
   // A rental that has been returned and closed takes no more changes.
   const stillOpen = booking != null && !isOver(booking.status)
-  /**
-   * Every write on this page needs an endpoint that doesn't exist yet, so the ones that can't be
-   * faked honestly say so rather than pretending to have worked. See booking.api.ts.
-   */
-  function pending(action: string) {
-    toast({ title: action, description: t('details.actions.pendingApi') })
-  }
 
   if (isLoading) {
     return (
@@ -179,15 +173,20 @@ export function BookingDetailsPage() {
     )
   }
 
-  if (isError || !booking) {
+  // A failed refetch keeps the booking already shown; only a page with nothing to show errors.
+  if (!booking) {
     return (
       <PageContainer>
-        <PageHeader title={t('details.notFoundTitle')} description={t('details.notFoundDescription')} />
-        <ErrorState
-          title={t('details.notFoundTitle')}
-          description={t('details.notFoundDescription')}
-          onRetry={() => refetch()}
-        />
+        {!error || isNotFound(error) ? (
+          <ErrorState
+            title={t('details.notFoundTitle')}
+            description={t('details.notFoundDescription')}
+            actionLabel={t('details.backToList')}
+            onRetry={() => navigate('/bookings')}
+          />
+        ) : (
+          <ErrorState description={t('details.loadError')} onRetry={() => refetch()} />
+        )}
       </PageContainer>
     )
   }
@@ -272,8 +271,9 @@ export function BookingDetailsPage() {
             <PageActionButton
               icon={Mail}
               label={t('details.actions.messageRenter')}
+              disabled={!booking.renter.email}
+              title={booking.renter.email ? undefined : t('details.actions.noEmail')}
               onClick={() => {
-                if (!booking.renter.email) return pending(t('details.actions.messageRenter'))
                 window.location.href = `mailto:${booking.renter.email}?subject=${encodeURIComponent(booking.reference)}`
               }}
             />
@@ -418,7 +418,6 @@ export function BookingDetailsPage() {
                 sharing={insuranceLink.sharing ? 'insurance' : undefined}
                 closed={closed}
                 returnOn={companyDay(booking.returnAt)}
-                onAction={(kind) => pending(t(`details.checks.${kind}`))}
               />
             }
           />

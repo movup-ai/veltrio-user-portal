@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next'
 import type { Row, RowActionItem } from '@/components/data-display/record-table.types'
-import type { PaymentRow, PaymentRowState, Payout } from '../types/payment.types'
+import type { PaymentFilters, PaymentRow, PaymentRowState, Payout } from '../types/payment.types'
 
 export function paymentColumns(t: TFunction<'payments'>) {
   return [
@@ -76,6 +76,17 @@ export function paymentRow(p: PaymentRow, labels: RowLabels, actions: RowActionI
       { kind: 'actions', align: 'right', items: actions },
     ],
   }
+}
+
+/** Whether an empty list means "nothing matches" rather than "no payments yet". A tab narrows too. */
+export function paymentFiltersActive(filters: PaymentFilters): boolean {
+  return (
+    filters.tab !== 'All' ||
+    filters.search.trim() !== '' ||
+    filters.state !== 'Any' ||
+    filters.method !== 'All' ||
+    Boolean(filters.period.from || filters.period.to)
+  )
 }
 
 /** A receipt says what was received, so a link nobody paid or a deposit only held has none. */

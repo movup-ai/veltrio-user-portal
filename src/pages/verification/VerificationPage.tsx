@@ -11,7 +11,9 @@ import { RecordTable } from '@/components/data-display/RecordTable'
 import type { Cell, Column, Row } from '@/components/data-display/record-table.types'
 import { usePermissions } from '@/components/feedback/Can'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
+import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
+import { LoadingState } from '@/components/feedback/LoadingState'
 import { FormField } from '@/components/forms/FormField'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -378,9 +380,20 @@ export function VerificationPage() {
         rows={rows}
         emptyState={
           log.isError ? (
-            <ErrorState description={t('verificationPage.log.loadError')} onRetry={() => log.refetch()} />
+            <ErrorState
+              className="py-10"
+              description={t('verificationPage.log.loadError')}
+              onRetry={() => log.refetch()}
+            />
+          ) : log.isLoading ? (
+            <LoadingState className="py-10" hideLabel />
           ) : (
-            t('verificationPage.log.empty')
+            <EmptyState
+              className="py-10"
+              icon={ShieldCheck}
+              title={t('verificationPage.log.emptyTitle')}
+              description={t('verificationPage.log.emptyDescription')}
+            />
           )
         }
         pagination={{

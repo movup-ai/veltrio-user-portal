@@ -7,10 +7,10 @@ import { ToneBadge } from '@/components/data-display/ToneBadge'
 import { Button } from '@/components/ui/button'
 import { useFormatters } from '@/i18n'
 import { DAY_FORMAT } from '@/lib/date-format'
+import { SettingsSection } from '@/modules/settings/components/SettingsCard'
 import { CHARGE_STATUS_TONE } from '../constants/billing.constants'
 import { useBillingHistory } from '../hooks/use-billing'
 import type { Charge } from '../types/billing.types'
-import { BillingSection } from './BillingSection'
 
 /**
  * What Veltrio has charged the company: the plan's invoices and its credit purchases, each
@@ -21,13 +21,7 @@ export function BillingHistory() {
   const { data: history, isLoading, refetch } = useBillingHistory()
 
   return (
-    <BillingSection
-      icon={ReceiptText}
-      section={t('billing.history.section')}
-      sectionHelp={t('billing.history.sectionHelp')}
-      title={t('billing.history.title')}
-      description={t('billing.history.description')}
-    >
+    <SettingsSection title={t('billing.history.title')} description={t('billing.history.description')}>
       {isLoading ? (
         <LoadingState />
       ) : !history ? (
@@ -49,7 +43,7 @@ export function BillingHistory() {
           {history.hasMore && <p className="text-fg-4 m-0 text-[12.5px]">{t('billing.history.more')}</p>}
         </>
       )}
-    </BillingSection>
+    </SettingsSection>
   )
 }
 

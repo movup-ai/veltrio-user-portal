@@ -2,7 +2,7 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import { describe, expect, it } from 'vitest'
 import i18n from '@/i18n'
 import { worthReporting } from '@/lib/error-reporting'
-import { normalizeApiError } from './errors'
+import { isNotFound, normalizeApiError } from './errors'
 
 /** Builds the axios error shape the interceptor actually receives. */
 function apiResponse(status: number, data: unknown): AxiosError {
@@ -77,5 +77,16 @@ describe('normalizeApiError', () => {
   it('reports a request that never reached the server as a network error', () => {
     const offline = new AxiosError('Network Error', 'ERR_NETWORK')
     expect(normalizeApiError(offline).kind).toBe('network_error')
+  })
+})
+
+describe('isNotFound', () => {
+  it('says a record is gone only when the API answers 404', () => {
+    expect(isNotFound(apiResponse(404, envelope('booking_not_found', 'Not found')))).toBe(true)
+  })
+
+  it('leaves a retry, not a dead end, when the load failed for another reason', () => {
+    expect(isNotFound(apiResponse(500, envelope('internal', 'Boom')))).toBe(false)
+    expect(isNotFound(new Error('Network Error'))).toBe(false)
   })
 })

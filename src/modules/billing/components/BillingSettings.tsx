@@ -1,13 +1,12 @@
-import { CreditCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { usePermissions } from '@/components/feedback/Can'
+import { SettingsSection } from '@/modules/settings/components/SettingsCard'
 import { hasAnyPermission } from '@/utils/permissions'
 import { useBilling } from '../hooks/use-billing'
 import { useSubscriptionReturn } from '../hooks/use-subscription-return'
 import { BillingHistory } from './BillingHistory'
-import { BillingSection } from './BillingSection'
 import { CreditsCard } from './CreditsCard'
 import { PlanPicker } from './PlanPicker'
 import { PlanSummary } from './PlanSummary'
@@ -29,13 +28,7 @@ export function BillingSettings() {
 
   return (
     <>
-      <BillingSection
-        icon={CreditCard}
-        section={t('billing.section')}
-        sectionHelp={t('billing.sectionHelp')}
-        title={t('billing.title')}
-        description={t('billing.description')}
-      >
+      <SettingsSection title={t('billing.title')} description={t('billing.description')}>
         {settling ? (
           <LoadingState />
         ) : !billing ? (
@@ -50,7 +43,7 @@ export function BillingSettings() {
             )}
           </>
         )}
-      </BillingSection>
+      </SettingsSection>
       {/* Credits pay for checks on a plan, so they are not offered where nothing is billed. */}
       {billing?.enabled && <CreditsCard billing={billing} canManage={canManage} />}
       {/* Invoices are the owner's, as the card is; the API refuses them to anyone else. */}

@@ -1,8 +1,7 @@
 {
   "page": {
     "title": "Ajustes",
-    "description": "Perfil de la empresa, localización y datos de contacto",
-    "auditLog": "Ver registro de auditoría"
+    "description": "Perfil de la empresa, localización y datos de contacto"
   },
   "company": {
     "profile": {
@@ -177,7 +176,8 @@
       "expired": "Caducada",
       "resend": "Reenviar",
       "revoke": "Revocar",
-      "revokeFor": "Revocar la invitación de {{email}}"
+      "revokeFor": "Revocar la invitación de {{email}}",
+      "loadError": "No pudimos cargar las invitaciones pendientes."
     },
     "revoke": {
       "title": "¿Revocar esta invitación?",
@@ -195,6 +195,16 @@
       "description": "Perderás el acceso a los ajustes, la facturación y el equipo de inmediato. Otro propietario puede volver a hacerte propietario.",
       "confirm": "Cambiar mi rol"
     },
+    "makeOwner": {
+      "title": "¿Hacer propietario a {{name}}?",
+      "description": "Los propietarios pueden hacerlo todo, incluidos los ajustes, la facturación y el equipo. {{name}} podrá invitar o quitar personas y cambiar el rol de cualquiera, también el tuyo.",
+      "confirm": "Hacer propietario"
+    },
+    "removeOwner": {
+      "title": "¿Quitar el acceso de propietario a {{name}}?",
+      "description": "{{name}} pierde el acceso a los ajustes, la facturación y el equipo de inmediato, y conserva solo lo que permite el nuevo rol.",
+      "confirm": "Cambiar rol"
+    },
     "toast": {
       "roleChanged": "Rol cambiado",
       "roleFailed": "No se pudo cambiar el rol",
@@ -206,8 +216,6 @@
     }
   },
   "payments": {
-    "section": "Pagos",
-    "sectionHelp": "Cómo te pagan los clientes y adónde va el dinero.",
     "title": "Procesador de pagos",
     "description": "Los clientes pagan en tu propia cuenta de Stripe y Stripe transfiere los fondos a tu banco. Los reembolsos, disputas y transferencias se gestionan en tu panel de Stripe.",
     "stripe": "Stripe",
@@ -334,8 +342,6 @@
     }
   },
   "billing": {
-    "section": "Facturación",
-    "sectionHelp": "Tu plan de Veltrio y lo que incluye.",
     "title": "Tu plan",
     "description": "Los planes se definen por los vehículos y sucursales que gestionas. Todos los planes tienen las mismas funciones.",
     "noPlan": "Sin plan",
@@ -442,8 +448,6 @@
       "action": "Ir a facturación"
     },
     "credits": {
-      "section": "Créditos",
-      "sectionHelp": "Créditos prepagados para verificaciones de antecedentes y de seguro.",
       "title": "Créditos de verificación",
       "description": "Una verificación toma sus créditos al ejecutarla. Se devuelven si nunca da una respuesta.",
       "balance": "Créditos disponibles",
@@ -507,8 +511,6 @@
     "currentTag": "Actual",
     "recommendedTag": "Ideal para tu flota",
     "history": {
-      "section": "Historial",
-      "sectionHelp": "Lo que Veltrio te ha cobrado, con cada factura.",
       "title": "Historial de facturación",
       "description": "Los cobros de tu plan y tus compras de créditos, del más reciente al más antiguo.",
       "kind": {

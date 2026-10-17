@@ -183,7 +183,7 @@ export function FilterBar({
               <SlidersHorizontal className="size-3.5" />
               <span>{t('filters.more')}</span>
               {moreFiltersActiveCount > 0 && (
-                <span className="bg-primary flex size-[16px] items-center justify-center rounded-full text-[10px] font-bold text-white">
+                <span className="bg-primary-solid text-solid-foreground flex size-[16px] items-center justify-center rounded-full text-[10px] font-bold">
                   {moreFiltersActiveCount}
                 </span>
               )}

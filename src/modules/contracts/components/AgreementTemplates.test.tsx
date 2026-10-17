@@ -95,9 +95,15 @@ describe('AgreementTemplates', () => {
     const user = userEvent.setup({ delay: null })
     renderAt('/agreements')
 
-    await user.click(await screen.findByRole('button', { name: 'Actions for Standard rental agreement' }))
-    expect(await screen.findByRole('menuitem', { name: 'Edit' })).toBeInTheDocument()
-    expect(screen.queryByRole('menuitem', { name: 'Delete' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Edit Standard rental agreement' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Edit Vans' })).toBeInTheDocument()
+
+    // The default's menu says why it can't go, rather than having nothing in it.
+    await user.click(screen.getByRole('button', { name: 'Actions for Standard rental agreement' }))
+    expect(await screen.findByRole('menuitem', { name: 'Delete' })).toHaveAttribute('aria-disabled', 'true')
+    expect(
+      screen.getByText("The default can't be deleted. Make another template the default first."),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Make default' })).not.toBeInTheDocument()
     await user.keyboard('{Escape}')
 
@@ -164,7 +170,10 @@ describe('AgreementTemplates', () => {
     await user.click(save)
 
     await waitFor(() =>
-      expect(update).toHaveBeenCalledWith('tpl_2', { name: 'Vans', body: '# Fuel\n\nReturn it full. Always.' }),
+      expect(update).toHaveBeenCalledWith('tpl_2', {
+        name: 'Vans',
+        body: '# Fuel\n\nReturn it full. Always.',
+      }),
     )
     await waitFor(() => expect(save).toBeDisabled())
   })

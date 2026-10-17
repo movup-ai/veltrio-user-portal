@@ -7,12 +7,12 @@ type Appearance = NonNullable<ComponentProps<typeof ClerkProvider>['appearance']
 // that read as half-drawn boxes, so a set shadow replaces them in every state.
 const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
 const input = [
-  'h-10 rounded-md border border-input bg-background px-3 text-body text-foreground shadow-xs transition-colors',
+  'h-10 rounded-md border border-input bg-field px-3 text-body text-foreground shadow-xs transition-colors',
   'placeholder:text-muted-foreground hover:border-border-strong',
   'focus:outline-2 focus:outline-offset-2 focus:outline-ring',
   'aria-[invalid=true]:border-error aria-[invalid=true]:focus:outline-error',
 ].join(' ')
-const outlineButton = `h-10 rounded-md border border-input bg-background text-foreground shadow-xs transition-colors hover:bg-muted ${focusRing}`
+const outlineButton = `h-10 rounded-md border border-input bg-field text-foreground shadow-xs transition-colors hover:bg-muted ${focusRing}`
 const link = 'text-primary hover:text-primary-hover font-semibold no-underline hover:underline'
 // Its own sizes rather than `input` plus overrides: two height utilities in one list resolve by
 // stylesheet order, not by which comes last here.

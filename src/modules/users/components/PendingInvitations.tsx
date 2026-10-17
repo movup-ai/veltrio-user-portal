@@ -14,28 +14,39 @@ import { TeamCard, TeamList, TeamRow } from './TeamCard'
 /** Invitations not yet accepted. Hidden while there are none, so a settled team reads as one list. */
 export function PendingInvitations({ onSent }: { onSent: (invitation: SentInvitation) => void }) {
   const { t } = useTranslation('settings')
-  const { data: invitations, isLoading, refetch } = useInvitations()
+  const { data: invitations, isLoading, isError, refetch } = useInvitations()
   const resend = useResendInvitation()
   const revoke = useRevokeInvitation()
   const [revoking, setRevoking] = useState<Invitation>()
 
-  if (isLoading) return <LoadingState />
-  if (!invitations) return <ErrorState className="py-10" onRetry={() => void refetch()} />
-  if (invitations.length === 0) return null
+  // A failed refetch keeps the last list; an empty one would otherwise hide that failure.
+  const failed = !invitations || (isError && invitations.length === 0)
+  if (invitations?.length === 0 && !isError) return null
 
   return (
+    // Loading and failure sit under this card's title: bare, they read as part of the Team card.
     <TeamCard title={t('users.pending.title')} description={t('users.pending.description')}>
-      <TeamList>
-        {invitations.map((invitation) => (
-          <InvitationRow
-            key={invitation.id}
-            invitation={invitation}
-            resending={resend.isPending && resend.variables?.id === invitation.id}
-            onResend={() => resend.mutate(invitation, { onSuccess: onSent })}
-            onRevoke={() => setRevoking(invitation)}
-          />
-        ))}
-      </TeamList>
+      {isLoading ? (
+        <LoadingState />
+      ) : failed ? (
+        <ErrorState
+          className="py-10"
+          description={t('users.pending.loadError')}
+          onRetry={() => void refetch()}
+        />
+      ) : (
+        <TeamList>
+          {invitations.map((invitation) => (
+            <InvitationRow
+              key={invitation.id}
+              invitation={invitation}
+              resending={resend.isPending && resend.variables?.id === invitation.id}
+              onResend={() => resend.mutate(invitation, { onSuccess: onSent })}
+              onRevoke={() => setRevoking(invitation)}
+            />
+          ))}
+        </TeamList>
+      )}
 
       <ConfirmDialog
         open={Boolean(revoking)}

@@ -8,7 +8,6 @@ import {
   MapPin,
   Settings,
   ShieldCheck,
-  Tag,
   UserCog,
   Users,
   type LucideIcon,
@@ -25,7 +24,6 @@ export type NavLinkKey =
   | 'Customers'
   | 'Verification'
   | 'Payments'
-  | 'Pricing'
   | 'Locations'
   | 'Agreements'
   | 'Users'
@@ -46,7 +44,6 @@ export const NAV_ITEMS: NavEntry[] = [
   { type: 'link', key: 'Verification', to: '/verification', icon: ShieldCheck },
   { type: 'group', key: 'Revenue' },
   { type: 'link', key: 'Payments', to: '/payments', icon: CreditCard },
-  { type: 'link', key: 'Pricing', to: '/pricing', icon: Tag },
   { type: 'group', key: 'Setup' },
   { type: 'link', key: 'Locations', to: '/locations', icon: MapPin },
   { type: 'link', key: 'Agreements', to: '/agreements', icon: FileSignature },

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Trans, useTranslation } from 'react-i18next'
 import { ArrowRight, ImageOff, Loader2, ScanLine, Save, Sparkles } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
@@ -715,7 +715,21 @@ function VehicleForm({
                               </p>
                             )}
                             {!locations.isLoading && !locations.isError && locations.names.length === 0 && (
-                              <p className="text-fg-3 m-0 text-caption">{t('form.fields.locationEmpty')}</p>
+                              <p className="text-fg-3 m-0 text-caption">
+                                <Trans
+                                  t={t}
+                                  i18nKey="form.fields.locationEmpty"
+                                  // Not `link`: Trans parses it as a void HTML tag and drops the text.
+                                  components={{
+                                    locations: (
+                                      <Link
+                                        to="/locations"
+                                        className="font-semibold underline underline-offset-2"
+                                      />
+                                    ),
+                                  }}
+                                />
+                              </p>
                             )}
                           </div>
                         )}
@@ -1202,7 +1216,7 @@ function ReviewStep({
             <ReviewRowGrid maxColumns={3}>
               <ReviewRow
                 label={t('specs.currentMileage')}
-                value={`${format.number(values.mileage ?? 0)} mi`}
+                value={t('service.odometerValue', { value: format.number(values.mileage ?? 0) })}
               />
               <ReviewRow
                 label={t('specs.transmission')}
@@ -1330,7 +1344,7 @@ function ReviewStep({
               {hasValue(values.overageRatePerMile) && (
                 <ReviewRow
                   label={t('fees.overageRate')}
-                  value={`${format.currency(values.overageRatePerMile)}/mi`}
+                  value={`${format.currency(values.overageRatePerMile)}${t('form.fields.overageRateUnit')}`}
                 />
               )}
               {hasValue(values.fuelChargeRate) && (

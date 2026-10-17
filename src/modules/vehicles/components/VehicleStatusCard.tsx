@@ -1,16 +1,38 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CalendarClock, CalendarPlus, CalendarRange, ChevronDown, Gauge, MapPin, User, Wrench } from 'lucide-react'
+import {
+  CalendarClock,
+  CalendarPlus,
+  CalendarRange,
+  ChevronDown,
+  Gauge,
+  MapPin,
+  User,
+  Wrench,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
 import { SELECTABLE_VEHICLE_STATUSES, type Vehicle, type VehicleStatus } from '../types/vehicle.types'
 
-function DetailRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: React.ReactNode }) {
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon
+  label: string
+  value: React.ReactNode
+}) {
   return (
     <div className="flex items-start gap-2.5">
       <Icon className="text-fg-4 mt-[3px] size-[15px] shrink-0" aria-hidden />
@@ -51,14 +73,24 @@ export function VehicleStatusCard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className="inline-flex cursor-pointer items-center gap-1 rounded-full">
+            <button
+              type="button"
+              aria-label={t('statusCard.changeStatus', { status: domain.status(vehicle.status) })}
+              className="group focus-visible:outline-ring inline-flex cursor-pointer items-center gap-1 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
               <StatusBadge status={vehicle.status} />
-              <ChevronDown className="text-fg-4 size-3.5" aria-hidden />
+              <ChevronDown
+                className="text-fg-4 group-hover:text-foreground size-3.5 transition-colors"
+                aria-hidden
+              />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             {SELECTABLE_VEHICLE_STATUSES.map((status) => (
-              <DropdownMenuItem key={status} onSelect={() => status !== vehicle.status && onStatusChange(status)}>
+              <DropdownMenuItem
+                key={status}
+                onSelect={() => status !== vehicle.status && onStatusChange(status)}
+              >
                 {domain.status(status)}
               </DropdownMenuItem>
             ))}
@@ -74,24 +106,36 @@ export function VehicleStatusCard({
               label={t('statusCard.currentRenter')}
               value={`${currentRental.customer} · ${currentRental.reference}`}
             />
-            <DetailRow icon={CalendarClock} label={t('statusCard.rentalWindow')} value={currentRental.window} />
+            <DetailRow
+              icon={CalendarClock}
+              label={t('statusCard.rentalWindow')}
+              value={currentRental.window}
+            />
           </>
         )}
         <DetailRow icon={MapPin} label={t('statusCard.homeBranch')} value={vehicle.location} />
-        <DetailRow icon={Gauge} label={t('statusCard.odometer')} value={`${format.number(vehicle.mileage)} mi`} />
-        <DetailRow icon={CalendarRange} label={t('statusCard.inFleetSince')} value={format.monthYear(vehicle.createdAt)} />
+        <DetailRow
+          icon={Gauge}
+          label={t('statusCard.odometer')}
+          value={t('service.odometerValue', { value: format.number(vehicle.mileage) })}
+        />
+        <DetailRow
+          icon={CalendarRange}
+          label={t('statusCard.inFleetSince')}
+          value={format.monthYear(vehicle.createdAt)}
+        />
       </div>
 
-      <div className="flex gap-2">
-        <Button
-          className="flex-1 gap-2"
-          onClick={() => navigate('/bookings/new', { state: { vehicleId: vehicle.id } })}
-        >
-          <CalendarPlus className="size-4" />
-          {t('statusCard.newBooking')}
-        </Button>
-        {/* Archived vehicles are out of the fleet entirely, so neither action applies. */}
-        {vehicle.status !== 'Archived' && (
+      {/* Archived vehicles are out of the fleet entirely, so neither action applies. */}
+      {vehicle.status !== 'Archived' && (
+        <div className="flex gap-2">
+          <Button
+            className="flex-1 gap-2"
+            onClick={() => navigate('/bookings/new', { state: { vehicleId: vehicle.id } })}
+          >
+            <CalendarPlus className="size-4" />
+            {t('statusCard.newBooking')}
+          </Button>
           <Button
             variant="outline"
             className="flex-1 gap-2"
@@ -101,8 +145,8 @@ export function VehicleStatusCard({
             <Wrench className="size-4" />
             {inService ? t('service.returnFromService') : t('service.sendToService')}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </Card>
   )
 }

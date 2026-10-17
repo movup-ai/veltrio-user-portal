@@ -75,7 +75,7 @@ export function BookingVehicleSelect({
         <div
           ref={field}
           className={cn(
-            'border-input bg-background text-body flex h-9 w-full items-center gap-2 rounded-md border px-3 py-1 shadow-xs transition-colors',
+            'border-input bg-field text-body flex h-9 w-full items-center gap-2 rounded-md border px-3 py-1 shadow-xs transition-colors',
             'focus-within:outline-ring focus-within:outline-2 focus-within:outline-offset-2',
           )}
         >

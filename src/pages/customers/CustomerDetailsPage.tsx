@@ -28,7 +28,7 @@ export function CustomerDetailsPage() {
   const format = useFormatters()
   const navigate = useNavigate()
   const { customerId } = useParams()
-  const { data: customer, isLoading, isError, refetch } = useCustomer(customerId)
+  const { data: customer, isLoading, refetch } = useCustomer(customerId)
   const [editing, setEditing] = useState(false)
   const [merging, setMerging] = useState<Customer>()
   const canEdit = hasAnyPermission(usePermissions(), ['customers.update'])
@@ -41,7 +41,8 @@ export function CustomerDetailsPage() {
       </PageContainer>
     )
   }
-  if (isError || !customer) {
+  // A failed refetch keeps the customer already shown; only a page with nothing to show errors.
+  if (!customer) {
     return (
       <PageContainer>
         <ErrorState description={t('details.loadError')} onRetry={() => refetch()} />

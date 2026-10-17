@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { CircleDollarSign, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { usePermissions } from '@/components/feedback/Can'
 import { ToneBadge } from '@/components/data-display/ToneBadge'
-import { PanelHeading } from '@/components/layout/PanelHeading'
 import { useFormatters } from '@/i18n'
 import { NOTICE_ICON, TONE_CLASS } from '@/lib/tone'
 import { cn } from '@/lib/utils'
+import { SettingsSection } from '@/modules/settings/components/SettingsCard'
 import { hasAnyPermission } from '@/utils/permissions'
 import { CAPABILITY_DOT, STATE_TONE, STRIPE_DASHBOARD_URL } from '../constants/payment.constants'
 import {
@@ -51,31 +50,21 @@ export function StripeAccountCard() {
   }, [returned, setParams, refresh, connect])
 
   return (
-    <Card as="section" className="grid overflow-hidden lg:grid-cols-[240px_minmax(0,1fr)]">
-      <div className="border-border-soft flex flex-col gap-3 border-b p-6 lg:border-r lg:border-b-0">
-        <span className="bg-surface-3 text-fg-2 flex size-10 items-center justify-center rounded-full">
-          <CircleDollarSign className="size-5" aria-hidden />
-        </span>
-        <PanelHeading title={t('payments.section')} description={t('payments.sectionHelp')} />
-      </div>
-
-      <div className="flex flex-col gap-4 p-6">
-        <PanelHeading title={t('payments.title')} description={t('payments.description')} />
-        {isLoading ? (
-          <LoadingState />
-        ) : isError || !account ? (
-          <ErrorState onRetry={() => void refetch()} />
-        ) : (
-          <ProcessorRow
-            account={account}
-            onConnect={() => connect.mutate()}
-            connecting={connect.isPending}
-            onRefresh={() => refresh.mutate()}
-            refreshing={refresh.isPending}
-          />
-        )}
-      </div>
-    </Card>
+    <SettingsSection title={t('payments.title')} description={t('payments.description')}>
+      {isLoading ? (
+        <LoadingState />
+      ) : isError || !account ? (
+        <ErrorState onRetry={() => void refetch()} />
+      ) : (
+        <ProcessorRow
+          account={account}
+          onConnect={() => connect.mutate()}
+          connecting={connect.isPending}
+          onRefresh={() => refresh.mutate()}
+          refreshing={refresh.isPending}
+        />
+      )}
+    </SettingsSection>
   )
 }
 

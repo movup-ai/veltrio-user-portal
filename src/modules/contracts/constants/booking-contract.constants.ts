@@ -15,3 +15,8 @@ export const VOID_REASON_MAX = 300
 
 /** Mirrors SIGNATORY_TITLE_LENGTH in the API. */
 export const SIGNATORY_TITLE_MAX = 80
+
+/** A signature is dark ink, and the API saves it flattened onto white for the PDF. The blend lets
+ *  the field show through that white; dark mode also lightens the ink, on screen only. */
+export const SIGNATURE_INK_ON_SCREEN =
+  'mix-blend-multiply [.dark_&]:hue-rotate-180 [.dark_&]:invert [.dark_&]:mix-blend-lighten'

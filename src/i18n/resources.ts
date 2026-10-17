@@ -8,7 +8,6 @@ import enDomain from './locales/en/domain.json'
 import enLocations from './locales/en/locations.json'
 import enNav from './locales/en/nav.json'
 import enPayments from './locales/en/payments.json'
-import enPricing from './locales/en/pricing.json'
 import enSettings from './locales/en/settings.json'
 import enValidation from './locales/en/validation.json'
 import enVehicles from './locales/en/vehicles.json'
@@ -23,7 +22,6 @@ import esDomain from './locales/es/domain.json'
 import esLocations from './locales/es/locations.json'
 import esNav from './locales/es/nav.json'
 import esPayments from './locales/es/payments.json'
-import esPricing from './locales/es/pricing.json'
 import esSettings from './locales/es/settings.json'
 import esValidation from './locales/es/validation.json'
 import esVehicles from './locales/es/vehicles.json'
@@ -45,7 +43,6 @@ export const resources = {
     locations: enLocations,
     nav: enNav,
     payments: enPayments,
-    pricing: enPricing,
     settings: enSettings,
     validation: enValidation,
     vehicles: enVehicles,
@@ -61,7 +58,6 @@ export const resources = {
     locations: esLocations,
     nav: esNav,
     payments: esPayments,
-    pricing: esPricing,
     settings: esSettings,
     validation: esValidation,
     vehicles: esVehicles,

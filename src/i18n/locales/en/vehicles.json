@@ -12,11 +12,38 @@
     "emptyDescription": "Try adjusting the search or filters.",
     "firstTitle": "No vehicles yet",
     "firstDescription": "Add a car, or import your fleet from a spreadsheet.",
+    "allArchivedTitle": "No active vehicles",
+    "allArchivedDescription": "Every vehicle is archived. Restore one from the Archived tab, or add a new one.",
+    "emptyTabs": {
+      "All": {
+        "title": "No active vehicles",
+        "description": "Vehicles you add, restore or publish show here."
+      },
+      "Available": {
+        "title": "No vehicles available",
+        "description": "Every vehicle is on rent, in maintenance or out of service right now."
+      },
+      "On rent": {
+        "title": "No vehicles on rent",
+        "description": "Vehicles show here while a renter has them."
+      },
+      "Maintenance": {
+        "title": "No vehicles in maintenance",
+        "description": "Vehicles you send to service show here until they're back."
+      },
+      "Drafts": {
+        "title": "No drafts",
+        "description": "A vehicle you save partway through adding waits here until you publish it."
+      },
+      "Archived": {
+        "title": "No archived vehicles",
+        "description": "Vehicles you archive are kept here, and can be restored at any time."
+      }
+    },
     "setOrder": "Set vehicle order",
     "doneOrdering": "Done ordering",
     "dragToReorder_one": "{{count}} vehicle · drag to reorder",
     "dragToReorder_other": "{{count}} vehicles · drag to reorder",
-    "noneFound": "No vehicles found",
     "draftsNote": "{{count}} unfinished draft",
     "draftsNote_other": "{{count}} unfinished drafts",
     "tabs": {
@@ -74,13 +101,14 @@
   "details": {
     "loading": "Loading vehicle…",
     "notFoundTitle": "Vehicle not found",
-    "notFoundDescription": "This vehicle may have been removed.",
     "notFoundError": "We couldn't find that vehicle. It may have been deleted.",
+    "loadError": "We couldn't load this vehicle. Check your connection and try again.",
     "backToVehicles": "Back to vehicles",
     "previousVehicle": "Previous vehicle",
     "nextVehicle": "Next vehicle",
     "position": "{{index}} of {{total}}",
     "archive": "Archive",
+    "restore": "Restore",
     "editVehicle": "Edit vehicle",
     "descriptionTitle": "Description",
     "descriptionSubtitle": "Customer-facing summary shown on the listing",
@@ -120,13 +148,13 @@
     "homeBranch": "Home branch",
     "odometer": "Odometer",
     "inFleetSince": "In fleet since",
-    "newBooking": "New booking"
+    "newBooking": "New booking",
+    "changeStatus": "Change status, currently {{status}}"
   },
   "performance": {
     "title": "Performance",
     "description": "Last 30 days",
     "revenue": "Revenue",
-    "trendVsLastMonth": "{{value}}% vs last month",
     "daysOnRent": "Days on rent",
     "outOf30": "/ 30",
     "utilization30d": "Utilization (30d)",
@@ -246,7 +274,7 @@
       "locationPlaceholder": "Select location",
       "locationLoading": "Loading locations…",
       "locationLoadFailed": "Couldn't load locations.",
-      "locationEmpty": "No locations yet. Add one under Settings before adding a vehicle.",
+      "locationEmpty": "No locations yet. Add one on the <locations>Locations</locations> page before adding a vehicle.",
       "plate": "Plate",
       "vin": "VIN",
       "status": "Status",
@@ -267,6 +295,7 @@
       "overageRatePlaceholder": "e.g. 0.35",
       "fuelCharge": "Fuel charge (per 1/8 tank)",
       "fuelChargeUnit": "/ 1/8 tank",
+      "overageRateUnit": "/mi",
       "taxRate": "Tax rate (%)",
       "billableHours": "Hourly cap per day",
       "billableHoursHint": "A renter who keeps the car past a day pays for at most this many hours of each day. Priced automatically; 24 turns the cap off.",
@@ -389,6 +418,11 @@
     "title": "Archive vehicle?",
     "description": "{{name}} ({{plate}}) will be removed from the active fleet. You can restore it from the Archived tab.",
     "confirm": "Archive vehicle"
+  },
+  "discardDraftDialog": {
+    "title": "Discard draft?",
+    "description": "{{name}} and its photos will be deleted. This can't be undone.",
+    "confirm": "Discard draft"
   },
   "errors": {
     "notFound": "Vehicle not found",

@@ -13,7 +13,7 @@ import {
   useInvitationPreview,
   useMyInvitations,
 } from '@/modules/users/hooks/use-invitations'
-import { inviteView, type JoinTarget } from '@/modules/users/utils/invite.utils'
+import { acceptError, inviteView, type JoinTarget } from '@/modules/users/utils/invite.utils'
 import { useMe } from '@/services/auth/use-me'
 import { StepHeading } from './StepHeading'
 
@@ -236,7 +236,7 @@ function Join({
       ))}
       {accept.error && (
         <p role="alert" className="text-error m-0 text-center text-[13px]">
-          {accept.error.message}
+          {t(`invite.errors.${acceptError(accept.error)}`)}
         </p>
       )}
     </Panel>

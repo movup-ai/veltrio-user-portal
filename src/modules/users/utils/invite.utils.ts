@@ -1,3 +1,4 @@
+import { ApiError } from '@/types/api'
 import type { MembershipRole } from '@/types/user'
 import type { InvitationPreview, MyInvitation } from '../types/users.types'
 
@@ -65,4 +66,22 @@ export function inviteView({ token, signedIn, preview, mine, email, hasCompany }
 /** Whether a fresh account should be offered to join before it is asked to set up a company. */
 export function hasOpenInvitation(mine: MyInvitation[] | undefined): boolean {
   return Boolean(mine?.some((invitation) => !invitation.expired))
+}
+
+/** The accept failures the API names (app/modules/team/service.py) that the invite page explains. */
+const ACCEPT_ERRORS = [
+  'invitation_not_found',
+  'invitation_expired',
+  'already_onboarded',
+  'email_in_use',
+  'email_not_verified',
+  'user_inactive',
+  'tenant_suspended',
+] as const
+export type AcceptError = (typeof ACCEPT_ERRORS)[number] | 'generic'
+
+/** The API's own message is English server text, so only its code is used. */
+export function acceptError(error: unknown): AcceptError {
+  const code = error instanceof ApiError ? error.code : undefined
+  return ACCEPT_ERRORS.find((known) => known === code) ?? 'generic'
 }

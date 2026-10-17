@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { Can } from '@/components/feedback/Can'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
+import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { usePlanLimitGuard } from '@/modules/billing/hooks/use-plan-limit'
@@ -44,7 +46,10 @@ export function LocationsPage() {
         title={t('list.title')}
         description={t('list.description')}
         actions={
-          <PageActionButton icon={Plus} label={t('list.addLocation')} variant="solid" onClick={openAdd} />
+          // The API lets owners and managers add a branch; staff would only meet a refusal.
+          <Can permission="locations.manage">
+            <PageActionButton icon={Plus} label={t('list.addLocation')} variant="solid" onClick={openAdd} />
+          </Can>
         }
       />
 
@@ -68,11 +73,7 @@ export function LocationsPage() {
           ))}
         </div>
       ) : (
-        <div className="py-16 text-center">
-          <MapPin className="text-fg-4 mx-auto size-8" />
-          <p className="m-0 mt-3 text-[15px] font-semibold">{t('list.emptyTitle')}</p>
-          <p className="text-fg-3 m-0 mt-1 text-[13px]">{t('list.emptyDescription')}</p>
-        </div>
+        <EmptyState icon={MapPin} title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
       )}
 
       <LocationDialog location={editing} open={dialogOpen} onOpenChange={setDialogOpen} />

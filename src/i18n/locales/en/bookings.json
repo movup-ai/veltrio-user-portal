@@ -6,11 +6,14 @@
     "export": "Export",
     "newBooking": "New booking",
     "searchPlaceholder": "Search reference, customer, plate",
-    "noneFound": "No bookings found",
     "loading": "Loading bookings…",
     "loadError": "We couldn't load your bookings.",
     "emptyTitle": "No bookings match your filters",
     "emptyDescription": "Try adjusting the search or filters.",
+    "firstRunTitle": "No bookings yet",
+    "firstRunDescription": "Bookings you create and reservations renters make online appear here.",
+    "emptyTabTitle": "No bookings in this tab",
+    "emptyTabDescription": "Nothing here right now. The other tabs show the rest of your bookings.",
     "tabs": {
       "All": "All",
       "Upcoming": "Upcoming",
@@ -29,7 +32,6 @@
     },
     "rowActions": {
       "viewDetails": "View details",
-      "editBooking": "Edit booking",
       "exportBooking": "Export booking"
     },
     "stats": {
@@ -47,7 +49,10 @@
       "noCustomer": "No renter yet",
       "noDates": "No dates yet",
       "resume": "Resume draft",
-      "discard": "Discard draft"
+      "discard": "Discard draft",
+      "discardTitle": "Discard this draft?",
+      "discardDescription": "Draft {{reference}} for {{renter}} will be deleted. This can't be undone.",
+      "discardDescriptionUnnamed": "Draft {{reference}} will be deleted. This can't be undone."
     },
     "draftsNote": "{{count}} saved draft",
     "draftsNote_other": "{{count}} saved drafts",
@@ -149,7 +154,8 @@
   "details": {
     "loading": "Loading booking…",
     "notFoundTitle": "Booking not found",
-    "notFoundDescription": "We couldn't find that booking. It may have been cancelled.",
+    "notFoundDescription": "There's no booking with this reference. Check the link, or find the booking in the list.",
+    "loadError": "We couldn't load this booking. Try again in a moment.",
     "backToList": "Back to bookings",
     "stages": {
       "reserved": "Reserved",
@@ -392,7 +398,8 @@
       "title": "Checklist",
       "done": "Successful",
       "pending": "Pending",
-      "verify": "Verify"
+      "verify": "Verify",
+      "comingSoon": "Coming soon"
     },
     "checks": {
       "background": "Background check",
@@ -532,7 +539,7 @@
       "decline": "Decline",
       "openAgreement": "Open agreement",
       "messageRenter": "Message renter",
-      "pendingApi": "This needs the bookings API, which isn't live yet.",
+      "noEmail": "No email on file for this renter",
       "restore": "Restore reservation",
       "returnVehicle": "Return vehicle"
     },
@@ -886,6 +893,15 @@
       "notDiscardedTitle": "Draft still in the list",
       "notDiscarded": "Booking {{reference}} was created, but its draft could not be removed. Discard it from the Drafts tab so it is not booked twice."
     },
+    "leave": {
+      "title": "Discard this booking?",
+      "titleResumed": "Discard your changes?",
+      "description": "What you've entered so far will be lost. To come back to it later, choose Keep editing, then Save draft.",
+      "descriptionResumed": "Changes since this draft was last saved will be lost; the saved draft stays in Drafts. To keep them, choose Keep editing, then Save draft.",
+      "confirm": "Discard booking",
+      "confirmResumed": "Discard changes",
+      "keepEditing": "Keep editing"
+    },
     "customerConflict": {
       "useCustomer": "Same person, use this customer"
     },
@@ -1074,7 +1090,8 @@
     "log": {
       "title": "Verification history",
       "rowCount_other": "{{count}} checks",
-      "empty": "No checks yet. Run one above.",
+      "emptyTitle": "No checks yet",
+      "emptyDescription": "Background and insurance checks you run above appear here, newest first.",
       "columns": {
         "person": "Person",
         "source": "Source",

@@ -42,7 +42,11 @@ export function VehicleSpecs({ vehicle }: { vehicle: Vehicle }) {
     { label: t('specs.color'), value: vehicle.color },
     { label: t('specs.plate'), value: vehicle.plate, emphasize: true },
     { label: t('specs.vin'), value: vehicle.vin, emphasize: true },
-    { label: t('specs.currentMileage'), value: `${format.number(vehicle.mileage)} mi`, emphasize: true },
+    {
+      label: t('specs.currentMileage'),
+      value: t('service.odometerValue', { value: format.number(vehicle.mileage) }),
+      emphasize: true,
+    },
     { label: t('specs.transmission'), value: domain.label('transmission', specs.transmission) },
     { label: t('specs.fuelType'), value: domain.label('fuelType', specs.fuelType) },
     { label: t('specs.seats'), value: specs.seats },

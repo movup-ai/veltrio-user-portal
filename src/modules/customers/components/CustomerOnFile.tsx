@@ -21,8 +21,14 @@ export function CustomerOnFile({ customer, reasons, action, size = 'md' }: Props
   const line = cn('text-fg-3 m-0', large ? 'text-[13px]' : 'text-caption')
 
   return (
-    <div className={cn('border-border-soft flex items-start gap-3 rounded-md border', large ? 'p-4' : 'p-3')}>
-      <div className={cn('min-w-0 flex-1', large && 'flex flex-col gap-1')}>
+    // Wraps rather than shrinks: beside two buttons on a phone, the details were squeezed to ~70px.
+    <div
+      className={cn(
+        'border-border-soft flex flex-wrap items-start gap-3 rounded-md border',
+        large ? 'p-4' : 'p-3',
+      )}
+    >
+      <div className={cn('min-w-0 grow basis-48', large && 'flex flex-col gap-1')}>
         <p className={cn('m-0 truncate font-medium', large ? 'text-[15px]' : 'text-[13px]')}>
           {customer.name}
         </p>

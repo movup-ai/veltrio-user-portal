@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { SIGNATURE_INK_ON_SCREEN } from '../constants/booking-contract.constants'
 import type { AgreementContent } from '../types/booking-contract.types'
 
 /**
@@ -76,21 +77,28 @@ export function AgreementDocument({ content }: { content: AgreementContent }) {
           <div className="mt-1.5 flex flex-col gap-1 text-[13px]">
             <span className="text-fg-3">{t('document.forCompany')}</span>
             {signed.signature ? (
-              <img
-                src={signed.signature}
-                alt={t('document.signatureOf', { name: signed.name })}
-                className="border-border-soft h-[72px] w-fit rounded-[8px] border bg-white"
-              />
+              // The border on its own box: the ink's filter would invert it too.
+              <span className="border-border-soft w-fit overflow-hidden rounded-[8px] border">
+                <img
+                  src={signed.signature}
+                  alt={t('document.signatureOf', { name: signed.name })}
+                  className={cn('block h-[72px]', SIGNATURE_INK_ON_SCREEN)}
+                />
+              </span>
             ) : (
               <span className="text-[20px] leading-tight font-bold">{signed.name}</span>
             )}
-            <span className="font-semibold">{signed.title ? `${signed.name}, ${signed.title}` : signed.name}</span>
+            <span className="font-semibold">
+              {signed.title ? `${signed.name}, ${signed.title}` : signed.name}
+            </span>
             <span className="text-fg-3">
               {signed.company} · {t('document.signedOn', { date: signed.signed })}
             </span>
             {/* Said when it is not the signatory's own act: their signature is applied on issue. */}
             {signed.issuedBy !== signed.name && (
-              <span className="text-fg-4 text-[12px]">{t('document.appliedBy', { name: signed.issuedBy })}</span>
+              <span className="text-fg-4 text-[12px]">
+                {t('document.appliedBy', { name: signed.issuedBy })}
+              </span>
             )}
           </div>
         </section>

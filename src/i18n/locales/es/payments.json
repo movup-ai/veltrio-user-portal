@@ -9,6 +9,8 @@
     "statsError": "No pudimos cargar los totales de tus pagos.",
     "emptyTitle": "No se encontraron pagos",
     "emptyDescription": "Los pagos aparecen aquí al enviar un enlace o al registrar dinero en una reserva.",
+    "noMatchesTitle": "Ningún pago coincide",
+    "noMatchesDescription": "Prueba a cambiar la búsqueda, los filtros o la pestaña.",
     "partlyRefunded": "Reembolsado {{amount}}",
     "rowActions": {
       "viewBooking": "Ver reserva",

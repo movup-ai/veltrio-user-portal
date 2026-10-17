@@ -124,3 +124,93 @@ describe('Sidebar links by role', () => {
     },
   )
 })
+
+describe('Sidebar on a phone and on a desktop', () => {
+  const aside = () => screen.getByRole('complementary')
+
+  function stubViewport(desktop: boolean) {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: desktop && query.includes('min-width'),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    )
+  }
+
+  beforeEach(() => useUIStore.setState({ theme: 'light', sidebarCollapsed: true }))
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('keeps a closed drawer out of the Tab order, and lets an open one in', () => {
+    stubViewport(false)
+    const { rerender } = render(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>,
+    )
+    expect(aside()).toHaveAttribute('inert')
+
+    rerender(
+      <MemoryRouter>
+        <Sidebar mobileOpen />
+      </MemoryRouter>,
+    )
+    expect(aside()).not.toHaveAttribute('inert')
+  })
+
+  it('shows the drawer with its labels, whatever was collapsed on a desktop', () => {
+    stubViewport(false)
+    render(
+      <MemoryRouter>
+        <Sidebar mobileOpen />
+      </MemoryRouter>,
+    )
+
+    expect(bookings()).toHaveTextContent('Bookings')
+  })
+
+  it('closes the drawer on Escape', async () => {
+    stubViewport(false)
+    const user = userEvent.setup({ delay: null })
+    const onMobileClose = vi.fn()
+    render(
+      <MemoryRouter>
+        <Sidebar mobileOpen onMobileClose={onMobileClose} />
+      </MemoryRouter>,
+    )
+
+    await user.keyboard('{Escape}')
+
+    expect(onMobileClose).toHaveBeenCalledOnce()
+  })
+
+  it('lets Escape close an open account menu without closing the drawer', async () => {
+    stubViewport(false)
+    const user = userEvent.setup({ delay: null })
+    const onMobileClose = vi.fn()
+    render(
+      <MemoryRouter>
+        <Sidebar mobileOpen onMobileClose={onMobileClose} account={account()} />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(onMobileClose).not.toHaveBeenCalled()
+  })
+
+  it('stays reachable and collapsed as chosen on a desktop', () => {
+    stubViewport(true)
+    render(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>,
+    )
+
+    expect(aside()).not.toHaveAttribute('inert')
+    expect(bookings()).toHaveTextContent(/^$/)
+  })
+})

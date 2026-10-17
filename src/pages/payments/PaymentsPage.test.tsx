@@ -110,4 +110,17 @@ describe('the payment list', () => {
     expect(screen.getByText('Renter 1')).toBeInTheDocument()
     expect(screen.queryByText('No payments found')).not.toBeInTheDocument()
   })
+
+  it('says nothing matches a tab, rather than how payments first appear', async () => {
+    stats.mockResolvedValue(STATS)
+    total = 0
+    const user = userEvent.setup({ delay: null })
+    renderPage()
+    expect(await screen.findByText('No payments found')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'Failed' }))
+
+    expect(await screen.findByText('No payments match')).toBeInTheDocument()
+    expect(screen.queryByText(/Payments appear here/)).not.toBeInTheDocument()
+  })
 })

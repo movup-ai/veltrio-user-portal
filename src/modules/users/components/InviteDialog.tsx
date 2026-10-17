@@ -175,8 +175,9 @@ export function InviteDialog({
             </p>
           )}
 
-          <DialogFooter className="border-border-soft items-center border-t pt-4 sm:justify-between">
-            <span className="text-fg-4 hidden text-[12.5px] sm:block">{t('users.invite.expiry')}</span>
+          {/* A column, not the footer's reversed one, so on a phone the note sits above the buttons. */}
+          <DialogFooter className="border-border-soft flex-col items-center border-t pt-4 sm:justify-between">
+            <span className="text-fg-4 text-[12.5px]">{t('users.invite.expiry')}</span>
             <div className="flex gap-2">
               <Button
                 type="button"

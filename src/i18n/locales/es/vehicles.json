@@ -12,11 +12,38 @@
     "emptyDescription": "Pruebe a ajustar la búsqueda o los filtros.",
     "firstTitle": "Aún no hay vehículos",
     "firstDescription": "Agregue un vehículo o importe su flota desde una hoja de cálculo.",
+    "allArchivedTitle": "No hay vehículos activos",
+    "allArchivedDescription": "Todos los vehículos están archivados. Restaure uno desde la pestaña Archivados o agregue uno nuevo.",
+    "emptyTabs": {
+      "All": {
+        "title": "No hay vehículos activos",
+        "description": "Aquí aparecen los vehículos que agregue, restaure o publique."
+      },
+      "Available": {
+        "title": "No hay vehículos disponibles",
+        "description": "Todos los vehículos están alquilados, en mantenimiento o fuera de servicio en este momento."
+      },
+      "On rent": {
+        "title": "No hay vehículos alquilados",
+        "description": "Los vehículos aparecen aquí mientras un cliente los tiene."
+      },
+      "Maintenance": {
+        "title": "No hay vehículos en mantenimiento",
+        "description": "Los vehículos que envíe al taller aparecen aquí hasta que vuelvan."
+      },
+      "Drafts": {
+        "title": "No hay borradores",
+        "description": "Un vehículo que guarde a medio agregar espera aquí hasta que lo publique."
+      },
+      "Archived": {
+        "title": "No hay vehículos archivados",
+        "description": "Los vehículos que archive se conservan aquí y puede restaurarlos en cualquier momento."
+      }
+    },
     "setOrder": "Ordenar vehículos",
     "doneOrdering": "Listo",
     "dragToReorder_one": "{{count}} vehículo · arrastre para reordenar",
     "dragToReorder_other": "{{count}} vehículos · arrastre para reordenar",
-    "noneFound": "No se encontraron vehículos",
     "draftsNote": "{{count}} borrador sin terminar",
     "draftsNote_other": "{{count}} borradores sin terminar",
     "tabs": {
@@ -74,13 +101,14 @@
   "details": {
     "loading": "Cargando vehículo…",
     "notFoundTitle": "Vehículo no encontrado",
-    "notFoundDescription": "Es posible que este vehículo se haya eliminado.",
     "notFoundError": "No encontramos ese vehículo. Puede que se haya eliminado.",
+    "loadError": "No pudimos cargar este vehículo. Revise su conexión e inténtelo de nuevo.",
     "backToVehicles": "Volver a vehículos",
     "previousVehicle": "Vehículo anterior",
     "nextVehicle": "Vehículo siguiente",
     "position": "{{index}} de {{total}}",
     "archive": "Archivar",
+    "restore": "Restaurar",
     "editVehicle": "Editar vehículo",
     "descriptionTitle": "Descripción",
     "descriptionSubtitle": "Resumen que ve el cliente en el anuncio",
@@ -120,13 +148,13 @@
     "homeBranch": "Sucursal base",
     "odometer": "Odómetro",
     "inFleetSince": "En la flota desde",
-    "newBooking": "Nueva reserva"
+    "newBooking": "Nueva reserva",
+    "changeStatus": "Cambiar estado, actualmente {{status}}"
   },
   "performance": {
     "title": "Rendimiento",
     "description": "Últimos 30 días",
     "revenue": "Ingresos",
-    "trendVsLastMonth": "{{value}} % vs. mes pasado",
     "daysOnRent": "Días alquilado",
     "outOf30": "/ 30",
     "utilization30d": "Uso (30 d)",
@@ -246,7 +274,7 @@
       "locationPlaceholder": "Seleccione la sucursal",
       "locationLoading": "Cargando sucursales…",
       "locationLoadFailed": "No se pudieron cargar las sucursales.",
-      "locationEmpty": "Aún no hay sucursales. Agregue una en Configuración antes de agregar un vehículo.",
+      "locationEmpty": "Aún no hay sucursales. Agregue una en la página <locations>Sucursales</locations> antes de agregar un vehículo.",
       "plate": "Matrícula",
       "vin": "VIN",
       "status": "Estado",
@@ -267,6 +295,7 @@
       "overageRatePlaceholder": "p. ej. 0.35",
       "fuelCharge": "Cargo por combustible (por 1/8 de tanque)",
       "fuelChargeUnit": "/ 1/8 de tanque",
+      "overageRateUnit": "/mi",
       "taxRate": "Tasa de impuesto (%)",
       "billableHours": "Tope por hora al día",
       "billableHoursHint": "Si el cliente se queda el coche más de un día, paga como máximo estas horas por cada día. Se calcula automáticamente; con 24 no hay tope.",
@@ -389,6 +418,11 @@
     "title": "¿Archivar vehículo?",
     "description": "{{name}} ({{plate}}) se retirará de la flota activa. Puede restaurarlo desde la pestaña Archivados.",
     "confirm": "Archivar vehículo"
+  },
+  "discardDraftDialog": {
+    "title": "¿Descartar borrador?",
+    "description": "Se eliminarán {{name}} y sus fotos. Esta acción no se puede deshacer.",
+    "confirm": "Descartar borrador"
   },
   "errors": {
     "notFound": "Vehículo no encontrado",

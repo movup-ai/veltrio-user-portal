@@ -17,6 +17,7 @@
   --color-tint: var(--veltrio-tint);
 
   --color-background: var(--veltrio-bg);
+  --color-field: var(--veltrio-field);
   --color-surface: var(--veltrio-surface);
   --color-surface-2: var(--veltrio-surface-2);
   --color-surface-3: var(--veltrio-surface-3);

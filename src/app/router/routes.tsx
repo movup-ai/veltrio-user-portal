@@ -64,9 +64,6 @@ const PaymentsPage = lazy(() =>
 const LocationsPage = lazy(() =>
   import('@/pages/locations/LocationsPage').then((m) => ({ default: m.LocationsPage })),
 )
-const PricingPage = lazy(() =>
-  import('@/pages/pricing/PricingPage').then((m) => ({ default: m.PricingPage })),
-)
 const SettingsPage = lazy(() =>
   import('@/pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 )
@@ -154,7 +151,6 @@ export const router = createBrowserRouter([
 
               { path: 'payments', element: withSuspense(<PaymentsPage />) },
               { path: 'locations', element: withSuspense(<LocationsPage />) },
-              { path: 'pricing', element: withSuspense(<PricingPage />) },
 
               { path: 'agreements', element: withSuspense(<AgreementsPage />) },
               { path: 'agreements/:templateId', element: withSuspense(<AgreementsPage />) },

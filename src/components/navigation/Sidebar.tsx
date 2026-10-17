@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -19,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { usePermissions } from '@/components/feedback/Can'
+import { useMediaQuery } from '@/lib/use-media-query'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/state/ui.store'
 import type { MembershipRole } from '@/types/user'
@@ -47,12 +49,24 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen = false, onMobileClose, badges, account, setup }: SidebarProps) {
   const { t } = useTranslation(['nav', 'common'])
-  const collapsed = useUIStore((state) => state.sidebarCollapsed)
+  // Tailwind's `lg`: below it the sidebar is the 242px drawer, which has no collapsed form.
+  const desktop = useMediaQuery('(min-width: 64rem)')
+  const collapsed = useUIStore((state) => state.sidebarCollapsed) && desktop
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
   const theme = useUIStore((state) => state.theme)
   const setTheme = useUIStore((state) => state.setTheme)
   const permissions = usePermissions()
   const expanded = !collapsed
+
+  useEffect(() => {
+    if (!mobileOpen || !onMobileClose) return
+    const close = (event: KeyboardEvent) => {
+      // Radix marks the Escape that closes a menu inside the drawer, so that one leaves it open.
+      if (event.key === 'Escape' && !event.defaultPrevented) onMobileClose()
+    }
+    document.addEventListener('keydown', close)
+    return () => document.removeEventListener('keydown', close)
+  }, [mobileOpen, onMobileClose])
 
   const isDark =
     theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -64,6 +78,8 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges, account, se
       )}
 
       <aside
+        // Off-screen is not gone: without this a closed drawer's links stay in the Tab order.
+        inert={!desktop && !mobileOpen}
         className={cn(
           'bg-surface border-border fixed inset-y-0 left-0 z-50 flex w-[242px] flex-col border-r transition-[width] duration-[180ms] ease-out',
           'lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
@@ -162,7 +178,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, badges, account, se
             type="button"
             aria-label={t('nav:sidebar.toggle')}
             onClick={toggleSidebar}
-            className="text-fg-3 hover:bg-surface-3 hover:text-foreground flex w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-[13px] transition-colors"
+            className="text-fg-3 hover:bg-surface-3 hover:text-foreground hidden w-full items-center gap-2.5 rounded-[9px] px-[9px] py-2 text-[13px] transition-colors lg:flex"
           >
             {collapsed ? (
               <PanelLeftOpen className="size-[17px] shrink-0" />

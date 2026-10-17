@@ -16,6 +16,11 @@ const STATUS_TO_KIND: Record<number, ApiError['kind']> = {
  * Normalizes any error thrown by the API client into an ApiError so the
  * UI never has to branch on axios internals or raw backend payload shapes.
  */
+/** Only a 404 says a record is gone; a timeout or a 500 is no proof, and is worth a retry. */
+export function isNotFound(error: unknown): boolean {
+  return normalizeApiError(error).kind === 'not_found'
+}
+
 export function normalizeApiError(error: unknown): ApiError {
   if (error instanceof ApiError) return error
 

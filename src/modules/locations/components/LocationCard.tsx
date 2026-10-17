@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
+import { Can } from '@/components/feedback/Can'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,19 +53,22 @@ export function LocationCard({ location, onEdit, onDelete }: Props) {
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <StatusBadge status={location.status} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-7" aria-label={t('card.actions')}>
-                <MoreVertical className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>{t('card.edit')}</DropdownMenuItem>
-              <DropdownMenuItem className="text-error focus:text-error" onClick={onDelete}>
-                {t('card.delete')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Staff can see the branches but not change them; the API refuses them both. */}
+          <Can permission="locations.manage">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-7" aria-label={t('card.actions')}>
+                  <MoreVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>{t('card.edit')}</DropdownMenuItem>
+                <DropdownMenuItem className="text-error focus:text-error" onClick={onDelete}>
+                  {t('card.delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Can>
         </div>
       </div>
 

@@ -9,8 +9,11 @@
     "searchPlaceholder": "Search name, email, phone or licence",
     "loading": "Loading customers…",
     "loadError": "We couldn't load your customers.",
+    "statsError": "We couldn't load your customer totals.",
     "emptyTitle": "No customers found",
     "emptyDescription": "Customers appear here when a booking is taken, or when you add one.",
+    "noMatchesTitle": "No customers match your search",
+    "noMatchesDescription": "Try a different name, email, phone or licence.",
     "possibleDuplicate": "Possible duplicate",
     "rowActions": {
       "view": "View customer"

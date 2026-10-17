@@ -3,6 +3,7 @@ import { Eraser } from 'lucide-react'
 import SignaturePadCore from 'signature_pad'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { SIGNATURE_INK_ON_SCREEN } from '../constants/booking-contract.constants'
 
 /** Always dark ink in the drawing itself: the PDF prints it on white paper. */
 const INK = '#0f172a'
@@ -59,17 +60,14 @@ export function SignaturePad({ onChange, label, clearLabel, invalid }: Signature
   }, [])
 
   return (
-    <div
-      className={cn('border-input bg-background relative rounded-[10px] border', invalid && 'border-error')}
-    >
+    <div className={cn('border-input bg-field relative rounded-[10px] border', invalid && 'border-error')}>
       <canvas
         ref={canvasRef}
         role="img"
         aria-label={label}
         aria-invalid={invalid || undefined}
-        // touch-none: without it a phone scrolls the page instead of drawing. Dark mode inverts the
-        // ink on screen only; a filter never reaches the pixels the PNG is made from.
-        className="block h-[160px] w-full touch-none rounded-[10px] [.dark_&]:hue-rotate-180 [.dark_&]:invert"
+        // touch-none: without it a phone scrolls the page instead of drawing.
+        className={cn('block h-[160px] w-full touch-none rounded-[10px]', SIGNATURE_INK_ON_SCREEN)}
       />
       {empty && (
         <span className="text-fg-4 pointer-events-none absolute inset-0 flex items-center justify-center text-[13px]">
