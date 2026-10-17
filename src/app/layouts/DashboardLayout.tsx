@@ -5,8 +5,10 @@ import { Header } from '@/components/navigation/Header'
 import { Sidebar } from '@/components/navigation/Sidebar'
 import { PlanLimitDialog } from '@/modules/billing/components/PlanLimitDialog'
 import { SubscriptionBanner } from '@/modules/billing/components/SubscriptionBanner'
+import { AnnouncementBanner } from '@/modules/notifications/components/AnnouncementBanner'
 import { useBookingStats } from '@/modules/bookings/hooks/use-bookings'
 import { setupProgress, showSetupReopen, useSetup, useUpdateSetup } from '@/modules/setup'
+import { useLocaleSync } from '@/services/auth/use-locale-sync'
 import { useMe } from '@/services/auth/use-me'
 import { useOrganizationStore } from '@/state/organization.store'
 
@@ -20,6 +22,7 @@ export function DashboardLayout() {
   const navigate = useNavigate()
   const setup = useSetup().data
   const reopenSetup = useUpdateSetup()
+  useLocaleSync()
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -54,6 +57,7 @@ export function DashboardLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <Header onMobileMenuClick={() => setMobileNavOpen(true)} />
         <SubscriptionBanner />
+        <AnnouncementBanner />
         <PlanLimitDialog />
         <main className="vx-scroll min-w-0 flex-1 overflow-x-hidden">
           <Outlet />

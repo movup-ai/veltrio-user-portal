@@ -1,11 +1,26 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@/i18n'
 import { useOrganizationStore } from '@/state/organization.store'
 import { Header } from './Header'
 
+vi.mock('@/modules/notifications/api/notifications.api', () => ({
+  notificationsApi: { unreadCount: async () => ({ notifications: 0, announcements: 0 }) },
+}))
+
 afterEach(() => useOrganizationStore.setState({ membership: null }))
+
+function renderHeader(path = '/customers') {
+  return render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={[path]}>
+        <Header onMobileMenuClick={() => {}} />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
 
 describe('Header breadcrumb', () => {
   it('starts with the signed-in company', () => {
@@ -21,11 +36,7 @@ describe('Header breadcrumb', () => {
       },
     })
 
-    render(
-      <MemoryRouter initialEntries={['/customers']}>
-        <Header onMobileMenuClick={() => {}} />
-      </MemoryRouter>,
-    )
+    renderHeader()
 
     const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' })
     expect(breadcrumb).toHaveTextContent('Coastline Rentals/Customers')
@@ -46,14 +57,17 @@ describe('Header breadcrumb', () => {
       },
     })
 
-    render(
-      <MemoryRouter initialEntries={['/customers']}>
-        <Header onMobileMenuClick={() => {}} />
-      </MemoryRouter>,
-    )
+    renderHeader()
 
     const company = screen.getByText(name)
     expect(company).toHaveClass('truncate')
     expect(company).toHaveAttribute('title', name)
+  })
+
+  it('names a page the sidebar does not list', () => {
+    // It fell back to "Dashboard" for any path without a sidebar link.
+    renderHeader('/notifications/settings')
+
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent('Notifications')
   })
 })

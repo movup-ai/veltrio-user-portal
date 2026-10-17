@@ -1,3 +1,4 @@
+import type { Language } from '@/i18n'
 import { apiClient } from '@/services/api/client'
 import { fromCents } from '@/lib/money'
 import { ROLE_PERMISSIONS } from '@/utils/permissions'
@@ -73,6 +74,10 @@ export const authApi = {
 
   /** The signed-in user's own name; the email is Clerk's. */
   updateMe: (fullName: string) => apiClient.patch<MeResponse>('/auth/me', { fullName }).then((r) => r.data),
+
+  /** The language the portal shows, which the user's notification emails are then written in. */
+  updateLocale: (locale: Language) =>
+    apiClient.put<MeResponse>('/auth/me/locale', { locale }).then((r) => r.data),
 
   registerTenant: (payload: RegisterTenantPayload) =>
     apiClient.post<RegisterTenantResponse>('/auth/register-tenant', payload).then((r) => r.data),

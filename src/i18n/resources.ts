@@ -7,6 +7,7 @@ import enDashboard from './locales/en/dashboard.json'
 import enDomain from './locales/en/domain.json'
 import enLocations from './locales/en/locations.json'
 import enNav from './locales/en/nav.json'
+import enNotifications from './locales/en/notifications.json'
 import enPayments from './locales/en/payments.json'
 import enSettings from './locales/en/settings.json'
 import enSupport from './locales/en/support.json'
@@ -22,6 +23,7 @@ import esDashboard from './locales/es/dashboard.json'
 import esDomain from './locales/es/domain.json'
 import esLocations from './locales/es/locations.json'
 import esNav from './locales/es/nav.json'
+import esNotifications from './locales/es/notifications.json'
 import esPayments from './locales/es/payments.json'
 import esSettings from './locales/es/settings.json'
 import esSupport from './locales/es/support.json'
@@ -44,6 +46,7 @@ export const resources = {
     domain: enDomain,
     locations: enLocations,
     nav: enNav,
+    notifications: enNotifications,
     payments: enPayments,
     settings: enSettings,
     support: enSupport,
@@ -60,6 +63,7 @@ export const resources = {
     domain: esDomain,
     locations: esLocations,
     nav: esNav,
+    notifications: esNotifications,
     payments: esPayments,
     settings: esSettings,
     support: esSupport,

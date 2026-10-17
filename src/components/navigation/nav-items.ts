@@ -30,6 +30,7 @@ export type NavLinkKey =
   | 'Users'
   | 'Settings'
   | 'Support'
+  | 'Notifications'
 
 export type NavEntry =
   | { type: 'group'; key: NavGroupKey }
@@ -55,8 +56,12 @@ export const NAV_ITEMS: NavEntry[] = [
   { type: 'link', key: 'Support', to: '/support', icon: LifeBuoy },
 ]
 
+/** Pages reached from the header rather than the sidebar, which still name themselves. */
+const UNLISTED: { to: string; key: NavLinkKey }[] = [{ to: '/notifications', key: 'Notifications' }]
+
 /** The nav key for a path — callers translate it via `t('nav:links.<key>')`. */
 export function navKeyForPath(pathname: string): NavLinkKey {
   const match = NAV_ITEMS.find((item) => item.type === 'link' && pathname.startsWith(item.to))
-  return match && match.type === 'link' ? match.key : 'Dashboard'
+  if (match && match.type === 'link') return match.key
+  return UNLISTED.find((page) => pathname.startsWith(page.to))?.key ?? 'Dashboard'
 }

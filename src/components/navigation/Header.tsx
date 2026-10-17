@@ -1,13 +1,12 @@
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bell, Menu, Search } from 'lucide-react'
+import { Menu, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { NotificationBell } from '@/modules/notifications/components/NotificationBell'
 import { useOrganizationStore } from '@/state/organization.store'
 import { usePageActionsStore } from '@/state/page-actions.store'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { navKeyForPath } from './nav-items'
-
-const UNREAD_NOTIFICATIONS = 3
 
 export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void }) {
   const { t } = useTranslation('nav')
@@ -66,16 +65,7 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
         </kbd>
       </label>
 
-      <button
-        type="button"
-        aria-label={t('header.notifications', { count: UNREAD_NOTIFICATIONS })}
-        className="bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground relative flex size-[34px] shrink-0 items-center justify-center rounded-[9px] border transition-colors"
-      >
-        <Bell className="size-4" />
-        <span className="bg-error border-background text-surface absolute -top-[3px] -right-[3px] flex size-[15px] items-center justify-center rounded-full border-2 text-[9.5px] font-bold">
-          {UNREAD_NOTIFICATIONS}
-        </span>
-      </button>
+      <NotificationBell />
 
       <LanguageSwitcher />
     </header>

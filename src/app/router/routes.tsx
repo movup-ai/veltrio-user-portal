@@ -7,6 +7,7 @@ import { PublicLayout } from '@/app/layouts/PublicLayout'
 import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { AgreementsPage } from '@/pages/agreements/AgreementsPage.lazy'
+import { NotificationSettingsPage, NotificationsPage } from '@/pages/notifications/NotificationsPage.lazy'
 import { SupportPage, SupportTicketPage } from '@/pages/support/SupportPage.lazy'
 import { UsersPage } from '@/pages/users/UsersPage.lazy'
 // Not lazy: small pages on the way in, where a lazy chunk would put a spinner in front of a redirect.
@@ -168,6 +169,9 @@ export const router = createBrowserRouter([
 
               { path: 'support', element: withSuspense(<SupportPage />) },
               { path: 'support/:ticketId', element: withSuspense(<SupportTicketPage />) },
+
+              { path: 'notifications', element: withSuspense(<NotificationsPage />) },
+              { path: 'notifications/settings', element: withSuspense(<NotificationSettingsPage />) },
             ],
           },
         ],
