@@ -7,6 +7,7 @@ import { PublicLayout } from '@/app/layouts/PublicLayout'
 import { ClerkRouterProvider } from '@/app/providers/ClerkRouterProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { AgreementsPage } from '@/pages/agreements/AgreementsPage.lazy'
+import { SupportPage, SupportTicketPage } from '@/pages/support/SupportPage.lazy'
 import { UsersPage } from '@/pages/users/UsersPage.lazy'
 // Not lazy: small pages on the way in, where a lazy chunk would put a spinner in front of a redirect.
 import { InvitePage } from '@/pages/auth/InvitePage'
@@ -164,6 +165,9 @@ export const router = createBrowserRouter([
               { path: 'settings/billing', element: withSuspense(<SettingsPage />) },
               { path: 'settings/brand', element: withSuspense(<SettingsPage />) },
               { path: 'settings/payments', element: withSuspense(<SettingsPage />) },
+
+              { path: 'support', element: withSuspense(<SupportPage />) },
+              { path: 'support/:ticketId', element: withSuspense(<SupportTicketPage />) },
             ],
           },
         ],

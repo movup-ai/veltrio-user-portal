@@ -2,7 +2,8 @@
   "groups": {
     "Operations": "Operaciones",
     "Revenue": "Ingresos",
-    "Setup": "Configuración"
+    "Setup": "Configuración",
+    "Help": "Ayuda"
   },
   "links": {
     "Dashboard": "Panel",
@@ -15,7 +16,8 @@
     "Agreements": "Contratos",
     "Users": "Usuarios",
     "Settings": "Ajustes",
-    "Verification": "Verificación"
+    "Verification": "Verificación",
+    "Support": "Soporte"
   },
   "sidebar": {
     "primary": "Principal",

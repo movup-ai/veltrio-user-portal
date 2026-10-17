@@ -1,0 +1,100 @@
+{
+  "page": {
+    "title": "Soporte",
+    "description": "Pide ayuda al equipo de Veltrio. Los propietarios ven todos los tickets de la empresa; el resto, solo los suyos.",
+    "newTicket": "Nuevo ticket",
+    "tableTitle": "Tickets",
+    "emptyTitle": "Aún no hay tickets",
+    "emptyDescription": "Si algo no funciona o tienes una pregunta, abre un ticket y te responderemos aquí y por correo.",
+    "noMatchesTitle": "No hay tickets aquí",
+    "noMatchesDescription": "Ningún ticket tiene este estado."
+  },
+  "tabs": {
+    "all": "Todos",
+    "open": "Esperando a soporte",
+    "waiting_on_customer": "Requiere tu respuesta",
+    "closed": "Cerrados"
+  },
+  "columns": {
+    "id": "ID del ticket",
+    "subject": "Asunto",
+    "topic": "Tema",
+    "author": "Abierto por",
+    "status": "Estado",
+    "lastUpdated": "Última actualización"
+  },
+  "categories": {
+    "question": "Pregunta",
+    "technical": "Problema técnico",
+    "billing": "Facturación",
+    "feature_request": "Sugerencia de función",
+    "other": "Otro"
+  },
+  "statuses": {
+    "open": "Esperando a soporte",
+    "waiting_on_customer": "Requiere tu respuesta",
+    "closed": "Cerrado"
+  },
+  "form": {
+    "title": "Nuevo ticket de soporte",
+    "description": "Cuéntanos qué pasa. Respondemos aquí y por correo.",
+    "subject": "Asunto",
+    "subjectPlaceholder": "p. ej., No puedo subir fotos del vehículo",
+    "subjectRequired": "Añade un asunto",
+    "category": "Tema",
+    "body": "Mensaje",
+    "bodyHint": "Incluye lo que intentaste y lo que esperabas, y el número de reserva o la matrícula si se trata de una.",
+    "bodyRequired": "Escribe un mensaje",
+    "submit": "Enviar ticket"
+  },
+  "ticket": {
+    "meta": "#{{number}} · {{category}}",
+    "veltrio": "Soporte de Veltrio",
+    "formerMember": "Antiguo miembro del equipo",
+    "replyLabel": "Respuesta",
+    "closedHint": "Si respondes, el ticket se vuelve a abrir.",
+    "close": "Cerrar ticket",
+    "send": "Enviar respuesta",
+    "closeFailed": "No se pudo cerrar el ticket",
+    "notFoundTitle": "Ticket no encontrado",
+    "notFoundDescription": "Puede que sea de otra persona de tu equipo o que el enlace no sea correcto.",
+    "back": "Todos los tickets",
+    "conversation": "Conversación",
+    "staffBadge": "Equipo de soporte",
+    "notice": {
+      "open": "Veltrio recibió tu mensaje. Te responderemos aquí y por correo.",
+      "waiting_on_customer": "Veltrio respondió. Contesta abajo o cierra el ticket si ya está resuelto.",
+      "closed": "Este ticket está cerrado.",
+      "closedOn": "Este ticket se cerró el {{date}}."
+    },
+    "details": {
+      "id": "ID del ticket",
+      "idHint": "Menciónalo si contactas a Veltrio por otra vía.",
+      "copyId": "Copiar ID del ticket",
+      "copied": "Copiado",
+      "topic": "Tema",
+      "openedBy": "Abierto por",
+      "opened": "Abierto",
+      "lastUpdated": "Última actualización",
+      "closed": "Cerrado"
+    }
+  },
+  "attachments": {
+    "attach": "Adjuntar archivos",
+    "hint": "Hasta 5 archivos de 10 MB cada uno: imágenes, PDF, texto o CSV.",
+    "uploading": "Subiendo… {{progress}} %",
+    "failed": "No se pudo subir",
+    "remove": "Quitar {{name}}",
+    "pending": "Espera a que terminen de subirse los archivos o quita los que fallaron.",
+    "open": "Abrir {{name}}",
+    "openFailed": "No se pudo abrir el archivo",
+    "refused": {
+      "type": "No se puede adjuntar {{name}}. Usa una imagen, un PDF, un texto o un CSV.",
+      "size": "{{name}} supera los 10 MB.",
+      "count": "Un mensaje puede llevar hasta 5 archivos."
+    },
+    "preview": "Ver {{name}}",
+    "previewFailed": "No se pudo cargar la vista previa de {{name}}",
+    "openOriginal": "Abrir original"
+  }
+}

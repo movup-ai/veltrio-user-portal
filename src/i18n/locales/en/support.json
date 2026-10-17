@@ -1,0 +1,100 @@
+{
+  "page": {
+    "title": "Support",
+    "description": "Ask the Veltrio team for help. Owners see every ticket from the company; everyone else sees their own.",
+    "newTicket": "New ticket",
+    "tableTitle": "Tickets",
+    "emptyTitle": "No tickets yet",
+    "emptyDescription": "When something isn't working or you have a question, open a ticket and we'll reply here and by email.",
+    "noMatchesTitle": "No tickets here",
+    "noMatchesDescription": "No tickets have this status."
+  },
+  "tabs": {
+    "all": "All",
+    "open": "Awaiting support",
+    "waiting_on_customer": "Needs your reply",
+    "closed": "Closed"
+  },
+  "columns": {
+    "id": "Ticket ID",
+    "subject": "Subject",
+    "topic": "Topic",
+    "author": "Opened by",
+    "status": "Status",
+    "lastUpdated": "Last updated"
+  },
+  "categories": {
+    "question": "Question",
+    "technical": "Technical problem",
+    "billing": "Billing",
+    "feature_request": "Feature request",
+    "other": "Other"
+  },
+  "statuses": {
+    "open": "Awaiting support",
+    "waiting_on_customer": "Needs your reply",
+    "closed": "Closed"
+  },
+  "form": {
+    "title": "New support ticket",
+    "description": "Tell us what's happening. We reply here and by email.",
+    "subject": "Subject",
+    "subjectPlaceholder": "e.g. Can't upload vehicle photos",
+    "subjectRequired": "Add a subject",
+    "category": "Topic",
+    "body": "Message",
+    "bodyHint": "Include what you tried and what you expected, and a booking or plate number if it's about one.",
+    "bodyRequired": "Write a message",
+    "submit": "Send ticket"
+  },
+  "ticket": {
+    "meta": "#{{number}} · {{category}}",
+    "veltrio": "Veltrio Support",
+    "formerMember": "Former team member",
+    "replyLabel": "Reply",
+    "closedHint": "Replying opens the ticket again.",
+    "close": "Close ticket",
+    "send": "Send reply",
+    "closeFailed": "Couldn't close the ticket",
+    "notFoundTitle": "Ticket not found",
+    "notFoundDescription": "It may belong to someone else on your team, or the link is wrong.",
+    "back": "All tickets",
+    "conversation": "Conversation",
+    "staffBadge": "Support team",
+    "notice": {
+      "open": "Veltrio has your message. We'll reply here and by email.",
+      "waiting_on_customer": "Veltrio replied. Answer below, or close the ticket if everything is sorted.",
+      "closed": "This ticket is closed.",
+      "closedOn": "This ticket was closed on {{date}}."
+    },
+    "details": {
+      "id": "Ticket ID",
+      "idHint": "Quote it if you contact Veltrio another way.",
+      "copyId": "Copy ticket ID",
+      "copied": "Copied",
+      "topic": "Topic",
+      "openedBy": "Opened by",
+      "opened": "Opened",
+      "lastUpdated": "Last updated",
+      "closed": "Closed"
+    }
+  },
+  "attachments": {
+    "attach": "Attach files",
+    "hint": "Up to 5 files, 10 MB each: images, PDF, text or CSV.",
+    "uploading": "Uploading… {{progress}}%",
+    "failed": "Upload failed",
+    "remove": "Remove {{name}}",
+    "pending": "Wait for the files to finish uploading, or remove the ones that failed.",
+    "open": "Open {{name}}",
+    "openFailed": "Couldn't open the file",
+    "refused": {
+      "type": "{{name}} can't be attached. Use an image, PDF, text or CSV file.",
+      "size": "{{name}} is over 10 MB.",
+      "count": "A message can carry up to 5 files."
+    },
+    "preview": "Preview {{name}}",
+    "previewFailed": "Couldn't load a preview of {{name}}",
+    "openOriginal": "Open original"
+  }
+}

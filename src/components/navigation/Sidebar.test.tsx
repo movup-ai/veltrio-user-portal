@@ -111,7 +111,8 @@ describe('Sidebar links by role', () => {
     renderAs('owner')
 
     const names = screen.getAllByRole('link').map((link) => link.textContent)
-    expect(names.slice(-2)).toEqual(['Users', 'Settings'])
+    const users = names.indexOf('Users')
+    expect(names.slice(users, users + 2)).toEqual(['Users', 'Settings'])
   })
 
   it.each(['manager', 'staff'] as const)(

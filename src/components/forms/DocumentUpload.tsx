@@ -1,10 +1,12 @@
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Download, Expand, FileText, Paperclip, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { usePreviewRef } from '@/lib/use-preview-ref'
+import { ImagePreviewDialog } from '@/components/feedback/ImagePreviewDialog'
 import { toast } from '@/components/ui/use-toast'
 import type { UploadedFile } from '@/types/common'
+import { formatFileSize } from '@/utils/formatting'
 
 const MAX_FILE_SIZE_MB = 10
 const DEFAULT_ACCEPT = 'image/*,application/pdf'
@@ -17,33 +19,6 @@ interface DocumentUploadProps {
   accept?: string
   id?: string
   className?: string
-}
-
-/**
- * Points an image or link at the file for as long as that element is on screen.
- *
- * The URL belongs to the element, not to the stored file: the form outlives the slot - stepping
- * to Review and back remounts it - and a URL revoked on the way out left a broken image on the
- * way back. An object URL rather than a data URL keeps a 10 MB scan out of React state, and the
- * ref's cleanup releases it whenever the file changes or the element goes.
- */
-function usePreviewRef(file: File | undefined) {
-  return useCallback(
-    (node: HTMLImageElement | HTMLAnchorElement | null) => {
-      if (!node || !file) return
-      const url = URL.createObjectURL(file)
-      if (node instanceof HTMLImageElement) node.src = url
-      else node.href = url
-      return () => URL.revokeObjectURL(url)
-    },
-    [file],
-  )
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 /**
@@ -96,7 +71,7 @@ export function DocumentUpload({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-semibold">{value.name}</span>
-          <span className="text-fg-4 block text-[11.5px]">{formatSize(value.size)}</span>
+          <span className="text-fg-4 block text-[11.5px]">{formatFileSize(value.size)}</span>
         </span>
         {/* An image opens full size; anything else (a PDF) is handed to the browser.
             The file is local, so this needs no network round trip. */}
@@ -128,18 +103,12 @@ export function DocumentUpload({
           <X className="size-4" />
         </button>
 
-        <Dialog open={isPreviewing} onOpenChange={setIsPreviewing}>
-          {/* Wider than the default dialog and sized to the image: a licence photographed in
-              landscape is unreadable squeezed into a form-width box. */}
-          <DialogContent className="max-w-3xl gap-3 p-4">
-            <DialogTitle className="truncate pr-8 text-[14.5px]">{value.name}</DialogTitle>
-            <img
-              ref={previewRef}
-              alt={value.name}
-              className="max-h-[70vh] w-full rounded-[7px] object-contain"
-            />
-          </DialogContent>
-        </Dialog>
+        <ImagePreviewDialog
+          open={isPreviewing}
+          onOpenChange={setIsPreviewing}
+          name={value.name}
+          imageRef={previewRef}
+        />
       </div>
     )
   }
