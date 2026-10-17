@@ -11,6 +11,7 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useFormatters } from '@/i18n'
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
+import { cn } from '@/lib/utils'
 import { NewTicketDialog } from '@/modules/support/components/NewTicketDialog'
 import { useTicketPage } from '@/modules/support/hooks/use-support'
 import { TICKET_STATUSES, type TicketStatus } from '@/modules/support/types/support.types'
@@ -37,7 +38,7 @@ export function SupportPage() {
   }
 
   const status: TicketStatus | undefined = tab === 'all' ? undefined : tab
-  const { data, isLoading, isError, refetch } = useTicketPage({ status, page, pageSize })
+  const { data, isLoading, isError, refetch, isStale } = useTicketPage({ status, page, pageSize })
 
   const rows = (data?.items ?? []).map((ticket) =>
     ticketRow(ticket, {
@@ -67,7 +68,11 @@ export function SupportPage() {
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : (
-        <div className="max-w-[1240px]">
+        // Dimmed while the next page loads: the rows on screen belong to the previous tab or page.
+        <div
+          className={cn('max-w-[1240px] transition-opacity', isStale && 'pointer-events-none opacity-60')}
+          aria-busy={isStale}
+        >
           <RecordTable
             title={t('page.tableTitle')}
             tabs={TABS.map((key) => ({
