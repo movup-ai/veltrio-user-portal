@@ -215,3 +215,44 @@ describe('Sidebar on a phone and on a desktop', () => {
     expect(bookings()).toHaveTextContent(/^$/)
   })
 })
+
+describe('Sidebar groups', () => {
+  beforeEach(() => useUIStore.setState({ theme: 'light', sidebarCollapsed: false }))
+
+  function renderSidebar() {
+    render(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>,
+    )
+    return screen.getByRole('navigation', { name: 'Primary' })
+  }
+
+  it('heads only groups that group something, with the dashboard above them', () => {
+    // A "Revenue" over Payments alone and a "Help" over Support alone added lines and grouped nothing.
+    const nav = renderSidebar()
+
+    const order = Array.from(nav.children).map((child) => child.textContent)
+    expect(order.filter((text) => text === 'Operations' || text === 'Setup')).toEqual(['Operations', 'Setup'])
+    expect(nav).not.toHaveTextContent('Revenue')
+    expect(nav).not.toHaveTextContent('Help')
+    expect(order.indexOf('Dashboard')).toBeLessThan(order.indexOf('Operations'))
+  })
+
+  it('lists Payments with the booking flow it belongs to', () => {
+    const nav = renderSidebar()
+
+    const links = Array.from(nav.querySelectorAll('a')).map((link) => link.textContent)
+    expect(links.slice(1, 4)).toEqual(['Bookings', 'Calendar', 'Payments'])
+  })
+
+  it('ends Operations with Support, where it is in reach rather than at the foot', () => {
+    const nav = renderSidebar()
+
+    const order = Array.from(nav.children).map((child) => child.textContent)
+    expect(order.slice(order.indexOf('Verification'), order.indexOf('Setup'))).toEqual([
+      'Verification',
+      'Support',
+    ])
+  })
+})

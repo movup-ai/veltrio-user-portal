@@ -1,0 +1,24 @@
+{
+  "title": "Buscar",
+  "placeholder": "Buscar reservas, matrículas, vehículos y clientes",
+  "searching": "Buscando",
+  "tooShort": "Escribe al menos dos letras para buscar reservas, vehículos y clientes.",
+  "nothing": "Ninguna reserva, vehículo ni cliente coincide con «{{term}}».",
+  "failed": "La búsqueda no funciona ahora mismo. Inténtalo de nuevo en un momento.",
+  "groups": {
+    "pages": "Ir a",
+    "bookings": "Reservas",
+    "vehicles": "Vehículos",
+    "customers": "Clientes"
+  },
+  "seeAll": {
+    "bookings": "Ver las {{count}} reservas",
+    "vehicles": "Ver los {{count}} vehículos",
+    "customers": "Ver los {{count}} clientes"
+  },
+  "keys": {
+    "move": "para moverte",
+    "open": "para abrir",
+    "close": "para cerrar"
+  }
+}

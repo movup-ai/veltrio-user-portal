@@ -1,0 +1,24 @@
+{
+  "title": "Search",
+  "placeholder": "Search bookings, plates, vehicles and customers",
+  "searching": "Searching",
+  "tooShort": "Type at least two letters to search bookings, vehicles and customers.",
+  "nothing": "No bookings, vehicles or customers match “{{term}}”.",
+  "failed": "Search isn't working right now. Try again in a moment.",
+  "groups": {
+    "pages": "Go to",
+    "bookings": "Bookings",
+    "vehicles": "Vehicles",
+    "customers": "Customers"
+  },
+  "seeAll": {
+    "bookings": "See all {{count}} bookings",
+    "vehicles": "See all {{count}} vehicles",
+    "customers": "See all {{count}} customers"
+  },
+  "keys": {
+    "move": "to move",
+    "open": "to open",
+    "close": "to close"
+  }
+}

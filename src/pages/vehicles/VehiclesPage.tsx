@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Car, ChevronDown, Download, Gauge, GripVertical, Plus, Tag, Wrench } from 'lucide-react'
 import { useDomainLabels } from '@/i18n/domain'
 import { useFormatters } from '@/i18n'
+import { useUrlSearch } from '@/lib/use-url-search'
 import { DEFAULT_PAGE_SIZE, DRAFTS_PAGE, MAX_PAGE_SIZE } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 import { PageActionButton } from '@/components/layout/PageActionButton'
@@ -91,7 +92,7 @@ export function VehiclesPage() {
   const navigate = useNavigate()
   const subdomain = useOrganizationStore((s) => s.membership?.subdomain)
   const [tab, setTab] = useState<VehicleListTab>('All')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useUrlSearch()
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'Any'>('Any')
   const [locationFilter, setLocationFilter] = useState<string>('All')
   const [typeFilter, setTypeFilter] = useState<string>('All')

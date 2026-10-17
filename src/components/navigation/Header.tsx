@@ -1,13 +1,13 @@
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bell, Menu, Search } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { NotificationBell } from '@/modules/notifications/components/NotificationBell'
+import { GlobalSearch } from '@/modules/search/components/GlobalSearch'
 import { useOrganizationStore } from '@/state/organization.store'
 import { usePageActionsStore } from '@/state/page-actions.store'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { navKeyForPath } from './nav-items'
-
-const UNREAD_NOTIFICATIONS = 3
 
 export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void }) {
   const { t } = useTranslation('nav')
@@ -53,29 +53,9 @@ export function Header({ onMobileMenuClick }: { onMobileMenuClick: () => void })
 
       <div className="flex-1" />
 
-      <label className="bg-surface border-border focus-within:border-primary flex h-[34px] min-w-0 max-w-[300px] flex-[1_1_160px] items-center gap-2 rounded-[9px] border px-2.5 focus-within:shadow-[0_0_0_3px_var(--color-tint)]">
-        <Search className="text-fg-4 size-[15px] shrink-0" />
-        <input
-          type="text"
-          placeholder={t('header.searchPlaceholder')}
-          aria-label={t('header.globalSearch')}
-          className="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-foreground outline-none"
-        />
-        <kbd className="text-fg-4 border-border hidden shrink-0 rounded-[5px] border px-1 py-px font-mono text-[10.5px] sm:block">
-          ⌘K
-        </kbd>
-      </label>
+      <GlobalSearch />
 
-      <button
-        type="button"
-        aria-label={t('header.notifications', { count: UNREAD_NOTIFICATIONS })}
-        className="bg-surface border-border text-fg-2 hover:bg-surface-3 hover:text-foreground relative flex size-[34px] shrink-0 items-center justify-center rounded-[9px] border transition-colors"
-      >
-        <Bell className="size-4" />
-        <span className="bg-error border-background text-surface absolute -top-[3px] -right-[3px] flex size-[15px] items-center justify-center rounded-full border-2 text-[9.5px] font-bold">
-          {UNREAD_NOTIFICATIONS}
-        </span>
-      </button>
+      <NotificationBell />
 
       <LanguageSwitcher />
     </header>

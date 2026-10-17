@@ -1,3 +1,4 @@
+import type { Language } from '@/i18n/languages'
 import type { ID } from './common'
 
 /**
@@ -37,6 +38,8 @@ export interface User {
   email: string
   fullName: string
   avatarUrl?: string
+  /** What their notification emails are written in. Null until the portal first reports it. */
+  locale?: Language | null
 }
 
 /**

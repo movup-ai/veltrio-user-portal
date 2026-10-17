@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { CopyCheck, Download, Plus, Repeat, UserX, Users } from 'lucide-react'
+import { useUrlSearch } from '@/lib/use-url-search'
 import { cn } from '@/lib/utils'
 import { PageActionButton } from '@/components/layout/PageActionButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -42,7 +43,7 @@ export function CustomersPage() {
   const domain = useDomainLabels()
   const navigate = useNavigate()
   const [sort, setSort] = useState<CustomerSort>('newest')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useUrlSearch()
   const [adding, setAdding] = useState(false)
   const debouncedSearch = useDebounced(search)
 

@@ -1,0 +1,115 @@
+{
+  "bell": {
+    "tabs": {
+      "notifications": "Notificaciones",
+      "whatsNew": "Novedades"
+    },
+    "markAllRead": "Marcar todo como leído",
+    "viewAll": "Ver todas",
+    "emptyTitle": "Estás al día",
+    "emptyDescription": "Aquí aparecen las nuevas reservas, los pagos y las respuestas de soporte.",
+    "noAnnouncements": "Todavía no hay novedades de Veltrio."
+  },
+  "page": {
+    "title": "Notificaciones",
+    "description": "Lo que pasó en tu empresa y las novedades de Veltrio. Las notificaciones se guardan {{days}} días.",
+    "tabs": {
+      "all": "Todas",
+      "unread": "Sin leer",
+      "whatsNew": "Novedades"
+    },
+    "category": "Categoría",
+    "allCategories": "Todas las categorías",
+    "markAllRead": "Marcar todo como leído",
+    "emailSettings": "Ajustes de correo",
+    "listLabel": "Notificaciones",
+    "empty": {
+      "none": {
+        "title": "Aún no hay notificaciones",
+        "description": "Cuando un cliente reserve, pague o firme, o Soporte de Veltrio responda, lo verás aquí."
+      },
+      "caughtUp": {
+        "title": "Estás al día",
+        "description": "Ya leíste todas las notificaciones."
+      },
+      "category": {
+        "title": "No hay notificaciones en {{category}}",
+        "description": "Nada en esta categoría en los últimos 90 días."
+      },
+      "announcements": {
+        "title": "Todavía no hay novedades",
+        "description": "Aquí aparecen las nuevas funciones y los avisos de Veltrio."
+      },
+      "showAll": "Ver todas",
+      "clearCategory": "Ver todas las categorías"
+    }
+  },
+  "categories": {
+    "bookings": "Reservas",
+    "payments": "Pagos",
+    "contracts": "Contratos",
+    "support": "Soporte",
+    "team": "Equipo",
+    "billing": "Facturación"
+  },
+  "kinds": {
+    "booking_requested": "Nueva reserva {{reference}} de {{customer}}",
+    "booking_overdue": "{{reference}} está atrasada: {{customer}} no ha devuelto el {{vehicle}}",
+    "booking_cancelled": "Se canceló {{reference}} de {{customer}}",
+    "booking_declined": "Se rechazó la reserva {{reference}} de {{customer}}",
+    "booking_dates_changed": "Se cambiaron las fechas de {{reference}}",
+    "booking_vehicle_swapped": "{{reference}} ahora tiene el {{vehicle}}",
+    "payment_received": "{{customer}} pagó {{amount}} por {{reference}}",
+    "payment_failed": "Un pago de {{customer}} por {{reference}} no se completó",
+    "extension_paid": "{{customer}} pagó {{amount}} para extender {{reference}}",
+    "deposit_held": "{{customer}} autorizó el depósito de {{amount}} de {{reference}}",
+    "deposit_lapsed": "Venció la retención del depósito de {{reference}}",
+    "contract_signed": "{{customer}} firmó el contrato de {{reference}}",
+    "ticket_replied": "Soporte de Veltrio respondió al ticket #{{number}}: {{subject}}",
+    "ticket_closed": "Se cerró el ticket #{{number}}: {{subject}}",
+    "invitation_accepted": "{{member}} se unió como {{role}}",
+    "subscription_past_due": "Tu pago de Veltrio no se completó. Actualiza tu tarjeta para que tu cuenta siga activa.",
+    "credits_low": "Te quedan {{balance}} créditos",
+    "credits_recharge_failed": "La recarga automática falló y se desactivó. Te quedan {{balance}} créditos.",
+    "unknown": "Pasó algo en tu empresa"
+  },
+  "row": {
+    "unread": "Sin leer"
+  },
+  "announcement": {
+    "kinds": {
+      "release": "Nuevo",
+      "maintenance": "Mantenimiento",
+      "notice": "Aviso"
+    },
+    "learnMore": "Más información",
+    "dismiss": "Descartar"
+  },
+  "settings": {
+    "title": "Ajustes de notificaciones",
+    "description": "Aquí en el portal siempre ves todas las notificaciones. Elige cuáles quieres recibir también por correo.",
+    "back": "Volver a notificaciones",
+    "cardTitle": "Correo",
+    "cardDescription": "Se envían a {{email}}, en el idioma en que usas el portal.",
+    "categories": {
+      "bookings": {
+        "label": "Reservas",
+        "description": "Nuevas reservas desde tu sitio de reservas y alquileres atrasados."
+      },
+      "payments": {
+        "label": "Pagos",
+        "description": "Pagos de clientes, depósitos retenidos o vencidos y pagos que fallan."
+      },
+      "contracts": {
+        "label": "Contratos",
+        "description": "Clientes que firman su contrato de alquiler en el enlace que les enviaste."
+      }
+    },
+    "always": "Las respuestas de Soporte de Veltrio y los problemas con tu facturación de Veltrio siempre se envían por correo.",
+    "saved": "Ajustes de notificaciones guardados",
+    "saveFailed": "No se pudieron guardar tus ajustes de notificaciones"
+  },
+  "toast": {
+    "markFailed": "No se pudieron marcar las notificaciones como leídas"
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "bell": {
+    "tabs": {
+      "notifications": "Notifications",
+      "whatsNew": "What's new"
+    },
+    "markAllRead": "Mark all read",
+    "viewAll": "View all",
+    "emptyTitle": "You're all caught up",
+    "emptyDescription": "New reservations, payments and support replies show up here.",
+    "noAnnouncements": "Nothing new from Veltrio yet."
+  },
+  "page": {
+    "title": "Notifications",
+    "description": "What happened in your company, and what's new in Veltrio. Notifications are kept for {{days}} days.",
+    "tabs": {
+      "all": "All",
+      "unread": "Unread",
+      "whatsNew": "What's new"
+    },
+    "category": "Category",
+    "allCategories": "All categories",
+    "markAllRead": "Mark all read",
+    "emailSettings": "Email settings",
+    "listLabel": "Notifications",
+    "empty": {
+      "none": {
+        "title": "No notifications yet",
+        "description": "When a renter books, pays or signs, or Veltrio Support replies, you'll see it here."
+      },
+      "caughtUp": {
+        "title": "You're all caught up",
+        "description": "You've read every notification."
+      },
+      "category": {
+        "title": "No notifications in {{category}}",
+        "description": "Nothing in this category in the last 90 days."
+      },
+      "announcements": {
+        "title": "Nothing new yet",
+        "description": "New features and notices from Veltrio show up here."
+      },
+      "showAll": "Show all",
+      "clearCategory": "Show all categories"
+    }
+  },
+  "categories": {
+    "bookings": "Bookings",
+    "payments": "Payments",
+    "contracts": "Agreements",
+    "support": "Support",
+    "team": "Team",
+    "billing": "Billing"
+  },
+  "kinds": {
+    "booking_requested": "New reservation {{reference}} from {{customer}}",
+    "booking_overdue": "{{reference}} is overdue: {{customer}} hasn't returned the {{vehicle}}",
+    "booking_cancelled": "{{reference}} for {{customer}} was cancelled",
+    "booking_declined": "The reservation {{reference}} from {{customer}} was declined",
+    "booking_dates_changed": "The dates of {{reference}} were changed",
+    "booking_vehicle_swapped": "{{reference}} now has the {{vehicle}}",
+    "payment_received": "{{customer}} paid {{amount}} for {{reference}}",
+    "payment_failed": "A payment by {{customer}} for {{reference}} didn't go through",
+    "extension_paid": "{{customer}} paid {{amount}} to extend {{reference}}",
+    "deposit_held": "{{customer}} authorised the {{amount}} deposit for {{reference}}",
+    "deposit_lapsed": "The deposit hold for {{reference}} lapsed",
+    "contract_signed": "{{customer}} signed the agreement for {{reference}}",
+    "ticket_replied": "Veltrio Support replied to ticket #{{number}}: {{subject}}",
+    "ticket_closed": "Ticket #{{number}} was closed: {{subject}}",
+    "invitation_accepted": "{{member}} joined as {{role}}",
+    "subscription_past_due": "Your Veltrio payment didn't go through. Update your card to keep your account running.",
+    "credits_low": "You have {{balance}} credits left",
+    "credits_recharge_failed": "Auto-recharge failed and was switched off. You have {{balance}} credits left.",
+    "unknown": "Something happened in your company"
+  },
+  "row": {
+    "unread": "Unread"
+  },
+  "announcement": {
+    "kinds": {
+      "release": "New",
+      "maintenance": "Maintenance",
+      "notice": "Notice"
+    },
+    "learnMore": "Learn more",
+    "dismiss": "Dismiss"
+  },
+  "settings": {
+    "title": "Notification settings",
+    "description": "You always see every notification here in the portal. Choose which ones also come by email.",
+    "back": "Back to notifications",
+    "cardTitle": "Email",
+    "cardDescription": "Sent to {{email}}, in the language you use the portal in.",
+    "categories": {
+      "bookings": {
+        "label": "Bookings",
+        "description": "New reservations from your booking site, and rentals that are overdue."
+      },
+      "payments": {
+        "label": "Payments",
+        "description": "Renters paying, deposits being held or lapsing, and payments that fail."
+      },
+      "contracts": {
+        "label": "Agreements",
+        "description": "Renters signing their rental agreement on the link you sent."
+      }
+    },
+    "always": "Replies from Veltrio Support and problems with your Veltrio billing are always emailed.",
+    "saved": "Notification settings saved",
+    "saveFailed": "Couldn't save your notification settings"
+  },
+  "toast": {
+    "markFailed": "Couldn't mark notifications as read"
+  }
+}
